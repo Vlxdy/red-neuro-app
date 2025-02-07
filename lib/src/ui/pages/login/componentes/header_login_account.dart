@@ -1,0 +1,66 @@
+import 'package:control_ventas_movil/src/config/theme_controller.dart';
+import 'package:flutter/material.dart';
+import 'package:control_ventas_movil/src/constants/resources.dart';
+
+class HeaderLoginAccount extends StatelessWidget {
+  const HeaderLoginAccount(this.offline, {super.key});
+  final bool offline;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ThemeController.instance;
+    return Column(
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              height: 100,
+              width: 190,
+              decoration: const BoxDecoration(
+                  image: DecorationImage(
+                      image: AssetImage(Recursos.logoPrincipal),
+                      fit: BoxFit.contain)),
+            ),
+          ],
+        ),
+        // Text(
+        //   'Bienvenido a Control cuotas móvil',
+        //   style: Theme.of(context)
+        //       .textTheme
+        //       .headlineSmall!
+        //       .copyWith(fontWeight: FontWeight.w600),
+        // ),
+        // !offline
+        //     ? Align(
+        //         child: Text(
+        //           'Inicia sesión con tus credenciales',
+        //           style: Theme.of(context).textTheme.labelLarge,
+        //         ),
+        //       )
+        //     : const SizedBox(),
+        offline
+            ? Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.signal_wifi_connected_no_internet_4_rounded,
+                      color: theme.grey),
+                  const SizedBox(width: 4),
+                  const Text(
+                    'Estas sin conexión a internet',
+                    style: TextStyle(fontWeight: FontWeight.w300),
+                  )
+                ],
+              )
+            : const SizedBox(),
+        offline
+            ? Text(
+                'Inicia sesión con los datos de la orden en curso',
+                style: Theme.of(context).textTheme.labelLarge,
+                textAlign: TextAlign.center,
+              )
+            : const SizedBox()
+      ],
+    );
+  }
+}
