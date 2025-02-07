@@ -24,7 +24,7 @@ class AvatarPerfil extends StatelessWidget {
             style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 24,
-                color: theme.primary),
+                color: theme.fontColor),
           ),
         ),
         // Container(

@@ -129,7 +129,7 @@ class _CambiarContrasenaState extends State<CambiarContrasena> {
                                   style: Theme.of(context)
                                       .textTheme
                                       .bodySmall
-                                      ?.copyWith(color: theme.primary)),
+                                      ?.copyWith(color: theme.fontColor)),
                               const SizedBox(height: 8),
                               LinearProgressIndicator(
                                 value: store.calificacion * 0.25,

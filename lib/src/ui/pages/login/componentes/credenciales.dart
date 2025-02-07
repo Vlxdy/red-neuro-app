@@ -56,7 +56,6 @@ class _CredencialesState extends State<Credenciales> {
                         disable: listener.isLoading,
                         requiredData: true,
                         controller: _email,
-                        labelColor: "#ffffff",
                         title: 'Usuario',
                         onChange: (value) =>
                             service.store.form.username = value,
@@ -75,7 +74,6 @@ class _CredencialesState extends State<Credenciales> {
                         disable: listener.isLoading,
                         requiredData: true,
                         obscure: true,
-                        labelColor: '#ffffff',
                         controller: _password,
                         title: 'Contraseña',
                         onChange: (value) => service.store.form.password =
@@ -98,9 +96,9 @@ class _CredencialesState extends State<Credenciales> {
                 SimpleButton(
                     disabled: listener.isLoading,
                     title: 'Iniciar sesión',
-                    background: theme.white,
-                    textColor: theme.primary,
-                    preffixicon: Icons.login,
+                    background: theme.primary700,
+                    textColor: theme.white,
+                    suffixicon: Icons.login,
                     onTap: () {
                       if (service.validateForm(_scaffoldingFormKey)) {
                         service.login();

@@ -42,7 +42,7 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     final theme = ThemeController.instance;
     return Scaffold(
-      backgroundColor: theme.primary,
+      backgroundColor: theme.background,
       body: Container(
         decoration: const BoxDecoration(),
         width: MediaQuery.of(context).size.width,

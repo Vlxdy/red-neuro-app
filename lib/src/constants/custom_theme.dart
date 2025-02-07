@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 
 class Theming {
   // primary
-  static const primaryColor50 = Color(0xFFDCF9F0);
-  static const primaryColor100 = Color(0xFFB9F3E2);
-  static const primaryColor200 = Color(0xFF78E8C7);
-  static const primaryColor500 = Color(0xFF106048);
-  static const primaryColor700 = Color(0xFF09392B);
-  static const primaryColor900 = Color(0xFF03110D);
+  static const primaryColor50 = Color(0xFFD6F7FD);
+  static const primaryColor100 = Color(0xFFADECFB);
+  static const primaryColor200 = Color(0xFF6DD7F5);
+  static const primaryColor500 = Color(0xFF00BBE2);
+  static const primaryColor700 = Color(0xFF007A9D);
+  static const primaryColor900 = Color(0xFF00475D);
 
   // TODO: pendiente colores dark
   static const primaryDarkColor50 = Color(0xFF1D1C4A);

@@ -78,7 +78,7 @@ class _HomePageState extends State<HomePage> {
       page: ScaffoldMessenger(
         key: homeMessenger,
         child: Scaffold(
-          backgroundColor: theme.primary,
+          backgroundColor: theme.background,
           appBar: AppBar(
             toolbarHeight: 0,
             scrolledUnderElevation: 0,

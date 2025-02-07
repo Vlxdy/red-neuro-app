@@ -24,21 +24,6 @@ class HeaderLoginAccount extends StatelessWidget {
             ),
           ],
         ),
-        // Text(
-        //   'Bienvenido a Control cuotas móvil',
-        //   style: Theme.of(context)
-        //       .textTheme
-        //       .headlineSmall!
-        //       .copyWith(fontWeight: FontWeight.w600),
-        // ),
-        // !offline
-        //     ? Align(
-        //         child: Text(
-        //           'Inicia sesión con tus credenciales',
-        //           style: Theme.of(context).textTheme.labelLarge,
-        //         ),
-        //       )
-        //     : const SizedBox(),
         offline
             ? Row(
                 mainAxisAlignment: MainAxisAlignment.center,

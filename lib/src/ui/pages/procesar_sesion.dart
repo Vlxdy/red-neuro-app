@@ -249,7 +249,7 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
                         },
                         child: Text(
                           '¿No recuerdas tu pin?',
-                          style: TextStyle(color: theme.primary),
+                          style: TextStyle(color: theme.fontColor),
                         )),
                     const SizedBox(height: 48),
                   ],

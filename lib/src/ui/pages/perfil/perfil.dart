@@ -57,7 +57,7 @@ class Perfil extends StatelessWidget {
                             child: Text(
                                 '${profile.nombres[0]}${profile.primerApellido[0]}',
                                 style: TextStyle(
-                                    color: theme.white,
+                                    color: theme.fontColor,
                                     fontSize: 28,
                                     fontWeight: FontWeight.bold)),
                           ),
