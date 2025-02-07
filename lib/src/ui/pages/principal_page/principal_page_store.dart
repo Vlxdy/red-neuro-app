@@ -1,4 +1,3 @@
-import 'package:control_ventas_movil/src/models/carga_combustible.dart';
 import 'package:control_ventas_movil/src/models/conductor.dart';
 import 'package:control_ventas_movil/src/models/vehiculo.dart';
 import 'package:flutter/material.dart';
@@ -29,12 +28,12 @@ class PrincipalPageStore with ChangeNotifier {
     notifyListeners();
   }
 
-  List<CargaCombustible> _historialCargas = [];
-  List<CargaCombustible> get historialCargas => _historialCargas;
-  set historialCargas(List<CargaCombustible> value) {
-    _historialCargas = value;
-    notifyListeners();
-  }
+  // List<CargaCombustible> _historialCargas = [];
+  // List<CargaCombustible> get historialCargas => _historialCargas;
+  // set historialCargas(List<CargaCombustible> value) {
+  //   _historialCargas = value;
+  //   notifyListeners();
+  // }
 
   List<ConductorVehiculo> _conductores = [];
   List<ConductorVehiculo> get conductores => _conductores;
