@@ -91,6 +91,7 @@ class LoginService extends ServiceConfig {
       if (response.status != StatusNetwork.connected) {
         showSnackBar(loginAccountMessenger, response.message,
             state: StatusSnackBar.error, colorText: theme.white);
+        context.goNamed(RouteNames.controlScreen);
       } else {
         // Logger.warning('respuesta ${response.data}');
         await Auth.instance.login(response.data);

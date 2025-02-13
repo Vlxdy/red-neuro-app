@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:control_ventas_movil/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
+import 'package:control_ventas_movil/src/ui/pages/control/control.dart';
 import 'package:control_ventas_movil/src/ui/pages/seguridad/configuracion_desbloqueo.dart';
 import 'package:control_ventas_movil/src/ui/pages/seguridad/configuracion_pin_seguridad.dart';
 import 'package:control_ventas_movil/src/ui/pages/home/home.dart';
@@ -37,11 +38,13 @@ class RouteNames {
   static const configurarPinSeguridad = 'configurar_pin_seguridad';
   static const configurarDesbloqueo = 'configurar_desbloqueo';
   static const modificarPin = 'modificar_pin';
+  static const controlScreen = 'control_screen';
 
   static const routesConfiguration = [
     '/$login',
     '/$loginAccount',
     '/$olvideContrasena',
+    '/$controlScreen',
   ];
 }
 
@@ -105,7 +108,12 @@ List<RouteBase> routes = [
     name: RouteNames.modificarPin,
     path: '/${RouteNames.modificarPin}',
     builder: (context, state) => const ModificarPinSeguridad(),
-  )
+  ),
+  GoRoute(
+    name: RouteNames.controlScreen,
+    path: '/${RouteNames.controlScreen}',
+    builder: (context, state) => const Control(),
+  ),
 ];
 
 // --------------------------------------------------------------
