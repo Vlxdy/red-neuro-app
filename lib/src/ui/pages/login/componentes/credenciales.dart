@@ -1,4 +1,5 @@
 import 'package:control_ventas_movil/src/config/dispositivo_service.dart';
+import 'package:control_ventas_movil/src/config/routes.dart';
 import 'package:flutter/material.dart';
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
 import 'package:control_ventas_movil/src/plugins/utils/encode.dart';
@@ -6,6 +7,7 @@ import 'package:control_ventas_movil/src/ui/common/buttons/simple_button.dart';
 import 'package:control_ventas_movil/src/ui/common/text_inputs/text_input.dart';
 import 'package:control_ventas_movil/src/ui/global/loading_animation.dart';
 import 'package:control_ventas_movil/src/ui/pages/login/login_service.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 class Credenciales extends StatefulWidget {
@@ -80,18 +82,18 @@ class _CredencialesState extends State<Credenciales> {
                             Encode.toBase64(value),
                         validate: (value, alias) =>
                             service.validateData(context, value, alias))),
-                // Align(
-                //   alignment: Alignment.bottomRight,
-                //   child: TextButton(
-                //     onPressed: listener.isLoading
-                //         ? null
-                //         : () => context.pushNamed(RouteNames.olvideContrasena),
-                //     child: Text(
-                //       '¿Olvidaste tu contraseña?',
-                //       style: TextStyle(color: theme.accent50),
-                //     ),
-                //   ),
-                // ),
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: TextButton(
+                    onPressed: listener.isLoading
+                        ? null
+                        : () => context.pushNamed(RouteNames.olvideContrasena),
+                    child: Text(
+                      '¿Olvidaste tu contraseña?',
+                      style: TextStyle(color: theme.accent500),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 40),
                 SimpleButton(
                     disabled: listener.isLoading,
