@@ -68,18 +68,18 @@ class _ControlState extends State<Control> {
                   const FormControl(),
                   const SizedBox(height: 16),
 
-                  SimpleButton(
-                      title: 'Iniciar control',
-                      background: theme.primary700,
-                      textColor: theme.white,
-                      onTap: () {
-                        // TODO: Refactor goNamed
-                        GoRouter.of(context).goNamed(RouteNames.resumenDia);
-                        if (service.validateForm(_scaffoldingFormKey)) {
-                          service.iniciarControl();
-                          GoRouter.of(context).goNamed(RouteNames.resumenDia);
-                        }
-                      }),
+                  // SimpleButton(
+                  //     title: 'Iniciar control',
+                  //     background: theme.primary700,
+                  //     textColor: theme.white,
+                  //     onTap: () {
+                  //       // TODO: Refactor goNamed
+                  //       GoRouter.of(context).goNamed(RouteNames.resumenDia);
+                  //       if (service.validateForm(_scaffoldingFormKey)) {
+                  //         service.iniciarControl();
+                  //         GoRouter.of(context).goNamed(RouteNames.resumenDia);
+                  //       }
+                  //     }),
                 ],
               ),
             ),

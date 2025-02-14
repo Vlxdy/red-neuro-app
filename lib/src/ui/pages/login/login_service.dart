@@ -83,7 +83,7 @@ class LoginService extends ServiceConfig {
   void login() async {
     try {
       LoadingAnimation.instance.showLoading();
-      final response = await fetch('/auth-app',
+      final response = await fetch('/auth-app-control',
           type: HttpProtocol.post,
           body: store.form.toJson(),
           withAuthorization: false);
@@ -91,13 +91,14 @@ class LoginService extends ServiceConfig {
       if (response.status != StatusNetwork.connected) {
         showSnackBar(loginAccountMessenger, response.message,
             state: StatusSnackBar.error, colorText: theme.white);
-        context.goNamed(RouteNames.controlScreen);
+        return;
       } else {
         // Logger.warning('respuesta ${response.data}');
         await Auth.instance.login(response.data);
 
         if (context.mounted) {
-          context.goNamed(RouteNames.splashScreen);
+          context.goNamed(RouteNames.controlScreen);
+          // context.goNamed(RouteNames.splashScreen);
         }
         store.clean();
       }
