@@ -105,6 +105,7 @@ class LoginService extends ServiceConfig {
     } catch (e, stacktrace) {
       Logger.error('Ocurrió un error -> $e');
       Logger.error('stacktrace $stacktrace');
+
       showSnackBar(loginAccountMessenger, '$e',
           state: StatusSnackBar.error, colorText: theme.white);
     } finally {
