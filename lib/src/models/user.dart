@@ -1,23 +1,5 @@
 import 'package:control_ventas_movil/src/models/person.dart';
-
-class Regimiento {
-  String? nombre;
-  String? tipoFuerza;
-
-  Regimiento({this.nombre, this.tipoFuerza});
-
-  Regimiento.fromJson(Map<String, dynamic> json) {
-    nombre = json['nombre'] ?? '';
-    tipoFuerza = json['tipoFuerza'] ?? '';
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'nombre': nombre,
-      'tipoFuerza': tipoFuerza,
-    };
-  }
-}
+import 'package:control_ventas_movil/src/models/regimiento.dart';
 
 class Usuario extends Persona {
   late String correoElectronico;
