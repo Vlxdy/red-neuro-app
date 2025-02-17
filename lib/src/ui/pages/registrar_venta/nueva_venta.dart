@@ -144,7 +144,7 @@ class _NuevaVentaScreenState extends State<NuevaVentaScreen> {
         const SizedBox(height: 8),
         OutlinedButton.icon(
           onPressed: () {
-            
+
           },
           icon: const Icon(Icons.camera_alt),
           label: const Text('Tomar foto'),
