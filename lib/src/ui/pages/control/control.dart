@@ -1,4 +1,5 @@
 import 'package:control_ventas_movil/src/config/routes.dart';
+import 'package:control_ventas_movil/src/plugins/auth/auth.dart';
 import 'package:control_ventas_movil/src/ui/common/buttons/simple_button.dart';
 import 'package:flutter/material.dart';
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
@@ -11,9 +12,8 @@ import 'package:go_router/go_router.dart';
 import 'componentes/form_control.dart';
 import 'componentes/header_control.dart';
 
-
 GlobalKey<ScaffoldMessengerState> controlMessenger =
-GlobalKey<ScaffoldMessengerState>();
+    GlobalKey<ScaffoldMessengerState>();
 
 class Control extends StatefulWidget {
   const Control({super.key});
@@ -37,6 +37,7 @@ class _ControlState extends State<Control> {
   @override
   Widget build(BuildContext context) {
     final theme = ThemeController.instance;
+    final profile = Auth.instance.profile;
     return TemplatePage(
       page: ScaffoldMessenger(
         key: controlMessenger,
@@ -47,7 +48,7 @@ class _ControlState extends State<Control> {
             elevation: 0,
             systemOverlayStyle: services.SystemUiOverlayStyle(
                 statusBarBrightness:
-                theme.isDark ? Brightness.dark : Brightness.light,
+                    theme.isDark ? Brightness.dark : Brightness.light,
                 statusBarColor: theme.transparent),
             backgroundColor: theme.transparent,
           ),
@@ -60,26 +61,24 @@ class _ControlState extends State<Control> {
                   HeaderControl(
                     titulo: 'Lince',
                     subTitulo: 'Te damos la bienvenida',
-                    nombreUsuario: 'TTE. ARMINIA ALCÁZAR SALAZAR',
-                    cuartel: 'CUARTEL GENERAL A',
+                    nombreUsuario:
+                        '${profile.nombres} ${profile.primerApellido} ${profile.segundoApellido}',
+                    regimiento: profile.regimiento?.nombre ?? '',
+                    tipoFuerza: profile.regimiento?.tipoFuerza ?? '',
                   ),
                   const SizedBox(height: 16),
-
                   const FormControl(),
                   const SizedBox(height: 16),
-
-                  // SimpleButton(
-                  //     title: 'Iniciar control',
-                  //     background: theme.primary700,
-                  //     textColor: theme.white,
-                  //     onTap: () {
-                  //       // TODO: Refactor goNamed
-                  //       GoRouter.of(context).goNamed(RouteNames.resumenDia);
-                  //       if (service.validateForm(_scaffoldingFormKey)) {
-                  //         service.iniciarControl();
-                  //         GoRouter.of(context).goNamed(RouteNames.resumenDia);
-                  //       }
-                  //     }),
+                  SimpleButton(
+                      title: 'Iniciar control',
+                      background: theme.primary700,
+                      textColor: theme.white,
+                      onTap: () {
+                        if (service.validateForm(_scaffoldingFormKey)) {
+                          service.iniciarControl();
+                          GoRouter.of(context).goNamed(RouteNames.resumenDia);
+                        }
+                      }),
                 ],
               ),
             ),
