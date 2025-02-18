@@ -1,19 +1,55 @@
+import 'package:control_ventas_movil/src/ui/pages/registrar_venta/tanque_adicional.dart';
+import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/volumenes_tanques.dart';
 import 'package:flutter/material.dart';
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
 import 'package:control_ventas_movil/src/ui/global/template_page.dart';
 
-class ResumenDelDiaPage extends StatelessWidget {
+import 'componentes/venta_card.dart';
+
+class ResumenDelDiaPage extends StatefulWidget {
   const ResumenDelDiaPage({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    final theme = ThemeController.instance;
+  _ResumenDelDiaPageState createState() => _ResumenDelDiaPageState();
+}
 
+class _ResumenDelDiaPageState extends State<ResumenDelDiaPage> {
+  int _selectedIndex = 0;
+  bool showSubNav = false;
+  final theme = ThemeController.instance;
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+      showSubNav = index == 2  showSubNav;
+    });
+    switch (index) {
+      case 0:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const ResumenDelDiaPage()),
+        );
+        break;
+      case 1:
+        break;
+      case 2:
+        break;
+      case 3:
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => const TanqueAdicionalScreen()),
+        );
+        break;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return TemplatePage(
       page: ScaffoldMessenger(
         child: Scaffold(
           backgroundColor: theme.background,
-
           body: SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
@@ -41,7 +77,6 @@ class ResumenDelDiaPage extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 16),
-
                   Text(
                     'Resumen del día',
                     style: TextStyle(
@@ -51,7 +86,6 @@ class ResumenDelDiaPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-
                   Text(
                     'Ventas',
                     style: TextStyle(
@@ -61,46 +95,27 @@ class ResumenDelDiaPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  _buildVentaItem(
-                    theme,
-                    iconData: Icons.local_drink,
-                    titulo: 'Bidones',
-                    gasolina: 'G12',
-                    diesel: 'D8',
-                    total: '20',
-                  ),
-                  _buildVentaItem(
-                    theme,
-                    iconData: Icons.agriculture,
-                    titulo: 'Maquinaria',
-                    gasolina: 'G0',
-                    diesel: 'D12',
-                    total: '12',
-                  ),
-                  _buildVentaItem(
-                    theme,
-                    iconData: Icons.home_work,
-                    titulo: 'Usuarios directos',
-                    gasolina: 'G0',
-                    diesel: 'D4',
-                    total: '4',
-                  ),
-                  _buildVentaItem(
-                    theme,
+                  VentaCard(
+                    theme: ThemeController.instance,
                     iconData: Icons.local_gas_station,
-                    titulo: 'Tanque adicional',
-                    gasolina: 'G0',
-                    diesel: 'D2',
-                    total: '2',
+                    titulo: 'Ventas de Combustible',
+                    combustibles: {
+                      'Gasolina': '5000L',
+                      'Diesel': '3000L',
+                      'Diesel6': '4000L',
+                      'Super': '2000L',
+                      'Premium': '1000L',
+                      'Extra': '1500L',
+                    },
+                    total: '\$10,000',
                   ),
-
                   const SizedBox(height: 16),
                   Text(
                     'Volúmenes',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: theme.background,
+                      color: theme.primary,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -118,14 +133,13 @@ class ResumenDelDiaPage extends StatelessWidget {
                     combustible: 'GE',
                     volumen: '20000',
                   ),
-
                   const SizedBox(height: 16),
                   Text(
                     'Novedades',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: theme.background,
+                      color: theme.primary,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -145,73 +159,71 @@ class ResumenDelDiaPage extends StatelessWidget {
               ),
             ),
           ),
-
-          bottomNavigationBar: BottomNavigationBar(
-            type: BottomNavigationBarType.fixed,
-            selectedItemColor: theme.primary,
-            unselectedItemColor: theme.black,
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.bar_chart),
-                label: 'Resumen del día',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.sync),
-                label: 'Sincronizar Reportes',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.speed),
-                label: 'Volúmenes y contadores',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.shopping_cart),
-                label: 'Registrar Ventas',
+          bottomNavigationBar: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (showSubNav)
+                Container(
+                  color: Colors.teal,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      TextButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    const VolumenesTanquesScreen()),
+                          );
+                        },
+                        icon: const Icon(Icons.local_gas_station,
+                            color: Colors.white),
+                        label: const Text('Volúmenes Tanques',
+                            style: TextStyle(color: Colors.white)),
+                      ),
+                      TextButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    const VolumenesTanquesScreen()),
+                          );
+                        },
+                        icon: const Icon(Icons.speed, color: Colors.white),
+                        label: const Text('Contadores Mangueras',
+                            style: TextStyle(color: Colors.white)),
+                      ),
+                    ],
+                  ),
+                ),
+              BottomNavigationBar(
+                type: BottomNavigationBarType.fixed,
+                selectedItemColor: Colors.blue,
+                unselectedItemColor: Colors.black,
+                currentIndex: _selectedIndex,
+                onTap: _onItemTapped,
+                items: const [
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.bar_chart),
+                    label: 'Resumen del día',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.sync),
+                    label: 'Sincronizar Reportes',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.speed),
+                    label: 'Volúmenes y contadores',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.shopping_cart),
+                    label: 'Registrar Ventas',
+                  ),
+                ],
               ),
             ],
-            // onTap: (index) { ... }
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildVentaItem(
-      ThemeController theme, {
-        required IconData iconData,
-        required String titulo,
-        required String gasolina,
-        required String diesel,
-        required String total,
-      }) {
-    return Card(
-      elevation: 1,
-      color: theme.accent900,
-      margin: const EdgeInsets.symmetric(vertical: 4),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: theme.primary.withOpacity(0.2),
-          child: Icon(iconData, color: theme.primary),
-        ),
-        title: Text(
-          titulo,
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: theme.background,
-          ),
-        ),
-        subtitle: Row(
-          children: [
-            _buildChip(theme, label: 'G $gasolina', color: theme.primary),
-            const SizedBox(width: 8),
-            _buildChip(theme, label: 'D $diesel', color: theme.secondary),
-          ],
-        ),
-        trailing: Text(
-          total,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: theme.background,
           ),
         ),
       ),
@@ -219,12 +231,12 @@ class ResumenDelDiaPage extends StatelessWidget {
   }
 
   Widget _buildVolumenItem(
-      ThemeController theme, {
-        required String hora,
-        required String tanque,
-        required String combustible,
-        required String volumen,
-      }) {
+    ThemeController theme, {
+    required String hora,
+    required String tanque,
+    required String combustible,
+    required String volumen,
+  }) {
     return Card(
       elevation: 1,
       color: theme.accent900,
@@ -234,7 +246,7 @@ class ResumenDelDiaPage extends StatelessWidget {
           hora,
           style: TextStyle(
             fontWeight: FontWeight.w600,
-            color: theme.background,
+            color: theme.primary,
           ),
         ),
         title: Row(
@@ -245,7 +257,7 @@ class ResumenDelDiaPage extends StatelessWidget {
             Text(
               tanque,
               style: TextStyle(
-                color: theme.background,
+                color: theme.primary,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -264,11 +276,11 @@ class ResumenDelDiaPage extends StatelessWidget {
   }
 
   Widget _buildNovedadItem(
-      ThemeController theme, {
-        required IconData iconData,
-        required String titulo,
-        required String cantidad,
-      }) {
+    ThemeController theme, {
+    required IconData iconData,
+    required String titulo,
+    required String cantidad,
+  }) {
     return Card(
       elevation: 1,
       color: theme.success,
@@ -279,7 +291,7 @@ class ResumenDelDiaPage extends StatelessWidget {
           titulo,
           style: TextStyle(
             fontWeight: FontWeight.w600,
-            color: theme.background,
+            color: theme.primary,
           ),
         ),
         trailing: Text(
@@ -287,14 +299,15 @@ class ResumenDelDiaPage extends StatelessWidget {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: theme.background,
+            color: theme.primary,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildChip(ThemeController theme, {required String label, required Color color}) {
+  Widget _buildChip(ThemeController theme,
+      {required String label, required Color color}) {
     return Chip(
       label: Text(
         label,
