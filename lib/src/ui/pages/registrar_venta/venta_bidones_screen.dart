@@ -1,7 +1,7 @@
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/componentes/combustible_card.dart';
 import 'package:flutter/material.dart';
-import 'bottom_nav_bar.dart';
+import 'componentes/bottom_nav_bar.dart';
 
 class VentaBidonesScreen extends StatefulWidget {
   const VentaBidonesScreen({Key? key}) : super(key: key);

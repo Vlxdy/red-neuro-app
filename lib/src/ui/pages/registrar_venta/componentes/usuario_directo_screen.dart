@@ -1,5 +1,5 @@
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/ui/pages/registrar_venta/bottom_nav_bar.dart';
+import 'package:control_ventas_movil/src/ui/pages/registrar_venta/componentes/bottom_nav_bar.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/componentes/usuario_directo_paso2_screen.dart';
 import 'package:flutter/material.dart';
 

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'componentes/usuario_directo_screen.dart';
-import 'venta_bidones_screen.dart';
-import 'maquinaria_screen.dart';
-import 'tanque_adicional.dart';
+import 'usuario_directo_screen.dart';
+import '../venta_bidones_screen.dart';
+import '../maquinaria_screen.dart';
+import '../tanque_adicional.dart';
 
 class BottomNavBar extends StatelessWidget {
   final int selectedIndex;

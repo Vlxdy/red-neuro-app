@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'bottom_nav_bar.dart';
+import 'componentes/bottom_nav_bar.dart';
 
 class MaquinariaScreen extends StatelessWidget {
   const MaquinariaScreen({Key? key}) : super(key: key);

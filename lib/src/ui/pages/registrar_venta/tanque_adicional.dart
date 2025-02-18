@@ -3,7 +3,7 @@ import 'package:control_ventas_movil/src/ui/pages/registrar_venta/componentes/co
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/nueva_venta.dart';
 import 'package:flutter/material.dart';
 
-import 'bottom_nav_bar.dart';
+import 'componentes/bottom_nav_bar.dart';
 
 class TanqueAdicionalScreen extends StatelessWidget {
   const TanqueAdicionalScreen({Key? key}) : super(key: key);
