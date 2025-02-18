@@ -8,6 +8,8 @@ class Constantes {
   static final oidcClientId = dotenv.get('OIDC_CLIENT_ID');
   static final oidcRedirectUri = dotenv.get('OIDC_REDIRECT_URI');
   static const timeout = 30;
+  static final imageCompressionQuality = dotenv.get('IMAGE_COMPRESSION_QUALITY');
+  static const gpsTimeout = 20;
 }
 
 enum TipoAsociacion { propietario, poseedor, conductor }
