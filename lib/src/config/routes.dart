@@ -41,7 +41,9 @@ class RouteNames {
   static const modificarPin = 'modificar_pin';
   static const controlScreen = 'control_screen';
   static const resumenDia = 'resumen_dia';
-
+  // adicionar nuevas rutas
+  
+  
   static const routesConfiguration = [
     '/$login',
     '/$loginAccount',

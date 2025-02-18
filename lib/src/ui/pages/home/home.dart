@@ -1,13 +1,16 @@
+import 'package:control_ventas_movil/src/config/routes.dart';
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
+import 'package:control_ventas_movil/src/plugins/auth/auth.dart';
 import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
 import 'package:control_ventas_movil/src/ui/common/keep_alive_page.dart';
 import 'package:control_ventas_movil/src/ui/global/template_page.dart';
 import 'package:control_ventas_movil/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
-import 'package:control_ventas_movil/src/ui/pages/inicio/inicio_page.dart';
 import 'package:control_ventas_movil/src/ui/pages/inicio/inicio_store.dart';
 import 'package:control_ventas_movil/src/ui/pages/mi_cuenta/mi_cuenta.dart';
+import 'package:control_ventas_movil/src/ui/pages/resumen_dia/resumen_dia.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:solar_icons/solar_icons.dart';
 
 final GlobalKey<ScaffoldMessengerState> homeMessenger =
@@ -39,39 +42,36 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final theme = ThemeController.instance;
+    final isLocked = Auth.instance.isLocked;
     _itemsChildren = [
       ChildrenItem(
-        iconoImagen: SolarIconsOutline.home,
-        iconoImagenSeleccionada: SolarIconsBold.home,
-        titulo: 'Inicio',
-        children: KeepAlivePage(child: InicioPage(
-          onGoVehicles: () {
-            setState(() {
-              _selectedIndex = 1;
-            });
-            Logger.info('Vista ${_itemsChildren[1].titulo}');
-            controller.jumpToPage(1);
-          },
-        )),
+        iconoImagen: SolarIconsOutline.courseUp,
+        iconoImagenSeleccionada: SolarIconsBold.courseUp,
+        titulo: 'Resumen del Día',
+        children: const ResumenDelDiaPage(),
         // _onTappedBar
       ),
       ChildrenItem(
-        iconoImagen: SolarIconsOutline.bus,
-        iconoImagenSeleccionada: SolarIconsBold.bus,
-        titulo: 'Pass',
+        iconoImagen: SolarIconsOutline.checklistMinimalistic,
+        iconoImagenSeleccionada: SolarIconsBold.checklistMinimalistic,
+        titulo: 'Sincronizar Reportes',
         children: const CambiarContrasena(),
       ),
       ChildrenItem(
           iconoImagen: SolarIconsOutline.gasStation,
           iconoImagenSeleccionada: SolarIconsBold.gasStation,
-          titulo: 'Cuenta',
-          // children: KeepAlivePage(child: const HistorialCargaPage())),
+          titulo: 'Volúmenes y Contadores',
+          children: const KeepAlivePage(child: Micuenta())),
+      ChildrenItem(
+          iconoImagen: SolarIconsOutline.shopMinimalistic,
+          iconoImagenSeleccionada: SolarIconsBold.shopMinimalistic,
+          titulo: 'Registrar Ventas',
           children: const Micuenta()),
       ChildrenItem(
           iconoImagen: SolarIconsOutline.settings,
           iconoImagenSeleccionada: SolarIconsBold.settings,
           titulo: 'Perfil',
-          children: const KeepAlivePage(child: Micuenta()))
+          children: const Micuenta()),
     ];
 
     return TemplatePage(
@@ -91,17 +91,71 @@ class _HomePageState extends State<HomePage> {
             backgroundColor: Colors.transparent,
             centerTitle: false,
           ),
-          body: Stack(
+          body: Column(
             children: [
-              PageView(
-                physics: const NeverScrollableScrollPhysics(),
-                controller: controller,
-                onPageChanged: (pageIndex) {
-                  setState(() {
-                    _selectedIndex = pageIndex;
-                  });
-                },
-                children: _itemsChildren.map((e) => e.children).toList(),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Row(
+                    // mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Icon(Icons.info, color: theme.primary, size: 28),
+                      const SizedBox(width: 20),
+                      Icon(Icons.notifications, color: theme.primary, size: 28),
+                      const SizedBox(width: 10),
+                      IconButton(
+                          onPressed: () {
+                            Auth.instance.isLocked = true;
+                            GoRouter.of(context)
+                                .goNamed(RouteNames.procesarSesion);
+                          },
+                          icon: Icon(
+                            color: theme.warning,
+                            isLocked
+                                ? SolarIconsBold.lockKeyhole
+                                : SolarIconsBold.lockKeyholeUnlocked,
+                            size: 28,
+                          )),
+                    ]),
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Row(
+                    // mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        'EESS Santa Rosa',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: theme.black,
+                        ),
+                      ),
+                      Text(
+                        '12/12/2024 00:00 - 08:00',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: theme.black,
+                        ),
+                      ),
+                    ]),
+              ),
+              Expanded(
+                child: PageView(
+                  physics: const NeverScrollableScrollPhysics(),
+                  controller: controller,
+                  onPageChanged: (pageIndex) {
+                    setState(() {
+                      _selectedIndex = pageIndex;
+                    });
+                  },
+                  children: _itemsChildren.map((e) => e.children).toList(),
+                ),
               ),
               Align(
                 alignment: Alignment.bottomCenter,
@@ -204,6 +258,30 @@ class _HomePageState extends State<HomePage> {
                                 _selectedIndex == 3
                                     ? _itemsChildren[3].iconoImagenSeleccionada
                                     : _itemsChildren[3].iconoImagen,
+                                color: theme.primary,
+                                size: 28,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedIndex = 3;
+                              });
+                              Logger.info('Vista ${_itemsChildren[4].titulo}');
+                              controller.jumpToPage(3);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              decoration: const BoxDecoration(
+                                  borderRadius: BorderRadius.horizontal(
+                                      right: Radius.circular(50))),
+                              child: Icon(
+                                _selectedIndex == 4
+                                    ? _itemsChildren[4].iconoImagenSeleccionada
+                                    : _itemsChildren[4].iconoImagen,
                                 color: theme.primary,
                                 size: 28,
                               ),
