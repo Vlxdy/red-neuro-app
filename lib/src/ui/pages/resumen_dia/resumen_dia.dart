@@ -1,4 +1,5 @@
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/tanque_adicional.dart';
+import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/meters_mangueras.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/volumenes_tanques.dart';
 import 'package:flutter/material.dart';
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
@@ -21,7 +22,11 @@ class _ResumenDelDiaPageState extends State<ResumenDelDiaPage> {
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
-      showSubNav = index == 2  showSubNav;
+      showSubNav = index == 2
+          ? showSubNav
+              ? false
+              : true
+          : false;
     });
     switch (index) {
       case 0:
@@ -188,7 +193,7 @@ class _ResumenDelDiaPageState extends State<ResumenDelDiaPage> {
                             context,
                             MaterialPageRoute(
                                 builder: (context) =>
-                                    const VolumenesTanquesScreen()),
+                                    const MetersManguerasScreen()),
                           );
                         },
                         icon: const Icon(Icons.speed, color: Colors.white),
