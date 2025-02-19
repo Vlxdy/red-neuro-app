@@ -1,5 +1,4 @@
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/extensions/strings_extensions.dart';
 import 'package:control_ventas_movil/src/plugins/auth/auth.dart';
 import 'package:control_ventas_movil/src/ui/pages/inicio/inicio_service.dart';
 import 'package:control_ventas_movil/src/ui/pages/inicio/inicio_store.dart';

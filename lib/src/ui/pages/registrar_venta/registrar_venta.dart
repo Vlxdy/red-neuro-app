@@ -4,12 +4,13 @@ import 'package:control_ventas_movil/src/plugins/auth/auth.dart';
 import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
 import 'package:control_ventas_movil/src/ui/common/keep_alive_page.dart';
 import 'package:control_ventas_movil/src/ui/global/template_page.dart';
-import 'package:control_ventas_movil/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
 import 'package:control_ventas_movil/src/ui/pages/inicio/inicio_store.dart';
 import 'package:control_ventas_movil/src/ui/pages/mi_cuenta/mi_cuenta.dart';
+import 'package:control_ventas_movil/src/ui/pages/registrar_venta/componentes/usuario_directo_screen.dart';
+import 'package:control_ventas_movil/src/ui/pages/registrar_venta/maquinaria_screen.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/tanque_adicional.dart';
+import 'package:control_ventas_movil/src/ui/pages/registrar_venta/venta_bidones_screen.dart';
 import 'package:control_ventas_movil/src/ui/pages/resumen_dia/resumen_dia.dart';
-import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/volumenes_tanques.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -18,14 +19,14 @@ import 'package:solar_icons/solar_icons.dart';
 final GlobalKey<ScaffoldMessengerState> homeMessenger =
     GlobalKey<ScaffoldMessengerState>();
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class RegistrarVentaPage extends StatefulWidget {
+  const RegistrarVentaPage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<RegistrarVentaPage> createState() => _RegistrarVentaState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _RegistrarVentaState extends State<RegistrarVentaPage> {
   int _selectedIndex = 0;
   final codigoPinStore = CodigoPinStore.instance;
 
@@ -47,29 +48,35 @@ class _HomePageState extends State<HomePage> {
     final isLocked = Auth.instance.isLocked;
     _itemsChildren = [
       ChildrenItem(
-          iconoImagen: SolarIconsOutline.chart_2,
-          iconoImagenSeleccionada: SolarIconsBold.chart_2,
-          titulo: 'Resumen del Día',
-          children: const KeepAlivePage(child: ResumenDelDiaPage())),
+          iconoImagen: SolarIconsOutline.gasStation,
+          iconoImagenSeleccionada: SolarIconsBold.gasStation,
+          titulo: 'Venta de Bidones',
+          children: const KeepAlivePage(child: VentaBidonesScreen())),
       ChildrenItem(
-        iconoImagen: SolarIconsOutline.checklistMinimalistic,
-        iconoImagenSeleccionada: SolarIconsBold.checklistMinimalistic,
-        titulo: 'Sincronizar Reportes',
-        children: const CambiarContrasena(),
+        iconoImagen: SolarIconsOutline.bus,
+        iconoImagenSeleccionada: SolarIconsBold.bus,
+        titulo: 'Maquinaria',
+        children: const MaquinariaScreen(),
       ),
       ChildrenItem(
-        iconoImagen: SolarIconsOutline.gasStation,
-        iconoImagenSeleccionada: SolarIconsBold.gasStation,
-        titulo: 'Volúmenes y Contadores',
-        children: const VolumenesTanquesScreen(),
+        iconoImagen: SolarIconsOutline.home,
+        iconoImagenSeleccionada: SolarIconsBold.home,
+        titulo: 'Home',
+        children: const ResumenDelDiaPage(),
+        onTap: () => {GoRouter.of(context).goNamed(RouteNames.home)},
+        color: theme.secondary,
       ),
       ChildrenItem(
-        iconoImagen: SolarIconsOutline.shopMinimalistic,
-        iconoImagenSeleccionada: SolarIconsBold.shopMinimalistic,
-        titulo: 'Registrar Ventas',
-        children: const TanqueAdicionalScreen(),
-        onTap: () => {GoRouter.of(context).goNamed(RouteNames.registrarVenta)},
-      )
+        iconoImagen: SolarIconsOutline.user,
+        iconoImagenSeleccionada: SolarIconsBold.user,
+        titulo: 'Usuario Directo',
+        children: const UsuarioDirectoPage(),
+      ),
+      ChildrenItem(
+          iconoImagen: SolarIconsOutline.gasStation,
+          iconoImagenSeleccionada: SolarIconsBold.gasStation,
+          titulo: 'Tanque adicional',
+          children: const TanqueAdicionalScreen()),
     ];
 
     return TemplatePage(
@@ -80,7 +87,6 @@ class _HomePageState extends State<HomePage> {
           appBar: AppBar(
             toolbarHeight: 0,
             scrolledUnderElevation: 0,
-            // foregroundColor: theme.white,
             elevation: 0,
             systemOverlayStyle: SystemUiOverlayStyle(
                 statusBarBrightness:
@@ -217,7 +223,7 @@ class _HomePageState extends State<HomePage> {
                                     _selectedIndex == index
                                         ? item.iconoImagenSeleccionada
                                         : item.iconoImagen,
-                                    color: theme.primary,
+                                    color: item.color ?? theme.primary,
                                     size: 28,
                                   ),
                                   const SizedBox(height: 5),
@@ -225,7 +231,7 @@ class _HomePageState extends State<HomePage> {
                                     item.titulo,
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
-                                      color: theme.primary,
+                                      color: item.color ?? theme.primary,
                                       fontSize: 12,
                                     ),
                                   ),
@@ -254,6 +260,7 @@ class ChildrenItem {
   String titulo;
   Widget children;
   VoidCallback? onTap;
+  Color? color;
 
   ChildrenItem({
     required this.iconoImagen,
@@ -261,5 +268,6 @@ class ChildrenItem {
     required this.titulo,
     required this.children,
     this.onTap,
+    this.color,
   });
 }

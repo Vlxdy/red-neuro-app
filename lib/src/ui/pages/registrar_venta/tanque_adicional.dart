@@ -2,40 +2,16 @@ import 'package:control_ventas_movil/src/config/theme_controller.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/nueva_venta.dart';
 import 'package:flutter/material.dart';
 
-import 'bottom_nav_bar.dart';
-
 class TanqueAdicionalScreen extends StatelessWidget {
   const TanqueAdicionalScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-
     final theme = ThemeController.instance;
     final int ventasDiesel = 12;
     final int ventasGasolina = 22;
 
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: const [
-            Text(
-              'EESS Santa Rosa',
-              style: TextStyle(fontSize: 16),
-            ),
-            Text(
-              '12/12/2024 00:00 - 08:00',
-              style: TextStyle(fontSize: 12),
-            ),
-          ],
-        ),
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -54,7 +30,6 @@ class TanqueAdicionalScreen extends StatelessWidget {
               style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
             const SizedBox(height: 16),
-
             Row(
               children: [
                 Expanded(
@@ -65,7 +40,8 @@ class TanqueAdicionalScreen extends StatelessWidget {
                     onPressedNuevaVenta: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => NuevaVentaScreen()),
+                        MaterialPageRoute(
+                            builder: (context) => NuevaVentaScreen()),
                       );
                     },
                   ),
@@ -79,7 +55,8 @@ class TanqueAdicionalScreen extends StatelessWidget {
                     onPressedNuevaVenta: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => NuevaVentaScreen()),
+                        MaterialPageRoute(
+                            builder: (context) => NuevaVentaScreen()),
                       );
                     },
                   ),
@@ -89,8 +66,6 @@ class TanqueAdicionalScreen extends StatelessWidget {
           ],
         ),
       ),
-
-      bottomNavigationBar: const BottomNavBar(selectedIndex: 3),
     );
   }
 }

@@ -1,6 +1,5 @@
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
 import 'package:flutter/material.dart';
-import 'bottom_nav_bar.dart';
 
 class VentaBidonesScreen extends StatefulWidget {
   const VentaBidonesScreen({Key? key}) : super(key: key);
@@ -30,7 +29,8 @@ class _VentaBidonesScreenState extends State<VentaBidonesScreen> {
               ),
               title: Text(
                 'Registrar nueva venta de $combustible',
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -66,7 +66,8 @@ class _VentaBidonesScreenState extends State<VentaBidonesScreen> {
                     Navigator.pop(context);
                   },
                   icon: const Icon(Icons.cancel, color: Colors.red),
-                  label: const Text('Cancelar', style: TextStyle(color: Colors.red)),
+                  label: const Text('Cancelar',
+                      style: TextStyle(color: Colors.red)),
                 ),
                 ElevatedButton.icon(
                   onPressed: () {
@@ -106,29 +107,6 @@ class _VentaBidonesScreenState extends State<VentaBidonesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.teal),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: const [
-            Text(
-              'EESS Santa Rosa',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            Text(
-              '12/12/2024 00:00 - 08:00',
-              style: TextStyle(fontSize: 12, color: Colors.black54),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.white,
-        elevation: 0,
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -153,7 +131,6 @@ class _VentaBidonesScreenState extends State<VentaBidonesScreen> {
               style: TextStyle(fontSize: 14, color: Colors.black54),
             ),
             const SizedBox(height: 20),
-
             Row(
               children: [
                 Expanded(
@@ -180,8 +157,6 @@ class _VentaBidonesScreenState extends State<VentaBidonesScreen> {
           ],
         ),
       ),
-
-      bottomNavigationBar: const BottomNavBar(selectedIndex: 0),
     );
   }
 }
