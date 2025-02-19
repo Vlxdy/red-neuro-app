@@ -1,19 +1,23 @@
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
 import 'package:control_ventas_movil/src/ui/common/selector_image/multiple_campo_fotografia.dart';
-import 'package:control_ventas_movil/src/ui/pages/registrar_venta/componentes/bottom_nav_bar.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/componentes/usuario_directo_paso2_screen.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/registrar_venta_store.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class UsuarioDirectoScreen extends StatefulWidget {
-  const UsuarioDirectoScreen({Key? key}) : super(key: key);
+final GlobalKey<ScaffoldMessengerState> inicioMessenger =
+    GlobalKey<ScaffoldMessengerState>();
+
+class UsuarioDirectoPage extends StatefulWidget {
+  const UsuarioDirectoPage({super.key});
 
   @override
-  _UsuarioDirectoScreenState createState() => _UsuarioDirectoScreenState();
+  State<UsuarioDirectoPage> createState() => _UsuarioDirectoPageState();
 }
 
-class _UsuarioDirectoScreenState extends State<UsuarioDirectoScreen> {
+class _UsuarioDirectoPageState extends State<UsuarioDirectoPage>
+    with WidgetsBindingObserver {
+  // late InicioService service;
   final TextEditingController ciController = TextEditingController();
   final TextEditingController placaController = TextEditingController();
 
@@ -22,6 +26,13 @@ class _UsuarioDirectoScreenState extends State<UsuarioDirectoScreen> {
       context,
       MaterialPageRoute(builder: (context) => const UsuarioDirectoScreen2()),
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // service = InicioService('', context);
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
@@ -166,7 +177,6 @@ class _UsuarioDirectoScreenState extends State<UsuarioDirectoScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: const BottomNavBar(selectedIndex: 2),
     );
   }
 }

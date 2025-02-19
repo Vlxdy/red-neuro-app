@@ -97,8 +97,8 @@ class LoginService extends ServiceConfig {
         await Auth.instance.login(response.data);
 
         if (context.mounted) {
-          context.goNamed(RouteNames.controlScreen);
-          // context.goNamed(RouteNames.splashScreen);
+          // context.goNamed(RouteNames.controlScreen);
+          context.goNamed(RouteNames.splashScreen);
         }
         store.clean();
       }

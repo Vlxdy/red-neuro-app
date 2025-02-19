@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:control_ventas_movil/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
 import 'package:control_ventas_movil/src/ui/pages/control/control.dart';
+import 'package:control_ventas_movil/src/ui/pages/registrar_venta/registrar_venta.dart';
 import 'package:control_ventas_movil/src/ui/pages/resumen_dia/resumen_dia.dart';
 import 'package:control_ventas_movil/src/ui/pages/seguridad/configuracion_desbloqueo.dart';
 import 'package:control_ventas_movil/src/ui/pages/seguridad/configuracion_pin_seguridad.dart';
@@ -43,6 +44,8 @@ class RouteNames {
   static const modificarPin = 'modificar_pin';
   static const controlScreen = 'control_screen';
   static const resumenDia = 'resumen_dia';
+  static const registrarVenta = 'registrar_venta';
+  // adicionar nuevas rutas
   static const vistaCamara = 'vista_camara';
 
   static const routesConfiguration = [
@@ -124,6 +127,11 @@ List<RouteBase> routes = [
     name: RouteNames.resumenDia,
     path: '/${RouteNames.resumenDia}',
     builder: (context, state) => const ResumenDelDiaPage(),
+  ),
+  GoRoute(
+    name: RouteNames.registrarVenta,
+    path: '/${RouteNames.registrarVenta}',
+    builder: (context, state) => const RegistrarVentaPage(),
   ),
   GoRoute(
       name: RouteNames.vistaCamara,

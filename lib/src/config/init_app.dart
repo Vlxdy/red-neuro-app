@@ -38,7 +38,8 @@ class InitAppController {
       if (pinSeguridad.isEmpty) {
         GoRouter.of(context).goNamed(RouteNames.configurarPinSeguridad);
       } else {
-        GoRouter.of(context).goNamed(RouteNames.resumenDia);
+        // GoRouter.of(context).goNamed(RouteNames.resumenDia);
+        GoRouter.of(context).goNamed(RouteNames.home);
       }
     }
     return;
