@@ -52,7 +52,7 @@ class TanqueAdicionalScreen extends StatelessWidget {
                   ventasRegistradas: ventasDiesel,
                   color: theme.bgBlue,
                   onPressedNuevaVenta: () {
-                    Navigator.pushReplacement(
+                    Navigator.push(
                       context,
                       MaterialPageRoute(
                           builder: (context) => NuevaVentaScreen()),
@@ -64,7 +64,7 @@ class TanqueAdicionalScreen extends StatelessWidget {
                   ventasRegistradas: ventasGasolina,
                   color: Colors.teal,
                   onPressedNuevaVenta: () {
-                    Navigator.pushReplacement(
+                    Navigator.push(
                       context,
                       MaterialPageRoute(
                           builder: (context) => NuevaVentaScreen()),
