@@ -21,6 +21,8 @@ import 'package:control_ventas_movil/src/ui/pages/login/componentes/login_accoun
 import 'package:control_ventas_movil/src/ui/pages/splash_screen.dart';
 import 'package:go_router/go_router.dart';
 
+import '../plugins/camera/camera_screen.dart';
+
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 //Lista de rutas
@@ -44,6 +46,7 @@ class RouteNames {
   static const resumenDia = 'resumen_dia';
   static const registrarVenta = 'registrar_venta';
   // adicionar nuevas rutas
+  static const vistaCamara = 'vista_camara';
 
   static const routesConfiguration = [
     '/$login',
@@ -129,7 +132,11 @@ List<RouteBase> routes = [
     name: RouteNames.registrarVenta,
     path: '/${RouteNames.registrarVenta}',
     builder: (context, state) => const RegistrarVentaPage(),
-  )
+  ),
+  GoRoute(
+      name: RouteNames.vistaCamara,
+      path: '/${RouteNames.vistaCamara}',
+      builder: (context, state) => const CameraScreen()),
 ];
 
 // --------------------------------------------------------------

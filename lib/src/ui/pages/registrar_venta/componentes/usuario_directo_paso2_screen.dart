@@ -1,19 +1,21 @@
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
 import 'package:flutter/material.dart';
-import 'usuario_directo_paso3_screen.dart';
 
-class UsuarioDirectoPaso2Screen extends StatefulWidget {
-  const UsuarioDirectoPaso2Screen({Key? key}) : super(key: key);
+class UsuarioDirectoScreen2 extends StatefulWidget {
+  const UsuarioDirectoScreen2({Key? key}) : super(key: key);
 
   @override
-  _UsuarioDirectoPaso2ScreenState createState() =>
-      _UsuarioDirectoPaso2ScreenState();
+  _UsuarioDirectoScreenState createState() => _UsuarioDirectoScreenState();
 }
 
-class _UsuarioDirectoPaso2ScreenState extends State<UsuarioDirectoPaso2Screen> {
+class _UsuarioDirectoScreenState extends State<UsuarioDirectoScreen2> {
+  final ScrollController _scrollController = ScrollController();
+
   final theme = ThemeController.instance;
+  List<Map<String, String>> autorizaciones = [];
+
   void _mostrarModalAgregarAutorizacion() {
-    String? tipoCombustible = 'Diesel Oil';
+    String tipoCombustible = 'Diesel Oil';
     TextEditingController codigoController = TextEditingController();
     TextEditingController volumenController = TextEditingController();
     TextEditingController observacionController = TextEditingController();
@@ -23,7 +25,7 @@ class _UsuarioDirectoPaso2ScreenState extends State<UsuarioDirectoPaso2Screen> {
       context: context,
       builder: (BuildContext context) {
         return StatefulBuilder(
-          builder: (context, setState) {
+          builder: (context, setStateModal) {
             return AlertDialog(
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -39,15 +41,14 @@ class _UsuarioDirectoPaso2ScreenState extends State<UsuarioDirectoPaso2Screen> {
                 ],
               ),
               content: SingleChildScrollView(
+                controller: _scrollController, // Agregamos el controlador
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
-                      'Tipo de combustible',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                    ),
+                    const Text('Tipo de combustible',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w500)),
                     const SizedBox(height: 4),
                     DropdownButtonFormField<String>(
                       value: tipoCombustible,
@@ -58,49 +59,40 @@ class _UsuarioDirectoPaso2ScreenState extends State<UsuarioDirectoPaso2Screen> {
                             horizontal: 16, vertical: 12),
                       ),
                       items: ['Diesel Oil', 'Gasolina Especial', 'GLP']
-                          .map((item) => DropdownMenuItem(
-                                value: item,
-                                child: Text(item),
-                              ))
+                          .map((item) =>
+                              DropdownMenuItem(value: item, child: Text(item)))
                           .toList(),
                       onChanged: (value) {
-                        setState(() {
-                          tipoCombustible = value;
-                        });
+                        setStateModal(
+                            () => tipoCombustible = value ?? 'Diesel Oil');
                       },
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'Código de autorización',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                    ),
+                    const Text('Código de autorización',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w500)),
                     const SizedBox(height: 4),
                     TextField(
                       controller: codigoController,
                       decoration: InputDecoration(
                         hintText: 'Ej. ABC123',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                            borderRadius: BorderRadius.circular(8)),
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 12),
                       ),
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'Volumen',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                    ),
+                    const Text('Volumen',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w500)),
                     const SizedBox(height: 4),
                     TextField(
                       controller: volumenController,
                       decoration: InputDecoration(
                         hintText: 'Ej. 50',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                            borderRadius: BorderRadius.circular(8)),
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 12),
                       ),
@@ -111,8 +103,18 @@ class _UsuarioDirectoPaso2ScreenState extends State<UsuarioDirectoPaso2Screen> {
                       title: const Text('Agregar una observación'),
                       value: agregarObservacion,
                       onChanged: (bool? value) {
-                        setState(() {
+                        setStateModal(() {
                           agregarObservacion = value ?? false;
+
+                          if (agregarObservacion) {
+                            Future.delayed(Duration(milliseconds: 300), () {
+                              _scrollController.animateTo(
+                                _scrollController.position.maxScrollExtent,
+                                duration: Duration(milliseconds: 500),
+                                curve: Curves.easeOut,
+                              );
+                            });
+                          }
                         });
                       },
                       controlAffinity: ListTileControlAffinity.leading,
@@ -124,8 +126,7 @@ class _UsuarioDirectoPaso2ScreenState extends State<UsuarioDirectoPaso2Screen> {
                         decoration: InputDecoration(
                           hintText: 'Escribe una observación...',
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                              borderRadius: BorderRadius.circular(8)),
                         ),
                       ),
                   ],
@@ -133,25 +134,30 @@ class _UsuarioDirectoPaso2ScreenState extends State<UsuarioDirectoPaso2Screen> {
               ),
               actions: [
                 TextButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
+                  onPressed: () => Navigator.pop(context),
                   icon: const Icon(Icons.cancel, color: Colors.red),
                   label: const Text('Cancelar',
                       style: TextStyle(color: Colors.red)),
                 ),
                 ElevatedButton.icon(
                   onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Autorización agregada')),
-                    );
                     Navigator.pop(context);
+                    setState(() {
+                      autorizaciones.add({
+                        'codigo': codigoController.text,
+                        'combustible': tipoCombustible,
+                        'volumen': volumenController.text,
+                        'observacion': agregarObservacion
+                            ? observacionController.text
+                            : '',
+                      });
+                    });
                   },
                   icon: const Icon(Icons.add, color: Colors.white),
                   label: const Text('Agregar'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.bgBlue,
-                  ),
+                      backgroundColor: theme.bgBlue,
+                      foregroundColor: Colors.white),
                 ),
               ],
             );
@@ -161,11 +167,15 @@ class _UsuarioDirectoPaso2ScreenState extends State<UsuarioDirectoPaso2Screen> {
     );
   }
 
-  void _siguientePaso() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-          builder: (context) => const UsuarioDirectoPaso3Screen()),
+  void _eliminarAutorizacion(int index) {
+    setState(() {
+      autorizaciones.removeAt(index);
+    });
+  }
+
+  void _finalizarProceso() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Proceso finalizado')),
     );
   }
 
@@ -174,80 +184,195 @@ class _UsuarioDirectoPaso2ScreenState extends State<UsuarioDirectoPaso2Screen> {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: theme.bgBlue),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
+            icon: Icon(Icons.arrow_back, color: theme.bgBlue),
+            onPressed: () => Navigator.pop(context)),
         backgroundColor: Colors.white,
         elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
+      body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(Icons.local_gas_station, color: theme.bgBlue, size: 28),
-                SizedBox(width: 8),
-                Text(
-                  'Venta de combustible a\nUSUARIOS DIRECTOS',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: theme.bgBlue,
-                  ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.local_gas_station,
+                            color: theme.bgBlue, size: 28),
+                        SizedBox(width: 8),
+                        Text(
+                          'Venta de combustible a\nUSUARIOS DIRECTOS',
+                          style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: theme.bgBlue),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    const Text('Registrarás una nueva venta de combustible',
+                        style: TextStyle(fontSize: 14, color: Colors.black54)),
+                    const SizedBox(height: 20),
+                    const Text('Autorizaciones',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.w500)),
+                    const SizedBox(height: 8),
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.teal),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: ElevatedButton.icon(
+                        onPressed: _mostrarModalAgregarAutorizacion,
+                        style: ElevatedButton.styleFrom(
+                          elevation: 0,
+                          foregroundColor: Colors.teal,
+                          backgroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        icon: const Icon(Icons.receipt, color: Colors.teal),
+                        label: const Text(
+                          'Agregar autorización',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    if (autorizaciones.isNotEmpty)
+                      Column(
+                        children: List.generate(autorizaciones.length, (index) {
+                          var autorizacion = autorizaciones[index];
+                          return Container(
+                            margin: const EdgeInsets.only(top: 8),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color:
+                                  Colors.teal.withOpacity(0.05), // Fondo claro
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      _buildInfoRow('Cód. autorización',
+                                          autorizacion['codigo']!),
+                                      _buildInfoRow('Tipo combustible',
+                                          autorizacion['combustible']!),
+                                      _buildInfoRow(
+                                          'Volumen', autorizacion['volumen']!),
+                                      if (autorizacion.containsKey('placa') &&
+                                          autorizacion['placa']!.isNotEmpty)
+                                        _buildInfoRow('Nro. de Placa',
+                                            autorizacion['placa']!),
+                                      if (autorizacion
+                                              .containsKey('observacion') &&
+                                          autorizacion['observacion']!
+                                              .isNotEmpty) ...[
+                                        const Text(
+                                          'Observación',
+                                          style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.red),
+                                        ),
+                                        Text(
+                                          autorizacion['observacion']!,
+                                          style: const TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.black87),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete,
+                                      color: Colors.grey),
+                                  onPressed: () => _eliminarAutorizacion(index),
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
+                      ),
+                  ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            const Text(
-              'Registrarás una nueva venta de combustible',
-              style: TextStyle(fontSize: 14, color: Colors.black54),
-            ),
-            const SizedBox(height: 20),
-            const Text(
-              'Paso 2 de 3',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Autorizaciones',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(height: 8),
-            ElevatedButton.icon(
-              onPressed: _mostrarModalAgregarAutorizacion,
-              style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.teal,
-                backgroundColor: Colors.white,
-                side: const BorderSide(color: Colors.teal),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 14),
               ),
-              icon: const Icon(Icons.add, color: Colors.teal),
-              label: const Text('Agregar autorización'),
             ),
-            const Spacer(),
-            ElevatedButton.icon(
-              onPressed: _siguientePaso,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.bgBlue,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+            if (autorizaciones.isNotEmpty)
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Column(
+                  children: [
+                    ElevatedButton.icon(
+                      onPressed: _finalizarProceso,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.bgBlue,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        minimumSize: const Size(double.infinity, 50),
+                      ),
+                      icon: const Icon(Icons.arrow_forward),
+                      label: const Text('Finalizar'),
+                    ),
+                    const SizedBox(height: 10),
+                    TextButton.icon(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      style: TextButton.styleFrom(
+                        foregroundColor: theme.bgBlue,
+                        side: BorderSide(color: theme.bgBlue),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        minimumSize: const Size(double.infinity, 50),
+                      ),
+                      icon: Icon(Icons.cancel, color: theme.bgBlue),
+                      label: const Text('Cancelar'),
+                    ),
+                  ],
                 ),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                minimumSize: const Size(double.infinity, 50),
-              ),
-              icon: const Icon(Icons.arrow_forward),
-              label: const Text('Siguiente'),
-            ),
+              )
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Text(
+            '$label: ',
+            style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.black54),
+          ),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 14, color: Colors.black87),
+          ),
+        ],
       ),
     );
   }

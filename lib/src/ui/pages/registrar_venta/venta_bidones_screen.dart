@@ -1,4 +1,5 @@
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
+import 'package:control_ventas_movil/src/ui/pages/registrar_venta/componentes/combustible_card.dart';
 import 'package:flutter/material.dart';
 
 class VentaBidonesScreen extends StatefulWidget {
@@ -77,8 +78,8 @@ class _VentaBidonesScreenState extends State<VentaBidonesScreen> {
                   icon: const Icon(Icons.check, color: Colors.white),
                   label: const Text('Confirmar'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal,
-                  ),
+                      backgroundColor: Colors.teal,
+                      foregroundColor: Colors.white),
                 ),
               ],
             );
@@ -131,104 +132,30 @@ class _VentaBidonesScreenState extends State<VentaBidonesScreen> {
               style: TextStyle(fontSize: 14, color: Colors.black54),
             ),
             const SizedBox(height: 20),
-            Row(
+            GridView(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                maxCrossAxisExtent: 300,
+                mainAxisExtent: 200,
+                mainAxisSpacing: 16,
+                crossAxisSpacing: 16,
+              ),
               children: [
-                Expanded(
-                  child: _FuelCard(
-                    title: 'Diesel',
-                    ventasRegistradas: ventasDiesel,
-                    color: theme.bgBlue,
-                    icon: Icons.oil_barrel,
-                    onPressedNuevaVenta: _incrementarDiesel,
-                  ),
+                CombustibleCard(
+                  title: 'Diesel',
+                  ventasRegistradas: ventasDiesel,
+                  color: theme.bgBlue,
+                  onPressedNuevaVenta: _incrementarDiesel,
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _FuelCard(
-                    title: 'Gasolina especial',
-                    ventasRegistradas: ventasGasolina,
-                    color: Colors.teal,
-                    icon: Icons.local_gas_station,
-                    onPressedNuevaVenta: _incrementarGasolina,
-                  ),
+                CombustibleCard(
+                  title: 'GASOLINA ULTRA PREMIUM 100',
+                  ventasRegistradas: ventasGasolina,
+                  color: Colors.teal,
+                  onPressedNuevaVenta: _incrementarGasolina,
                 ),
               ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _FuelCard extends StatelessWidget {
-  final String title;
-  final int ventasRegistradas;
-  final Color color;
-  final IconData icon;
-  final VoidCallback onPressedNuevaVenta;
-
-  const _FuelCard({
-    Key? key,
-    required this.title,
-    required this.ventasRegistradas,
-    required this.color,
-    required this.icon,
-    required this.onPressedNuevaVenta,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      elevation: 2,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 28),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Ventas registradas',
-              style: TextStyle(fontSize: 14, color: Colors.black54),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              ventasRegistradas.toString(),
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: onPressedNuevaVenta,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: color,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-              icon: const Icon(Icons.add),
-              label: Text('Nueva venta ${title.toUpperCase()}'),
-            ),
+            )
           ],
         ),
       ),
