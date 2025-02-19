@@ -64,8 +64,8 @@ class _HomePageState extends State<HomePage> {
         children: const VolumenesTanquesScreen(),
       ),
       ChildrenItem(
-        iconoImagen: SolarIconsOutline.shopMinimalistic,
-        iconoImagenSeleccionada: SolarIconsBold.shopMinimalistic,
+        iconoImagen:  SolarIconsOutline.sidebar,
+        iconoImagenSeleccionada: SolarIconsBold.sidebar,
         titulo: 'Registrar Ventas',
         children: const TanqueAdicionalScreen(),
         onTap: () => {GoRouter.of(context).goNamed(RouteNames.registrarVenta)},
