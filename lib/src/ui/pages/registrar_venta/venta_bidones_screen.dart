@@ -132,29 +132,41 @@ class _VentaBidonesScreenState extends State<VentaBidonesScreen> {
               style: TextStyle(fontSize: 14, color: Colors.black54),
             ),
             const SizedBox(height: 20),
-            GridView(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 300,
-                mainAxisExtent: 200,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
+            Expanded(
+              child: GridView(
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 400,
+                  mainAxisExtent: 200,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                ),
+                children: [
+                  CombustibleCard(
+                    title: 'Diesel',
+                    ventasRegistradas: ventasDiesel,
+                    color: theme.bgBlue,
+                    onPressedNuevaVenta: _incrementarDiesel,
+                  ),
+                  CombustibleCard(
+                    title: 'GASOLINA ULTRA PREMIUM 100',
+                    ventasRegistradas: ventasGasolina,
+                    color: Colors.teal,
+                    onPressedNuevaVenta: _incrementarGasolina,
+                  ),
+                  CombustibleCard(
+                    title: 'GASOLINA ULTRA PREMIUM 100',
+                    ventasRegistradas: ventasGasolina,
+                    color: Colors.teal,
+                    onPressedNuevaVenta: _incrementarGasolina,
+                  ),
+                  CombustibleCard(
+                    title: 'GASOLINA ULTRA PREMIUM 100',
+                    ventasRegistradas: ventasGasolina,
+                    color: Colors.teal,
+                    onPressedNuevaVenta: _incrementarGasolina,
+                  ),
+                ],
               ),
-              children: [
-                CombustibleCard(
-                  title: 'Diesel',
-                  ventasRegistradas: ventasDiesel,
-                  color: theme.bgBlue,
-                  onPressedNuevaVenta: _incrementarDiesel,
-                ),
-                CombustibleCard(
-                  title: 'GASOLINA ULTRA PREMIUM 100',
-                  ventasRegistradas: ventasGasolina,
-                  color: Colors.teal,
-                  onPressedNuevaVenta: _incrementarGasolina,
-                ),
-              ],
             )
           ],
         ),
