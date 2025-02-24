@@ -6,7 +6,7 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 
 class DropDown extends StatefulWidget {
-  final List<dynamic> items;
+  final List<Map<String, dynamic>> items;
   final double? width;
   final bool requiredData;
   final GlobalKey<DropdownButton2State> dropKey;
@@ -39,11 +39,15 @@ class DropDown extends StatefulWidget {
 class _DropDownState extends State<DropDown> {
   String? value;
   bool _error = false;
-
   void _openDropdown() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.dropKey.currentState != null) {
-        widget.dropKey.currentState!.callTap();
+        try {
+          widget.dropKey.currentState!.callTap();
+        } catch (e) {
+          Logger.warning(
+              "El dropdown ya está abierto o se produjo un error al abrirlo: $e");
+        }
       } else {
         Logger.warning('DropdownButton2 state is null.');
       }
@@ -51,12 +55,11 @@ class _DropDownState extends State<DropDown> {
   }
 
   List<DropdownMenuItem<String>> _dropItems(List<dynamic> data) {
-    final keys = data;
-    return keys
-        .map((key) => DropdownMenuItem(
-              value: key.toString(),
+    return data
+        .map((key) => DropdownMenuItem<String>(
+              value: key['id'].toString(),
               child: Text(
-                key.toString().capitalize(),
+                key['label'].toString().capitalize(),
                 overflow: TextOverflow.ellipsis,
               ),
             ))

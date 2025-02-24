@@ -1,13 +1,9 @@
-import 'package:control_ventas_movil/src/config/routes.dart';
 import 'package:control_ventas_movil/src/plugins/auth/auth.dart';
-import 'package:control_ventas_movil/src/ui/common/buttons/simple_button.dart';
 import 'package:flutter/material.dart';
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
 import 'package:control_ventas_movil/src/ui/global/template_page.dart';
-import 'package:control_ventas_movil/src/ui/pages/control/control_service.dart';
 import 'package:control_ventas_movil/src/ui/pages/control/control_store.dart';
 import 'package:flutter/services.dart' as services;
-import 'package:go_router/go_router.dart';
 
 import 'componentes/form_control.dart';
 import 'componentes/header_control.dart';
@@ -23,13 +19,10 @@ class Control extends StatefulWidget {
 }
 
 class _ControlState extends State<Control> {
-  late ControlService service;
   final store = ControlStore.instance;
-  final GlobalKey<FormState> _scaffoldingFormKey = GlobalKey<FormState>();
 
   @override
   void initState() {
-    service = ControlService(context);
     // service.cargarDatosIniciales();
     super.initState();
   }
@@ -69,16 +62,7 @@ class _ControlState extends State<Control> {
                   const SizedBox(height: 16),
                   const FormControl(),
                   const SizedBox(height: 16),
-                  SimpleButton(
-                      title: 'Iniciar control',
-                      background: theme.primary700,
-                      textColor: theme.white,
-                      onTap: () {
-                        if (service.validateForm(_scaffoldingFormKey)) {
-                          service.iniciarControl();
-                          GoRouter.of(context).goNamed(RouteNames.resumenDia);
-                        }
-                      }),
+            
                 ],
               ),
             ),
