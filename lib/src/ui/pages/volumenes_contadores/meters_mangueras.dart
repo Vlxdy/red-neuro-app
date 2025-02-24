@@ -1,59 +1,30 @@
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/navbar_volumenes.dart';
+import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/meters_service.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
-class MetersManguerasScreen extends StatelessWidget {
+class MetersManguerasScreen extends StatefulWidget {
   const MetersManguerasScreen({super.key});
+
+  @override
+  State<MetersManguerasScreen> createState() => _MetersManguerasScreen();
+}
+
+class _MetersManguerasScreen extends State<MetersManguerasScreen> {
+  late MeterService service;
+  late Future<List<Map<String, dynamic>>> futureMeters;
+
+  @override
+  void initState() {
+    super.initState();
+    service = MeterService('/mobile', context);
+    futureMeters = service.getMetersListado();
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = ThemeController.instance;
-
-    final List<Map<String, Object>> volumenes = [
-      {
-        'hora': '08:20',
-        'dispensador': '01',
-        'mangueras': [
-          {'id': 1, 'combustible': 'DO', 'contador': '15003'},
-          {'id': 2, 'combustible': 'GE', 'contador': '20450'},
-          {'id': 3, 'combustible': 'GE', 'contador': '11450'},
-        ]
-      },
-      {
-        'hora': '08:25',
-        'dispensador': '02',
-        'mangueras': [
-          {'id': 1, 'combustible': 'DO', 'contador': '20000'},
-        ]
-      },
-      {
-        'hora': '08:20',
-        'dispensador': '01',
-        'mangueras': [
-          {'id': 1, 'combustible': 'DO', 'contador': '15003'},
-          {'id': 2, 'combustible': 'GE', 'contador': '20450'},
-          {'id': 3, 'combustible': 'GE', 'contador': '11450'},
-        ]
-      },
-      {
-        'hora': '08:20',
-        'dispensador': '01',
-        'mangueras': [
-          {'id': 1, 'combustible': 'DO', 'contador': '15003'},
-          {'id': 2, 'combustible': 'GE', 'contador': '20450'},
-          {'id': 3, 'combustible': 'GE', 'contador': '11450'},
-        ]
-      },
-      {
-        'hora': '08:20',
-        'dispensador': '01',
-        'mangueras': [
-          {'id': 1, 'combustible': 'DO', 'contador': '15003'},
-          {'id': 2, 'combustible': 'GE', 'contador': '20450'},
-          {'id': 3, 'combustible': 'GE', 'contador': '11450'},
-        ]
-      },
-    ];
 
     return Scaffold(
       appBar: AppBar(
@@ -86,7 +57,7 @@ class MetersManguerasScreen extends StatelessWidget {
                 Icon(Icons.speed, color: theme.bgBlue, size: 28),
                 const SizedBox(width: 8),
                 Text(
-                  'Meters de Manguera',
+                  'Meters de Mangueras',
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -106,84 +77,193 @@ class MetersManguerasScreen extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 10),
-            const SizedBox(height: 10),
             Expanded(
-              child: ListView.builder(
-                itemCount: volumenes.length,
-                itemBuilder: (context, index) {
-                  final volumen = volumenes[index];
-                  return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Hora: ${volumen['hora']}  -  Dispensador: ${volumen['dispensador']}',
-                            style: const TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(height: 8),
-                          Column(
+              child: FutureBuilder<List<Map<String, dynamic>>>(
+                future: futureMeters,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (snapshot.hasError) {
+                    return const Center(child: Text('Error al cargar datos'));
+                  }
+                  final data = snapshot.data ?? [];
+
+                  if (data.isEmpty) {
+                    return const Center(
+                        child: Text('No hay datos disponibles'));
+                  }
+
+                  return ListView.builder(
+                    itemCount: data.length,
+                    itemBuilder: (context, index) {
+                      final volumen = data[index];
+                      final hora = DateFormat('HH:mm')
+                          .format(DateTime.parse(volumen['hora']));
+
+                      return Card(
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text('Manguera',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  Text('Combustible',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                  Text('Contador',
-                                      style: TextStyle(
-                                          fontWeight: FontWeight.bold)),
-                                ],
+                              Text(
+                                'Hora: $hora',
+                                style: const TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
                               ),
-                              const Divider(),
-                              ...(volumen['mangueras'] as List)
-                                  .map((manguera) => Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                            vertical: 4),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
+                              const SizedBox(height: 8),
+                              // Mapeo de los dispensadores
+                              ...(volumen['dispensadores'] as List)
+                                  .map((dispensador) {
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Dispensador
+                                    Text(
+                                      'Dispensador: ${dispensador['codigo']}',
+                                      style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    // Mapeo de las mangueras del dispensador
+                                    Table(
+                                      // Eliminar borde de la tabla
+                                      children: [
+                                        // Fila para los encabezados de los campos
+                                        const TableRow(
+                                          /* decoration: BoxDecoration(
+                                              color: Colors.blueAccent), */
                                           children: [
-                                            Expanded(
+                                            Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                  vertical: 8.0),
                                               child: Center(
                                                 child: Text(
-                                                    '${(volumen['mangueras'] as List).indexOf(manguera) + 1}'),
-                                              ),
-                                            ),
-                                            Expanded(
-                                              child: Center(
-                                                child: CircleAvatar(
-                                                  backgroundColor:
-                                                      Colors.blueAccent,
-                                                  child: Text(
-                                                    manguera['combustible'],
-                                                    style: const TextStyle(
-                                                        color: Colors.white),
-                                                  ),
+                                                  'Manguera',
+                                                  style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: Colors.black),
                                                 ),
                                               ),
                                             ),
-                                            Expanded(
+                                            Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                  vertical: 8.0),
                                               child: Center(
                                                 child: Text(
-                                                    '${manguera['contador']}'),
+                                                  'Combustible',
+                                                  style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: Colors.black),
+                                                ),
+                                              ),
+                                            ),
+                                            Padding(
+                                              padding: EdgeInsets.symmetric(
+                                                  vertical: 8.0),
+                                              child: Center(
+                                                child: Text(
+                                                  'Contador',
+                                                  style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: Colors.black),
+                                                ),
                                               ),
                                             ),
                                           ],
                                         ),
-                                      )),
+                                        // Mapeo de las mangueras
+                                        ...(dispensador['mangueras'] as List)
+                                            .asMap()
+                                            .entries
+                                            .map((entry) {
+                                          final indexM = entry.key;
+                                          final manguera = entry.value;
+                                          // Obtener el color hexadecimal del combustible
+                                          String hexColor =
+                                              manguera['combustible']
+                                                  ['combustiblecolor'];
+                                          Color color = Color(int.parse(
+                                              '0xFF${hexColor.substring(1)}'));
+
+                                          return TableRow(
+                                            decoration: BoxDecoration(
+                                              color: indexM.isEven
+                                                  ? theme.primary50
+                                                  : theme.white,
+                                            ),
+                                            children: [
+                                              Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 8.0),
+                                                child: Center(
+                                                    //child: Text('${indexM + 1}'),
+                                                    child: Text(
+                                                        manguera['codigo'])),
+                                              ),
+                                              Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 8.0),
+                                                child: Center(
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                      color:
+                                                          color, // Color dinámico
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              12),
+                                                    ),
+                                                    //width: 90, // Ancho fijo
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                        vertical: 6.0,
+                                                        horizontal: 12.0),
+                                                    child: Align(
+                                                      alignment: Alignment
+                                                          .center, // Alineación central
+                                                      child: Text(
+                                                        manguera['combustible'][
+                                                            'combustiblecodigo'],
+                                                        style: const TextStyle(
+                                                            color:
+                                                                Colors.white),
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                              Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 8.0),
+                                                child: Center(
+                                                  child: Text(
+                                                      '${manguera['meter']}'),
+                                                ),
+                                              ),
+                                            ],
+                                          );
+                                        }),
+                                      ],
+                                    ),
+                                  ],
+                                );
+                              }),
                             ],
-                          )
-                        ],
-                      ),
-                    ),
+                          ),
+                        ),
+                      );
+                    },
                   );
                 },
               ),
