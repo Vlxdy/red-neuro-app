@@ -165,7 +165,7 @@ class _InicioPageState extends State<InicioPage> with WidgetsBindingObserver {
   }) {
     return Card(
       elevation: 1,
-      color: theme.accent900,
+      color: theme.primary,
       margin: const EdgeInsets.symmetric(vertical: 4),
       child: ListTile(
         leading: Text(

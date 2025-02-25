@@ -1,4 +1,5 @@
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
+import 'package:control_ventas_movil/src/ui/common/buttons/simple_button.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/navbar_volumenes.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/meters_service.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/componentes/form_registro_contadores_control.dart';
@@ -56,14 +57,14 @@ class _MetersManguerasScreen extends State<MetersManguerasScreen> {
           children: [
             Row(
               children: [
-                Icon(Icons.speed, color: theme.bgBlue, size: 28),
+                Icon(Icons.speed, color: theme.primary, size: 28),
                 const SizedBox(width: 8),
                 Text(
                   'Meters de Mangueras',
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: theme.bgBlue,
+                    color: theme.primary,
                   ),
                 ),
               ],
@@ -71,13 +72,12 @@ class _MetersManguerasScreen extends State<MetersManguerasScreen> {
             Row(
               children: [
                 Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {
-                      showRegistroContadoresModal(context);
-                    },
-                    child: const Text('+ Registrar contadores'),
-                  ),
-                ),
+                    child: SimpleButton(
+                  title: '+ Registrar contadores',
+                  onTap: () {
+                    showRegistroContadoresModal(context);
+                  },
+                )),
               ],
             ),
             const SizedBox(height: 10),
@@ -137,7 +137,7 @@ class _MetersManguerasScreen extends State<MetersManguerasScreen> {
                                       // Eliminar borde de la tabla
                                       children: [
                                         // Fila para los encabezados de los campos
-                                        const TableRow(
+                                        TableRow(
                                           /* decoration: BoxDecoration(
                                               color: Colors.blueAccent), */
                                           children: [
@@ -150,7 +150,7 @@ class _MetersManguerasScreen extends State<MetersManguerasScreen> {
                                                   style: TextStyle(
                                                       fontWeight:
                                                           FontWeight.bold,
-                                                      color: Colors.black),
+                                                      color: theme.black),
                                                 ),
                                               ),
                                             ),
@@ -163,7 +163,7 @@ class _MetersManguerasScreen extends State<MetersManguerasScreen> {
                                                   style: TextStyle(
                                                       fontWeight:
                                                           FontWeight.bold,
-                                                      color: Colors.black),
+                                                      color: theme.black),
                                                 ),
                                               ),
                                             ),
@@ -176,7 +176,7 @@ class _MetersManguerasScreen extends State<MetersManguerasScreen> {
                                                   style: TextStyle(
                                                       fontWeight:
                                                           FontWeight.bold,
-                                                      color: Colors.black),
+                                                      color: theme.black),
                                                 ),
                                               ),
                                             ),
@@ -236,9 +236,8 @@ class _MetersManguerasScreen extends State<MetersManguerasScreen> {
                                                       child: Text(
                                                         manguera['combustible'][
                                                             'combustiblecodigo'],
-                                                        style: const TextStyle(
-                                                            color:
-                                                                Colors.white),
+                                                        style: TextStyle(
+                                                            color: theme.white),
                                                         overflow: TextOverflow
                                                             .ellipsis,
                                                       ),

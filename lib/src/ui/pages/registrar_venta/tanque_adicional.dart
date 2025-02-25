@@ -13,28 +13,29 @@ class TanqueAdicionalScreen extends StatelessWidget {
     final int ventasGasolina = 22;
 
     return Scaffold(
+      backgroundColor: theme.background,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              children: const [
-                Icon(Icons.local_gas_station, color: Colors.teal, size: 28),
+              children: [
+                Icon(Icons.local_gas_station, color: theme.primary, size: 28),
                 SizedBox(width: 8),
                 Text(
                   'Tanque adicional',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Colors.teal,
+                    color: theme.primary,
                   ),
                 ),
               ],
             ),
-            const Text(
+            Text(
               'Venta de combustible a vehículos con DOBLE TANQUE',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+              style: TextStyle(fontSize: 14, color: theme.primary),
             ),
             const SizedBox(height: 20),
             GridView(
@@ -50,7 +51,7 @@ class TanqueAdicionalScreen extends StatelessWidget {
                 CombustibleCard(
                   title: 'Diesel',
                   ventasRegistradas: ventasDiesel,
-                  color: theme.bgBlue,
+                  color: theme.primary,
                   onPressedNuevaVenta: () {
                     Navigator.push(
                       context,
@@ -62,7 +63,7 @@ class TanqueAdicionalScreen extends StatelessWidget {
                 CombustibleCard(
                   title: 'GASOLINA ULTRA PREMIUM 100',
                   ventasRegistradas: ventasGasolina,
-                  color: Colors.teal,
+                  color: theme.secondary,
                   onPressedNuevaVenta: () {
                     Navigator.push(
                       context,

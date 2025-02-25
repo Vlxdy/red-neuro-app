@@ -32,7 +32,7 @@ class _UsuarioDirectoScreenState extends State<UsuarioDirectoScreen2> {
               ),
               title: Row(
                 children: [
-                  Icon(Icons.receipt, color: theme.bgBlue),
+                  Icon(Icons.receipt, color: theme.secondary),
                   SizedBox(width: 8),
                   Text(
                     'Agregar autorización',
@@ -135,9 +135,9 @@ class _UsuarioDirectoScreenState extends State<UsuarioDirectoScreen2> {
               actions: [
                 TextButton.icon(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.cancel, color: Colors.red),
-                  label: const Text('Cancelar',
-                      style: TextStyle(color: Colors.red)),
+                  icon: Icon(Icons.cancel, color: theme.error),
+                  label: Text('Cancelar',
+                      style: TextStyle(color: theme.error)),
                 ),
                 ElevatedButton.icon(
                   onPressed: () {
@@ -153,11 +153,11 @@ class _UsuarioDirectoScreenState extends State<UsuarioDirectoScreen2> {
                       });
                     });
                   },
-                  icon: const Icon(Icons.add, color: Colors.white),
+                  icon: Icon(Icons.add, color: theme.white),
                   label: const Text('Agregar'),
                   style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.bgBlue,
-                      foregroundColor: Colors.white),
+                      backgroundColor: theme.secondary,
+                      foregroundColor: theme.white),
                 ),
               ],
             );
@@ -182,13 +182,31 @@ class _UsuarioDirectoScreenState extends State<UsuarioDirectoScreen2> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: theme.background,
       appBar: AppBar(
-        leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: theme.bgBlue),
-            onPressed: () => Navigator.pop(context)),
-        backgroundColor: Colors.white,
+        backgroundColor: theme.background,
         elevation: 0,
+        title: Row(
+          children: [
+            Icon(Icons.local_gas_station, color: theme.secondary, size: 28),
+            SizedBox(width: 8),
+            Expanded( // Permite que el texto se ajuste sin desbordar
+              child: Text(
+                'Venta de combustible a\nUsuarios Directos',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: theme.secondary,
+                ),
+                overflow: TextOverflow.ellipsis, // Evita el desbordamiento
+                maxLines: 2,
+              ),
+            ),
+          ],
+        ),
       ),
+
+
       body: SafeArea(
         child: Column(
           children: [
@@ -198,23 +216,26 @@ class _UsuarioDirectoScreenState extends State<UsuarioDirectoScreen2> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Icon(Icons.local_gas_station,
-                            color: theme.bgBlue, size: 28),
-                        SizedBox(width: 8),
-                        Text(
-                          'Venta de combustible a\nUSUARIOS DIRECTOS',
-                          style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: theme.bgBlue),
-                        ),
-                      ],
-                    ),
+                    // Row(
+                    //   children: [
+                    //     IconButton(
+                    //         icon: Icon(Icons.arrow_back, color: theme.secondary),
+                    //         onPressed: () => Navigator.pop(context)),
+                    //     Icon(Icons.local_gas_station,
+                    //         color: theme.secondary, size: 28),
+                    //     SizedBox(width: 8),
+                    //     Text(
+                    //       'Venta de combustible a\nUSUARIOS DIRECTOS',
+                    //       style: TextStyle(
+                    //           fontSize: 22,
+                    //           fontWeight: FontWeight.bold,
+                    //           color: theme.secondary),
+                    //     ),
+                    //   ],
+                    // ),
                     const SizedBox(height: 6),
-                    const Text('Registrarás una nueva venta de combustible',
-                        style: TextStyle(fontSize: 14, color: Colors.black54)),
+                    Text('Registrarás una nueva venta de combustible',
+                        style: TextStyle(fontSize: 14, color: theme.secondary)),
                     const SizedBox(height: 20),
                     const Text('Autorizaciones',
                         style: TextStyle(
@@ -223,20 +244,20 @@ class _UsuarioDirectoScreenState extends State<UsuarioDirectoScreen2> {
                     Container(
                       width: double.infinity,
                       decoration: BoxDecoration(
-                        border: Border.all(color: Colors.teal),
+                        border: Border.all(color: theme.primary),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: ElevatedButton.icon(
                         onPressed: _mostrarModalAgregarAutorizacion,
                         style: ElevatedButton.styleFrom(
                           elevation: 0,
-                          foregroundColor: Colors.teal,
-                          backgroundColor: Colors.white,
+                          foregroundColor: theme.primary,
+                          backgroundColor: theme.white,
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8)),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                         ),
-                        icon: const Icon(Icons.receipt, color: Colors.teal),
+                        icon: Icon(Icons.receipt, color: theme.primary),
                         label: const Text(
                           'Agregar autorización',
                           style: TextStyle(
@@ -254,7 +275,7 @@ class _UsuarioDirectoScreenState extends State<UsuarioDirectoScreen2> {
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               color:
-                                  Colors.teal.withOpacity(0.05), // Fondo claro
+                                  theme.primary.withOpacity(0.05), // Fondo claro
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Row(
@@ -279,26 +300,26 @@ class _UsuarioDirectoScreenState extends State<UsuarioDirectoScreen2> {
                                               .containsKey('observacion') &&
                                           autorizacion['observacion']!
                                               .isNotEmpty) ...[
-                                        const Text(
+                                         Text(
                                           'Observación',
                                           style: TextStyle(
                                               fontSize: 14,
                                               fontWeight: FontWeight.bold,
-                                              color: Colors.red),
+                                              color: theme.error),
                                         ),
                                         Text(
                                           autorizacion['observacion']!,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                               fontSize: 12,
-                                              color: Colors.black87),
+                                              color: theme.black),
                                         ),
                                       ],
                                     ],
                                   ),
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.delete,
-                                      color: Colors.grey),
+                                  icon: Icon(Icons.delete,
+                                      color: theme.grey),
                                   onPressed: () => _eliminarAutorizacion(index),
                                 ),
                               ],
@@ -319,8 +340,8 @@ class _UsuarioDirectoScreenState extends State<UsuarioDirectoScreen2> {
                     ElevatedButton.icon(
                       onPressed: _finalizarProceso,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: theme.bgBlue,
-                        foregroundColor: Colors.white,
+                        backgroundColor: theme.secondary,
+                        foregroundColor: theme.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -336,15 +357,15 @@ class _UsuarioDirectoScreenState extends State<UsuarioDirectoScreen2> {
                         Navigator.pop(context);
                       },
                       style: TextButton.styleFrom(
-                        foregroundColor: theme.bgBlue,
-                        side: BorderSide(color: theme.bgBlue),
+                        foregroundColor: theme.secondary,
+                        side: BorderSide(color: theme.secondary),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         minimumSize: const Size(double.infinity, 50),
                       ),
-                      icon: Icon(Icons.cancel, color: theme.bgBlue),
+                      icon: Icon(Icons.cancel, color: theme.secondary),
                       label: const Text('Cancelar'),
                     ),
                   ],
@@ -363,14 +384,14 @@ class _UsuarioDirectoScreenState extends State<UsuarioDirectoScreen2> {
         children: [
           Text(
             '$label: ',
-            style: const TextStyle(
+            style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: Colors.black54),
+                color: theme.black),
           ),
           Text(
             value,
-            style: const TextStyle(fontSize: 14, color: Colors.black87),
+            style: TextStyle(fontSize: 14, color: theme.black),
           ),
         ],
       ),

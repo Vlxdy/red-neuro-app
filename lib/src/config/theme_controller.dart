@@ -24,7 +24,7 @@ class ThemeController {
       isLight ? Theming.primaryColor900 : Theming.primaryDarkColor900;
 
   // secondary
-  Color get secondary => Theming.secondaryColor500;
+  Color get secondary => Theming.primaryDarkColor100;
   // Accent
   Color get accent50 => Theming.accentColor50;
   Color get accent100 => Theming.accentColor100;

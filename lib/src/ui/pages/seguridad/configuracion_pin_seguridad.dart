@@ -168,7 +168,7 @@ class _ConfiguracionPinSeguridadState extends State<ConfiguracionPinSeguridad>
                         ),
                         child: ListTile(
                           leading: Icon(SolarIconsOutline.infoCircle,
-                              color: theme.bgBlue),
+                              color: theme.secondary),
                           title: const Text(
                               style: TextStyle(fontSize: 12, height: 1.4),
                               'Recuerda ingresar una combinación de números para tu pin de seguridad que solo tú conozcas.'),

@@ -139,8 +139,8 @@ class _HomePageState extends State<HomePage> {
                 systemOverlayStyle: SystemUiOverlayStyle(
                     statusBarBrightness:
                         theme.isDark ? Brightness.dark : Brightness.light,
-                    statusBarColor: theme.transparent),
-                backgroundColor: Colors.transparent,
+                    statusBarColor: theme.background),
+                backgroundColor: theme.white,
                 centerTitle: false,
               ),
               body: Column(
@@ -162,7 +162,7 @@ class _HomePageState extends State<HomePage> {
                                     .goNamed(RouteNames.procesarSesion);
                               },
                               icon: Icon(
-                                color: theme.warning,
+                                color: theme.primary,
                                 isLocked
                                     ? SolarIconsBold.lockKeyhole
                                     : SolarIconsBold.lockKeyholeUnlocked,

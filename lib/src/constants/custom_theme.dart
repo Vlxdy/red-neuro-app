@@ -11,6 +11,7 @@ class Theming {
 
   // TODO: pendiente colores dark
   static const primaryDarkColor50 = Color(0xFF1D1C4A);
+  static const primaryDarkColor100 = Color(0xFF5E518F);
   static const primaryDarkColor200 = Color(0xFF3532A1);
   static const primaryDarkColor500 = Color(0xFF666EEE);
   static const primaryDarkColor700 = Color(0xFF8392F6);

@@ -1,3 +1,4 @@
+import 'package:control_ventas_movil/src/ui/common/buttons/simple_button.dart';
 import 'package:flutter/material.dart';
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
 
@@ -21,7 +22,7 @@ class VentaCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 2,
-      color: Colors.white,
+      color: theme.accent50,
       margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
@@ -32,7 +33,7 @@ class VentaCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             CircleAvatar(
-              backgroundColor: theme.primary200,
+              backgroundColor: theme.primary,
               radius: 20,
               child: Icon(iconData, color: theme.white, size: 20),
             ),
@@ -47,15 +48,10 @@ class VentaCard extends StatelessWidget {
                 ),
               ),
             ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.primary200,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              onPressed: () => _showFuelDetails(context),
-              child: const Text('Ver Detalles', style: TextStyle(color: Colors.white)),
+            SimpleButton(
+              onTap: () => _showFuelDetails(context),
+              title: "Ver Detalle",
+              background: theme.primary,
             ),
             const SizedBox(width: 12),
             Text(
@@ -90,19 +86,19 @@ class VentaCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: theme.primary200,
+                  color: theme.primary,
                 ),
               ),
               const SizedBox(height: 12),
               ...combustibles.entries.map(
                     (entry) => ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: theme.primary200.withOpacity(0.3),
-                    child: Icon(Icons.local_gas_station, color: theme.primary200),
+                    backgroundColor: theme.primary.withOpacity(0.3),
+                    child: Icon(Icons.local_gas_station, color: theme.primary),
                   ),
                   title: Text(
                     entry.key,
-                    style: TextStyle(fontWeight: FontWeight.bold, color: theme.primary200),
+                    style: TextStyle(fontWeight: FontWeight.bold, color: theme.primary),
                   ),
                   trailing: Text(
                     entry.value,

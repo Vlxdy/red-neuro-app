@@ -156,7 +156,7 @@ class _PrincipalPage extends State<PrincipalPage> with WidgetsBindingObserver {
                                                                 .tipo ==
                                                             TipoAsociacion
                                                                 .poseedor.name
-                                                        ? theme.bgBlue
+                                                        ? theme.secondary
                                                         : asignacionUsuario
                                                                     .tipo ==
                                                                 TipoAsociacion
