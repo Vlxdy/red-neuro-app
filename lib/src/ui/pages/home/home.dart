@@ -1,10 +1,12 @@
 import 'package:control_ventas_movil/src/config/routes.dart';
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
 import 'package:control_ventas_movil/src/plugins/auth/auth.dart';
+import 'package:control_ventas_movil/src/plugins/bitacora/bitacora.dart';
 import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
 import 'package:control_ventas_movil/src/ui/common/keep_alive_page.dart';
 import 'package:control_ventas_movil/src/ui/global/template_page.dart';
 import 'package:control_ventas_movil/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
+import 'package:control_ventas_movil/src/ui/pages/control/control.dart';
 import 'package:control_ventas_movil/src/ui/pages/mi_cuenta/mi_cuenta.dart';
 import 'package:control_ventas_movil/src/ui/pages/resumen_dia/resumen_dia.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/volumenes_tanques.dart';
@@ -26,7 +28,6 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   final PageController controller = PageController(initialPage: 0);
-
   late List<ChildrenItem> _itemsChildren;
 
   @override
@@ -77,16 +78,34 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  bool verificarBitacora() {
+    final bitacora = BitacoraStore.instance.bitacora;
+    final DateTime? bitacoraFecha = bitacora.fecha;
+    if (bitacora.id != '' && bitacoraFecha?.day == DateTime.now().day) {
+      Logger.info('entraaa');
+      Logger.info(bitacora.toString());
+      return true;
+    } else {
+      Logger.info('no entraaa');
+      Logger.info(bitacora.id);
+      return false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = ThemeController.instance;
     final isLocked = Auth.instance.isLocked;
+    final existeBitacora = verificarBitacora();
+    final bitacora = BitacoraStore.instance.bitacora.id;
+
     _itemsChildren = [
       ChildrenItem(
-          iconoImagen: SolarIconsOutline.chart_2,
-          iconoImagenSeleccionada: SolarIconsBold.chart_2,
-          titulo: 'Resumen\ndel Día',
-          children: const KeepAlivePage(child: ResumenDelDiaPage())),
+        iconoImagen: SolarIconsOutline.chart_2,
+        iconoImagenSeleccionada: SolarIconsBold.chart_2,
+        titulo: 'Resumen\ndel Día',
+        children: const KeepAlivePage(child: ResumenDelDiaPage()),
+      ),
       ChildrenItem(
         iconoImagen: SolarIconsOutline.checklistMinimalistic,
         iconoImagenSeleccionada: SolarIconsBold.checklistMinimalistic,
@@ -107,128 +126,130 @@ class _HomePageState extends State<HomePage> {
               await context.pushNamed<String>(RouteNames.registrarVenta)),
     ];
 
-    return TemplatePage(
-      page: ScaffoldMessenger(
-          child: Scaffold(
-        backgroundColor: theme.background,
-        appBar: AppBar(
-          toolbarHeight: 0,
-          scrolledUnderElevation: 0,
-          elevation: 0,
-          systemOverlayStyle: SystemUiOverlayStyle(
-              statusBarBrightness:
-                  theme.isDark ? Brightness.dark : Brightness.light,
-              statusBarColor: theme.transparent),
-          backgroundColor: Colors.transparent,
-          centerTitle: false,
-        ),
-        body: 
-        
-        
-        
-        Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-                Icon(Icons.info, color: theme.primary, size: 28),
-                const SizedBox(width: 20),
-                Icon(Icons.notifications, color: theme.primary, size: 28),
-                const SizedBox(width: 10),
-                IconButton(
-                    onPressed: () {
-                      Auth.instance.isLocked = true;
-                      GoRouter.of(context).goNamed(RouteNames.procesarSesion);
-                    },
-                    icon: Icon(
-                      color: theme.warning,
-                      isLocked
-                          ? SolarIconsBold.lockKeyhole
-                          : SolarIconsBold.lockKeyholeUnlocked,
-                      size: 28,
-                    )),
-                IconButton(
-                    onPressed: () {
-                      setState(() {
-                        Logger.info('Vista Mi Cuenta');
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const Micuenta(),
-                          ),
-                        );
-                      });
-                    },
-                    icon: Icon(
-                      color: theme.primary,
-                      SolarIconsBold.settings,
-                      size: 28,
-                    )),
-              ]),
-            ),
-            const SizedBox(
-              height: 10,
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Row(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      'EESS Santa Rosa',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: theme.black,
-                      ),
-                    ),
-                    Text(
-                      '12/12/2024 00:00 - 08:00',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: theme.black,
-                      ),
-                    ),
-                  ]),
-            ),
-            Expanded(
-              child: PageView(
-                physics: const NeverScrollableScrollPhysics(),
-                controller: controller,
-                onPageChanged: (pageIndex) {
-                  setState(() {
-                    _selectedIndex = pageIndex;
-                  });
-                },
-                children: _itemsChildren
-                    .map((item) => item.children ?? Container())
-                    .toList(),
+    return !existeBitacora
+        ? const Control()
+        : TemplatePage(
+            page: ScaffoldMessenger(
+                child: Scaffold(
+              backgroundColor: theme.background,
+              appBar: AppBar(
+                toolbarHeight: 0,
+                scrolledUnderElevation: 0,
+                elevation: 0,
+                systemOverlayStyle: SystemUiOverlayStyle(
+                    statusBarBrightness:
+                        theme.isDark ? Brightness.dark : Brightness.light,
+                    statusBarColor: theme.transparent),
+                backgroundColor: Colors.transparent,
+                centerTitle: false,
               ),
-            ),
-          ],
-        ),
-        bottomNavigationBar: BottomAppBar(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: _itemsChildren.asMap().entries.map((entry) {
-              int index = entry.key;
-              ChildrenItem item = entry.value;
-              return buildNavItem(
-                index == _selectedIndex
-                    ? item.iconoImagenSeleccionada
-                    : item.iconoImagen,
-                item.titulo,
-                index,
-                item.onTap,
-                item.color,
-              );
-            }).toList(),
-          ),
-        ),
-      )),
-    );
+              body: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Icon(Icons.info, color: theme.primary, size: 28),
+                          const SizedBox(width: 20),
+                          Icon(Icons.notifications,
+                              color: theme.primary, size: 28),
+                          const SizedBox(width: 10),
+                          IconButton(
+                              onPressed: () {
+                                Auth.instance.isLocked = true;
+                                GoRouter.of(context)
+                                    .goNamed(RouteNames.procesarSesion);
+                              },
+                              icon: Icon(
+                                color: theme.warning,
+                                isLocked
+                                    ? SolarIconsBold.lockKeyhole
+                                    : SolarIconsBold.lockKeyholeUnlocked,
+                                size: 28,
+                              )),
+                          IconButton(
+                              onPressed: () {
+                                setState(() {
+                                  Logger.info('Vista Mi Cuenta');
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => const Micuenta(),
+                                    ),
+                                  );
+                                });
+                              },
+                              icon: Icon(
+                                color: theme.primary,
+                                SolarIconsBold.settings,
+                                size: 28,
+                              )),
+                        ]),
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: Row(
+                        mainAxisSize: MainAxisSize.max,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text(
+                            'EESS Santa Rosa $bitacora',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: theme.black,
+                            ),
+                          ),
+                          Text(
+                            '12/12/2024 00:00 - 08:00',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: theme.black,
+                            ),
+                          ),
+                        ]),
+                  ),
+                  Expanded(
+                    child: PageView(
+                      physics: const NeverScrollableScrollPhysics(),
+                      controller: controller,
+                      onPageChanged: (pageIndex) {
+                        setState(() {
+                          _selectedIndex = pageIndex;
+                        });
+                      },
+                      children: _itemsChildren
+                          .map((item) => item.children ?? Container())
+                          .toList(),
+                    ),
+                  ),
+                ],
+              ),
+              bottomNavigationBar: BottomAppBar(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: _itemsChildren.asMap().entries.map((entry) {
+                    int index = entry.key;
+                    ChildrenItem item = entry.value;
+                    return buildNavItem(
+                      index == _selectedIndex
+                          ? item.iconoImagenSeleccionada
+                          : item.iconoImagen,
+                      item.titulo,
+                      index,
+                      item.children != null ? null : item.onTap,
+                      item.color,
+                    );
+                  }).toList(),
+                ),
+              ),
+            )),
+          );
   }
 }
 

@@ -5,7 +5,7 @@ class LoadingAnimation with ChangeNotifier {
   static final instance = LoadingAnimation._();
 
   late OverlayState _overlayState;
-  late OverlayEntry? _overlayEntry;
+  OverlayEntry? _overlayEntry;
 
   bool _isLoading = false;
 
