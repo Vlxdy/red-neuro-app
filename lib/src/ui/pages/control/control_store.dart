@@ -1,26 +1,35 @@
+import 'package:control_ventas_movil/src/models/estacion_servicio.dart';
+import 'package:control_ventas_movil/src/models/horario.dart';
 import 'package:flutter/foundation.dart';
 
 class ControlStore with ChangeNotifier {
   ControlStore._();
   static final instance = ControlStore._();
 
-  List<String> _estaciones = [];
-  List<String> _horarios = [];
+  bool _cargando = false;
+  bool get cargando => _cargando;
+  set cargando(bool val) {
+    _cargando = val;
+    notifyListeners();
+  }
+
+  List<EstacionServicio> _estaciones = [];
+  List<Horario> _horarios = [];
 
   String? _estacionSeleccionada;
   String? _horarioSeleccionado;
 
-  List<String> get estaciones => _estaciones;
-  List<String> get horarios => _horarios;
+  List<EstacionServicio> get estaciones => _estaciones;
+  List<Horario> get horarios => _horarios;
   String? get estacionSeleccionada => _estacionSeleccionada;
   String? get horarioSeleccionado => _horarioSeleccionado;
 
-  set estaciones(List<String> value) {
+  set estaciones(List<EstacionServicio> value) {
     _estaciones = value;
     notifyListeners();
   }
 
-  set horarios(List<String> value) {
+  set horarios(List<Horario> value) {
     _horarios = value;
     notifyListeners();
   }

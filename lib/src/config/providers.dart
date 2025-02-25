@@ -1,5 +1,6 @@
 import 'package:control_ventas_movil/src/plugins/camera/camera_screen_store.dart';
 import 'package:control_ventas_movil/src/ui/pages/cambiar_contrasena/cambiar_contrasena_store.dart';
+import 'package:control_ventas_movil/src/ui/pages/control/control_store.dart';
 import 'package:control_ventas_movil/src/ui/pages/inicio/inicio_store.dart';
 import 'package:control_ventas_movil/src/ui/pages/principal_page/principal_page_store.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/registrar_venta_store.dart';
@@ -18,6 +19,7 @@ List<SingleChildWidget> proveedores(BuildContext context) => [
       ChangeNotifierProvider(create: (context) => CodigoPinStore.instance),
       ChangeNotifierProvider(create: (context) => RegistrarVentaStore.instance),
       ChangeNotifierProvider(create: (context) => CameraScreenStore.instance),
+      ChangeNotifierProvider(create: (context) => ControlStore.instance),
     ];
 
 resetProviders() {
