@@ -1,5 +1,4 @@
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/plugins/auth/auth.dart';
 import 'package:control_ventas_movil/src/ui/pages/inicio/inicio_service.dart';
 import 'package:control_ventas_movil/src/ui/pages/inicio/inicio_store.dart';
 import 'package:control_ventas_movil/src/ui/pages/resumen_dia/componentes/venta_card.dart';
@@ -8,15 +7,15 @@ import 'package:flutter/material.dart';
 final GlobalKey<ScaffoldMessengerState> inicioMessenger =
     GlobalKey<ScaffoldMessengerState>();
 
-class InicioPage extends StatefulWidget {
-  final VoidCallback onGoVehicles;
-  const InicioPage({super.key, required this.onGoVehicles});
+class ResumenDelDiaPage extends StatefulWidget {
+  const ResumenDelDiaPage({super.key});
 
   @override
-  State<InicioPage> createState() => _InicioPageState();
+  State<ResumenDelDiaPage> createState() => _ResumenDelDiaPageState();
 }
 
-class _InicioPageState extends State<InicioPage> with WidgetsBindingObserver {
+class _ResumenDelDiaPageState extends State<ResumenDelDiaPage>
+    with WidgetsBindingObserver {
   late InicioService service;
   final pinStore = CodigoPinStore.instance;
 
@@ -30,7 +29,6 @@ class _InicioPageState extends State<InicioPage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final theme = ThemeController.instance;
-    final profile = Auth.instance.profile;
 
     return ScaffoldMessenger(
       key: inicioMessenger,
@@ -81,9 +79,51 @@ class _InicioPageState extends State<InicioPage> with WidgetsBindingObserver {
                       const SizedBox(height: 8),
                       VentaCard(
                         theme: ThemeController.instance,
+                        iconData: Icons.import_contacts,
+                        titulo: 'Bidones',
+                        combustibles: const {
+                          'Gasolina': '5000L',
+                          'Diesel': '3000L',
+                          'Diesel6': '4000L',
+                          'Super': '2000L',
+                          'Premium': '1000L',
+                          'Extra': '1500L',
+                        },
+                        total: '\$10,000',
+                      ),
+                      VentaCard(
+                        theme: ThemeController.instance,
+                        iconData: Icons.motorcycle,
+                        titulo: 'Maquinaria',
+                        combustibles: const {
+                          'Gasolina': '5000L',
+                          'Diesel': '3000L',
+                          'Diesel6': '4000L',
+                          'Super': '2000L',
+                          'Premium': '1000L',
+                          'Extra': '1500L',
+                        },
+                        total: '\$10,000',
+                      ),
+                      VentaCard(
+                        theme: ThemeController.instance,
+                        iconData: Icons.nature_people,
+                        titulo: 'Usuarios Directos',
+                        combustibles: const {
+                          'Gasolina': '5000L',
+                          'Diesel': '3000L',
+                          'Diesel6': '4000L',
+                          'Super': '2000L',
+                          'Premium': '1000L',
+                          'Extra': '1500L',
+                        },
+                        total: '\$10,000',
+                      ),
+                      VentaCard(
+                        theme: ThemeController.instance,
                         iconData: Icons.local_gas_station,
-                        titulo: 'Ventas de Combustible',
-                        combustibles: {
+                        titulo: 'Tanque Adicional',
+                        combustibles: const {
                           'Gasolina': '5000L',
                           'Diesel': '3000L',
                           'Diesel6': '4000L',
@@ -165,7 +205,6 @@ class _InicioPageState extends State<InicioPage> with WidgetsBindingObserver {
   }) {
     return Card(
       elevation: 1,
-      color: theme.accent900,
       margin: const EdgeInsets.symmetric(vertical: 4),
       child: ListTile(
         leading: Text(
@@ -178,7 +217,7 @@ class _InicioPageState extends State<InicioPage> with WidgetsBindingObserver {
         title: Row(
           mainAxisAlignment: MainAxisAlignment.start,
           children: [
-            _buildChip(theme, label: combustible, color: theme.secondary),
+            _buildChip(theme, label: combustible, color: theme.background),
             const SizedBox(width: 8),
             Text(
               tanque,
@@ -209,7 +248,6 @@ class _InicioPageState extends State<InicioPage> with WidgetsBindingObserver {
   }) {
     return Card(
       elevation: 1,
-      color: theme.success,
       margin: const EdgeInsets.symmetric(vertical: 4),
       child: ListTile(
         leading: Icon(iconData, color: theme.primary),

@@ -4,7 +4,6 @@ import 'package:control_ventas_movil/src/plugins/auth/auth.dart';
 import 'package:control_ventas_movil/src/plugins/seguridad/seguridad.dart';
 import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
 import 'package:control_ventas_movil/src/ui/common/alerts/confirmation_alert_dialog.dart';
-import 'package:control_ventas_movil/src/ui/common/components/custom_circle.dart';
 import 'package:control_ventas_movil/src/ui/common/snackbar/snackbar.dart';
 import 'package:control_ventas_movil/src/ui/pages/mi_cuenta/componentes/avatar_perfil.dart';
 import 'package:flutter/material.dart';

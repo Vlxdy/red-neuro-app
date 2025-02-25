@@ -70,7 +70,8 @@ class ServiceConfig with Middleware, FormController {
 
     StatusNetwork status = StatusNetwork.noContent;
     final Response response;
-    final String url = '${Constantes.apiUrl}$urlBase$urlRecipe';
+    // final String url = '${Constantes.apiUrl}$urlBase$urlRecipe';
+    final String url = '${Constantes.apiUrl}$urlRecipe';
 
     try {
       final headers = await getHeaders(

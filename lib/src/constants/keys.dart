@@ -12,4 +12,7 @@ class Keys {
   // pin seguridad
   static const pinSeguridad = 'pin_seguridad';
   static const fingerprintActivo = 'fingerprint_activo';
+
+  //bitacora de las aplicacion
+  static const bitacora= 'bitacora';
 }

@@ -48,7 +48,7 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
       if (await seguridad.hasFingeprintEnabled) {
         Logger.info('autenticar con huella!!');
         localAuthentication = await LocalSecure.autenticar(
-          titulo: 'Control Cuotas Movil',
+          titulo: 'Control Ventas Movil',
           message: 'Escanea tu huella dactilar para continuar',
         );
         Logger.info('Biometrico autenticado $localAuthentication');

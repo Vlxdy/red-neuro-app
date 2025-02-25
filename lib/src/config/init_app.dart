@@ -22,6 +22,7 @@ class InitAppController {
     final token = await auth.apiToken;
     await auth.updateAppInfo();
     await auth.validateFirstTime();
+
     if (token.isEmpty) {
       await auth.logout();
       if (context.mounted) {
@@ -34,13 +35,13 @@ class InitAppController {
     resetProviders(); // Reset valores mas importantes de providers
     final pinSeguridad =
         await _preferencesService.getStringSecure(Keys.pinSeguridad);
-    if (context.mounted) {
-      if (pinSeguridad.isEmpty) {
-        GoRouter.of(context).goNamed(RouteNames.configurarPinSeguridad);
-      } else {
-        GoRouter.of(context).goNamed(RouteNames.home);
-      }
+
+    if (!context.mounted) return;
+
+    if (pinSeguridad.isEmpty) {
+      GoRouter.of(context).goNamed(RouteNames.configurarPinSeguridad);
+      return;
     }
-    return;
+    GoRouter.of(context).goNamed(RouteNames.home);
   }
 }
