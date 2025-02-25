@@ -1,6 +1,4 @@
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/models/estacion_servicio.dart';
-import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
 import 'package:control_ventas_movil/src/ui/common/buttons/simple_button.dart';
 import 'package:control_ventas_movil/src/ui/common/drop_down/drop_down.dart';
 import 'package:control_ventas_movil/src/ui/pages/control/control_service.dart';
@@ -32,9 +30,9 @@ class _FormControl extends State<FormControl> {
 
   @override
   void initState() {
-    super.initState();
-    service = ControlService(context);
+    service = ControlService('', context);
     service.fetchData();
+    super.initState();
   }
 
   @override
@@ -99,15 +97,8 @@ class _FormControl extends State<FormControl> {
                     background: theme.primary700,
                     textColor: theme.white,
                     onTap: () {
-                      // _service.iniciarControl();
-                      // Logger('hola')
                       if (service.validateForm(_scaffoldingFormKey)) {
-                        Logger.info(' entra');
-
-                        service.iniciarControl();
-                        // GoRouter.of(context).goNamed(RouteNames.resumenDia);
-                      } else {
-                        Logger.info('no entra');
+                        service.iniciarControl(context);
                       }
                     }),
               ],

@@ -7,80 +7,73 @@ class BitacoraStore with ChangeNotifier {
   BitacoraStore._();
   static final instance = BitacoraStore._();
 
-  String _idBitacora = '';
-  DateTime? _fechaBitacora;
+  Bitacora _bitacora = Bitacora.empty();
 
-  // Método para obtener la bitácora como un mapa
-  Map<String, dynamic> get bitacora => {
-        "id": _idBitacora,
-        "fecha": _fechaBitacora?.toIso8601String(),
-      };
+  Bitacora get bitacora => _bitacora;
 
-  // Método para actualizar la bitácora
-  void setBitacora(String id, DateTime fecha) {
-    _idBitacora = id;
-    _fechaBitacora = fecha;
+  void setBitacora(String id, DateTime? fecha) {
+    _bitacora = Bitacora(id, fecha);
     notifyListeners();
   }
 }
 
 class Bitacora {
-  String _idBitacora = '';
-  DateTime? _fechaBitacora;
+  final String id;
+  final DateTime? fecha;
 
-  Bitacora._();
-  static final instance = Bitacora._();
+  Bitacora(this.id, this.fecha);
 
-  final store = BitacoraStore.instance;
-  final PreferencesService _preferencesService = PreferencesService.instance;
-
-  // Obtener la bitácora almacenada
-  Future<Map<String, dynamic>> get bitacora async {
-    try {
-      if (_idBitacora.isEmpty) {
-        String? data = await _preferencesService.getStringSecure(Keys.bitacora);
-        if (data.isNotEmpty) {
-          Map<String, dynamic> bitacoraMap = json.decode(data);
-          _idBitacora = bitacoraMap['id'];
-          _fechaBitacora = DateTime.parse(bitacoraMap['fecha']);
-        }
-      }
-      return {
-        "id": _idBitacora,
-        "fecha": _fechaBitacora?.toIso8601String(),
-      };
-    } catch (e) {
-      return {};
-    }
+  factory Bitacora.empty() {
+    return Bitacora('', null);
   }
 
-  // Método para actualizar la bitácora en el almacenamiento
+  factory Bitacora.fromJson(Map<String, dynamic> json) {
+    return Bitacora(
+      json['id'] ?? '',
+      json['fecha'] != null ? DateTime.parse(json['fecha']) : DateTime.now(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      "id": id,
+      "fecha": fecha?.toIso8601String(),
+    };
+  }
+}
+
+class BitacoraService {
+  static final BitacoraService instance = BitacoraService._();
+  BitacoraService._();
+
+  final PreferencesService _preferencesService = PreferencesService.instance;
+  final BitacoraStore store = BitacoraStore.instance;
+
+  Future<Bitacora> getBitacora() async {
+    try {
+      String? data = await _preferencesService.getStringSecure(Keys.bitacora);
+      if (data != null && data.isNotEmpty) {
+        Map<String, dynamic> bitacoraMap = json.decode(data);
+        return Bitacora.fromJson(bitacoraMap);
+      }
+    } catch (e) {
+      debugPrint("Error al obtener bitácora: $e");
+    }
+    return Bitacora.empty();
+  }
+
   Future<void> updateBitacora(
       {required String id, required DateTime fecha}) async {
-    _idBitacora = id;
-    _fechaBitacora = fecha;
-
-    // Guardar en almacenamiento seguro como JSON
-    Map<String, dynamic> bitacoraData = {
-      "id": _idBitacora,
-      "fecha": _fechaBitacora?.toIso8601String(),
-    };
+    Bitacora nuevaBitacora = Bitacora(id, fecha);
 
     await _preferencesService.setStringSecure(
-        Keys.bitacora, json.encode(bitacoraData));
+        Keys.bitacora, json.encode(nuevaBitacora.toJson()));
 
-    // También actualizar en el store y notificar cambios
     store.setBitacora(id, fecha);
   }
 
-  // Método para borrar la bitácora
   Future<void> clearBitacora() async {
-    _idBitacora = '';
-    _fechaBitacora = DateTime.now();
-
     await _preferencesService.setStringSecure(Keys.bitacora, '');
-
-    // También actualizar en el store y notificar cambios
-    store.setBitacora('', DateTime.now());
+    store.setBitacora('', null);
   }
 }
