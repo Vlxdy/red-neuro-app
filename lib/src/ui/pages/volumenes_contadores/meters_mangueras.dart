@@ -1,6 +1,8 @@
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/navbar_volumenes.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/meters_service.dart';
+import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/componentes/form_registro_contadores_control.dart';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -70,7 +72,9 @@ class _MetersManguerasScreen extends State<MetersManguerasScreen> {
               children: [
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      showRegistroContadoresModal(context);
+                    },
                     child: const Text('+ Registrar contadores'),
                   ),
                 ),

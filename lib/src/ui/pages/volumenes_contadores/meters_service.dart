@@ -10,9 +10,10 @@ class MeterService extends ServiceConfig {
 
   Future<List<Map<String, dynamic>>> getMetersListado() async {
     try {
-      const idBitadora = '1';
-      final response =
-          await fetch('/$idBitadora/listar-meter', type: HttpProtocol.get);
+      //todo: la bitacora no tiene que estar quemados
+      const idBitadora = '2';
+      final response = await fetch('/mobile/$idBitadora/listar-meter',
+          type: HttpProtocol.get);
       Logger.success('response -> ${response.data}');
       if (response.data['list'] != null) {
         return List<Map<String, dynamic>>.from(response.data['list']);
