@@ -23,6 +23,7 @@ class Usuario extends Persona {
     this.ciudadaniaDigital = false,
     this.estado,
     this.usuario,
+    this.regimiento,
   });
 
   static get empty => Usuario('', '', '', '', '', '', '', '');
