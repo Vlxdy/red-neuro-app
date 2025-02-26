@@ -15,7 +15,7 @@ class ConfirmarRegistroScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = ThemeController.instance;
-    final colorPrincipal = theme.bgBlue;
+    final colorPrincipal = theme.secondary;
 
     return Scaffold(
       appBar: AppBar(
@@ -60,7 +60,7 @@ class ConfirmarRegistroScreen extends StatelessWidget {
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: colorPrincipal,
-                    foregroundColor: Colors.white,
+                    foregroundColor: theme.white,
                   ),
                   icon: const Icon(Icons.check),
                   label: const Text('Confirmar'),

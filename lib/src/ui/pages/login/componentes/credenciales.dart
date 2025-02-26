@@ -98,7 +98,7 @@ class _CredencialesState extends State<Credenciales> {
                 SimpleButton(
                     disabled: listener.isLoading,
                     title: 'Iniciar sesión',
-                    background: theme.primary700,
+                    background: theme.primary,
                     textColor: theme.white,
                     suffixicon: Icons.login,
                     onTap: () {

@@ -134,7 +134,7 @@ class _RegistrarVentaState extends State<RegistrarVentaPage> {
             statusBarBrightness:
                 theme.isDark ? Brightness.dark : Brightness.light,
             statusBarColor: theme.transparent),
-        backgroundColor: Colors.transparent,
+        backgroundColor: theme.transparent,
         centerTitle: false,
       ),
       body: Column(
@@ -152,7 +152,7 @@ class _RegistrarVentaState extends State<RegistrarVentaPage> {
                     GoRouter.of(context).goNamed(RouteNames.procesarSesion);
                   },
                   icon: Icon(
-                    color: theme.warning,
+                    color: theme.primary,
                     isLocked
                         ? SolarIconsBold.lockKeyhole
                         : SolarIconsBold.lockKeyholeUnlocked,

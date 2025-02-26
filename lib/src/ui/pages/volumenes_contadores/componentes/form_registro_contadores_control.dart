@@ -32,9 +32,9 @@ class _RegistroContadoresState extends State<RegistroContadores> {
       appBar: AppBar(
         title: Row(
           children: [
-            Icon(Icons.menu_book, color: theme.bgBlue),
+            Icon(Icons.menu_book, color: theme.secondary),
             const SizedBox(width: 8),
-            Text(widget.titulo, style: TextStyle(color: theme.bgBlue)),
+            Text(widget.titulo, style: TextStyle(color: theme.secondary)),
           ],
         ),
       ),

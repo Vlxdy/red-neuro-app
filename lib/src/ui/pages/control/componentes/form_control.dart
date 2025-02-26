@@ -94,7 +94,7 @@ class _FormControl extends State<FormControl> {
                 const SizedBox(height: 16),
                 SimpleButton(
                     title: 'Iniciar control',
-                    background: theme.primary700,
+                    background: theme.primary,
                     textColor: theme.white,
                     onTap: () {
                       if (service.validateForm(_scaffoldingFormKey)) {
