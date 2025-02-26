@@ -190,7 +190,7 @@ class _UsuarioDirectoScreenState extends State<UsuarioDirectoScreen2> {
           children: [
             Icon(Icons.local_gas_station, color: theme.secondary, size: 28),
             SizedBox(width: 8),
-            Expanded( // Permite que el texto se ajuste sin desbordar
+            Expanded(
               child: Text(
                 'Venta de combustible a\nUsuarios Directos',
                 style: TextStyle(
@@ -198,7 +198,7 @@ class _UsuarioDirectoScreenState extends State<UsuarioDirectoScreen2> {
                   fontWeight: FontWeight.bold,
                   color: theme.secondary,
                 ),
-                overflow: TextOverflow.ellipsis, // Evita el desbordamiento
+                overflow: TextOverflow.ellipsis,
                 maxLines: 2,
               ),
             ),
