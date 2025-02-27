@@ -7,9 +7,6 @@ import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-GlobalKey<ScaffoldMessengerState> controlMessenger =
-    GlobalKey<ScaffoldMessengerState>();
-
 class FormControl extends StatefulWidget {
   const FormControl({super.key});
 
@@ -56,8 +53,6 @@ class _FormControl extends State<FormControl> {
                   label: 'EESS Asignadas al regimiento',
                   requiredData: true,
                   dropKey: dropKey,
-                  // TODO: Obtener datos del servicio
-                  // items: ['REG-001', 'REG-002'],
                   items: estaciones.map((estacion) {
                     return {
                       'id': estacion.id,
@@ -71,7 +66,7 @@ class _FormControl extends State<FormControl> {
                       .validateData(context, value, alias, required: true),
                 ),
                 const SizedBox(height: 16),
-                Text('Selecciona un horario'),
+                const Text('Selecciona un horario'),
                 const SizedBox(height: 4),
                 DropDown(
                   width: MediaQuery.of(context).size.width,
@@ -94,7 +89,7 @@ class _FormControl extends State<FormControl> {
                 const SizedBox(height: 16),
                 SimpleButton(
                     title: 'Iniciar control',
-                    background: theme.primary,
+                    background: theme.primary700,
                     textColor: theme.white,
                     onTap: () {
                       if (service.validateForm(_scaffoldingFormKey)) {

@@ -5,6 +5,7 @@ import 'package:control_ventas_movil/src/constants/keys.dart';
 import 'package:control_ventas_movil/src/constants/network.dart';
 import 'package:control_ventas_movil/src/plugins/auth/auth.dart';
 import 'package:control_ventas_movil/src/plugins/auth/ciudadania.dart';
+import 'package:control_ventas_movil/src/plugins/estaciones/regimiento_store.dart';
 import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
 import 'package:control_ventas_movil/src/ui/common/snackbar/snackbar.dart';
 import 'package:control_ventas_movil/src/ui/global/loading_animation.dart';
@@ -93,8 +94,9 @@ class LoginService extends ServiceConfig {
             state: StatusSnackBar.error, colorText: theme.white);
         return;
       } else {
-        // Logger.warning('respuesta ${response.data}');
+        Logger.warning('respuesta ${response.data}');
         await Auth.instance.login(response.data);
+        await RegimientoStore.instance.actualizar(response.data['regimiento']);
 
         if (context.mounted) {
           // context.goNamed(RouteNames.controlScreen);
