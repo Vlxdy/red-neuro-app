@@ -10,6 +10,7 @@ import 'package:control_ventas_movil/src/ui/global/template_page.dart';
 import 'package:control_ventas_movil/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
 import 'package:control_ventas_movil/src/ui/pages/mi_cuenta/mi_cuenta.dart';
 import 'package:control_ventas_movil/src/ui/pages/resumen_dia/resumen_dia.dart';
+import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/volumenes_contadores_screen.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/volumenes_tanques.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -115,7 +116,7 @@ class _HomePageState extends State<HomePage> {
         iconoImagen: SolarIconsOutline.gasStation,
         iconoImagenSeleccionada: SolarIconsBold.gasStation,
         titulo: 'Volúmenes y\nContadores',
-        children: const VolumenesTanquesScreen(),
+        children: const VolumenesContadoresScreen(),
       ),
       ChildrenItem(
           iconoImagen: SolarIconsOutline.sidebar,
