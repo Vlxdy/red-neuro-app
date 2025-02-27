@@ -9,6 +9,7 @@ import 'package:control_ventas_movil/src/ui/global/loading_animation.dart';
 import 'package:control_ventas_movil/src/ui/pages/login/login_store.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
+import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/registro_meters_store.dart';
 
 List<SingleChildWidget> proveedores(BuildContext context) => [
       ChangeNotifierProvider(create: (context) => LoadingAnimation.instance),
@@ -20,6 +21,7 @@ List<SingleChildWidget> proveedores(BuildContext context) => [
       ChangeNotifierProvider(create: (context) => RegistrarVentaStore.instance),
       ChangeNotifierProvider(create: (context) => CameraScreenStore.instance),
       ChangeNotifierProvider(create: (context) => ControlStore.instance),
+      ChangeNotifierProvider(create: (context) => RegistroMetersStore.instance),
     ];
 
 resetProviders() {

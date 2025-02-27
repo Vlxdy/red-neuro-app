@@ -1,11 +1,13 @@
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/ui/common/buttons/simple_button.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/navbar_volumenes.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/meters_service.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/componentes/form_registro_contadores_control.dart';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+
+import 'package:provider/provider.dart';
+import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/registro_meters_store.dart';
 
 class MetersManguerasScreen extends StatefulWidget {
   const MetersManguerasScreen({super.key});
@@ -28,7 +30,7 @@ class _MetersManguerasScreen extends State<MetersManguerasScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = ThemeController.instance;
-
+    final store = context.watch<RegistroMetersStore>();
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
@@ -72,12 +74,15 @@ class _MetersManguerasScreen extends State<MetersManguerasScreen> {
             Row(
               children: [
                 Expanded(
-                    child: SimpleButton(
-                  title: '+ Registrar contadores',
-                  onTap: () {
-                    showRegistroContadoresModal(context);
-                  },
-                )),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      // Primero, accede a los registros almacenados en el store
+                      store.limpiarRegistros();
+                      showRegistroContadoresModal(context);
+                    },
+                    child: const Text('+ Registrar contadores'),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 10),

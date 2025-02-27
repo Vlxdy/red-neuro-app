@@ -1,5 +1,6 @@
 import 'package:control_ventas_movil/src/config/service_config.dart';
 import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
+import 'package:control_ventas_movil/src/plugins/bitacora/bitacora.dart';
 
 class MeterService extends ServiceConfig {
   MeterService(super.urlBase, super.context);
@@ -10,8 +11,7 @@ class MeterService extends ServiceConfig {
 
   Future<List<Map<String, dynamic>>> getMetersListado() async {
     try {
-      //todo: la bitacora no tiene que estar quemados
-      const idBitadora = '2';
+      final idBitadora = BitacoraStore.instance.bitacora.id;
       final response = await fetch('/mobile/$idBitadora/listar-meter',
           type: HttpProtocol.get);
       Logger.success('response -> ${response.data}');
