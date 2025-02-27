@@ -21,11 +21,6 @@ class EstacionServicioStore with ChangeNotifier {
 
   Future<void> actualizar(Map<String, dynamic> json) async {
     final nuevaEstacionServicio = EstacionServicio.fromJson(json);
-    Logger.info('guardar-------------------------------');
-    Logger.info(jsonEncode(json));
-    Logger.info(jsonEncode(json));
-
-    Logger.info('guardar3-------------------------------');
     await _preferencesService.setString(
         Keys.estacionServicio, jsonEncode(nuevaEstacionServicio.toJson()));
     setEstacionServicio = nuevaEstacionServicio;

@@ -1,5 +1,4 @@
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/plugins/auth/auth.dart';
 import 'package:control_ventas_movil/src/ui/pages/inicio/inicio_service.dart';
 import 'package:control_ventas_movil/src/ui/pages/inicio/inicio_store.dart';
 import 'package:control_ventas_movil/src/ui/pages/resumen_dia/componentes/venta_card.dart';
@@ -30,7 +29,6 @@ class _InicioPageState extends State<InicioPage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final theme = ThemeController.instance;
-    final profile = Auth.instance.profile;
 
     return ScaffoldMessenger(
       key: inicioMessenger,

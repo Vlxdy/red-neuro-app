@@ -53,7 +53,7 @@ class _HomePageState extends State<HomePage> {
   void verificarBitacora(Bitacora bitacora) {
     if (bitacora.id == '' || bitacora.fecha?.day != DateTime.now().day) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
+        if (context.mounted) {
           GoRouter.of(context).goNamed(RouteNames.controlScreen);
         }
       });
@@ -199,7 +199,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     Text(
-                      '${now} ${estacionServicio.horaInicio} - ${estacionServicio.horaFin}',
+                      '$now ${estacionServicio.horaInicio} - ${estacionServicio.horaFin}',
                       style: TextStyle(
                         fontSize: 14,
                         color: theme.black,

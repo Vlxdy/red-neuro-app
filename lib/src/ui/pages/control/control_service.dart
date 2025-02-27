@@ -78,10 +78,9 @@ class ControlService extends ServiceConfig {
       );
 
       LoadingAnimation.instance.hideLoading();
-      Logger.info('LLEGA HASTA AQUI');
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (context.mounted) {
-          GoRouter.of(context).goNamed(RouteNames.controlScreen);
+          GoRouter.of(context).goNamed(RouteNames.home);
         }
       });
     } catch (e, stacktrace) {
