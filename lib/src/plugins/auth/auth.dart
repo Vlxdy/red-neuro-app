@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:control_ventas_movil/src/constants/constants.dart';
 import 'package:control_ventas_movil/src/plugins/auth/ciudadania.dart';
+import 'package:control_ventas_movil/src/plugins/estaciones/estacion_servicio.dart';
+import 'package:control_ventas_movil/src/plugins/estaciones/regimiento_store.dart';
 import 'package:control_ventas_movil/src/plugins/seguridad/seguridad.dart';
 import 'package:control_ventas_movil/src/plugins/utils/connection.dart';
 import 'package:flutter/material.dart';
@@ -43,6 +45,8 @@ class Auth {
 
   final _store = AuthStore.instance;
   final seguridad = Seguridad.instance;
+  final regimiento = RegimientoStore.instance;
+  final estacionServicio = EstacionServicioStore.instance;
   PackageInfo _info = PackageInfo(
       appName: '',
       buildNumber: '',
@@ -129,6 +133,8 @@ class Auth {
   Future<void> loginSuccess() async {
     _user = await profileAsync();
     _store.isLogged = true;
+    await regimiento.regimientoAsync();
+    await estacionServicio.estacionServicioAsync();
   }
 
   Future<void> clearCredentials() async {

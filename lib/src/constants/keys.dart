@@ -14,5 +14,7 @@ class Keys {
   static const fingerprintActivo = 'fingerprint_activo';
 
   //bitacora de las aplicacion
-  static const bitacora= 'bitacora';
+  static const bitacora = 'bitacora';
+  static const regimiento = 'regimiento';
+  static const estacionServicio = 'estacion_servicio';
 }

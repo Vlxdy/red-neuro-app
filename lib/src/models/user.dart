@@ -1,5 +1,4 @@
 import 'package:control_ventas_movil/src/models/person.dart';
-import 'package:control_ventas_movil/src/models/regimiento.dart';
 
 class Usuario extends Persona {
   late String correoElectronico;
@@ -8,7 +7,6 @@ class Usuario extends Persona {
   String? id;
   String? estado;
   String? usuario;
-  Regimiento? regimiento;
 
   Usuario(
     super.fechaNacimiento,
@@ -23,7 +21,6 @@ class Usuario extends Persona {
     this.ciudadaniaDigital = false,
     this.estado,
     this.usuario,
-    this.regimiento,
   });
 
   static get empty => Usuario('', '', '', '', '', '', '', '');
@@ -36,9 +33,6 @@ class Usuario extends Persona {
     estado = json['estado'] ?? '';
     id = json['id'] ?? '';
     usuario = json['usuario'] ?? '';
-    regimiento = json['regimiento'] != null
-        ? Regimiento.fromJson(json['regimiento'])
-        : null;
   }
 
   @override
@@ -51,7 +45,7 @@ class Usuario extends Persona {
     data['estado'] = estado;
     data['id'] = id;
     data['usuario'] = usuario;
-    data['regimiento'] = regimiento?.toJson();
+
     return data;
   }
 

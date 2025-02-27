@@ -1,4 +1,5 @@
 import 'package:control_ventas_movil/src/plugins/auth/auth.dart';
+import 'package:control_ventas_movil/src/plugins/estaciones/regimiento_store.dart';
 import 'package:flutter/material.dart';
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
 import 'package:control_ventas_movil/src/ui/global/template_page.dart';
@@ -31,20 +32,12 @@ class _ControlState extends State<Control> {
   Widget build(BuildContext context) {
     final theme = ThemeController.instance;
     final profile = Auth.instance.profile;
+    final regimiento = RegimientoStore.instance.regimiento;
     return TemplatePage(
       page: ScaffoldMessenger(
         key: controlMessenger,
         child: Scaffold(
           backgroundColor: theme.transparent,
-          appBar: AppBar(
-            scrolledUnderElevation: 0,
-            elevation: 0,
-            systemOverlayStyle: services.SystemUiOverlayStyle(
-                statusBarBrightness:
-                    theme.isDark ? Brightness.dark : Brightness.light,
-                statusBarColor: theme.transparent),
-            backgroundColor: theme.transparent,
-          ),
           body: SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
@@ -56,13 +49,12 @@ class _ControlState extends State<Control> {
                     subTitulo: 'Te damos la bienvenida',
                     nombreUsuario:
                         '${profile.nombres} ${profile.primerApellido} ${profile.segundoApellido}',
-                    regimiento: profile.regimiento?.nombre ?? '',
-                    tipoFuerza: profile.regimiento?.tipoFuerza ?? '',
+                    regimiento: regimiento.nombre,
+                    tipoFuerza: regimiento.tipoFuerza,
                   ),
                   const SizedBox(height: 16),
                   const FormControl(),
                   const SizedBox(height: 16),
-            
                 ],
               ),
             ),

@@ -42,6 +42,6 @@ class InitAppController {
       GoRouter.of(context).goNamed(RouteNames.configurarPinSeguridad);
       return;
     }
-    GoRouter.of(context).goNamed(RouteNames.home);
+    GoRouter.of(context).goNamed(RouteNames.procesarSesion);
   }
 }

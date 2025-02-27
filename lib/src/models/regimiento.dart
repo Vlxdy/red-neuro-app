@@ -1,14 +1,15 @@
 class Regimiento {
-  String? nombre;
-  String? tipoFuerza;
-  String? id;
+  late String nombre;
+  late String tipoFuerza;
+  late String id;
 
-  Regimiento({this.nombre, this.tipoFuerza, this.id});
+  Regimiento(
+      {required this.nombre, required this.tipoFuerza, required this.id});
 
   Regimiento.fromJson(Map<String, dynamic> json) {
-    nombre = json['nombre'] ?? '';
-    tipoFuerza = json['tipoFuerza'] ?? '';
-    id = json['id'] ?? '';
+    nombre = json['nombre'];
+    tipoFuerza = json['tipoFuerza'];
+    id = json['id'];
   }
 
   Map<String, dynamic> toJson() {
