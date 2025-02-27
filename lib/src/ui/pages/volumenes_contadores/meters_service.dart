@@ -1,6 +1,6 @@
 import 'package:control_ventas_movil/src/config/service_config.dart';
+import 'package:control_ventas_movil/src/plugins/estaciones/bitacora_store.dart';
 import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
-import 'package:control_ventas_movil/src/plugins/bitacora/bitacora.dart';
 
 class MeterService extends ServiceConfig {
   MeterService(super.urlBase, super.context);

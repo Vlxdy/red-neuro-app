@@ -75,7 +75,7 @@ class _VolumenesContadoresScreenState extends State<VolumenesContadoresScreen> {
                                   child: Icon(
                                     Icons.add_circle,
                                     size: 150,
-                                    color: color,
+                                    color: theme.primary,
                                   ),
                                 ),
                               ),
@@ -83,7 +83,7 @@ class _VolumenesContadoresScreenState extends State<VolumenesContadoresScreen> {
                             Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: color.withOpacity(0.1),
+                                color: theme.primary,
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: Column(
@@ -95,29 +95,21 @@ class _VolumenesContadoresScreenState extends State<VolumenesContadoresScreen> {
                                         CrossAxisAlignment.center,
                                     children: [
                                       Icon(Icons.local_gas_station,
-                                          color: color, size: 28),
+                                          color: theme.primary, size: 28),
                                       const SizedBox(width: 10),
                                       Expanded(
                                         child: Text(
-                                          title,
+                                          item.title,
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
                                           style: TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.bold,
-                                            color: color,
+                                            color: theme.black,
                                           ),
                                         ),
                                       ),
                                     ],
-                                  ),
-                                  Text(
-                                    ventasRegistradas.toString(),
-                                    style: TextStyle(
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.bold,
-                                      color: color,
-                                    ),
                                   ),
                                 ],
                               ),
@@ -127,36 +119,6 @@ class _VolumenesContadoresScreenState extends State<VolumenesContadoresScreen> {
                       ),
                     ),
                   );
-
-                  // GestureDetector(
-
-                  //   child: Card(
-                  //     elevation: 4,
-                  //     shape: RoundedRectangleBorder(
-                  //       borderRadius: BorderRadius.circular(12),
-                  //     ),
-                  //     child: Container(
-                  //       width: double.infinity,
-                  //       padding: const EdgeInsets.symmetric(vertical: 20),
-                  //       child: Column(
-                  //         mainAxisAlignment: MainAxisAlignment.center,
-                  //         children: [
-                  //           Icon(item.icon, size: 50, color: theme.primary),
-                  //           const SizedBox(height: 10),
-                  //           Text(
-                  //             item.title,
-                  //             textAlign: TextAlign.center,
-                  //             style: TextStyle(
-                  //               fontSize: 16,
-                  //               fontWeight: FontWeight.bold,
-                  //               color: theme.primary,
-                  //             ),
-                  //           ),
-                  //         ],
-                  //       ),
-                  //     ),
-                  //   ),
-                  // );
                 }).toList(),
               ),
             )
