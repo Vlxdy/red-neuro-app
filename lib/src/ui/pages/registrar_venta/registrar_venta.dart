@@ -1,6 +1,7 @@
 import 'package:control_ventas_movil/src/config/routes.dart';
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
 import 'package:control_ventas_movil/src/plugins/auth/auth.dart';
+import 'package:control_ventas_movil/src/plugins/estaciones/estacion_servicio.dart';
 import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
 import 'package:control_ventas_movil/src/ui/common/keep_alive_page.dart';
 import 'package:control_ventas_movil/src/ui/global/template_page.dart';
@@ -14,6 +15,7 @@ import 'package:control_ventas_movil/src/ui/pages/resumen_dia/resumen_dia.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:solar_icons/solar_icons.dart';
 
 final GlobalKey<ScaffoldMessengerState> homeMessenger =
@@ -88,6 +90,8 @@ class _RegistrarVentaState extends State<RegistrarVentaPage> {
   Widget build(BuildContext context) {
     final theme = ThemeController.instance;
     final isLocked = Auth.instance.isLocked;
+    final estacionServicio = EstacionServicioStore.instance.estacionServicio;
+    final now = DateFormat('dd/MM/yyyy').format(DateTime.now());
     _itemsChildren = [
       ChildrenItem(
           iconoImagen: SolarIconsOutline.gasStation,
@@ -188,7 +192,7 @@ class _RegistrarVentaState extends State<RegistrarVentaPage> {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    'EESS Santa Rosa',
+                    estacionServicio.nombre,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -196,7 +200,7 @@ class _RegistrarVentaState extends State<RegistrarVentaPage> {
                     ),
                   ),
                   Text(
-                    '12/12/2024 00:00 - 08:00',
+                    '$now ${estacionServicio.horaInicio} - ${estacionServicio.horaFin}',
                     style: TextStyle(
                       fontSize: 14,
                       color: theme.black,

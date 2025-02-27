@@ -1,5 +1,5 @@
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/navbar_volumenes.dart';
+import 'package:control_ventas_movil/src/ui/common/buttons/simple_button.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/meters_service.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/componentes/form_registro_contadores_control.dart';
 
@@ -32,27 +32,6 @@ class _MetersManguerasScreen extends State<MetersManguerasScreen> {
     final theme = ThemeController.instance;
     final store = context.watch<RegistroMetersStore>();
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        title: const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'EESS Santa Rosa',
-              style: TextStyle(fontSize: 16),
-            ),
-            Text(
-              '12/12/2024 00:00 - 08:00',
-              style: TextStyle(fontSize: 12),
-            ),
-          ],
-        ),
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -279,7 +258,6 @@ class _MetersManguerasScreen extends State<MetersManguerasScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: const NavBarVolumenes(selectedIndex: 1),
     );
   }
 }

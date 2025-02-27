@@ -2,8 +2,7 @@ import 'package:control_ventas_movil/src/config/routes.dart';
 import 'package:control_ventas_movil/src/constants/network.dart';
 import 'package:control_ventas_movil/src/models/estacion_servicio.dart';
 import 'package:control_ventas_movil/src/models/horario.dart';
-import 'package:control_ventas_movil/src/plugins/bitacora/bitacora.dart';
-import 'package:control_ventas_movil/src/ui/pages/home/home.dart';
+import 'package:control_ventas_movil/src/plugins/estaciones/bitacora_store.dart';
 import 'package:flutter/material.dart';
 import 'package:control_ventas_movil/src/config/service_config.dart';
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
@@ -18,7 +17,6 @@ class ControlService extends ServiceConfig {
   ControlService(super.urlBase, super.context);
   final theme = ThemeController.instance;
   final store = ControlStore.instance;
-  final bitacoraStore = BitacoraService.instance;
 
   void fetchData() {
     cargarDatosIniciales().whenComplete(() => store.cargando = false);
@@ -33,6 +31,7 @@ class ControlService extends ServiceConfig {
         throw Exception('No hay conexión a internet');
       }
       if (response.status == StatusNetwork.connected) {
+        Logger.info(response.data['estaciones-de-servicios'][0].toString());
         store.estaciones = (response.data['estaciones-de-servicios'][0] as List)
             .map((item) => EstacionServicio.fromJson(item))
             .toList();
@@ -69,11 +68,8 @@ class ControlService extends ServiceConfig {
       if (response.status != StatusNetwork.connected) {
         throw Exception(response.message);
       }
-      final datos = response.data;
-      // CORRECCIÓN: Usar los valores obtenidos del servidor
-      await bitacoraStore.updateBitacora(
-          id: datos['idBitacora'], fecha: fechaRegistro);
-
+      final json = response.data;
+      await BitacoraStore.instance.actualizar(json, fechaRegistro);
       showSnackBar(
         controlMessenger,
         'Control iniciado correctamente',
@@ -82,11 +78,11 @@ class ControlService extends ServiceConfig {
       );
 
       LoadingAnimation.instance.hideLoading();
-      if (context.mounted) {
-        const home = RouteNames.home;
-        await context.push<String>('/$home');
-      }
-      // store.clean();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) {
+          GoRouter.of(context).goNamed(RouteNames.home);
+        }
+      });
     } catch (e, stacktrace) {
       Logger.error('Error al iniciar control: $e');
       Logger.error('Stacktrace: $stacktrace');

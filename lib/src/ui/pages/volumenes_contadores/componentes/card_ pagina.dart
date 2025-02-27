@@ -1,13 +1,13 @@
-import 'dart:ui';
+// ignore: file_names
 import 'package:flutter/material.dart';
 
-class CombustibleCard extends StatelessWidget {
+class PaginaCard extends StatelessWidget {
   final String title;
   final int ventasRegistradas;
   final Color color;
   final VoidCallback onPressedNuevaVenta;
 
-  const CombustibleCard({
+  const PaginaCard({
     super.key,
     required this.title,
     required this.ventasRegistradas,
@@ -17,7 +17,6 @@ class CombustibleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    ;
     return SizedBox(
       height: 200,
       child: InkWell(
@@ -31,12 +30,15 @@ class CombustibleCard extends StatelessWidget {
           child: Stack(
             children: [
               Positioned.fill(
-                child: Opacity(
-                  opacity: 0.1,
-                  child: Icon(
-                    Icons.add_circle,
-                    size: 150,
-                    color: color,
+                child: Align(
+                  alignment: Alignment.center,
+                  child: Opacity(
+                    opacity: 0.1,
+                    child: Icon(
+                      Icons.add_circle,
+                      size: 150,
+                      color: color,
+                    ),
                   ),
                 ),
               ),
@@ -57,9 +59,8 @@ class CombustibleCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             title,
-                            maxLines: 4,
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            softWrap: true,
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
