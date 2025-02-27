@@ -31,7 +31,7 @@ class AppInfo extends StatelessWidget {
                 style: Theme.of(context)
                     .textTheme
                     .labelLarge
-                    ?.copyWith(color: theme.accent900),
+                    ?.copyWith(color: theme.primary),
               ),
               const SizedBox(
                 height: 12,

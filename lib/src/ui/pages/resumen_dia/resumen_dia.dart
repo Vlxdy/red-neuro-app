@@ -89,7 +89,7 @@ class _ResumenDelDiaPageState extends State<ResumenDelDiaPage>
                           'Premium': '1000L',
                           'Extra': '1500L',
                         },
-                        total: '\$10,000',
+                        total: '10,000',
                       ),
                       VentaCard(
                         theme: ThemeController.instance,
@@ -103,7 +103,7 @@ class _ResumenDelDiaPageState extends State<ResumenDelDiaPage>
                           'Premium': '1000L',
                           'Extra': '1500L',
                         },
-                        total: '\$10,000',
+                        total: '10,000',
                       ),
                       VentaCard(
                         theme: ThemeController.instance,
@@ -117,7 +117,7 @@ class _ResumenDelDiaPageState extends State<ResumenDelDiaPage>
                           'Premium': '1000L',
                           'Extra': '1500L',
                         },
-                        total: '\$10,000',
+                        total: '10,000',
                       ),
                       VentaCard(
                         theme: ThemeController.instance,
@@ -131,7 +131,7 @@ class _ResumenDelDiaPageState extends State<ResumenDelDiaPage>
                           'Premium': '1000L',
                           'Extra': '1500L',
                         },
-                        total: '\$10,000',
+                        total: '10,000',
                       ),
                       const SizedBox(height: 16),
                       Text(

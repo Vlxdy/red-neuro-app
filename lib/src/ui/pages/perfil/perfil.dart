@@ -53,7 +53,7 @@ class Perfil extends StatelessWidget {
                                 horizontal: 9, vertical: 8),
                             decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(18),
-                                color: theme.accent900),
+                                color: theme.primary),
                             child: Text(
                                 '${profile.nombres[0]}${profile.primerApellido[0]}',
                                 style: TextStyle(

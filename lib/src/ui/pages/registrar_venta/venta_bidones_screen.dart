@@ -66,20 +66,20 @@ class _VentaBidonesScreenState extends State<VentaBidonesScreen> {
                   onPressed: () {
                     Navigator.pop(context);
                   },
-                  icon: const Icon(Icons.cancel, color: Colors.red),
-                  label: const Text('Cancelar',
-                      style: TextStyle(color: Colors.red)),
+                  icon: Icon(Icons.cancel, color: theme.error),
+                  label: Text('Cancelar',
+                      style: TextStyle(color: theme.error)),
                 ),
                 ElevatedButton.icon(
                   onPressed: () {
                     onConfirm();
                     Navigator.pop(context);
                   },
-                  icon: const Icon(Icons.check, color: Colors.white),
+                  icon: Icon(Icons.check, color: theme.white),
                   label: const Text('Confirmar'),
                   style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.teal,
-                      foregroundColor: Colors.white),
+                      backgroundColor: theme.primary,
+                      foregroundColor: theme.white),
                 ),
               ],
             );
@@ -108,28 +108,29 @@ class _VentaBidonesScreenState extends State<VentaBidonesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: theme.background,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              children: const [
-                Icon(Icons.local_gas_station, color: Colors.teal, size: 28),
+              children: [
+                Icon(Icons.local_gas_station, color: theme.primary, size: 28),
                 SizedBox(width: 8),
                 Text(
                   'Bidones',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Colors.teal,
+                    color: theme.primary,
                   ),
                 ),
               ],
             ),
-            const Text(
+            Text(
               'Venta de Combustible en bidones',
-              style: TextStyle(fontSize: 14, color: Colors.black54),
+              style: TextStyle(fontSize: 14, color: theme.black),
             ),
             const SizedBox(height: 20),
             Expanded(
@@ -144,25 +145,25 @@ class _VentaBidonesScreenState extends State<VentaBidonesScreen> {
                   CombustibleCard(
                     title: 'Diesel',
                     ventasRegistradas: ventasDiesel,
-                    color: theme.bgBlue,
+                    color: theme.secondary,
                     onPressedNuevaVenta: _incrementarDiesel,
                   ),
                   CombustibleCard(
                     title: 'GASOLINA ULTRA PREMIUM 100',
                     ventasRegistradas: ventasGasolina,
-                    color: Colors.teal,
+                    color: theme.primary,
                     onPressedNuevaVenta: _incrementarGasolina,
                   ),
                   CombustibleCard(
                     title: 'GASOLINA ULTRA PREMIUM 100',
                     ventasRegistradas: ventasGasolina,
-                    color: Colors.teal,
+                    color: theme.primary,
                     onPressedNuevaVenta: _incrementarGasolina,
                   ),
                   CombustibleCard(
                     title: 'GASOLINA ULTRA PREMIUM 100',
                     ventasRegistradas: ventasGasolina,
-                    color: Colors.teal,
+                    color: theme.primary,
                     onPressedNuevaVenta: _incrementarGasolina,
                   ),
                 ],

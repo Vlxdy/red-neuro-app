@@ -1,4 +1,5 @@
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
+import 'package:control_ventas_movil/src/ui/common/buttons/simple_button.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/navbar_volumenes.dart';
 import 'package:flutter/material.dart';
 
@@ -19,6 +20,7 @@ class VolumenesTanquesScreen extends StatelessWidget {
     ];
 
     return Scaffold(
+      backgroundColor: theme.background,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -39,6 +41,7 @@ class VolumenesTanquesScreen extends StatelessWidget {
             ),
           ],
         ),
+        backgroundColor: theme.background,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -46,14 +49,14 @@ class VolumenesTanquesScreen extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.local_gas_station, color: theme.bgBlue, size: 28),
+                Icon(Icons.local_gas_station, color: theme.primary, size: 28),
                 const SizedBox(width: 8),
                 Text(
                   'Volúmenes de conbustible \n en Tanques',
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: theme.bgBlue,
+                    color: theme.primary,
                   ),
                 ),
               ],
@@ -61,11 +64,10 @@ class VolumenesTanquesScreen extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {},
-                    child: const Text('+ Registrar volúmenes'),
-                  ),
-                ),
+                    child: SimpleButton(
+                  title: "+ Registrar volúmenes",
+                  onTap: () {},
+                )),
               ],
             ),
             const SizedBox(height: 10),
@@ -80,9 +82,9 @@ class VolumenesTanquesScreen extends StatelessWidget {
                     3: FlexColumnWidth(2),
                   },
                   children: [
-                    const TableRow(
-                      decoration: BoxDecoration(color: Colors.white),
-                      children: [
+                    TableRow(
+                      decoration: BoxDecoration(color: theme.white),
+                      children: const [
                         Padding(
                           padding: EdgeInsets.all(8.0),
                           child: Text('Hora', textAlign: TextAlign.center),
@@ -106,7 +108,7 @@ class VolumenesTanquesScreen extends StatelessWidget {
                       Map<String, String> volumen = entry.value;
                       return TableRow(
                         decoration: BoxDecoration(
-                          color: index.isEven ? Colors.blue[50] : Colors.white,
+                          color: index.isEven ? theme.primary50 : theme.white,
                         ),
                         children: [
                           Padding(
@@ -123,9 +125,12 @@ class VolumenesTanquesScreen extends StatelessWidget {
                             padding: const EdgeInsets.all(8.0),
                             child: CircleAvatar(
                               backgroundColor: volumen['combustible'] == 'DO'
-                                  ? Colors.blue
-                                  : Colors.purple,
-                              child: Text(volumen['combustible']!),
+                                  ? theme.primary
+                                  : theme.secondary,
+                              child: Text(
+                                volumen['combustible']!,
+                                style: TextStyle(color: theme.white),
+                              ),
                             ),
                           ),
                           Padding(
