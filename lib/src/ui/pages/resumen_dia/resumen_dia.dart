@@ -1,8 +1,11 @@
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/ui/pages/inicio/inicio_service.dart';
+import 'package:control_ventas_movil/src/models/resumen_dia.dart';
 import 'package:control_ventas_movil/src/ui/pages/inicio/inicio_store.dart';
 import 'package:control_ventas_movil/src/ui/pages/resumen_dia/componentes/venta_card.dart';
+import 'package:control_ventas_movil/src/ui/pages/resumen_dia/resumen_dia_service.dart';
+import 'package:control_ventas_movil/src/ui/pages/resumen_dia/resumen_dia_store.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 final GlobalKey<ScaffoldMessengerState> inicioMessenger =
     GlobalKey<ScaffoldMessengerState>();
@@ -16,19 +19,20 @@ class ResumenDelDiaPage extends StatefulWidget {
 
 class _ResumenDelDiaPageState extends State<ResumenDelDiaPage>
     with WidgetsBindingObserver {
-  late InicioService service;
+  late ResumenDiaService service;
   final pinStore = CodigoPinStore.instance;
 
   @override
   void initState() {
+    service = ResumenDiaService('', context);
+    service.fetchData();
     super.initState();
-    service = InicioService('', context);
-    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = ThemeController.instance;
+    final resumenDia = context.watch<ResumenDiaStore>().resumenDia;
 
     return ScaffoldMessenger(
       key: inicioMessenger,
@@ -77,6 +81,17 @@ class _ResumenDelDiaPageState extends State<ResumenDelDiaPage>
                         ),
                       ),
                       const SizedBox(height: 8),
+                      ...resumenDia!.ventas.map((venta) => VentaCard(
+                            theme: ThemeController.instance,
+                            iconData: Icons.import_contacts,
+                            titulo: venta.tipoVenta,
+                            combustibles: Map.fromEntries(venta.detalle.map(
+                              (combustible) => MapEntry(
+                                  combustible.tipoCombustible,
+                                  combustible.cantidad),
+                            )),
+                            total: '10,000',
+                          )),
                       VentaCard(
                         theme: ThemeController.instance,
                         iconData: Icons.import_contacts,
@@ -143,6 +158,18 @@ class _ResumenDelDiaPageState extends State<ResumenDelDiaPage>
                         ),
                       ),
                       const SizedBox(height: 8),
+                      const SizedBox(height: 8),
+                      ...resumenDia.volumenes.expand(
+                        (volumen) => volumen.tanqueRegistroVolumen.map(
+                          (tanque) => _buildVolumenItem(
+                            theme,
+                            hora: tanque.hora,
+                            tanque: tanque.nombre,
+                            combustible: tanque.tipoCombustible,
+                            volumen: tanque.volumen,
+                          ),
+                        ),
+                      ),
                       _buildVolumenItem(
                         theme,
                         hora: '08:20',
@@ -171,13 +198,17 @@ class _ResumenDelDiaPageState extends State<ResumenDelDiaPage>
                         theme,
                         iconData: Icons.info,
                         titulo: 'Observaciones',
-                        cantidad: '3',
+                        cantidad: resumenDia.novedades?.totalObservaciones
+                                .toString() ??
+                            "0",
                       ),
                       _buildNovedadItem(
                         theme,
                         iconData: Icons.warning,
                         titulo: 'Incidentes',
-                        cantidad: '1',
+                        cantidad:
+                            resumenDia.novedades?.totalIncidentes.toString() ??
+                                "0",
                       ),
                     ],
                   ),
