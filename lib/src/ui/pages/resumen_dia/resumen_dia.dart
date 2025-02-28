@@ -124,7 +124,7 @@ class _ResumenDelDiaPageState extends State<ResumenDelDiaPage>
                             hora: DateFormat('HH:mm')
                                 .format(DateTime.parse(tanque.hora)),
                             tanque: volumen.nombre,
-                            combustible: tanque.tipoCombustible,
+                            combustible: tanque.codigo,
                             volumen: tanque.volumen,
                           ),
                         ),

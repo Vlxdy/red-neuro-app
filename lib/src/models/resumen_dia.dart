@@ -70,32 +70,32 @@ class VentasResumen {
     return {
       'id': tipoVenta,
       'nombre': cantidad,
-      'capacidad': detalle,
+      'detalle': detalle,
     };
   }
 }
 
 class DetalleVenta {
-  String tipoCombustible;
+  String codigo;
   String cantidad;
   String? color;
 
   DetalleVenta({
-    required this.tipoCombustible,
+    required this.codigo,
     required this.cantidad,
     this.color,
   });
 
   factory DetalleVenta.fromJson(Map<String, dynamic> json) {
     return DetalleVenta(
-      tipoCombustible: json['tipoCombustible'] ?? '',
+      codigo: json['codigo'] ?? '',
       cantidad: json['cantidad'] ?? '',
       color: json['color'],
     );
   }
   Map<String, dynamic> toJson() {
     return {
-      'tipoCombustible': tipoCombustible,
+      'codigo': codigo,
       'cantidad': cantidad,
       'color': color,
     };
@@ -145,14 +145,14 @@ class TanqueRegistroVolumen {
   String id;
   String hora;
   String tipoMedicion;
-  String tipoCombustible;
+  String codigo;
   String volumen;
 
   TanqueRegistroVolumen({
     required this.id,
     required this.hora,
     required this.tipoMedicion,
-    required this.tipoCombustible,
+    required this.codigo,
     required this.volumen,
   });
 
@@ -163,7 +163,7 @@ class TanqueRegistroVolumen {
       id: json['id'] ?? '',
       hora: json['hora'] ?? '',
       tipoMedicion: json['tipoMedicion'] ?? '',
-      tipoCombustible: json['tipoCombustible'] ?? '',
+      codigo: json['codigo'] ?? '',
       volumen: json['volumen'] ?? '',
     );
   }
@@ -172,7 +172,7 @@ class TanqueRegistroVolumen {
       'id': id,
       'hora': hora,
       'tipoMedicion': tipoMedicion,
-      'tipoCombustible': tipoCombustible,
+      'codigo': codigo,
       'volumen': volumen,
     };
   }
