@@ -1,3 +1,4 @@
+import 'package:control_ventas_movil/src/models/resumen_dia.dart';
 import 'package:control_ventas_movil/src/ui/common/buttons/simple_button.dart';
 import 'package:flutter/material.dart';
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
@@ -7,7 +8,7 @@ class VentaCard extends StatelessWidget {
   final IconData iconData;
   final String titulo;
   final String total;
-  final Map<String, String> combustibles;
+  final List<DetalleVenta> combustibles;
 
   const VentaCard({
     super.key,
@@ -21,7 +22,6 @@ class VentaCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 2,
       color: theme.accent50,
       margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
       shape: RoundedRectangleBorder(
@@ -33,7 +33,7 @@ class VentaCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             CircleAvatar(
-              backgroundColor: theme.primary,
+              backgroundColor: theme.secondary,
               radius: 20,
               child: Icon(iconData, color: theme.white, size: 20),
             ),
@@ -44,7 +44,7 @@ class VentaCard extends StatelessWidget {
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
-                  color: theme.black,
+                  color: theme.secondary,
                 ),
               ),
             ),
@@ -86,23 +86,27 @@ class VentaCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: theme.primary,
+                  color: theme.secondary,
                 ),
               ),
               const SizedBox(height: 12),
-              ...combustibles.entries.map(
-                    (entry) => ListTile(
+              ...combustibles.map(
+                (combustible) => ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: theme.primary.withOpacity(0.3),
-                    child: Icon(Icons.local_gas_station, color: theme.primary),
+                    backgroundColor: theme.primary,
+                    child: Icon(Icons.local_gas_station, color: theme.white),
                   ),
                   title: Text(
-                    entry.key,
-                    style: TextStyle(fontWeight: FontWeight.bold, color: theme.primary),
+                    combustible.tipoCombustible,
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, color: theme.black),
                   ),
                   trailing: Text(
-                    entry.value,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: theme.success),
+                    combustible.cantidad,
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: theme.black),
                   ),
                 ),
               ),

@@ -1,7 +1,6 @@
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
 import 'package:control_ventas_movil/src/ui/pages/inicio/inicio_service.dart';
 import 'package:control_ventas_movil/src/ui/pages/inicio/inicio_store.dart';
-import 'package:control_ventas_movil/src/ui/pages/resumen_dia/componentes/venta_card.dart';
 import 'package:flutter/material.dart';
 
 final GlobalKey<ScaffoldMessengerState> inicioMessenger =
@@ -77,21 +76,6 @@ class _InicioPageState extends State<InicioPage> with WidgetsBindingObserver {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      VentaCard(
-                        theme: ThemeController.instance,
-                        iconData: Icons.local_gas_station,
-                        titulo: 'Ventas de Combustible',
-                        combustibles: {
-                          'Gasolina': '5000L',
-                          'Diesel': '3000L',
-                          'Diesel6': '4000L',
-                          'Super': '2000L',
-                          'Premium': '1000L',
-                          'Extra': '1500L',
-                        },
-                        total: '\$10,000',
-                      ),
-                      const SizedBox(height: 16),
                       Text(
                         'Volúmenes',
                         style: TextStyle(

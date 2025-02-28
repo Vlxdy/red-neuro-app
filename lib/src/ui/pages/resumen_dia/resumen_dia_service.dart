@@ -1,4 +1,5 @@
 import 'package:control_ventas_movil/src/constants/network.dart';
+import 'package:control_ventas_movil/src/models/resumen_dia.dart';
 import 'package:control_ventas_movil/src/plugins/estaciones/bitacora_store.dart';
 import 'package:control_ventas_movil/src/ui/pages/resumen_dia/resumen_dia_store.dart';
 import 'package:flutter/material.dart';
@@ -21,16 +22,13 @@ class ResumenDiaService extends ServiceConfig {
   Future<void> cargarResumen() async {
     try {
       LoadingAnimation.instance.state = Overlay.of(context);
-      final response =
-          await fetch('/mobile/bitacora/1/resumen', // todo cambiar idBitacora
-              type: HttpProtocol.get,
-              withAuthorization: true);
+      final response = await fetch('/mobile/bitacora/$idBitacora/resumen',
+          type: HttpProtocol.get, withAuthorization: true);
       if (response.status == StatusNetwork.noInternet) {
         throw Exception('No hay conexión a internet');
       }
       if (response.status == StatusNetwork.connected) {
-        Logger.info(response.data.toString());
-        store.setResumenDia = (response.data['datos']);
+        store.setResumenDia = ResumenDia.fromJson(response.data);
       }
     } catch (e, stacktrace) {
       Logger.error('Exception al obtener estaciones de servicio $e');

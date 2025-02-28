@@ -1,5 +1,9 @@
 // import 'dart:ffi';
 
+import 'dart:convert';
+
+import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
+
 class ResumenDia {
   List<VentasResumen> ventas;
   List<VolumenesResumen> volumenes;
@@ -12,6 +16,7 @@ class ResumenDia {
   });
 
   factory ResumenDia.fromJson(Map<String, dynamic> json) {
+    Logger.info(jsonEncode(json));
     return ResumenDia(
         ventas: json['ventas'] != null
             ? (json['ventas'] as List)
@@ -56,7 +61,7 @@ class VentasResumen {
         tipoVenta: json['tipoVenta'] ?? '',
         cantidad: json['cantidad'] ?? '',
         detalle: json['detalle'] != null
-            ? (json['tanques'] as List)
+            ? (json['detalle'] as List)
                 .map((item) => DetalleVenta.fromJson(item))
                 .toList()
             : []);
@@ -73,22 +78,26 @@ class VentasResumen {
 class DetalleVenta {
   String tipoCombustible;
   String cantidad;
+  String? color;
 
   DetalleVenta({
     required this.tipoCombustible,
     required this.cantidad,
+    this.color,
   });
 
   factory DetalleVenta.fromJson(Map<String, dynamic> json) {
     return DetalleVenta(
       tipoCombustible: json['tipoCombustible'] ?? '',
       cantidad: json['cantidad'] ?? '',
+      color: json['color'],
     );
   }
   Map<String, dynamic> toJson() {
     return {
       'tipoCombustible': tipoCombustible,
       'cantidad': cantidad,
+      'color': color,
     };
   }
 }
@@ -96,20 +105,25 @@ class DetalleVenta {
 class VolumenesResumen {
   String id;
   String idCombustible;
+  String nombre;
   int capacidad;
   List<TanqueRegistroVolumen> tanqueRegistroVolumen;
 
   VolumenesResumen({
     required this.id,
     required this.idCombustible,
+    required this.nombre,
     required this.capacidad,
     required this.tanqueRegistroVolumen,
   });
 
   factory VolumenesResumen.fromJson(Map<String, dynamic> json) {
+    Logger.info('primer objetp');
+    Logger.info(jsonEncode(json));
     return VolumenesResumen(
       id: json['id'] ?? '',
       idCombustible: json['idCombusticle'] ?? '',
+      nombre: json['nombre'] ?? '',
       capacidad: json['capacidad'] ?? 0,
       tanqueRegistroVolumen: json['tanqueRegistroVolumen'] != null
           ? (json['tanqueRegistroVolumen'] as List)
@@ -130,10 +144,9 @@ class VolumenesResumen {
 class TanqueRegistroVolumen {
   String id;
   String hora;
-  DateTime tipoMedicion;
+  String tipoMedicion;
   String tipoCombustible;
   String volumen;
-  String nombre;
 
   TanqueRegistroVolumen({
     required this.id,
@@ -141,17 +154,17 @@ class TanqueRegistroVolumen {
     required this.tipoMedicion,
     required this.tipoCombustible,
     required this.volumen,
-    required this.nombre,
   });
 
   factory TanqueRegistroVolumen.fromJson(Map<String, dynamic> json) {
+    print(json);
+    print('==================');
     return TanqueRegistroVolumen(
       id: json['id'] ?? '',
       hora: json['hora'] ?? '',
       tipoMedicion: json['tipoMedicion'] ?? '',
       tipoCombustible: json['tipoCombustible'] ?? '',
       volumen: json['volumen'] ?? '',
-      nombre: json['nombre'] ?? '',
     );
   }
   Map<String, dynamic> toJson() {
@@ -161,7 +174,6 @@ class TanqueRegistroVolumen {
       'tipoMedicion': tipoMedicion,
       'tipoCombustible': tipoCombustible,
       'volumen': volumen,
-      'nombre': nombre,
     };
   }
 }
