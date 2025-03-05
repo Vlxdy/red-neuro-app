@@ -157,8 +157,7 @@ class TanqueRegistroVolumen {
   });
 
   factory TanqueRegistroVolumen.fromJson(Map<String, dynamic> json) {
-    print(json);
-    print('==================');
+   
     return TanqueRegistroVolumen(
       id: json['id'] ?? '',
       hora: json['hora'] ?? '',

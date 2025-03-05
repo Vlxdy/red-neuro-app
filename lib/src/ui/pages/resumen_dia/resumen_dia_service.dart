@@ -28,7 +28,6 @@ class ResumenDiaService extends ServiceConfig {
         throw Exception('No hay conexión a internet');
       }
       if (response.status == StatusNetwork.connected) {
-        print(response.data);
         store.setResumenDia = ResumenDia.fromJson(response.data);
       }
     } catch (e, stacktrace) {

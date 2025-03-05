@@ -19,7 +19,7 @@ class PopupVolumenes extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => const VolumenesTanquesScreen()),
+              builder: (context) => const VolumenesTanques()),
         );
         break;
       case 1:

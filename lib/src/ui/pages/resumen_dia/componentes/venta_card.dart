@@ -1,5 +1,4 @@
 import 'package:control_ventas_movil/src/models/resumen_dia.dart';
-import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
 import 'package:control_ventas_movil/src/ui/common/buttons/simple_button.dart';
 import 'package:flutter/material.dart';
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
@@ -49,7 +48,7 @@ class VentaCard extends StatelessWidget {
                 ),
               ),
             ),
-            combustibles!=[]
+            combustibles.isNotEmpty
                 ? SimpleButton(
                     onTap: () => _showFuelDetails(context),
                     title: "Ver Detalle",
