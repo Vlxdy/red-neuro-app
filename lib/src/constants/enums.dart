@@ -9,9 +9,9 @@ enum TipoVentas {
       case TipoVentas.bidones:
         return 'Bidones';
       case TipoVentas.maquinarias:
-        return 'Maquinarias';
+        return 'Maquinaria';
       case TipoVentas.usuariosDirectos:
-        return 'Usuarios directos';
+        return 'Usuario directo';
       case TipoVentas.tanqueAdicional:
         return 'Tanque adicional';
     }

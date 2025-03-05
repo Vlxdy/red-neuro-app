@@ -1,8 +1,13 @@
+import 'package:collection/collection.dart';
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/ui/pages/inicio/inicio_service.dart';
+import 'package:control_ventas_movil/src/constants/enums.dart';
 import 'package:control_ventas_movil/src/ui/pages/inicio/inicio_store.dart';
 import 'package:control_ventas_movil/src/ui/pages/resumen_dia/componentes/venta_card.dart';
+import 'package:control_ventas_movil/src/ui/pages/resumen_dia/resumen_dia_service.dart';
+import 'package:control_ventas_movil/src/ui/pages/resumen_dia/resumen_dia_store.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 final GlobalKey<ScaffoldMessengerState> inicioMessenger =
     GlobalKey<ScaffoldMessengerState>();
@@ -16,19 +21,36 @@ class ResumenDelDiaPage extends StatefulWidget {
 
 class _ResumenDelDiaPageState extends State<ResumenDelDiaPage>
     with WidgetsBindingObserver {
-  late InicioService service;
+  late ResumenDiaService service;
   final pinStore = CodigoPinStore.instance;
 
   @override
   void initState() {
+    service = ResumenDiaService('', context);
+    service.fetchData();
     super.initState();
-    service = InicioService('', context);
-    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = ThemeController.instance;
+    final resumenDia = context.watch<ResumenDiaStore>().resumenDia;
+    IconData icono(String tipoVenta) {
+      TipoVentas? tipo = TipoVentas.values.firstWhereOrNull(
+        (e) => e.descripcion == tipoVenta,
+      );
+      if (tipo == null) return Icons.info;
+      switch (tipo) {
+        case TipoVentas.bidones:
+          return Icons.import_contacts;
+        case TipoVentas.maquinarias:
+          return Icons.motorcycle;
+        case TipoVentas.tanqueAdicional:
+          return Icons.nature_people;
+        case TipoVentas.usuariosDirectos:
+          return Icons.local_gas_station;
+      }
+    }
 
     return ScaffoldMessenger(
       key: inicioMessenger,
@@ -73,89 +95,39 @@ class _ResumenDelDiaPageState extends State<ResumenDelDiaPage>
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: theme.success,
+                          color: theme.secondary,
                         ),
                       ),
                       const SizedBox(height: 8),
-                      VentaCard(
-                        theme: ThemeController.instance,
-                        iconData: Icons.import_contacts,
-                        titulo: 'Bidones',
-                        combustibles: const {
-                          'Gasolina': '5000L',
-                          'Diesel': '3000L',
-                          'Diesel6': '4000L',
-                          'Super': '2000L',
-                          'Premium': '1000L',
-                          'Extra': '1500L',
-                        },
-                        total: '10,000',
-                      ),
-                      VentaCard(
-                        theme: ThemeController.instance,
-                        iconData: Icons.motorcycle,
-                        titulo: 'Maquinaria',
-                        combustibles: const {
-                          'Gasolina': '5000L',
-                          'Diesel': '3000L',
-                          'Diesel6': '4000L',
-                          'Super': '2000L',
-                          'Premium': '1000L',
-                          'Extra': '1500L',
-                        },
-                        total: '10,000',
-                      ),
-                      VentaCard(
-                        theme: ThemeController.instance,
-                        iconData: Icons.nature_people,
-                        titulo: 'Usuarios Directos',
-                        combustibles: const {
-                          'Gasolina': '5000L',
-                          'Diesel': '3000L',
-                          'Diesel6': '4000L',
-                          'Super': '2000L',
-                          'Premium': '1000L',
-                          'Extra': '1500L',
-                        },
-                        total: '10,000',
-                      ),
-                      VentaCard(
-                        theme: ThemeController.instance,
-                        iconData: Icons.local_gas_station,
-                        titulo: 'Tanque Adicional',
-                        combustibles: const {
-                          'Gasolina': '5000L',
-                          'Diesel': '3000L',
-                          'Diesel6': '4000L',
-                          'Super': '2000L',
-                          'Premium': '1000L',
-                          'Extra': '1500L',
-                        },
-                        total: '10,000',
-                      ),
+                      ...resumenDia.ventas.map((venta) => VentaCard(
+                            theme: ThemeController.instance,
+                            iconData: icono(venta.tipoVenta),
+                            titulo: venta.tipoVenta,
+                            combustibles: venta.detalle,
+                            total: venta.cantidad,
+                          )),
                       const SizedBox(height: 16),
                       Text(
                         'Volúmenes',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: theme.primary,
+                          color: theme.secondary,
                         ),
                       ),
                       const SizedBox(height: 8),
-                      _buildVolumenItem(
-                        theme,
-                        hora: '08:20',
-                        tanque: 'Tanque 1',
-                        combustible: 'DO',
-                        volumen: '23000',
-                      ),
-                      _buildVolumenItem(
-                        theme,
-                        hora: '08:10',
-                        tanque: 'Tanque 2',
-                        combustible: 'GE',
-                        volumen: '20000',
+                      const SizedBox(height: 8),
+                      ...resumenDia.volumenes.expand(
+                        (volumen) => volumen.tanqueRegistroVolumen.map(
+                          (tanque) => _buildVolumenItem(
+                            theme,
+                            hora: DateFormat('HH:mm')
+                                .format(DateTime.parse(tanque.hora)),
+                            tanque: volumen.nombre,
+                            combustible: tanque.codigo,
+                            volumen: tanque.volumen,
+                          ),
+                        ),
                       ),
                       const SizedBox(height: 16),
                       Text(
@@ -163,7 +135,7 @@ class _ResumenDelDiaPageState extends State<ResumenDelDiaPage>
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: theme.primary,
+                          color: theme.secondary,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -171,13 +143,17 @@ class _ResumenDelDiaPageState extends State<ResumenDelDiaPage>
                         theme,
                         iconData: Icons.info,
                         titulo: 'Observaciones',
-                        cantidad: '3',
+                        cantidad: resumenDia.novedades?.totalObservaciones
+                                .toString() ??
+                            "0",
                       ),
                       _buildNovedadItem(
                         theme,
                         iconData: Icons.warning,
                         titulo: 'Incidentes',
-                        cantidad: '1',
+                        cantidad:
+                            resumenDia.novedades?.totalIncidentes.toString() ??
+                                "0",
                       ),
                     ],
                   ),
@@ -204,28 +180,28 @@ class _ResumenDelDiaPageState extends State<ResumenDelDiaPage>
     required String volumen,
   }) {
     return Card(
-      elevation: 1,
-      margin: const EdgeInsets.symmetric(vertical: 4),
+      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
       child: ListTile(
         leading: Text(
           hora,
           style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: theme.primary,
+            fontWeight: FontWeight.w800,
+            fontSize: 16,
+            color: theme.secondary,
           ),
         ),
         title: Row(
-          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _buildChip(theme, label: combustible, color: theme.background),
-            const SizedBox(width: 8),
             Text(
               tanque,
               style: TextStyle(
-                color: theme.primary,
+                color: theme.secondary,
                 fontWeight: FontWeight.w500,
               ),
             ),
+            const SizedBox(width: 10),
+            _buildChip(theme, label: combustible, color: theme.primary),
           ],
         ),
         trailing: Text(
@@ -250,12 +226,12 @@ class _ResumenDelDiaPageState extends State<ResumenDelDiaPage>
       elevation: 1,
       margin: const EdgeInsets.symmetric(vertical: 4),
       child: ListTile(
-        leading: Icon(iconData, color: theme.primary),
+        leading: Icon(iconData, color: theme.secondary),
         title: Text(
           titulo,
           style: TextStyle(
             fontWeight: FontWeight.w600,
-            color: theme.primary,
+            color: theme.secondary,
           ),
         ),
         trailing: Text(
@@ -263,7 +239,7 @@ class _ResumenDelDiaPageState extends State<ResumenDelDiaPage>
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: theme.primary,
+            color: theme.secondary,
           ),
         ),
       ),
@@ -273,6 +249,9 @@ class _ResumenDelDiaPageState extends State<ResumenDelDiaPage>
   Widget _buildChip(ThemeController theme,
       {required String label, required Color color}) {
     return Chip(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(50),
+      ),
       label: Text(
         label,
         style: TextStyle(
@@ -281,6 +260,7 @@ class _ResumenDelDiaPageState extends State<ResumenDelDiaPage>
         ),
       ),
       backgroundColor: color,
+      side: BorderSide.none,
     );
   }
 }

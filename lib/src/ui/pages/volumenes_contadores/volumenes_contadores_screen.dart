@@ -6,9 +6,9 @@ import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/volumenes
 
 class VolumenesContadoresScreen extends StatefulWidget {
   const VolumenesContadoresScreen({super.key});
-
+  
   @override
-  _VolumenesContadoresScreenState createState() =>
+  State<VolumenesContadoresScreen> createState() =>
       _VolumenesContadoresScreenState();
 }
 
