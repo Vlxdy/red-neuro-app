@@ -15,8 +15,8 @@ class ResumenDiaService extends ServiceConfig {
 
   final idBitacora = BitacoraStore.instance.bitacora.id;
 
-  void fetchData() {
-    cargarResumen().whenComplete(() => {});
+  Future<void> fetchData() {
+    return cargarResumen();
   }
 
   Future<void> cargarResumen() async {
