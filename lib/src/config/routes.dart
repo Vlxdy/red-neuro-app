@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:control_ventas_movil/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
 import 'package:control_ventas_movil/src/ui/pages/control/control.dart';
-import 'package:control_ventas_movil/src/ui/pages/registrar_venta/registrar_venta.dart';
+import 'package:control_ventas_movil/src/ui/pages/registrar_venta/componentes/navbar_registrar_venta.dart';
 import 'package:control_ventas_movil/src/ui/pages/resumen_dia/resumen_dia.dart';
 import 'package:control_ventas_movil/src/ui/pages/seguridad/configuracion_desbloqueo.dart';
 import 'package:control_ventas_movil/src/ui/pages/seguridad/configuracion_pin_seguridad.dart';
