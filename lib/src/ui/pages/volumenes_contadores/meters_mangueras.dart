@@ -8,7 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/registro_meters_store.dart';
 
-import '../../common/datatble/custom_datatable.dart';
+import '../../common/datatable/custom_datatable.dart';
 
 class MetersManguerasScreen extends StatefulWidget {
   const MetersManguerasScreen({super.key});
