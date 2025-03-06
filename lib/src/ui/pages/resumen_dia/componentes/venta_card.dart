@@ -1,5 +1,4 @@
 import 'package:control_ventas_movil/src/models/resumen_dia.dart';
-import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
 import 'package:control_ventas_movil/src/ui/common/buttons/simple_button.dart';
 import 'package:flutter/material.dart';
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
@@ -49,7 +48,7 @@ class VentaCard extends StatelessWidget {
                 ),
               ),
             ),
-            combustibles!=[]
+            combustibles != []
                 ? SimpleButton(
                     onTap: () => _showFuelDetails(context),
                     title: "Ver Detalle",
@@ -96,7 +95,10 @@ class VentaCard extends StatelessWidget {
               ...combustibles.map(
                 (combustible) => ListTile(
                   leading: CircleAvatar(
-                    backgroundColor: theme.primary,
+                    backgroundColor: (combustible.color != null)
+                        ? Color(
+                            int.parse('0xFF${combustible.color!.substring(1)}'))
+                        : theme.primary,
                     child: Icon(Icons.local_gas_station, color: theme.white),
                   ),
                   title: Text(
