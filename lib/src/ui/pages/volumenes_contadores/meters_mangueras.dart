@@ -8,6 +8,8 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/registro_meters_store.dart';
 
+import '../../common/datatble/custom_datatable.dart';
+
 class MetersManguerasScreen extends StatefulWidget {
   const MetersManguerasScreen({super.key});
 
@@ -91,7 +93,7 @@ class _MetersManguerasScreen extends State<MetersManguerasScreen> {
                       return Card(
                         margin: const EdgeInsets.symmetric(vertical: 8),
                         child: Padding(
-                          padding: const EdgeInsets.all(12.0),
+                          padding: const EdgeInsets.all(2.0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -100,13 +102,13 @@ class _MetersManguerasScreen extends State<MetersManguerasScreen> {
                                 style: const TextStyle(
                                     fontSize: 16, fontWeight: FontWeight.bold),
                               ),
-                              const SizedBox(height: 8),
                               // Mapeo de los dispensadores
                               ...(volumen['dispensadores'] as List)
                                   .map((dispensador) {
                                 return Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
+                                    const SizedBox(height: 16),
                                     // Dispensador
                                     Text(
                                       'Dispensador: ${dispensador['codigo']}',
@@ -115,132 +117,49 @@ class _MetersManguerasScreen extends State<MetersManguerasScreen> {
                                           fontWeight: FontWeight.bold),
                                     ),
                                     const SizedBox(height: 8),
-                                    // Mapeo de las mangueras del dispensador
-                                    Table(
-                                      // Eliminar borde de la tabla
-                                      children: [
-                                        // Fila para los encabezados de los campos
-                                        TableRow(
-                                          /* decoration: BoxDecoration(
-                                              color: Colors.blueAccent), */
-                                          children: [
-                                            Padding(
-                                              padding: EdgeInsets.symmetric(
-                                                  vertical: 8.0),
-                                              child: Center(
-                                                child: Text(
-                                                  'Manguera',
-                                                  style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: theme.black),
-                                                ),
-                                              ),
-                                            ),
-                                            Padding(
-                                              padding: EdgeInsets.symmetric(
-                                                  vertical: 8.0),
-                                              child: Center(
-                                                child: Text(
-                                                  'Combustible',
-                                                  style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: theme.black),
-                                                ),
-                                              ),
-                                            ),
-                                            Padding(
-                                              padding: EdgeInsets.symmetric(
-                                                  vertical: 8.0),
-                                              child: Center(
-                                                child: Text(
-                                                  'Contador',
-                                                  style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: theme.black),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        // Mapeo de las mangueras
-                                        ...(dispensador['mangueras'] as List)
-                                            .asMap()
-                                            .entries
-                                            .map((entry) {
-                                          final indexM = entry.key;
-                                          final manguera = entry.value;
-                                          // Obtener el color hexadecimal del combustible
-                                          String hexColor =
-                                              manguera['combustible']
-                                                  ['combustiblecolor'];
-                                          Color color = Color(int.parse(
-                                              '0xFF${hexColor.substring(1)}'));
-
-                                          return TableRow(
-                                            decoration: BoxDecoration(
-                                              color: indexM.isEven
-                                                  ? theme.primary50
-                                                  : theme.white,
-                                            ),
-                                            children: [
-                                              Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        vertical: 8.0),
-                                                child: Center(
-                                                    //child: Text('${indexM + 1}'),
-                                                    child: Text(
-                                                        manguera['codigo'])),
-                                              ),
-                                              Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        vertical: 8.0),
-                                                child: Center(
-                                                  child: Container(
-                                                    decoration: BoxDecoration(
-                                                      color:
-                                                          color, // Color dinámico
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                              12),
-                                                    ),
-                                                    //width: 90, // Ancho fijo
-                                                    padding: const EdgeInsets
-                                                        .symmetric(
-                                                        vertical: 6.0,
-                                                        horizontal: 12.0),
-                                                    child: Align(
-                                                      alignment: Alignment
-                                                          .center, // Alineación central
-                                                      child: Text(
-                                                        manguera['combustible'][
-                                                            'combustiblecodigo'],
-                                                        style: TextStyle(
-                                                            color: theme.white),
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                              Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        vertical: 8.0),
-                                                child: Center(
-                                                  child: Text(
-                                                      '${manguera['meter']}'),
-                                                ),
-                                              ),
-                                            ],
-                                          );
-                                        }),
+                                    CustomDesktopDataTable(
+                                      columnas: [
+                                        CriterioOrdenType(nombre: 'Manguera'),
+                                        CriterioOrdenType(
+                                            nombre: 'Combustible'),
+                                        CriterioOrdenType(nombre: 'Contador'),
                                       ],
+                                      contenidoTabla:
+                                          (dispensador['mangueras'] as List)
+                                              .map((manguera) {
+                                        String hexColor =
+                                            manguera['combustible']
+                                                ['combustiblecolor'];
+                                        Color color = Color(int.parse(
+                                            '0xFF${hexColor.substring(1)}'));
+
+                                        return [
+                                          Center(
+                                              child: Text(manguera['codigo'])),
+                                          Center(
+                                              child: Container(
+                                            decoration: BoxDecoration(
+                                              color: color,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 6.0,
+                                                horizontal: 12.0),
+                                            child: Text(
+                                              manguera['combustible']
+                                                  ['combustiblecodigo'],
+                                              style:
+                                                  TextStyle(color: theme.white),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          )),
+                                          Center(
+                                              child:
+                                                  Text('${manguera['meter']}')),
+                                        ];
+                                      }).toList(),
+                                      condensed: true,
                                     ),
                                   ],
                                 );
