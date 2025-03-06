@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 
+import 'package:control_ventas_movil/src/models/combustible.dart';
 import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
 
 class ResumenDia {
@@ -145,25 +146,26 @@ class TanqueRegistroVolumen {
   String id;
   String hora;
   String tipoMedicion;
-  String codigo;
   String volumen;
+  Combustible? combustible;
 
   TanqueRegistroVolumen({
     required this.id,
     required this.hora,
     required this.tipoMedicion,
-    required this.codigo,
     required this.volumen,
+    this.combustible,
   });
 
   factory TanqueRegistroVolumen.fromJson(Map<String, dynamic> json) {
-   
     return TanqueRegistroVolumen(
       id: json['id'] ?? '',
       hora: json['hora'] ?? '',
       tipoMedicion: json['tipoMedicion'] ?? '',
-      codigo: json['codigo'] ?? '',
       volumen: json['volumen'] ?? '',
+      combustible: json['combustible'] != null
+          ? Combustible.fromJson(json['combustible'])
+          : null, // Manejo de null
     );
   }
   Map<String, dynamic> toJson() {
@@ -171,8 +173,8 @@ class TanqueRegistroVolumen {
       'id': id,
       'hora': hora,
       'tipoMedicion': tipoMedicion,
-      'codigo': codigo,
       'volumen': volumen,
+      'combustible': combustible?.toJson(),
     };
   }
 }

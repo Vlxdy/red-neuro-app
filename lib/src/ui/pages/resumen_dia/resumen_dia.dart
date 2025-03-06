@@ -9,6 +9,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../common/components/skeleton.dart';
+
 final GlobalKey<ScaffoldMessengerState> inicioMessenger =
     GlobalKey<ScaffoldMessengerState>();
 
@@ -23,12 +25,28 @@ class _ResumenDelDiaPageState extends State<ResumenDelDiaPage>
     with WidgetsBindingObserver {
   late ResumenDiaService service;
   final pinStore = CodigoPinStore.instance;
+  bool isLoading = true;
 
   @override
   void initState() {
     service = ResumenDiaService('', context);
-    service.fetchData();
+    service.fetchData().then((_) {
+      setState(() {
+        isLoading = false;
+      });
+    });
     super.initState();
+  }
+
+  Future<void> _refresh() async {
+    setState(() {
+      isLoading = true;
+    });
+    service = ResumenDiaService('', context);
+    await service.fetchData();
+    setState(() {
+      isLoading = false;
+    });
   }
 
   @override
@@ -53,117 +71,125 @@ class _ResumenDelDiaPageState extends State<ResumenDelDiaPage>
     }
 
     return ScaffoldMessenger(
-      key: inicioMessenger,
-      child: Scaffold(
-        backgroundColor: theme.background,
-        body: SafeArea(
-            child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            const SizedBox(height: 15),
-            const SizedBox(
-              height: 10,
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Row(children: [
-                Icon(Icons.stacked_bar_chart, color: theme.primary, size: 30),
-                const SizedBox(width: 8),
-                Text(
-                  'Resumen del día',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: theme.primary,
-                  ),
-                ),
-              ]),
-            ),
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                    color: theme.background,
-                    borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(25),
-                        topRight: Radius.circular(25))),
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 25),
-                      Text(
-                        'Ventas',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: theme.secondary,
-                        ),
+        key: inicioMessenger,
+        child: RefreshIndicator(
+          onRefresh: _refresh,
+          child: Scaffold(
+            backgroundColor: theme.background,
+            body: SafeArea(
+                child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: isLoading
+                  ? [const SkeletonGrid(rows: 5, columns: 1, itemHeight: 30)]
+                  : [
+                      const SizedBox(height: 15),
+                      const SizedBox(
+                        height: 10,
                       ),
-                      const SizedBox(height: 8),
-                      ...resumenDia.ventas.map((venta) => VentaCard(
-                            theme: ThemeController.instance,
-                            iconData: icono(venta.tipoVenta),
-                            titulo: venta.tipoVenta,
-                            combustibles: venta.detalle,
-                            total: venta.cantidad,
-                          )),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Volúmenes',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: theme.secondary,
-                        ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                        child: Row(children: [
+                          Icon(Icons.stacked_bar_chart,
+                              color: theme.primary, size: 30),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Resumen del día',
+                            style: TextStyle(
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              color: theme.primary,
+                            ),
+                          ),
+                        ]),
                       ),
-                      const SizedBox(height: 8),
-                      const SizedBox(height: 8),
-                      ...resumenDia.volumenes.expand(
-                        (volumen) => volumen.tanqueRegistroVolumen.map(
-                          (tanque) => _buildVolumenItem(
-                            theme,
-                            hora: DateFormat('HH:mm')
-                                .format(DateTime.parse(tanque.hora)),
-                            tanque: volumen.nombre,
-                            combustible: tanque.codigo,
-                            volumen: tanque.volumen,
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                              color: theme.background,
+                              borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(25),
+                                  topRight: Radius.circular(25))),
+                          child: SingleChildScrollView(
+                            child: Column(
+                              children: [
+                                const SizedBox(height: 25),
+                                Text(
+                                  'Ventas',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: theme.secondary,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                ...resumenDia.ventas.map((venta) => VentaCard(
+                                      theme: ThemeController.instance,
+                                      iconData: icono(venta.tipoVenta),
+                                      titulo: venta.tipoVenta,
+                                      combustibles: venta.detalle,
+                                      total: venta.cantidad,
+                                    )),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Volúmenes',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: theme.secondary,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                const SizedBox(height: 8),
+                                ...resumenDia.volumenes.expand(
+                                  (volumen) =>
+                                      volumen.tanqueRegistroVolumen.map(
+                                    (tanque) => _buildVolumenItem(
+                                      theme,
+                                      hora: DateFormat('HH:mm')
+                                          .format(DateTime.parse(tanque.hora)),
+                                      tanque: volumen.nombre,
+                                      combustible: tanque.combustible!.codigo,
+                                      volumen: tanque.volumen,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Novedades',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: theme.secondary,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                _buildNovedadItem(
+                                  theme,
+                                  iconData: Icons.info,
+                                  titulo: 'Observaciones',
+                                  cantidad: resumenDia
+                                          .novedades?.totalObservaciones
+                                          .toString() ??
+                                      "0",
+                                ),
+                                _buildNovedadItem(
+                                  theme,
+                                  iconData: Icons.warning,
+                                  titulo: 'Incidentes',
+                                  cantidad: resumenDia
+                                          .novedades?.totalIncidentes
+                                          .toString() ??
+                                      "0",
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Novedades',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: theme.secondary,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      _buildNovedadItem(
-                        theme,
-                        iconData: Icons.info,
-                        titulo: 'Observaciones',
-                        cantidad: resumenDia.novedades?.totalObservaciones
-                                .toString() ??
-                            "0",
-                      ),
-                      _buildNovedadItem(
-                        theme,
-                        iconData: Icons.warning,
-                        titulo: 'Incidentes',
-                        cantidad:
-                            resumenDia.novedades?.totalIncidentes.toString() ??
-                                "0",
-                      ),
                     ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        )),
-      ),
-    );
+            )),
+          ),
+        ));
   }
 
   @override
