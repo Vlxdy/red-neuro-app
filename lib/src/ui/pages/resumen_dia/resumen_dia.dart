@@ -1,6 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
 import 'package:control_ventas_movil/src/constants/enums.dart';
+import 'package:control_ventas_movil/src/models/combustible.dart';
 import 'package:control_ventas_movil/src/ui/pages/inicio/inicio_store.dart';
 import 'package:control_ventas_movil/src/ui/pages/resumen_dia/componentes/venta_card.dart';
 import 'package:control_ventas_movil/src/ui/pages/resumen_dia/resumen_dia_service.dart';
@@ -117,16 +118,32 @@ class _ResumenDelDiaPageState extends State<ResumenDelDiaPage>
                           child: SingleChildScrollView(
                             child: Column(
                               children: [
-                                const SizedBox(height: 25),
-                                Text(
-                                  'Ventas',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: theme.secondary,
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 16.0, horizontal: 20.0),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Ventas',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: theme.secondary,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Total',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: theme.secondary,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                const SizedBox(height: 8),
                                 ...resumenDia.ventas.map((venta) => VentaCard(
                                       theme: ThemeController.instance,
                                       iconData: icono(venta.tipoVenta),
@@ -134,17 +151,32 @@ class _ResumenDelDiaPageState extends State<ResumenDelDiaPage>
                                       combustibles: venta.detalle,
                                       total: venta.cantidad,
                                     )),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Volúmenes',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: theme.secondary,
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 16.0, horizontal: 20.0),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Volúmenes',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: theme.secondary,
+                                        ),
+                                      ),
+                                      Text(
+                                        '',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: theme.secondary,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                const SizedBox(height: 8),
-                                const SizedBox(height: 8),
                                 ...resumenDia.volumenes.expand(
                                   (volumen) =>
                                       volumen.tanqueRegistroVolumen.map(
@@ -153,21 +185,37 @@ class _ResumenDelDiaPageState extends State<ResumenDelDiaPage>
                                       hora: DateFormat('HH:mm')
                                           .format(DateTime.parse(tanque.hora)),
                                       tanque: volumen.nombre,
-                                      combustible: tanque.combustible!.codigo,
+                                      combustible: tanque.combustible!,
                                       volumen: tanque.volumen,
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Novedades',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: theme.secondary,
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 16.0, horizontal: 20.0),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Novedades',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: theme.secondary,
+                                        ),
+                                      ),
+                                      Text(
+                                        '',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: theme.secondary,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                const SizedBox(height: 8),
                                 _buildNovedadItem(
                                   theme,
                                   iconData: Icons.info,
@@ -207,11 +255,12 @@ class _ResumenDelDiaPageState extends State<ResumenDelDiaPage>
     ThemeController theme, {
     required String hora,
     required String tanque,
-    required String combustible,
+    required Combustible combustible,
     required String volumen,
   }) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
+      color: theme.primary20,
       child: ListTile(
         leading: Text(
           hora,
@@ -232,7 +281,13 @@ class _ResumenDelDiaPageState extends State<ResumenDelDiaPage>
               ),
             ),
             const SizedBox(width: 10),
-            _buildChip(theme, label: combustible, color: theme.primary),
+            _buildChip(
+              theme,
+              label: combustible.codigo,
+              color: (combustible.color != null)
+                  ? Color(int.parse('0xFF${combustible.color!.substring(1)}'))
+                  : theme.primary,
+            ),
           ],
         ),
         trailing: Text(
@@ -256,6 +311,7 @@ class _ResumenDelDiaPageState extends State<ResumenDelDiaPage>
     return Card(
       elevation: 1,
       margin: const EdgeInsets.symmetric(vertical: 4),
+      color: theme.primary20,
       child: ListTile(
         leading: Icon(iconData, color: theme.secondary),
         title: Text(

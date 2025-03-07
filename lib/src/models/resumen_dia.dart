@@ -80,11 +80,13 @@ class DetalleVenta {
   String codigo;
   String cantidad;
   String? color;
+  String? nombre;
 
   DetalleVenta({
     required this.codigo,
     required this.cantidad,
     this.color,
+    this.nombre,
   });
 
   factory DetalleVenta.fromJson(Map<String, dynamic> json) {
@@ -92,6 +94,7 @@ class DetalleVenta {
       codigo: json['codigo'] ?? '',
       cantidad: json['cantidad'] ?? '',
       color: json['color'],
+      nombre: json['nombre'],
     );
   }
   Map<String, dynamic> toJson() {
@@ -99,6 +102,7 @@ class DetalleVenta {
       'codigo': codigo,
       'cantidad': cantidad,
       'color': color,
+      'nombre': nombre,
     };
   }
 }

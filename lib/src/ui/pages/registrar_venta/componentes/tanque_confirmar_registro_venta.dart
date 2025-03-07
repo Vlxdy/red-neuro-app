@@ -1,5 +1,5 @@
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/ui/pages/registrar_venta/tanque_adicional.dart';
+import 'package:control_ventas_movil/src/ui/pages/registrar_venta/screens/tanque_adicional.dart';
 import 'package:flutter/material.dart';
 
 class ConfirmarRegistroScreen extends StatelessWidget {

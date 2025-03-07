@@ -56,12 +56,12 @@ class CombustibleCard extends StatelessWidget {
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
-                            title,
-                            maxLines: 4,
+                            title.toUpperCase(),
+                            maxLines: 3,
                             overflow: TextOverflow.ellipsis,
                             softWrap: true,
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 12,
                               fontWeight: FontWeight.bold,
                               color: color,
                             ),

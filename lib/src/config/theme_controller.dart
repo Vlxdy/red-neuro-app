@@ -12,6 +12,8 @@ class ThemeController {
 
   //Colors
   // Primary
+  Color get primary20 =>
+      isLight ? Theming.primaryColor20 : Theming.primaryDarkColor20;
   Color get primary50 =>
       isLight ? Theming.primaryColor50 : Theming.primaryDarkColor50;
   Color get primary200 =>
@@ -34,7 +36,8 @@ class ThemeController {
   Color get accent900 => Theming.accentColor900;
 
   // Background
-  Color get background => isLight ? Theming.background : Theming.backgroundDark;
+  Color get background =>
+      isLight ? const Color(0xFFFFFFFF) : Theming.backgroundDark;
 
   Color get transparent => Colors.transparent;
 

@@ -73,25 +73,78 @@ class _RegistroContadoresState extends State<RegistroContadores> {
                 },
               ),
               Expanded(
-                child: Stepper(
-                  type: StepperType.horizontal,
-                  currentStep: _currentStep,
-                  controlsBuilder:
-                      (BuildContext context, ControlsDetails details) {
-                    return const SizedBox.shrink(); // Sin botones
-                  },
-                  steps: widget.dispensadores.map((dispensador) {
-                    return Step(
-                      title: const Text(''), // Sin titulo
-                      content: DispensadorWidget(
-                        dispensador: dispensador,
-                        listaCombustibles: widget.listaCombustibles,
+                child: Column(
+                  children: [
+                    if (widget.dispensadores.length > 1) ...[
+                      SizedBox(
+                        height: 72,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (widget.dispensadores.length <= 5) ...[
+                                ...List.generate(
+                                  widget.dispensadores.length,
+                                  (index) => Container(
+                                    margin: const EdgeInsets.symmetric(
+                                        horizontal: 4),
+                                    width: 24,
+                                    height: 24,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: _currentStep == index
+                                          ? ThemeController.instance.secondary
+                                          : Colors.grey[300],
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        '${index + 1}',
+                                        style: TextStyle(
+                                          color: _currentStep == index
+                                              ? Colors.white
+                                              : Colors.black,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ] else ...[
+                                _buildStepper(0),
+                                if (_currentStep > 1) ...[
+                                  const Text('...',
+                                      style: TextStyle(fontSize: 20)),
+                                  _buildStepper(_currentStep - 1),
+                                ],
+                                if (_currentStep > 0)
+                                  _buildStepper(_currentStep),
+                                if (_currentStep <
+                                    widget.dispensadores.length - 1) ...[
+                                  _buildStepper(_currentStep + 1),
+                                  if (_currentStep <
+                                      widget.dispensadores.length - 2) ...[
+                                    const Text('...',
+                                        style: TextStyle(fontSize: 20)),
+                                    _buildStepper(
+                                        widget.dispensadores.length - 1),
+                                  ]
+                                ],
+                              ],
+                            ],
+                          ),
+                        ),
                       ),
-                      isActive: _currentStep >=
-                          widget.dispensadores.indexOf(dispensador),
-                    );
-                  }).toList(),
-                  elevation: 0, // Sin elevación
+                    ],
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: DispensadorWidget(
+                          dispensador: widget.dispensadores[_currentStep],
+                          listaCombustibles: widget.listaCombustibles,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -173,6 +226,29 @@ class _RegistroContadoresState extends State<RegistroContadores> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStepper(int index) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      width: 24,
+      height: 24,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: _currentStep == index
+            ? ThemeController.instance.secondary
+            : Colors.grey[300],
+      ),
+      child: Center(
+        child: Text(
+          '${index + 1}',
+          style: TextStyle(
+            color: _currentStep == index ? Colors.white : Colors.black,
+            fontSize: 12,
+          ),
         ),
       ),
     );
@@ -411,7 +487,7 @@ void showRegistroContadoresModal(BuildContext context) {
         tipoMedicion: tiposMediciones,
         listaCombustibles: listaCombustibles,
         dispensadores: [
-          /*         Dispensador(
+          Dispensador(
             idDispensador: "1",
             codigo: "DISP-200",
             horaRegistro: horaActual,
@@ -419,31 +495,47 @@ void showRegistroContadoresModal(BuildContext context) {
               Manguera(idManguera: "1", codigo: "M001"),
               Manguera(idManguera: "1", codigo: "M002"),
             ],
-          ), */
+          ),
           Dispensador(
             idDispensador: "2",
-            codigo: "DISP-201",
+            codigo: "DISP-202",
             horaRegistro: horaActual,
             mangueras: [
               Manguera(idManguera: "1", codigo: "M003"),
             ],
           ),
-          /*        Dispensador(
-            idDispensador: "3",
-            codigo: "DISP-202",
-            horaRegistro: horaActual,
-            mangueras: [
-              Manguera(idManguera: "1", codigo: "M004"),
-            ],
-          ),
           Dispensador(
-            idDispensador: "3",
+            idDispensador: "2",
             codigo: "DISP-203",
             horaRegistro: horaActual,
             mangueras: [
-              Manguera(idManguera: "5", codigo: "M005"),
+              Manguera(idManguera: "1", codigo: "M003"),
             ],
-          ), */
+          ),
+          Dispensador(
+            idDispensador: "2",
+            codigo: "DISP-204",
+            horaRegistro: horaActual,
+            mangueras: [
+              Manguera(idManguera: "1", codigo: "M003"),
+            ],
+          ),
+          Dispensador(
+            idDispensador: "2",
+            codigo: "DISP-205",
+            horaRegistro: horaActual,
+            mangueras: [
+              Manguera(idManguera: "1", codigo: "M003"),
+            ],
+          ),
+          Dispensador(
+            idDispensador: "2",
+            codigo: "DISP-205",
+            horaRegistro: horaActual,
+            mangueras: [
+              Manguera(idManguera: "1", codigo: "M003"),
+            ],
+          ),
         ],
       ),
     ),
