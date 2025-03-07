@@ -32,7 +32,7 @@ class EstacionServicio {
 
   factory EstacionServicio.fromJson(Map<String, dynamic> json) {
     return EstacionServicio(
-        id: json['id'] ?? json['idEstacionServicio:'] ?? '',
+        id: json['id'] ?? json['idEstacionServicio'] ?? '',
         nombre: json['nombreEstacionServicio'] ?? json['nombre'] ?? '',
         estado: json['estado'] ?? '',
         latitud: json['latitud'] ?? '',
@@ -49,7 +49,7 @@ class EstacionServicio {
                 .toList()
             : null,
         dispensadores: json['dispensadores'] != null
-            ? (json['tanques'] as List)
+            ? (json['dispensadores'] as List)
                 .map((item) => DispensadorEstacion.fromJson(item))
                 .toList()
             : null);

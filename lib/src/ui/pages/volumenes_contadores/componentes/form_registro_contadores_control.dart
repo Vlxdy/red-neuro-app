@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
+import 'package:control_ventas_movil/src/plugins/estaciones/estacion_servicio.dart';
+import 'package:control_ventas_movil/src/ui/common/form_stepper/form_stepper.dart';
 import 'package:control_ventas_movil/src/ui/common/text_inputs/text_input.dart';
 import 'package:control_ventas_movil/src/ui/common/drop_down/drop_down.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
@@ -77,64 +81,14 @@ class _RegistroContadoresState extends State<RegistroContadores> {
                   children: [
                     if (widget.dispensadores.length > 1) ...[
                       SizedBox(
-                        height: 72,
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              if (widget.dispensadores.length <= 5) ...[
-                                ...List.generate(
-                                  widget.dispensadores.length,
-                                  (index) => Container(
-                                    margin: const EdgeInsets.symmetric(
-                                        horizontal: 4),
-                                    width: 24,
-                                    height: 24,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: _currentStep == index
-                                          ? ThemeController.instance.secondary
-                                          : Colors.grey[300],
-                                    ),
-                                    child: Center(
-                                      child: Text(
-                                        '${index + 1}',
-                                        style: TextStyle(
-                                          color: _currentStep == index
-                                              ? Colors.white
-                                              : Colors.black,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ] else ...[
-                                _buildStepper(0),
-                                if (_currentStep > 1) ...[
-                                  const Text('...',
-                                      style: TextStyle(fontSize: 20)),
-                                  _buildStepper(_currentStep - 1),
-                                ],
-                                if (_currentStep > 0)
-                                  _buildStepper(_currentStep),
-                                if (_currentStep <
-                                    widget.dispensadores.length - 1) ...[
-                                  _buildStepper(_currentStep + 1),
-                                  if (_currentStep <
-                                      widget.dispensadores.length - 2) ...[
-                                    const Text('...',
-                                        style: TextStyle(fontSize: 20)),
-                                    _buildStepper(
-                                        widget.dispensadores.length - 1),
-                                  ]
-                                ],
-                              ],
-                            ],
-                          ),
-                        ),
-                      ),
+                          height: 72,
+                          child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: FormStepper(
+                                dispensadores: widget.dispensadores,
+                                currentStep: _currentStep,
+                                activeColor: theme.secondary,
+                              ))),
                     ],
                     Expanded(
                       child: SingleChildScrollView(
@@ -226,29 +180,6 @@ class _RegistroContadoresState extends State<RegistroContadores> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStepper(int index) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      width: 24,
-      height: 24,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: _currentStep == index
-            ? ThemeController.instance.secondary
-            : Colors.grey[300],
-      ),
-      child: Center(
-        child: Text(
-          '${index + 1}',
-          style: TextStyle(
-            color: _currentStep == index ? Colors.white : Colors.black,
-            fontSize: 12,
-          ),
         ),
       ),
     );
@@ -459,6 +390,7 @@ class MangueraWidgetState extends State<MangueraWidget> {
 }
 
 void showRegistroContadoresModal(BuildContext context) {
+  final estacionServicio = EstacionServicioStore.instance.estacionServicio;
   String horaActual = DateFormat('HH:mm').format(DateTime.now());
 
   List<DropDownType> listaCombustibles = [
@@ -486,57 +418,19 @@ void showRegistroContadoresModal(BuildContext context) {
             "Registrarás el valor de cada meter de manguera de los dispensadores de la EESS",
         tipoMedicion: tiposMediciones,
         listaCombustibles: listaCombustibles,
-        dispensadores: [
-          Dispensador(
-            idDispensador: "1",
-            codigo: "DISP-200",
-            horaRegistro: horaActual,
-            mangueras: [
-              Manguera(idManguera: "1", codigo: "M001"),
-              Manguera(idManguera: "1", codigo: "M002"),
-            ],
-          ),
-          Dispensador(
-            idDispensador: "2",
-            codigo: "DISP-202",
-            horaRegistro: horaActual,
-            mangueras: [
-              Manguera(idManguera: "1", codigo: "M003"),
-            ],
-          ),
-          Dispensador(
-            idDispensador: "2",
-            codigo: "DISP-203",
-            horaRegistro: horaActual,
-            mangueras: [
-              Manguera(idManguera: "1", codigo: "M003"),
-            ],
-          ),
-          Dispensador(
-            idDispensador: "2",
-            codigo: "DISP-204",
-            horaRegistro: horaActual,
-            mangueras: [
-              Manguera(idManguera: "1", codigo: "M003"),
-            ],
-          ),
-          Dispensador(
-            idDispensador: "2",
-            codigo: "DISP-205",
-            horaRegistro: horaActual,
-            mangueras: [
-              Manguera(idManguera: "1", codigo: "M003"),
-            ],
-          ),
-          Dispensador(
-            idDispensador: "2",
-            codigo: "DISP-205",
-            horaRegistro: horaActual,
-            mangueras: [
-              Manguera(idManguera: "1", codigo: "M003"),
-            ],
-          ),
-        ],
+        dispensadores: (estacionServicio.dispensadores ?? [])
+            .map((d) => Dispensador(
+                  idDispensador: d.id,
+                  codigo: d.codigo,
+                  horaRegistro: horaActual,
+                  mangueras: (d.mangueras ?? [])
+                      .map((m) => Manguera(
+                            idManguera: m.id,
+                            codigo: m.codigo,
+                          ))
+                      .toList(),
+                ))
+            .toList(),
       ),
     ),
   );
