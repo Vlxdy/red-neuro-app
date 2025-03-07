@@ -85,7 +85,7 @@ class _RegistroContadoresState extends State<RegistroContadores> {
                           child: SingleChildScrollView(
                               scrollDirection: Axis.horizontal,
                               child: FormStepper(
-                                dispensadores: widget.dispensadores,
+                                longitud: widget.dispensadores.length,
                                 currentStep: _currentStep,
                                 activeColor: theme.secondary,
                               ))),
