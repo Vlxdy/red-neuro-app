@@ -153,7 +153,7 @@ class FormRegistroContadoresFinal extends StatelessWidget {
                 store.limpiarRegistros();
                 Navigator.pop(context);
               },
-              child: const Text('Cancelar'),
+              child: const Text('Atrás'),
             ),
             ElevatedButton(
               onPressed: () {

@@ -19,3 +19,21 @@ class RegistroMetersStore with ChangeNotifier {
     notifyListeners();
   }
 }
+
+class DataListadoMetersStore with ChangeNotifier {
+  DataListadoMetersStore._();
+  static final instance = DataListadoMetersStore._();
+
+  DataListadoMeters _dataListadoMeters = DataListadoMeters(volumenes: []);
+  DataListadoMeters get dataListadoMeters => _dataListadoMeters;
+
+  set dataListadoMeters(DataListadoMeters? value) {
+    _dataListadoMeters = value ?? DataListadoMeters(volumenes: []);
+    notifyListeners();
+  }
+
+  void clearData() {
+    _dataListadoMeters = DataListadoMeters(volumenes: []);
+    notifyListeners();
+  }
+}
