@@ -3,7 +3,6 @@ class VolumenTanque {
   String id;
   String hora;
   String tipoMedicion;
-  String codigo;
   String volumen;
   CombustibleVolumenTanque? combustible;
   TanqueVolumenTanque? tanques;
@@ -12,7 +11,6 @@ class VolumenTanque {
     required this.id,
     required this.hora,
     required this.tipoMedicion,
-    required this.codigo,
     required this.volumen,
     this.combustible,
     this.tanques,
@@ -23,7 +21,6 @@ class VolumenTanque {
       id: json['id'] ?? '',
       hora: json['hora'] ?? '',
       tipoMedicion: json['tipoMedicion'] ?? '',
-      codigo: json['codigo'] ?? '',
       volumen: json['volumen'] ?? '',
       combustible: json['combustible'] != null
           ? CombustibleVolumenTanque.fromJson(json['combustible'])
@@ -38,7 +35,6 @@ class VolumenTanque {
       'id': id,
       'hora': hora,
       'tipoMedicion': tipoMedicion,
-      'codigo': codigo,
       'volumen': volumen,
       'combustible': combustible,
       'tanques': tanques,

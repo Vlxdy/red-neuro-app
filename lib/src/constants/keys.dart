@@ -17,4 +17,5 @@ class Keys {
   static const bitacora = 'bitacora';
   static const regimiento = 'regimiento';
   static const estacionServicio = 'estacion_servicio';
+  static const combustibles = 'combustibles';
 }

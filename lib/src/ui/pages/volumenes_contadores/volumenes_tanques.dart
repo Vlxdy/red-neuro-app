@@ -1,10 +1,15 @@
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
+import 'package:control_ventas_movil/src/constants/enums.dart';
+import 'package:control_ventas_movil/src/models/combustible.dart';
+import 'package:control_ventas_movil/src/models/registro_meters.dart';
 import 'package:control_ventas_movil/src/models/volumenes_tanques.dart';
+import 'package:control_ventas_movil/src/plugins/estaciones/combustibles_store.dart';
 import 'package:control_ventas_movil/src/ui/common/customdatatable/custom_datatable.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/componentes/form_registro_volumenes_tanques.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/volumenes_tanques_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 class VolumenesTanques extends StatefulWidget {
   const VolumenesTanques({super.key});
@@ -24,44 +29,56 @@ class VolumenesTanquesScreen extends State<VolumenesTanques> {
     futurevolumenes = service.fetchData();
   }
 
- void _mostrarModal(BuildContext context) {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true, // Permite que el modal se expanda
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
-    ),
-    backgroundColor: Colors.white,
-    builder: (context) {
-      return FractionallySizedBox(
-        heightFactor: 0.9, // Ajusta el tamaño del modal (90% de la pantalla)
-        child: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom, // Ajusta si hay teclado
-            left: 16.0,
-            right: 16.0,
-            top: 16.0,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                "Registrar Volúmenes",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-              Expanded(
-                child: FormVolumenesTanques(), // Asegúrate de que el formulario no tenga restricciones de tamaño
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-  );
-}
+  void _mostrarModal(List<VolumenTanque> volumenes) {
+    List<Combustible> listaCombustibles =
+        CombustiblesStore.instance.combustibles;
 
+    List<TipoMedicion> tiposMedicion = TipoMedicion.values;
 
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: false,
+      enableDrag: false,
+      builder: (context) => FractionallySizedBox(
+        heightFactor: 0.95,
+        child: FormVolumenesTanques(
+            titulo: "Registro de contadores",
+            descripcion:
+                "Registrarás el volumen de combustible em los tanques de la EESS",
+            tiposMedicion: tiposMedicion,
+            listaCombustibles: listaCombustibles,
+            tanques: volumenes.isNotEmpty
+                ? volumenes
+                : [
+                    VolumenTanque(
+                        id: "1",
+                        hora: "00:02",
+                        tipoMedicion: "x",
+                        volumen: "300",
+                        tanques: TanqueVolumenTanque(
+                          nombre: "Tanque 1",
+                          id: "1",
+                        )),
+                    VolumenTanque(
+                        id: "1",
+                        hora: "00:02",
+                        tipoMedicion: "x",
+                        volumen: "300"),
+                    VolumenTanque(
+                        id: "1",
+                        hora: "00:02",
+                        tipoMedicion: "x",
+                        volumen: "300"),
+                    VolumenTanque(
+                        id: "1",
+                        hora: "00:02",
+                        tipoMedicion: "x",
+                        volumen: "300"),
+                  ]),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -91,11 +108,17 @@ class VolumenesTanquesScreen extends State<VolumenesTanques> {
               children: [
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: () {
-                      _mostrarModal(context);
-                      // Primero, accede a los registros almacenados en el store
-                      // store.limpiarRegistros();
-                      // showRegistroContadoresModal(context);
+                    // onPressed: () {
+                    //   _mostrarModal(context);
+                    //   // Primero, accede a los registros almacenados en el store
+                    //   // store.limpiarRegistros();
+                    //   // showRegistroContadoresModal(context);
+                    // },
+                    onPressed: () async {
+                      final volumenes =
+                          await futurevolumenes; // Espera a que se carguen los datos
+                      _mostrarModal(
+                          volumenes); // Ahora mandamos los datos ya cargados
                     },
                     child: const Text('+ Registrar volúmenes'),
                   ),
@@ -130,41 +153,39 @@ class VolumenesTanquesScreen extends State<VolumenesTanques> {
                       CriterioOrdenType(nombre: 'Combustible'),
                       CriterioOrdenType(nombre: 'Volumen'),
                     ],
-                    contenidoTabla: 
-                    volumenes.isEmpty ?
-                    [] :
-                    (volumenes).map((volumen) {
-                      String hexColor = volumen.combustible!.color;
-                      Color color =
-                        Color(int.parse('0xFF${hexColor.substring(1)}'));
+                    contenidoTabla: volumenes.isEmpty
+                        ? []
+                        : (volumenes).map((volumen) {
+                            String hexColor = volumen.combustible!.color;
+                            Color color = Color(
+                                int.parse('0xFF${hexColor.substring(1)}'));
 
-                      return [
-                      Center(
-                        child: Text(
-                        DateFormat('HH:mm')
-                          .format(DateTime.parse(volumen.hora)),
-                        textAlign: TextAlign.center,
-                        ),
-                      ),
-                      Center(child: Text(volumen.tanques!.nombre)),
-                      Center(
-                        child: Container(
-                        decoration: BoxDecoration(
-                        color: color,
-                        borderRadius: BorderRadius.circular(12),
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 6.0, horizontal: 12.0),
-                        child: Text(
-                        volumen.combustible!.codigo,
-                        style: TextStyle(color: theme.white),
-                        overflow: TextOverflow.ellipsis,
-                        ),
-                      )),
-                      Center(child: Text(volumen.volumen)),
-                      ];
-                    }).toList(),
-
+                            return [
+                              Center(
+                                child: Text(
+                                  DateFormat('HH:mm')
+                                      .format(DateTime.parse(volumen.hora)),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                              Center(child: Text(volumen.tanques!.nombre)),
+                              Center(
+                                  child: Container(
+                                decoration: BoxDecoration(
+                                  color: color,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 6.0, horizontal: 12.0),
+                                child: Text(
+                                  volumen.combustible!.codigo,
+                                  style: TextStyle(color: theme.white),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              )),
+                              Center(child: Text(volumen.volumen)),
+                            ];
+                          }).toList(),
                   ));
                 },
               ),
