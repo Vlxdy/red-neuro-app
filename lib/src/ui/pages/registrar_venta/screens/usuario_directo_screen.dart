@@ -1,8 +1,8 @@
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
 import 'package:control_ventas_movil/src/ui/common/selector_image/multiple_campo_fotografia.dart';
 import 'package:control_ventas_movil/src/ui/common/text_inputs/text_input.dart';
-import 'package:control_ventas_movil/src/ui/pages/registrar_venta/componentes/usuario_directo_paso2_screen.dart';
-import 'package:control_ventas_movil/src/ui/pages/registrar_venta/registrar_venta_store.dart';
+import 'package:control_ventas_movil/src/ui/pages/registrar_venta/componentes/usuario_directo_registrar_autorizacion.dart';
+import 'package:control_ventas_movil/src/ui/pages/registrar_venta/stores/registrar_venta_store.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
