@@ -1,6 +1,6 @@
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/componentes/combustible_card.dart';
-import 'package:control_ventas_movil/src/ui/pages/registrar_venta/nueva_venta.dart';
+import 'package:control_ventas_movil/src/ui/pages/registrar_venta/componentes/tanque_registrar_venta.dart';
 import 'package:flutter/material.dart';
 
 class TanqueAdicionalScreen extends StatelessWidget {

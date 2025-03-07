@@ -1,7 +1,7 @@
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
 import 'package:control_ventas_movil/src/ui/common/selector_image/multiple_campo_fotografia.dart';
-import 'package:control_ventas_movil/src/ui/pages/registrar_venta/confirmar_registro.dart';
-import 'package:control_ventas_movil/src/ui/pages/registrar_venta/registrar_venta_store.dart';
+import 'package:control_ventas_movil/src/ui/pages/registrar_venta/componentes/tanque_confirmar_registro_venta.dart';
+import 'package:control_ventas_movil/src/ui/pages/registrar_venta/stores/registrar_venta_store.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -32,7 +32,7 @@ class _NuevaVentaScreenState extends State<NuevaVentaScreen> {
       appBar: AppBar(
         backgroundColor: theme.white,
         title: Text(
-          'Venta de ${widget.tipoCombustible} a vehículos\ncon TANQUE ADICIONAL',
+          'Venta de ${widget.tipoCombustible} a vehículos\ncon TANQUE ADICIONALL',
           style: TextStyle(fontSize: 16, color: theme.secondary),
         ),
         leading: Icon(Icons.local_gas_station, color: theme.secondary,),
