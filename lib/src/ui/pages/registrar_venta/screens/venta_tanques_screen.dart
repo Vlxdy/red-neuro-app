@@ -1,16 +1,34 @@
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/componentes/combustible_card.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/componentes/tanque_registrar_venta.dart';
+import 'package:control_ventas_movil/src/ui/pages/registrar_venta/services/venta_tanque_service.dart';
+import 'package:control_ventas_movil/src/ui/pages/registrar_venta/stores/venta_tanques_store.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-class TanqueAdicionalScreen extends StatelessWidget {
-  const TanqueAdicionalScreen({Key? key}) : super(key: key);
+class VentaTanquesScreen extends StatefulWidget {
+  const VentaTanquesScreen({Key? key}) : super(key: key);
+
+  @override
+  State<VentaTanquesScreen> createState() => _VentaTanquesScreenState();
+}
+
+class _VentaTanquesScreenState extends State<VentaTanquesScreen> {
+  final theme = ThemeController.instance;
+  late VentaTanquesService _service;
+
+  @override
+  void initState() {
+    _service = VentaTanquesService('', context);
+    _service.fetchDataBidones();
+    super.initState();
+  }
+
 
   @override
   Widget build(BuildContext context) {
     final theme = ThemeController.instance;
-    final int ventasDiesel = 12;
-    final int ventasGasolina = 22;
+    final store = Provider.of<VentaTanquesStore>(context);
 
     return Scaffold(
       backgroundColor: theme.background,
@@ -38,7 +56,7 @@ class TanqueAdicionalScreen extends StatelessWidget {
               style: TextStyle(fontSize: 14, color: theme.primary),
             ),
             const SizedBox(height: 20),
-            GridView(
+            GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
@@ -47,32 +65,23 @@ class TanqueAdicionalScreen extends StatelessWidget {
                 mainAxisSpacing: 16,
                 crossAxisSpacing: 16,
               ),
-              children: [
-                CombustibleCard(
-                  title: 'Diesel',
-                  ventasRegistradas: ventasDiesel,
-                  color: theme.primary,
+              itemCount: store.ventas.length,
+              itemBuilder: (context, index) {
+                final venta = store.ventas[index];
+                return CombustibleCard(
+                  title: venta.codigo,
+                  ventasRegistradas: venta.cantidadVentas,
+                  color: index.isEven ? theme.primary : theme.secondary,
                   onPressedNuevaVenta: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => NuevaVentaScreen()),
+                        builder: (context) => NuevaVentaScreen(),
+                      ),
                     );
                   },
-                ),
-                CombustibleCard(
-                  title: 'GASOLINA ULTRA PREMIUM 100',
-                  ventasRegistradas: ventasGasolina,
-                  color: theme.secondary,
-                  onPressedNuevaVenta: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => NuevaVentaScreen()),
-                    );
-                  },
-                ),
-              ],
+                );
+              },
             )
           ],
         ),

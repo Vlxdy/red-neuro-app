@@ -10,7 +10,7 @@ import 'package:control_ventas_movil/src/ui/pages/mi_cuenta/mi_cuenta.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/screens/usuario_directo_screen.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/screens/maquinaria_screen.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/screens/venta_bidones_screen.dart';
-import 'package:control_ventas_movil/src/ui/pages/registrar_venta/screens/tanque_adicional.dart';
+import 'package:control_ventas_movil/src/ui/pages/registrar_venta/screens/venta_tanques_screen.dart';
 import 'package:control_ventas_movil/src/ui/pages/resumen_dia/resumen_dia.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -123,7 +123,7 @@ class _RegistrarVentaState extends State<RegistrarVentaPage> {
           iconoImagen: SolarIconsOutline.gasStation,
           iconoImagenSeleccionada: SolarIconsBold.gasStation,
           titulo: 'Tanque\nadicional',
-          children: const TanqueAdicionalScreen()),
+          children: const VentaTanquesScreen()),
     ];
 
     return TemplatePage(

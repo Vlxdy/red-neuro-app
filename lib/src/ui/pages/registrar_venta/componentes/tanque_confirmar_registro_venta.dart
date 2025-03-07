@@ -1,5 +1,5 @@
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/ui/pages/registrar_venta/screens/tanque_adicional.dart';
+import 'package:control_ventas_movil/src/ui/pages/registrar_venta/screens/venta_tanques_screen.dart';
 import 'package:flutter/material.dart';
 
 class ConfirmarRegistroScreen extends StatelessWidget {
@@ -55,7 +55,7 @@ class ConfirmarRegistroScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => TanqueAdicionalScreen()),
+                      MaterialPageRoute(builder: (context) => VentaTanquesScreen()),
                     );
                   },
                   style: ElevatedButton.styleFrom(

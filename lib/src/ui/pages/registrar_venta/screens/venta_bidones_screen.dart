@@ -69,7 +69,6 @@ class _VentaBidonesScreenState extends State<VentaBidonesScreen> {
                     onRefresh: _refreshList,
                     child: GridView.builder(
                       shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
                       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                         maxCrossAxisExtent: 300,
                         mainAxisExtent: 200,
@@ -82,7 +81,7 @@ class _VentaBidonesScreenState extends State<VentaBidonesScreen> {
                         return CombustibleCard(
                           title: venta.codigo,
                           ventasRegistradas: venta.cantidadVentas,
-                          color: index & 1 == 0 ? theme.primary : theme.secondary ,
+                          color: (index + 1) % 4 == 1 || (index + 1) % 4 == 0 ? theme.primary : theme.secondary ,
                           onPressedNuevaVenta: () {
                             _mostrarDialogoRegistro(venta.codigo);
                           },
