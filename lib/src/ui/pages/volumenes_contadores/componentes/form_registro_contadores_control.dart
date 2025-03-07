@@ -1,6 +1,9 @@
 import 'dart:convert';
 
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
+import 'package:control_ventas_movil/src/constants/enums.dart';
+import 'package:control_ventas_movil/src/models/combustible.dart';
+import 'package:control_ventas_movil/src/plugins/estaciones/combustibles_store.dart';
 import 'package:control_ventas_movil/src/plugins/estaciones/estacion_servicio.dart';
 import 'package:control_ventas_movil/src/ui/common/form_stepper/form_stepper.dart';
 import 'package:control_ventas_movil/src/ui/common/text_inputs/text_input.dart';
@@ -17,9 +20,9 @@ import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
 class RegistroContadores extends StatefulWidget {
   final String titulo;
   final String descripcion;
-  final List<DropDownType> tipoMedicion;
+  final List<TipoMedicion> tipoMedicion;
   final List<Dispensador> dispensadores;
-  final List<DropDownType> listaCombustibles;
+  final List<Combustible> listaCombustibles;
 
   const RegistroContadores({
     super.key,
@@ -35,7 +38,7 @@ class RegistroContadores extends StatefulWidget {
 }
 
 class _RegistroContadoresState extends State<RegistroContadores> {
-  DropDownType? selectedTipoMedicion;
+  String? _tipoSeleccionado;
   int _currentStep = 0;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final GlobalKey<DropdownButton2State> dropKeyTipoMedicion =
@@ -60,13 +63,15 @@ class _RegistroContadoresState extends State<RegistroContadores> {
                 label: 'Tipo de medición',
                 requiredData: true,
                 dropKey: dropKeyTipoMedicion,
-                items: widget.tipoMedicion
-                    .map((e) => {'id': e.id, 'label': e.nombre})
-                    .toList(),
+                items: widget.tipoMedicion.map((tipo) {
+                  return {
+                    'id': tipo.info,
+                    'label': tipo.info,
+                  };
+                }).toList(),
                 onChange: (value) {
                   setState(() {
-                    selectedTipoMedicion = widget.tipoMedicion
-                        .firstWhere((element) => element.id == value);
+                    _tipoSeleccionado = value;
                   });
                 },
                 validate: (value, alias) {
@@ -133,7 +138,7 @@ class _RegistroContadoresState extends State<RegistroContadores> {
                   if (_formKey.currentState?.validate() ?? false) {
                     // Crear la lista de registros y guardarlos en el store
                     RegistroMeterStore registro = RegistroMeterStore(
-                      tipoMedicion: selectedTipoMedicion!,
+                      tipoMedicion: _tipoSeleccionado!,
                       dispensadores: widget.dispensadores.map((dispensador) {
                         return DispensadorStore(
                           hora: dispensador.horaRegistro,
@@ -236,7 +241,7 @@ class Dispensador {
 class Manguera {
   final String idManguera;
   final String codigo;
-  DropDownType? selectedCombustible;
+  Combustible? selectedCombustible;
   TextEditingController? _meterController;
   String? meterValue;
 
@@ -247,7 +252,7 @@ class Manguera {
 
 class DispensadorWidget extends StatefulWidget {
   final Dispensador dispensador;
-  final List<DropDownType> listaCombustibles;
+  final List<Combustible> listaCombustibles;
 
   const DispensadorWidget({
     super.key,
@@ -318,7 +323,7 @@ class DispensadorWidgetState extends State<DispensadorWidget> {
 
 class MangueraWidget extends StatefulWidget {
   final Manguera manguera;
-  final List<DropDownType> listaCombustibles;
+  final List<Combustible> listaCombustibles;
 
   const MangueraWidget({
     super.key,
@@ -393,17 +398,9 @@ void showRegistroContadoresModal(BuildContext context) {
   final estacionServicio = EstacionServicioStore.instance.estacionServicio;
   String horaActual = DateFormat('HH:mm').format(DateTime.now());
 
-  List<DropDownType> listaCombustibles = [
-    DropDownType(id: "1", nombre: "Diesel Oil"),
-    DropDownType(id: "2", nombre: "Gasolina 95"),
-    DropDownType(id: "3", nombre: "Gasolina 98"),
-  ];
+  List<Combustible> listaCombustibles = CombustiblesStore.instance.combustibles;
 
-  List<DropDownType> tiposMediciones = [
-    DropDownType(id: "1", nombre: "Jornada inicial"),
-    DropDownType(id: "2", nombre: "Jornada final"),
-    DropDownType(id: "3", nombre: "A pedido"),
-  ];
+  List<TipoMedicion> tiposMedicion = TipoMedicion.values;
 
   showModalBottomSheet(
     context: context,
@@ -416,7 +413,7 @@ void showRegistroContadoresModal(BuildContext context) {
         titulo: "Registro de contadores",
         descripcion:
             "Registrarás el valor de cada meter de manguera de los dispensadores de la EESS",
-        tipoMedicion: tiposMediciones,
+        tipoMedicion: tiposMedicion,
         listaCombustibles: listaCombustibles,
         dispensadores: (estacionServicio.dispensadores ?? [])
             .map((d) => Dispensador(
