@@ -1,3 +1,4 @@
+import 'package:control_ventas_movil/src/ui/pages/registrar_venta/componentes/combustible_card.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/services/venta_bidones_service.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/stores/venta_bidones_store.dart';
 import 'package:flutter/material.dart';
@@ -23,6 +24,12 @@ class _VentaBidonesScreenState extends State<VentaBidonesScreen> {
     super.initState();
   }
 
+  Future<void> _refreshList() async {
+    _service.cargarVentasBidones();
+    setState(() {});
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final store = Provider.of<VentaBidonesStore>(context);
@@ -37,37 +44,51 @@ class _VentaBidonesScreenState extends State<VentaBidonesScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Venta de Bidones',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: theme.primary,
-                  ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Venta de Bidones',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: theme.primary,
+                      ),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.refresh),
+                      onPressed: _refreshList,
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 12),
-                store.cargando
-                    ? const Center(child: CircularProgressIndicator())
-                    : Expanded(
-                  child: ListView.builder(
-                    itemCount: store.ventas.length,
-                    itemBuilder: (context, index) {
-                      final venta = store.ventas[index];
-                      return Card(
-                        child: ListTile(
-                          title: Text(venta.codigo),
-                          subtitle: Text(
-                            'Cantidad vendida: ${venta.cantidadVentas}',
-                          ),
-                          trailing: IconButton(
-                            icon: const Icon(Icons.add),
-                            onPressed: () {
-                              _mostrarDialogoRegistro(venta.codigo);
-                            },
-                          ),
-                        ),
-                      );
-                    },
+                Expanded(
+                  child: store.cargando
+                      ? const Center(child: CircularProgressIndicator())
+                      : RefreshIndicator(
+                    onRefresh: _refreshList,
+                    child: GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                        maxCrossAxisExtent: 300,
+                        mainAxisExtent: 200,
+                        mainAxisSpacing: 16,
+                        crossAxisSpacing: 16,
+                      ),
+                      itemCount: store.ventas.length,
+                      itemBuilder: (context, index) {
+                        final venta = store.ventas[index];
+                        return CombustibleCard(
+                          title: venta.codigo,
+                          ventasRegistradas: venta.cantidadVentas,
+                          color: index & 1 == 0 ? theme.primary : theme.secondary ,
+                          onPressedNuevaVenta: () {
+                            _mostrarDialogoRegistro(venta.codigo);
+                          },
+                        );
+                      },
+                    ),
                   ),
                 ),
               ],
@@ -129,13 +150,13 @@ class _VentaBidonesScreenState extends State<VentaBidonesScreen> {
                 ),
                 ElevatedButton.icon(
                   onPressed: () {
-                    Navigator.pop(context); // Cierra el diálogo
-                    _service.incrementarVenta(idCombustible);
+                    Navigator.pop(context);
+                    _service.incrementarVenta(idCombustible, observacionController.text);
                   },
                   icon: const Icon(Icons.check, color: Colors.white),
                   label: const Text('Confirmar'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: ThemeController.instance.primary,
+                    backgroundColor: theme.primary,
                     foregroundColor: Colors.white,
                   ),
                 ),

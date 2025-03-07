@@ -1,3 +1,4 @@
+import 'package:control_ventas_movil/src/models/venta.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/stores/venta_bidones_store.dart';
 import 'package:flutter/material.dart';
 import 'package:control_ventas_movil/src/config/service_config.dart';
@@ -17,10 +18,10 @@ class VentaBidonesService extends ServiceConfig {
   final theme = ThemeController.instance;
 
   void fetchDataBidones() {
-    _cargarVentasBidones().whenComplete(() => store.cargando = false);
+    cargarVentasBidones().whenComplete(() => store.cargando = false);
   }
 
-  Future<void> _cargarVentasBidones() async {
+  Future<void> cargarVentasBidones() async {
     try {
       store.cargando = true;
       LoadingAnimation.instance.state = Overlay.of(context);
@@ -40,7 +41,7 @@ class VentaBidonesService extends ServiceConfig {
         final datos = response.data;
 
         store.ventas = (datos['list'] as List<dynamic>)
-            .map((item) => VentaBidon.fromJson(item))
+            .map((item) => Venta.fromJson(item))
             .toList();
 
       } else {
@@ -57,10 +58,11 @@ class VentaBidonesService extends ServiceConfig {
       );
     } finally {
       LoadingAnimation.instance.hideLoading();
+      store.cargando = false;
     }
   }
 
-  Future<void> incrementarVenta(String idCombustible) async {
+  Future<void> incrementarVenta(String idCombustible, String observacion) async {
     try {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (context.mounted) {
@@ -77,7 +79,7 @@ class VentaBidonesService extends ServiceConfig {
           "tipoVenta": "Bidones",
           "fechaRegistroApp": DateTime.now().toIso8601String(),
           "idCombustible": 1,
-          "observacion": "Venta desde app",
+          "observacion": observacion.isEmpty ? null : observacion,
         },
       );
 

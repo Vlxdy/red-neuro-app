@@ -1,21 +1,5 @@
+import 'package:control_ventas_movil/src/models/venta.dart';
 import 'package:flutter/foundation.dart';
-
-class VentaBidon {
-  final String codigo;
-  final int cantidadVentas;
-
-  VentaBidon({
-    required this.codigo,
-    required this.cantidadVentas,
-  });
-
-  factory VentaBidon.fromJson(Map<String, dynamic> json) {
-    return VentaBidon(
-      codigo: json['codigo'] ?? 'Desconocido',
-      cantidadVentas: int.tryParse(json['cantidadVentas']?.toString() ?? '0') ?? 0,
-    );
-  }
-}
 
 class VentaBidonesStore with ChangeNotifier {
   VentaBidonesStore._();
@@ -28,9 +12,9 @@ class VentaBidonesStore with ChangeNotifier {
     notifyListeners();
   }
 
-  List<VentaBidon> _ventas = [];
-  List<VentaBidon> get ventas => _ventas;
-  set ventas(List<VentaBidon> val) {
+  List<Venta> _ventas = [];
+  List<Venta> get ventas => _ventas;
+  set ventas(List<Venta> val) {
     _ventas = val;
     notifyListeners();
   }
