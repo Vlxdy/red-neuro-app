@@ -6,7 +6,7 @@ import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/volumenes
 
 class VolumenesContadoresScreen extends StatefulWidget {
   const VolumenesContadoresScreen({super.key});
-  
+
   @override
   State<VolumenesContadoresScreen> createState() =>
       _VolumenesContadoresScreenState();
@@ -38,6 +38,7 @@ class _VolumenesContadoresScreenState extends State<VolumenesContadoresScreen> {
     return Scaffold(
       backgroundColor: theme.background,
       appBar: AppBar(
+        backgroundColor: theme.background,
         title: const Text('Volúmenes y Contadores'),
         leading: _selectedIndex != null
             ? IconButton(

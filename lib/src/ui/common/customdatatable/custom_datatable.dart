@@ -1,3 +1,4 @@
+import 'package:control_ventas_movil/src/config/theme_controller.dart';
 import 'package:flutter/material.dart';
 
 class CriterioOrdenType {
@@ -173,12 +174,21 @@ class CustomDesktopDataTableState extends State<CustomDesktopDataTable> {
   }
 
   Widget _buildTable() {
+    final theme = ThemeController.instance;
+
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      child: DataTable(
-        columns: _buildColumns(),
-        rows: _buildRows(),
-        columnSpacing: widget.columnSpacing,
+      child: Theme(
+        data: Theme.of(context).copyWith(
+          dataTableTheme: DataTableThemeData(
+            decoration: BoxDecoration(color: theme.background),
+          ),
+        ),
+        child: DataTable(
+          columns: _buildColumns(),
+          rows: _buildRows(),
+          columnSpacing: widget.columnSpacing,
+        ),
       ),
     );
   }
@@ -200,7 +210,10 @@ class CustomDesktopDataTableState extends State<CustomDesktopDataTable> {
     columns.addAll(
       widget.columnas.map(
         (columna) => DataColumn(
-          label: Text(columna.nombre),
+          label: Text(
+            columna.nombre,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
         ),
       ),
     );
@@ -209,6 +222,8 @@ class CustomDesktopDataTableState extends State<CustomDesktopDataTable> {
   }
 
   List<DataRow> _buildRows() {
+    final theme = ThemeController.instance;
+
     return List.generate(
       widget.contenidoTabla.length,
       (rowIndex) {
@@ -231,7 +246,10 @@ class CustomDesktopDataTableState extends State<CustomDesktopDataTable> {
           ),
         );
 
-        return DataRow(cells: cells);
+        return DataRow(
+          cells: cells,
+          color: WidgetStateProperty.all(theme.primary20),
+        );
       },
     );
   }

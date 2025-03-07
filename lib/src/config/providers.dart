@@ -26,6 +26,8 @@ List<SingleChildWidget> proveedores(BuildContext context) => [
       ChangeNotifierProvider(create: (context) => ControlStore.instance),
       ChangeNotifierProvider(create: (context) => RegistroMetersStore.instance),
       ChangeNotifierProvider(create: (context) => ResumenDiaStore.instance),
+      ChangeNotifierProvider(
+          create: (context) => DataListadoMetersStore.instance),
     ];
 
 resetProviders() {
