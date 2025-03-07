@@ -15,7 +15,7 @@ class VolumenesContadoresScreen extends StatefulWidget {
 class _VolumenesContadoresScreenState extends State<VolumenesContadoresScreen> {
   int? _selectedIndex;
   final List<Widget> _pages = [
-    const VolumenesTanquesScreen(),
+    const VolumenesTanques(),
     const MetersManguerasScreen(),
   ];
 

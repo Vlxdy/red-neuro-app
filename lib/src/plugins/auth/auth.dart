@@ -1,8 +1,10 @@
 import 'dart:convert';
 
 import 'package:control_ventas_movil/src/constants/constants.dart';
+import 'package:control_ventas_movil/src/models/combustible.dart';
 import 'package:control_ventas_movil/src/plugins/auth/ciudadania.dart';
 import 'package:control_ventas_movil/src/plugins/estaciones/bitacora_store.dart';
+import 'package:control_ventas_movil/src/plugins/estaciones/combustibles_store.dart';
 import 'package:control_ventas_movil/src/plugins/estaciones/estacion_servicio.dart';
 import 'package:control_ventas_movil/src/plugins/estaciones/regimiento_store.dart';
 import 'package:control_ventas_movil/src/plugins/seguridad/seguridad.dart';
@@ -49,6 +51,7 @@ class Auth {
   final regimiento = RegimientoStore.instance;
   final estacionServicio = EstacionServicioStore.instance;
   final bitacora = BitacoraStore.instance;
+  final combustibles = CombustiblesStore.instance;
   PackageInfo _info = PackageInfo(
       appName: '',
       buildNumber: '',
@@ -138,6 +141,7 @@ class Auth {
     await regimiento.regimientoAsync();
     await bitacora.bitacoraAsync();
     await estacionServicio.estacionServicioAsync();
+    await combustibles.combustiblesAsync();
   }
 
   Future<void> clearCredentials() async {

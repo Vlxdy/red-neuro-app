@@ -30,13 +30,18 @@ class _ResumenDelDiaPageState extends State<ResumenDelDiaPage>
 
   @override
   void initState() {
+    super.initState();
     service = ResumenDiaService('', context);
-    service.fetchData().then((_) {
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    await service.fetchData();
+    if (mounted) {
       setState(() {
         isLoading = false;
       });
-    });
-    super.initState();
+    }
   }
 
   Future<void> _refresh() async {
