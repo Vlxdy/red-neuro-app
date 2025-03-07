@@ -4,10 +4,11 @@ import 'package:control_ventas_movil/src/models/combustible.dart';
 import 'package:control_ventas_movil/src/models/registro_meters.dart';
 import 'package:control_ventas_movil/src/models/volumenes_tanques.dart';
 import 'package:control_ventas_movil/src/ui/common/drop_down/drop_down.dart';
+import 'package:control_ventas_movil/src/ui/common/form_stepper/form_stepper.dart';
 import 'package:control_ventas_movil/src/ui/common/text_inputs/date_input.dart';
 import 'package:control_ventas_movil/src/ui/common/text_inputs/text_input.dart';
 import 'package:control_ventas_movil/src/ui/pages/control/control_store.dart';
-import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/componentes/form_registro_contadores_control.dart';
+import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/volumenes_tanques_service.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -33,6 +34,7 @@ class FormVolumenesTanques extends StatefulWidget {
 }
 
 class _FormVolumenesTanques extends State<FormVolumenesTanques> {
+  late VolumenesTanquesService service;
   final GlobalKey<DropdownButton2State> dropKey =
       GlobalKey<DropdownButton2State>();
   final GlobalKey<DropdownButton2State> dropKeyHorario =
@@ -59,7 +61,7 @@ class _FormVolumenesTanques extends State<FormVolumenesTanques> {
   @override
   void initState() {
     super.initState();
-    // service = ControlService(); // Asegúrate de inicializarlo si es necesario
+    service = VolumenesTanquesService('/mobile', context);
     for (var _ in widget.tanques) {
       horaControllers.add(TextEditingController());
       combustibleControllers.add(TextEditingController());
@@ -93,7 +95,8 @@ class _FormVolumenesTanques extends State<FormVolumenesTanques> {
         };
       })
     };
-    print(datosFormulario); // Aquí podrías enviar los datos al backend
+    service.registrarVolumenes(context, datosFormulario);
+    // print(datosFormulario); // Aquí podrías enviar los datos al backend
   }
 
   @override
@@ -123,7 +126,7 @@ class _FormVolumenesTanques extends State<FormVolumenesTanques> {
                     'label': tipo.info,
                   };
                 }).toList(),
-                onChange: (value) {
+                onChange: (String? value) {
                   setState(() {
                     _tipoSeleccionado = value;
                   });
@@ -132,91 +135,38 @@ class _FormVolumenesTanques extends State<FormVolumenesTanques> {
                 //     service.validateData(context, value, alias, required: true),
               ),
               Expanded(
-                child: Stepper(
-                  type: StepperType.horizontal,
-                  currentStep: _currentStep,
-                  elevation: 0, // Sin elevación
-                  controlsBuilder:
-                      (BuildContext context, ControlsDetails details) {
-                    return const SizedBox.shrink();
-                  },
-
-                  steps: [
-                    ...widget.tanques.asMap().entries.map(
-                      (entry) {
-                        int index = entry.key;
-
-                        return Step(
-                          title: const Text(""),
-                          content: Column(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 8.0),
-                                child: CustomTimePicker(
-                                  title: 'Hora de Registro',
-                                  controller: horaControllers[index],
-                                  placeholder: 'Seleccionar hora',
-                                  requiredData: true,
-                                  onTap: () {
-                                    print("Date field tapped");
-                                  },
-                                  validate: (value, alias) {
-                                    if (value == null || value.isEmpty) {
-                                      return '$alias es obligatorio';
-                                    }
-                                    return '';
-                                  },
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 8.0),
-                                child: CustomTextInput(
-                                  requiredData: true,
-                                  controller: volumenControllers[index],
-                                  title: 'Volumen',
-                                  onChange: (value) => () {},
-                                  // validate: (value, alias) =>
-                                  //     service.validateData(
-                                  //   context,
-                                  //   value,
-                                  //   alias,
-                                  // ),
-                                ),
-                              ),
-                              DropDown(
-                                width: MediaQuery.of(context).size.width,
-                                label: 'Tipo de combustible',
-                                requiredData: true,
-                                // initialValue:
-                                //     combustibleControllers[index].text,
-                                dropKey: dropKeys[index], // Ahora es único
-                                items:
-                                    widget.listaCombustibles.map((combustible) {
-                                  return {
-                                    'id': combustible.id,
-                                    'label': combustible.nombre
-                                  };
-                                }).toList(),
-                                onChange: (value) {
-                                  setState(() {
-                                    combustibleControllers[index].text =
-                                        value ?? '';
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                          isActive: _currentStep >= index,
-                        );
-                      },
-                    ),
-                    Step(
-                      title: const Text(""),
-                      content: ElevatedButton(
-                        onPressed: _guardarFormulario,
-                        child: const Text("Resumen"),
+                child: Column(
+                  children: [
+                    if (widget.tanques.length > 1) ...[
+                      SizedBox(
+                          height: 72,
+                          child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: FormStepper(
+                                longitud: widget.tanques.length,
+                                currentStep: _currentStep,
+                                activeColor: theme.secondary,
+                              ))),
+                    ],
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: VolumenTanqueWidget(
+                          listaCombustibles: widget.listaCombustibles,
+                          combustibleController:
+                              combustibleControllers[_currentStep],
+                          horaController: horaControllers[_currentStep],
+                          volumenController: volumenControllers[_currentStep],
+                          dropKey: dropKeys[_currentStep],
+                          volumenTanque: widget.tanques[_currentStep],
+                          onChange: (String? value) {
+                            setState(() {
+                              combustibleControllers[_currentStep].text =
+                                  value ?? '';
+                            });
+                          },
+                          step: _currentStep,
+                        ),
                       ),
-                      isActive: _currentStep == widget.tanques.length,
                     ),
                   ],
                 ),
@@ -244,7 +194,7 @@ class _FormVolumenesTanques extends State<FormVolumenesTanques> {
             ),
             ElevatedButton(
               onPressed: () {
-                if (_currentStep < widget.tanques.length) {
+                if (_currentStep < widget.tanques.length - 1) {
                   setState(() => _currentStep++);
                 } else {
                   _guardarFormulario();
@@ -254,7 +204,7 @@ class _FormVolumenesTanques extends State<FormVolumenesTanques> {
                 backgroundColor: theme.secondary,
               ),
               child: Text(
-                _currentStep == widget.tanques.length
+                _currentStep == widget.tanques.length - 1
                     ? 'Finalizar registro'
                     : 'Siguiente',
                 style: const TextStyle(color: Colors.white),
@@ -271,4 +221,84 @@ class Tanque {
   final String nombre;
   final String codigo;
   Tanque({required this.nombre, required this.codigo});
+}
+
+class VolumenTanqueWidget extends StatefulWidget {
+  final VolumenTanque volumenTanque;
+  final List<Combustible> listaCombustibles;
+  final TextEditingController horaController;
+  final TextEditingController combustibleController;
+  final TextEditingController volumenController;
+  final GlobalKey<DropdownButton2State> dropKey;
+  final Function(String?)? onChange;
+  final int step;
+
+  const VolumenTanqueWidget({
+    super.key,
+    required this.volumenTanque,
+    required this.listaCombustibles,
+    required this.horaController,
+    required this.combustibleController,
+    required this.volumenController,
+    required this.dropKey,
+    this.onChange,
+    required this.step,
+  });
+
+  @override
+  VolumenTanqueWidgetState createState() => VolumenTanqueWidgetState();
+}
+
+class VolumenTanqueWidgetState extends State<VolumenTanqueWidget> {
+  @override
+  Widget build(BuildContext context) {
+    final theme = ThemeController.instance;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8.0),
+          child: CustomTimePicker(
+            title: 'Hora de Registro',
+            controller: widget.horaController,
+            placeholder: 'Seleccionar hora',
+            requiredData: true,
+            onTap: () {
+              print("Date field tapped");
+            },
+            validate: (value, alias) {
+              if (value == null || value.isEmpty) {
+                return '$alias es obligatorio';
+              }
+              return '';
+            },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8.0),
+          child: CustomTextInput(
+            requiredData: true,
+            controller: widget.volumenController,
+            title: 'Volumen',
+            onChange: (value) => () {},
+          ),
+        ),
+        DropDown(
+            width: MediaQuery.of(context).size.width,
+            label: 'Tipo de combustible',
+            requiredData: true,
+            initialValue: widget.combustibleController.text,
+            dropKey: widget.dropKey, // Ahora es único
+            key: ValueKey(widget.step),
+            items: widget.listaCombustibles.map((combustible) {
+              return {'id': combustible.id, 'label': combustible.nombre};
+            }).toList(),
+            onChange: (String? value) {
+              widget.onChange != null
+                  ? widget.onChange!(value)
+                  : widget.onChange!('');
+            }),
+      ],
+    );
+  }
 }
