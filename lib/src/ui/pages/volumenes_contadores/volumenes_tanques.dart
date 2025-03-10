@@ -50,34 +50,23 @@ class VolumenesTanquesScreen extends State<VolumenesTanques> {
                 "Registrarás el volumen de combustible em los tanques de la EESS",
             tiposMedicion: tiposMedicion,
             listaCombustibles: listaCombustibles,
-            tanques: volumenes.isNotEmpty
-                ? volumenes
-                : [
-                    VolumenTanque(
-                        id: "1",
-                        hora: "00:02",
-                        tipoMedicion: "x",
-                        volumen: "300",
-                        tanques: TanqueVolumenTanque(
-                          nombre: "Tanque 1",
-                          id: "1",
-                        )),
-                    VolumenTanque(
-                        id: "1",
-                        hora: "00:02",
-                        tipoMedicion: "x",
-                        volumen: "300"),
-                    VolumenTanque(
-                        id: "1",
-                        hora: "00:02",
-                        tipoMedicion: "x",
-                        volumen: "300"),
-                    VolumenTanque(
-                        id: "1",
-                        hora: "00:02",
-                        tipoMedicion: "x",
-                        volumen: "300"),
-                  ]),
+            tanques: [
+              VolumenTanque(
+                  id: "1",
+                  hora: "00:02",
+                  tipoMedicion: "x",
+                  volumen: "300",
+                  tanques: TanqueVolumenTanque(
+                    nombre: "Tanque 1",
+                    id: "1",
+                  )),
+              VolumenTanque(
+                  id: "1", hora: "00:02", tipoMedicion: "x", volumen: "300"),
+              VolumenTanque(
+                  id: "1", hora: "00:02", tipoMedicion: "x", volumen: "300"),
+              VolumenTanque(
+                  id: "1", hora: "00:02", tipoMedicion: "x", volumen: "300"),
+            ]),
       ),
     );
   }

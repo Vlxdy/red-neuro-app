@@ -1,10 +1,25 @@
+import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/meters_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/registro_meters_store.dart';
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
 
-class FormRegistroContadoresFinal extends StatelessWidget {
+class FormRegistroContadoresFinal extends StatefulWidget {
   const FormRegistroContadoresFinal({super.key});
+
+  @override
+  State<FormRegistroContadoresFinal> createState() =>
+      _FormRegistroContadoresFinal();
+}
+
+class _FormRegistroContadoresFinal extends State<FormRegistroContadoresFinal> {
+  late MeterService service;
+
+  @override
+  void initState() {
+    service = MeterService('', context);
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +44,9 @@ class FormRegistroContadoresFinal extends StatelessWidget {
               icon: const Icon(Icons.close),
               onPressed: () {
                 store.limpiarRegistros();
-                Navigator.pop(context);
+                Navigator.of(context)
+                  ..pop()
+                  ..pop();
               },
             ),
           ],
@@ -54,7 +71,7 @@ class FormRegistroContadoresFinal extends StatelessWidget {
                     style: TextStyle(color: theme.secondary),
                     children: <TextSpan>[
                       TextSpan(
-                        text: registro.tipoMedicion.nombre,
+                        text: registro.tipoMedicion,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: theme.secondary,
@@ -157,7 +174,10 @@ class FormRegistroContadoresFinal extends StatelessWidget {
             ),
             ElevatedButton(
               onPressed: () {
-                Navigator.pop(context);
+                service.guardarMetersRegistro(context);
+                Navigator.of(context)
+                  ..pop()
+                  ..pop();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: theme.secondary,

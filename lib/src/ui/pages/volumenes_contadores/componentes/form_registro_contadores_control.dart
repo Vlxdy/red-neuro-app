@@ -6,6 +6,7 @@ import 'package:control_ventas_movil/src/models/combustible.dart';
 import 'package:control_ventas_movil/src/plugins/estaciones/combustibles_store.dart';
 import 'package:control_ventas_movil/src/plugins/estaciones/estacion_servicio.dart';
 import 'package:control_ventas_movil/src/ui/common/form_stepper/form_stepper.dart';
+import 'package:control_ventas_movil/src/ui/common/text_inputs/date_input.dart';
 import 'package:control_ventas_movil/src/ui/common/text_inputs/text_input.dart';
 import 'package:control_ventas_movil/src/ui/common/drop_down/drop_down.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
@@ -17,14 +18,14 @@ import 'package:control_ventas_movil/src/models/registro_meters.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/componentes/form_registro_contadores_final.dart';
 import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
 
-class RegistroContadores extends StatefulWidget {
+class FormRegistroContadores extends StatefulWidget {
   final String titulo;
   final String descripcion;
   final List<TipoMedicion> tipoMedicion;
   final List<Dispensador> dispensadores;
   final List<Combustible> listaCombustibles;
 
-  const RegistroContadores({
+  const FormRegistroContadores({
     super.key,
     required this.titulo,
     required this.descripcion,
@@ -34,15 +35,77 @@ class RegistroContadores extends StatefulWidget {
   });
 
   @override
-  State<RegistroContadores> createState() => _RegistroContadoresState();
+  State<FormRegistroContadores> createState() => _RegistroContadoresState();
 }
 
-class _RegistroContadoresState extends State<RegistroContadores> {
+class _RegistroContadoresState extends State<FormRegistroContadores> {
+  final GlobalKey<DropdownButton2State> dropKey =
+      GlobalKey<DropdownButton2State>();
+
   String? _tipoSeleccionado;
   int _currentStep = 0;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final GlobalKey<DropdownButton2State> dropKeyTipoMedicion =
       GlobalKey<DropdownButton2State>();
+
+  List<TextEditingController> horaControllers = [];
+  Map<String, List<TextEditingController>> combustibleControllers = {};
+  Map<String, List<TextEditingController>> meterControllers = {};
+
+  @override
+  void initState() {
+    super.initState();
+    for (var i = 0; i < widget.dispensadores.length; i++) {
+      horaControllers.add(TextEditingController());
+      String key = i.toString();
+      combustibleControllers[key] = [];
+      meterControllers[key] = [];
+      for (var j = 0; j < widget.dispensadores[i].mangueras.length; j++) {
+        combustibleControllers[key]!.add(TextEditingController());
+        meterControllers[key]!.add(TextEditingController());
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    for (var controller in [
+      ...horaControllers,
+      ...combustibleControllers.values.expand((list) => list),
+      ...meterControllers.values.expand((list) => list),
+    ]) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _guardarFormulario() {
+    RegistroMeterStore datosFormulario = RegistroMeterStore(
+        tipoMedicion: _tipoSeleccionado!,
+        dispensadores: List.generate(widget.dispensadores.length, (dispIndex) {
+          return DispensadorStore(
+              idDispensador: widget.dispensadores[dispIndex].idDispensador,
+              codigo: widget.dispensadores[dispIndex].codigo,
+              hora: horaControllers[dispIndex].text,
+              mangueras: List.generate(
+                  widget.dispensadores[dispIndex].mangueras.length,
+                  (mangIndex) {
+                String key = dispIndex.toString();
+                return MangueraStore(
+                  idManguera: widget
+                      .dispensadores[dispIndex].mangueras[mangIndex].idManguera,
+                  codigo: widget
+                      .dispensadores[dispIndex].mangueras[mangIndex].codigo,
+                  combustible: widget.listaCombustibles.firstWhere((element) =>
+                      element.id ==
+                      combustibleControllers[key]![mangIndex].text),
+                  meter: int.parse(meterControllers[key]![mangIndex].text),
+                );
+              }));
+        }));
+
+    context.read<RegistroMetersStore>().guardarRegistro([datosFormulario]);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -100,6 +163,11 @@ class _RegistroContadoresState extends State<RegistroContadores> {
                         child: DispensadorWidget(
                           dispensador: widget.dispensadores[_currentStep],
                           listaCombustibles: widget.listaCombustibles,
+                          horaController: horaControllers[_currentStep],
+                          combustibleControllers:
+                              combustibleControllers[_currentStep.toString()]!,
+                          meterControllers:
+                              meterControllers[_currentStep.toString()]!,
                         ),
                       ),
                     ),
@@ -130,48 +198,20 @@ class _RegistroContadoresState extends State<RegistroContadores> {
             ElevatedButton(
               onPressed: () {
                 if (_currentStep < widget.dispensadores.length - 1) {
-                  setState(() {
-                    _currentStep += 1;
-                  });
-                } else {
-                  // Finalizar registro
-                  if (_formKey.currentState?.validate() ?? false) {
-                    // Crear la lista de registros y guardarlos en el store
-                    RegistroMeterStore registro = RegistroMeterStore(
-                      tipoMedicion: _tipoSeleccionado!,
-                      dispensadores: widget.dispensadores.map((dispensador) {
-                        return DispensadorStore(
-                          hora: dispensador.horaRegistro,
-                          idDispensador: dispensador.idDispensador,
-                          codigo: dispensador.codigo,
-                          mangueras: dispensador.mangueras.map((manguera) {
-                            return MangueraStore(
-                                idManguera: manguera.idManguera,
-                                codigo: manguera.codigo,
-                                combustible: manguera.selectedCombustible!,
-                                meter: 3000
-                                //int.parse(manguera.meterController.text),
-                                );
-                          }).toList(),
-                        );
-                      }).toList(),
-                    );
-
-                    // Guardar el registro en el store
-                    context
-                        .read<RegistroMetersStore>()
-                        .guardarRegistro([registro]);
-
-                    /*     // Volver atrás en el stack de navegación
-                    Navigator.pop(context); */
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            const FormRegistroContadoresFinal(),
-                      ),
-                    );
+                  if (_formKey.currentState != null &&
+                      _formKey.currentState!.validate()) {
+                    setState(() {
+                      _currentStep += 1;
+                    });
                   }
+                } else {
+                  _guardarFormulario();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const FormRegistroContadoresFinal(),
+                    ),
+                  );
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -242,22 +282,28 @@ class Manguera {
   final String idManguera;
   final String codigo;
   Combustible? selectedCombustible;
-  TextEditingController? _meterController;
   String? meterValue;
 
   Manguera({required this.idManguera, required this.codigo}) {
-    _meterController = TextEditingController();
+    selectedCombustible = null;
+    meterValue = '';
   }
 }
 
 class DispensadorWidget extends StatefulWidget {
   final Dispensador dispensador;
   final List<Combustible> listaCombustibles;
+  final TextEditingController horaController;
+  final List<TextEditingController> combustibleControllers;
+  final List<TextEditingController> meterControllers;
 
   const DispensadorWidget({
     super.key,
     required this.dispensador,
     required this.listaCombustibles,
+    required this.horaController,
+    required this.combustibleControllers,
+    required this.meterControllers,
   });
 
   @override
@@ -292,30 +338,38 @@ class DispensadorWidgetState extends State<DispensadorWidget> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 10),
-            GestureDetector(
+            CustomTimePicker(
+              title: 'Hora de Registro',
+              initialValue: widget.dispensador.horaRegistro,
+              controller: widget.horaController,
+              placeholder: 'Seleccionar hora',
+              requiredData: true,
               onTap: () => _selectTime(context),
-              child: AbsorbPointer(
-                child: TextFormField(
-                  controller: TextEditingController(
-                    text: widget.dispensador.horaRegistro,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: 'Hora',
-                    border: const OutlineInputBorder(),
-                    suffixIcon: Icon(Icons.access_time, color: theme.secondary),
-                  ),
-                ),
-              ),
+              validate: (value, alias) {
+                if (value == null || value.isEmpty) {
+                  return '$alias es obligatorio';
+                }
+                return '';
+              },
             ),
           ],
         ),
         const SizedBox(height: 16),
-        ...widget.dispensador.mangueras.map(
-          (manguera) => MangueraWidget(
-            manguera: manguera,
-            listaCombustibles: widget.listaCombustibles,
-          ),
-        ),
+        ...widget.dispensador.mangueras.asMap().entries.map(
+              (entry) => MangueraWidget(
+                manguera: entry.value,
+                listaCombustibles: widget.listaCombustibles,
+                combustibleController: widget.combustibleControllers[entry.key],
+                meterController: widget.meterControllers[entry.key],
+                keyManguera:
+                    int.parse(widget.dispensador.idDispensador) + entry.key,
+                onChange: (String? value) {
+                  setState(() {
+                    widget.combustibleControllers[entry.key].text = value ?? '';
+                  });
+                },
+              ),
+            ),
       ],
     );
   }
@@ -324,11 +378,19 @@ class DispensadorWidgetState extends State<DispensadorWidget> {
 class MangueraWidget extends StatefulWidget {
   final Manguera manguera;
   final List<Combustible> listaCombustibles;
+  final TextEditingController combustibleController;
+  final TextEditingController meterController;
+  final Function(String?)? onChange;
+  final int keyManguera;
 
   const MangueraWidget({
     super.key,
     required this.manguera,
     required this.listaCombustibles,
+    required this.combustibleController,
+    required this.meterController,
+    required this.keyManguera,
+    this.onChange,
   });
 
   @override
@@ -336,8 +398,14 @@ class MangueraWidget extends StatefulWidget {
 }
 
 class MangueraWidgetState extends State<MangueraWidget> {
-  final GlobalKey<DropdownButton2State> dropKeyCombustible =
-      GlobalKey<DropdownButton2State>();
+  List<GlobalKey<DropdownButton2State>> dropKeyCombustible = [];
+
+  @override
+  void initState() {
+    super.initState();
+    dropKeyCombustible = List.generate(widget.listaCombustibles.length,
+        (_) => GlobalKey<DropdownButton2State>());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -348,18 +416,21 @@ class MangueraWidgetState extends State<MangueraWidget> {
             style: const TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 16),
         DropDown(
+          key: ValueKey(widget.keyManguera),
+          /* key: Key(
+              '${DateTime.now().millisecondsSinceEpoch}_${widget.keyManguera}'), */
+          initialValue: widget.combustibleController.text,
           width: MediaQuery.of(context).size.width,
           label: 'Tipo de combustible',
           requiredData: true,
-          dropKey: dropKeyCombustible,
+          dropKey: dropKeyCombustible[int.parse(widget.manguera.idManguera)],
           items: widget.listaCombustibles
               .map((e) => {'id': e.id, 'label': e.nombre})
               .toList(),
-          onChange: (value) {
-            setState(() {
-              widget.manguera.selectedCombustible = widget.listaCombustibles
-                  .firstWhere((element) => element.id == value);
-            });
+          onChange: (String? value) {
+            widget.onChange != null
+                ? widget.onChange!(value)
+                : widget.onChange!('');
           },
           validate: (value, alias) {
             if (value == null || value.isEmpty) {
@@ -370,23 +441,21 @@ class MangueraWidgetState extends State<MangueraWidget> {
         ),
         const SizedBox(height: 16),
         CustomTextInput(
-          controller: widget.manguera._meterController,
+          controller: widget.meterController,
           title: 'Meter',
           requiredData: true,
           onlyNumbers: true,
-          /*  onChange: (String? value) => store. = value ?? ' */
           onChange: (value) {
             setState(() {
-              Logger.info(value.toString());
               widget.manguera.meterValue = value;
             });
           },
-          /*  validate: (value, alias) {
+          validate: (value, alias) {
             if (value == null || value.isEmpty) {
               return 'Por favor ingrese el valor del meter';
             }
             return null;
-          }, */
+          },
         ),
         const SizedBox(height: 10),
       ],
@@ -409,7 +478,7 @@ void showRegistroContadoresModal(BuildContext context) {
     enableDrag: false,
     builder: (context) => FractionallySizedBox(
       heightFactor: 0.95,
-      child: RegistroContadores(
+      child: FormRegistroContadores(
         titulo: "Registro de contadores",
         descripcion:
             "Registrarás el valor de cada meter de manguera de los dispensadores de la EESS",
