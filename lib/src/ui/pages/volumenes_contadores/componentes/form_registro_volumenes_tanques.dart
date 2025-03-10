@@ -4,6 +4,7 @@ import 'package:control_ventas_movil/src/models/combustible.dart';
 import 'package:control_ventas_movil/src/models/registro_meters.dart';
 import 'package:control_ventas_movil/src/models/volumenes_tanques.dart';
 import 'package:control_ventas_movil/src/ui/common/drop_down/drop_down.dart';
+import 'package:control_ventas_movil/src/ui/common/form_stepper/form_stepper.dart';
 import 'package:control_ventas_movil/src/ui/common/text_inputs/date_input.dart';
 import 'package:control_ventas_movil/src/ui/common/text_inputs/text_input.dart';
 import 'package:control_ventas_movil/src/ui/pages/control/control_store.dart';
@@ -132,92 +133,126 @@ class _FormVolumenesTanques extends State<FormVolumenesTanques> {
                 //     service.validateData(context, value, alias, required: true),
               ),
               Expanded(
-                child: Stepper(
-                  type: StepperType.horizontal,
-                  currentStep: _currentStep,
-                  elevation: 0, // Sin elevación
-                  controlsBuilder:
-                      (BuildContext context, ControlsDetails details) {
-                    return const SizedBox.shrink();
-                  },
+                child: Column(
+                  children: [
+                    if (widget.tanques.length > 1) ...[
+                      SizedBox(
+                          height: 72,
+                          child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: FormStepper(
+                                longitud: widget.tanques.length,
+                                currentStep: _currentStep,
+                                activeColor: theme.secondary,
+                              ))),
+                    ],
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: VolumenTanqueWidget(
+                          listaCombustibles: widget.listaCombustibles,
+                          combustibleController:
+                              combustibleControllers[_currentStep],
+                          horaController: horaControllers[_currentStep],
+                          volumenController: volumenControllers[_currentStep],
+                          dropKey: dropKeys[_currentStep],
+                          volumenTanque: widget.tanques[_currentStep],
+                          onChange: (value)=>{
+                            setState(() {
+                              combustibleControllers[_currentStep].text = value ?? '';
+                            })
+                          },
 
-                  steps: [
-                    ...widget.tanques.asMap().entries.map(
-                      (entry) {
-                        int index = entry.key;
-
-                        return Step(
-                          title: const Text(""),
-                          content: Column(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 8.0),
-                                child: CustomTimePicker(
-                                  title: 'Hora de Registro',
-                                  controller: horaControllers[index],
-                                  placeholder: 'Seleccionar hora',
-                                  requiredData: true,
-                                  onTap: () {
-                                    print("Date field tapped");
-                                  },
-                                  validate: (value, alias) {
-                                    if (value == null || value.isEmpty) {
-                                      return '$alias es obligatorio';
-                                    }
-                                    return '';
-                                  },
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 8.0),
-                                child: CustomTextInput(
-                                  requiredData: true,
-                                  controller: volumenControllers[index],
-                                  title: 'Volumen',
-                                  onChange: (value) => () {},
-                                  // validate: (value, alias) =>
-                                  //     service.validateData(
-                                  //   context,
-                                  //   value,
-                                  //   alias,
-                                  // ),
-                                ),
-                              ),
-                              DropDown(
-                                width: MediaQuery.of(context).size.width,
-                                label: 'Tipo de combustible',
-                                requiredData: true,
-                                // initialValue:
-                                //     combustibleControllers[index].text,
-                                dropKey: dropKeys[index], // Ahora es único
-                                items:
-                                    widget.listaCombustibles.map((combustible) {
-                                  return {
-                                    'id': combustible.id,
-                                    'label': combustible.nombre
-                                  };
-                                }).toList(),
-                                onChange: (value) {
-                                  setState(() {
-                                    combustibleControllers[index].text =
-                                        value ?? '';
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                          isActive: _currentStep >= index,
-                        );
-                      },
-                    ),
-                    Step(
-                      title: const Text(""),
-                      content: ElevatedButton(
-                        onPressed: _guardarFormulario,
-                        child: const Text("Resumen"),
+                        ),
                       ),
-                      isActive: _currentStep == widget.tanques.length,
                     ),
+                    // Stepper(
+                    //   type: StepperType.horizontal,
+                    //   currentStep: _currentStep,
+                    //   elevation: 0, // Sin elevación
+                    //   controlsBuilder:
+                    //       (BuildContext context, ControlsDetails details) {
+                    //     return const SizedBox.shrink();
+                    //   },
+
+                    //   steps: [
+                    //     ...widget.tanques.asMap().entries.map(
+                    //       (entry) {
+                    //         int index = entry.key;
+
+                    //         return Step(
+                    //           title: const Text(""),
+                    //           content: Column(
+                    //             children: [
+                    //               Padding(
+                    //                 padding: const EdgeInsets.only(bottom: 8.0),
+                    //                 child: CustomTimePicker(
+                    //                   title: 'Hora de Registro',
+                    //                   controller: horaControllers[index],
+                    //                   placeholder: 'Seleccionar hora',
+                    //                   requiredData: true,
+                    //                   onTap: () {
+                    //                     print("Date field tapped");
+                    //                   },
+                    //                   validate: (value, alias) {
+                    //                     if (value == null || value.isEmpty) {
+                    //                       return '$alias es obligatorio';
+                    //                     }
+                    //                     return '';
+                    //                   },
+                    //                 ),
+                    //               ),
+                    //               Padding(
+                    //                 padding: const EdgeInsets.only(bottom: 8.0),
+                    //                 child: CustomTextInput(
+                    //                   requiredData: true,
+                    //                   controller: volumenControllers[index],
+                    //                   title: 'Volumen',
+                    //                   onChange: (value) => () {},
+                    //                   // validate: (value, alias) =>
+                    //                   //     service.validateData(
+                    //                   //   context,
+                    //                   //   value,
+                    //                   //   alias,
+                    //                   // ),
+                    //                 ),
+                    //               ),
+                    //               DropDown(
+                    //                 width: MediaQuery.of(context).size.width,
+                    //                 label: 'Tipo de combustible',
+                    //                 requiredData: true,
+                    //                 // initialValue:
+                    //                 //     combustibleControllers[index].text,
+                    //                 dropKey: dropKeys[index], // Ahora es único
+                    //                 items: widget.listaCombustibles
+                    //                     .map((combustible) {
+                    //                   return {
+                    //                     'id': combustible.id,
+                    //                     'label': combustible.nombre
+                    //                   };
+                    //                 }).toList(),
+                    //                 onChange: (value) {
+                    //                   setState(() {
+                    //                     combustibleControllers[index].text =
+                    //                         value ?? '';
+                    //                   });
+                    //                 },
+                    //               ),
+                    //             ],
+                    //           ),
+                    //           isActive: _currentStep >= index,
+                    //         );
+                    //       },
+                    //     ),
+                    //     Step(
+                    //       title: const Text(""),
+                    //       content: ElevatedButton(
+                    //         onPressed: _guardarFormulario,
+                    //         child: const Text("Resumen"),
+                    //       ),
+                    //       isActive: _currentStep == widget.tanques.length,
+                    //     ),
+                    //   ],
+                    // ),
                   ],
                 ),
               ),
@@ -271,4 +306,87 @@ class Tanque {
   final String nombre;
   final String codigo;
   Tanque({required this.nombre, required this.codigo});
+}
+
+class VolumenTanqueWidget extends StatefulWidget {
+  final VolumenTanque volumenTanque;
+  final List<Combustible> listaCombustibles;
+  final TextEditingController horaController;
+  final TextEditingController combustibleController;
+  final TextEditingController volumenController;
+  final GlobalKey<DropdownButton2State> dropKey;
+  final Function(String?)? onChange;
+
+  const VolumenTanqueWidget({
+    super.key,
+    required this.volumenTanque,
+    required this.listaCombustibles,
+    required this.horaController,
+    required this.combustibleController,
+    required this.volumenController,
+    required this.dropKey,
+    this.onChange,
+  });
+
+  @override
+  VolumenTanqueWidgetState createState() => VolumenTanqueWidgetState();
+}
+
+class VolumenTanqueWidgetState extends State<VolumenTanqueWidget> {
+  @override
+  Widget build(BuildContext context) {
+    final theme = ThemeController.instance;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8.0),
+          child: CustomTimePicker(
+            title: 'Hora de Registro',
+            controller: widget.horaController,
+            placeholder: 'Seleccionar hora',
+            requiredData: true,
+            onTap: () {
+              print("Date field tapped");
+            },
+            validate: (value, alias) {
+              if (value == null || value.isEmpty) {
+                return '$alias es obligatorio';
+              }
+              return '';
+            },
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8.0),
+          child: CustomTextInput(
+            requiredData: true,
+            controller: widget.volumenController,
+            title: 'Volumen',
+            onChange: (value) => () {},
+            // validate: (value, alias) =>
+            //     service.validateData(
+            //   context,
+            //   value,
+            //   alias,
+            // ),
+          ),
+        ),
+        DropDown(
+          width: MediaQuery.of(context).size.width,
+          label: 'Tipo de combustible',
+          requiredData: true,
+          // initialValue:
+          //     combustibleControllers[index].text,
+          dropKey: widget.dropKey, // Ahora es único
+          items: widget.listaCombustibles.map((combustible) {
+            return {'id': combustible.id, 'label': combustible.nombre};
+          }).toList(),
+          onChange: (value) {
+            widget.onChange!(value);
+          },
+        ),
+      ],
+    );
+  }
 }
