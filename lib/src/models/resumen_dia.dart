@@ -2,6 +2,7 @@
 
 import 'dart:convert';
 
+import 'package:control_ventas_movil/src/models/combustible.dart';
 import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
 
 class ResumenDia {
@@ -79,11 +80,13 @@ class DetalleVenta {
   String codigo;
   String cantidad;
   String? color;
+  String? nombre;
 
   DetalleVenta({
     required this.codigo,
     required this.cantidad,
     this.color,
+    this.nombre,
   });
 
   factory DetalleVenta.fromJson(Map<String, dynamic> json) {
@@ -91,6 +94,7 @@ class DetalleVenta {
       codigo: json['codigo'] ?? '',
       cantidad: json['cantidad'] ?? '',
       color: json['color'],
+      nombre: json['nombre'],
     );
   }
   Map<String, dynamic> toJson() {
@@ -98,6 +102,7 @@ class DetalleVenta {
       'codigo': codigo,
       'cantidad': cantidad,
       'color': color,
+      'nombre': nombre,
     };
   }
 }
@@ -145,26 +150,26 @@ class TanqueRegistroVolumen {
   String id;
   String hora;
   String tipoMedicion;
-  String codigo;
   String volumen;
+  Combustible? combustible;
 
   TanqueRegistroVolumen({
     required this.id,
     required this.hora,
     required this.tipoMedicion,
-    required this.codigo,
     required this.volumen,
+    this.combustible,
   });
 
   factory TanqueRegistroVolumen.fromJson(Map<String, dynamic> json) {
-    print(json);
-    print('==================');
     return TanqueRegistroVolumen(
       id: json['id'] ?? '',
       hora: json['hora'] ?? '',
       tipoMedicion: json['tipoMedicion'] ?? '',
-      codigo: json['codigo'] ?? '',
       volumen: json['volumen'] ?? '',
+      combustible: json['combustible'] != null
+          ? Combustible.fromJson(json['combustible'])
+          : null, // Manejo de null
     );
   }
   Map<String, dynamic> toJson() {
@@ -172,8 +177,8 @@ class TanqueRegistroVolumen {
       'id': id,
       'hora': hora,
       'tipoMedicion': tipoMedicion,
-      'codigo': codigo,
       'volumen': volumen,
+      'combustible': combustible?.toJson(),
     };
   }
 }

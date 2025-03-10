@@ -1,9 +1,12 @@
+import 'package:control_ventas_movil/src/models/combustible.dart';
+
 class DropDownType {
   String id;
   String nombre;
-
   DropDownType({required this.id, required this.nombre});
 }
+
+/* Modelo para llenar el formulario Vólumenes y contadores */
 
 class RegistroMeterStore {
   final DropDownType tipoMedicion;
@@ -100,5 +103,110 @@ class MangueraStore {
       combustible: map['combustible'],
       meter: map['meter'],
     );
+  }
+}
+
+/* Modelo para listar Vólumenes y contadores */
+class DataListMangueras {
+  final String id;
+  final String codigo;
+  final Combustible combustible;
+  final String meter;
+
+  DataListMangueras({
+    required this.id,
+    required this.codigo,
+    required this.combustible,
+    required this.meter,
+  });
+
+  factory DataListMangueras.fromJson(Map<String, dynamic> json) {
+    return DataListMangueras(
+      id: json['id'],
+      codigo: json['codigo'],
+      combustible: Combustible.fromJson(json['combustible']),
+      meter: json['meter'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'codigo': codigo,
+      'combustible': combustible.toJson(),
+      'meter': meter,
+    };
+  }
+}
+
+class DataListDispensador {
+  final String codigo;
+  final List<DataListMangueras> mangueras;
+
+  DataListDispensador({
+    required this.codigo,
+    required this.mangueras,
+  });
+
+  factory DataListDispensador.fromJson(Map<String, dynamic> json) {
+    return DataListDispensador(
+      codigo: json['codigo'],
+      mangueras: (json['mangueras'] as List)
+          .map((manguera) => DataListMangueras.fromJson(manguera))
+          .toList(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'codigo': codigo,
+      'mangueras': mangueras.map((manguera) => manguera.toJson()).toList(),
+    };
+  }
+}
+
+class DataListVolumenes {
+  final String hora;
+  final List<DataListDispensador> dispensadores;
+
+  DataListVolumenes({
+    required this.hora,
+    required this.dispensadores,
+  });
+
+  factory DataListVolumenes.fromJson(Map<String, dynamic> json) {
+    return DataListVolumenes(
+      hora: json['hora'],
+      dispensadores: (json['dispensadores'] as List)
+          .map((dispensador) => DataListDispensador.fromJson(dispensador))
+          .toList(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'hora': hora,
+      'dispensadores':
+          dispensadores.map((dispensador) => dispensador.toJson()).toList(),
+    };
+  }
+}
+
+class DataListadoMeters {
+  final List<DataListVolumenes> volumenes;
+
+  DataListadoMeters({
+    required this.volumenes,
+  });
+
+  factory DataListadoMeters.fromJson(List<dynamic> json) {
+    return DataListadoMeters(
+      volumenes:
+          json.map((volumen) => DataListVolumenes.fromJson(volumen)).toList(),
+    );
+  }
+
+  List<dynamic> toJson() {
+    return volumenes.map((volumen) => volumen.toJson()).toList();
   }
 }

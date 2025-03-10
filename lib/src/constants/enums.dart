@@ -17,3 +17,20 @@ enum TipoVentas {
     }
   }
 }
+
+enum TipoMedicion {
+  inicialJornada,
+  finJornada,
+  aSolicitud;
+
+  String get info {
+    switch (this) {
+      case TipoMedicion.inicialJornada:
+        return 'Inicio de jornada';
+      case TipoMedicion.finJornada:
+        return 'Fin de jornada';
+      case TipoMedicion.aSolicitud:
+        return 'A solicitud';
+    }
+  }
+}
