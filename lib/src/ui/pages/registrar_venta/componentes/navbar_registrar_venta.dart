@@ -35,7 +35,6 @@ class _RegistrarVentaState extends State<RegistrarVentaPage> {
     initialPage: 0,
   );
 
-  /// Array con lista de pestañas
   late List<ChildrenItem> _itemsChildren;
 
   @override

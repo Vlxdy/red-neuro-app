@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:control_ventas_movil/src/models/venta.dart';
+import 'package:control_ventas_movil/src/plugins/estaciones/bitacora_store.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/stores/venta_tanques_store.dart';
 import 'package:flutter/material.dart';
 import 'package:control_ventas_movil/src/config/service_config.dart';
@@ -9,14 +10,15 @@ import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
 import 'package:control_ventas_movil/src/ui/common/snackbar/snackbar.dart';
 import 'package:control_ventas_movil/src/ui/global/loading_animation.dart';
 
-GlobalKey<ScaffoldMessengerState> tanquesMessenger =
-GlobalKey<ScaffoldMessengerState>();
+GlobalKey<ScaffoldMessengerState> tanquesMessenger = GlobalKey<ScaffoldMessengerState>();
 
 class VentaTanquesService extends ServiceConfig {
   VentaTanquesService(super.urlBase, super.context);
 
   final store = VentaTanquesStore.instance;
   final theme = ThemeController.instance;
+
+  final idBitacora = BitacoraStore.instance.bitacora.id;
 
   void fetchDataTanques() {
     cargarVentasTanques().whenComplete(() => store.cargando = false);
@@ -28,7 +30,7 @@ class VentaTanquesService extends ServiceConfig {
       LoadingAnimation.instance.state = Overlay.of(context);
 
       final response = await fetch(
-        '/mobile/1/listar-venta?tipoVenta=Tanque adicional',
+        '/mobile/$idBitacora/listar-venta?tipoVenta=Tanque adicional',
         type: HttpProtocol.get,
         withAuthorization: true,
       );
@@ -43,7 +45,6 @@ class VentaTanquesService extends ServiceConfig {
         store.ventas = (datos['list'] as List<dynamic>)
             .map((item) => Venta.fromJson(item))
             .toList();
-
       } else {
         Logger.error('Error al obtener datos. Status: ${response.status}');
       }
@@ -78,22 +79,21 @@ class VentaTanquesService extends ServiceConfig {
         'idCombustible': '$idCombustible',
         'tipoVenta': 'Tanque adicional',
         'fechaRegistroApp': fechaRegistroApp.toIso8601String(),
-        if (observacion != null && observacion.isNotEmpty) 'observacion': observacion,
+        if (observacion != null && observacion.isNotEmpty)
+          'observacion': observacion,
       };
 
       final response = await multipartRequest(
-        '/mobile/1/registro-venta',
-        type: 'POST',
-        files: files,
-        nameFiles: files.map((_) => 'files').toList(),
-        body: body,
-        image: true
-      );
+          '/mobile/$idBitacora/registro-venta',
+          type: 'POST',
+          files: files,
+          nameFiles: files.map((_) => 'files').toList(),
+          body: body,
+          image: true);
 
       if (response.status != StatusNetwork.connected) {
         throw Exception(response.message);
       }
-
     } catch (e, stacktrace) {
       Logger.error('Error al registrar venta: $e');
       Logger.error('Stacktrace: $stacktrace');
