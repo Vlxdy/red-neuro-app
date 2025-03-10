@@ -1,4 +1,5 @@
 import 'package:control_ventas_movil/src/models/venta.dart';
+import 'package:control_ventas_movil/src/plugins/estaciones/bitacora_store.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/stores/venta_bidones_store.dart';
 import 'package:flutter/material.dart';
 import 'package:control_ventas_movil/src/config/service_config.dart';
@@ -17,6 +18,8 @@ class VentaBidonesService extends ServiceConfig {
   final store = VentaBidonesStore.instance;
   final theme = ThemeController.instance;
 
+  final idBitacora = BitacoraStore.instance.bitacora.id;
+
   void fetchDataBidones() {
     cargarVentasBidones().whenComplete(() => store.cargando = false);
   }
@@ -28,7 +31,7 @@ class VentaBidonesService extends ServiceConfig {
       // LoadingAnimation.instance.showLoading(mensaje: 'Cargando Bidones...');
 
       final response = await fetch(
-        '/mobile/1/listar-venta?tipoVenta=Bidones',
+        '/mobile/$idBitacora/listar-venta?tipoVenta=Bidones',
         type: HttpProtocol.get,
         withAuthorization: true,
       );
@@ -72,7 +75,7 @@ class VentaBidonesService extends ServiceConfig {
       });
 
       final response = await fetch(
-        '/mobile/1/registro-venta',
+        '/mobile/$idBitacora/registro-venta',
         type: HttpProtocol.post,
         withAuthorization: true,
         body: {
