@@ -15,13 +15,13 @@ import 'package:flutter/material.dart';
 class VolumenesTanquesService extends ServiceConfig {
   VolumenesTanquesService(super.urlBase, super.context);
   final theme = ThemeController.instance;
+  final idBitacora = BitacoraStore.instance.bitacora.id;
   Future<List<VolumenTanque>> fetchData() {
     return getVolumenesTanques();
   }
 
   Future<List<VolumenTanque>> getVolumenesTanques() async {
     try {
-      final idBitacora = BitacoraStore.instance.bitacora.id;
       final idEstacionServicio =
           EstacionServicioStore.instance.estacionServicio.id;
 
@@ -47,21 +47,18 @@ class VolumenesTanquesService extends ServiceConfig {
   }
 
   Future<void> registrarVolumenes(
-      BuildContext context, Map<String, dynamic> datos) async {
+      BuildContext context, FormularioRegistroVolumenes datos) async {
     try {
       LoadingAnimation.instance.state = Overlay.of(context);
       LoadingAnimation.instance.showLoading(mensaje: 'Iniciando control...');
 
-      Logger.info(jsonEncode(datos));
+      Logger.info(jsonEncode(datos.toMap()));
       Logger.info('--------------------------');
-      final response = await fetch('/mobile/bitacora',
+      final response = await fetch(
+          '/mobile/bitacora/$idBitacora/registro-tanque-volumenes',
           type: HttpProtocol.post,
           withAuthorization: true,
-          body: {
-            // "idEstacionServicio": estacion,
-            // "idHorario": horario,
-            // "fechaRegistro": fechaRegistro.toString(),
-          });
+          body: {...datos.toMap()});
       if (response.status != StatusNetwork.connected) {
         throw Exception(response.message);
       }

@@ -6,6 +6,7 @@ import 'package:control_ventas_movil/src/ui/pages/principal_page/principal_page_
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/stores/registrar_venta_store.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/stores/venta_bidones_store.dart';
 import 'package:control_ventas_movil/src/ui/pages/resumen_dia/resumen_dia_store.dart';
+import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/registro_volumenes_store.dart';
 import 'package:flutter/material.dart';
 import 'package:control_ventas_movil/src/ui/global/loading_animation.dart';
 import 'package:control_ventas_movil/src/ui/pages/login/login_store.dart';
@@ -28,6 +29,8 @@ List<SingleChildWidget> proveedores(BuildContext context) => [
       ChangeNotifierProvider(create: (context) => ResumenDiaStore.instance),
       ChangeNotifierProvider(
           create: (context) => DataListadoMetersStore.instance),
+      ChangeNotifierProvider(create: (context) => RegistroVolumenesStore.instance),
+
     ];
 
 resetProviders() {

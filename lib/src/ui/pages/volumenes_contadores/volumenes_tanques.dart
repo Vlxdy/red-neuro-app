@@ -62,11 +62,15 @@ class VolumenesTanquesScreen extends State<VolumenesTanques> {
                           nombre: "Tanque 1",
                           id: "1",
                         )),
-                    VolumenTanque(
+                  VolumenTanque(
                         id: "1",
                         hora: "00:02",
                         tipoMedicion: "x",
-                        volumen: "300"),
+                        volumen: "300",
+                        tanques: TanqueVolumenTanque(
+                          nombre: "Tanque 2",
+                          id: "3",
+                        )),
                     VolumenTanque(
                         id: "1",
                         hora: "00:02",
