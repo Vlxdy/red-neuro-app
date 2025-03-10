@@ -11,6 +11,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+final GlobalKey<ScaffoldMessengerState> volumenTanquesMessenger =
+    GlobalKey<ScaffoldMessengerState>();
 class VolumenesTanques extends StatefulWidget {
   const VolumenesTanques({super.key});
 

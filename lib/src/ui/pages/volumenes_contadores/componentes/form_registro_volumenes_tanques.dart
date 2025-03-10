@@ -8,7 +8,7 @@ import 'package:control_ventas_movil/src/ui/common/form_stepper/form_stepper.dar
 import 'package:control_ventas_movil/src/ui/common/text_inputs/date_input.dart';
 import 'package:control_ventas_movil/src/ui/common/text_inputs/text_input.dart';
 import 'package:control_ventas_movil/src/ui/pages/control/control_store.dart';
-import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/componentes/form_registro_contadores_control.dart';
+import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/volumenes_tanques_service.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -34,6 +34,7 @@ class FormVolumenesTanques extends StatefulWidget {
 }
 
 class _FormVolumenesTanques extends State<FormVolumenesTanques> {
+  late VolumenesTanquesService service;
   final GlobalKey<DropdownButton2State> dropKey =
       GlobalKey<DropdownButton2State>();
   final GlobalKey<DropdownButton2State> dropKeyHorario =
@@ -60,7 +61,7 @@ class _FormVolumenesTanques extends State<FormVolumenesTanques> {
   @override
   void initState() {
     super.initState();
-    // service = ControlService(); // Asegúrate de inicializarlo si es necesario
+    service = VolumenesTanquesService('/mobile', context);
     for (var _ in widget.tanques) {
       horaControllers.add(TextEditingController());
       combustibleControllers.add(TextEditingController());
@@ -94,7 +95,8 @@ class _FormVolumenesTanques extends State<FormVolumenesTanques> {
         };
       })
     };
-    print(datosFormulario); // Aquí podrías enviar los datos al backend
+    service.registrarVolumenes(context, datosFormulario);
+    // print(datosFormulario); // Aquí podrías enviar los datos al backend
   }
 
   @override
@@ -124,7 +126,7 @@ class _FormVolumenesTanques extends State<FormVolumenesTanques> {
                     'label': tipo.info,
                   };
                 }).toList(),
-                onChange: (value) {
+                onChange: (String? value) {
                   setState(() {
                     _tipoSeleccionado = value;
                   });
@@ -156,12 +158,13 @@ class _FormVolumenesTanques extends State<FormVolumenesTanques> {
                           volumenController: volumenControllers[_currentStep],
                           dropKey: dropKeys[_currentStep],
                           volumenTanque: widget.tanques[_currentStep],
-                          onChange: (value)=>{
+                          onChange: (String? value) {
                             setState(() {
-                              combustibleControllers[_currentStep].text = value ?? '';
-                            })
+                              combustibleControllers[_currentStep].text =
+                                  value ?? '';
+                            });
                           },
-
+                          step: _currentStep,
                         ),
                       ),
                     ),
@@ -279,7 +282,7 @@ class _FormVolumenesTanques extends State<FormVolumenesTanques> {
             ),
             ElevatedButton(
               onPressed: () {
-                if (_currentStep < widget.tanques.length) {
+                if (_currentStep < widget.tanques.length - 1) {
                   setState(() => _currentStep++);
                 } else {
                   _guardarFormulario();
@@ -289,7 +292,7 @@ class _FormVolumenesTanques extends State<FormVolumenesTanques> {
                 backgroundColor: theme.secondary,
               ),
               child: Text(
-                _currentStep == widget.tanques.length
+                _currentStep == widget.tanques.length - 1
                     ? 'Finalizar registro'
                     : 'Siguiente',
                 style: const TextStyle(color: Colors.white),
@@ -316,6 +319,7 @@ class VolumenTanqueWidget extends StatefulWidget {
   final TextEditingController volumenController;
   final GlobalKey<DropdownButton2State> dropKey;
   final Function(String?)? onChange;
+  final int step;
 
   const VolumenTanqueWidget({
     super.key,
@@ -326,6 +330,7 @@ class VolumenTanqueWidget extends StatefulWidget {
     required this.volumenController,
     required this.dropKey,
     this.onChange,
+    required this.step,
   });
 
   @override
@@ -364,28 +369,23 @@ class VolumenTanqueWidgetState extends State<VolumenTanqueWidget> {
             controller: widget.volumenController,
             title: 'Volumen',
             onChange: (value) => () {},
-            // validate: (value, alias) =>
-            //     service.validateData(
-            //   context,
-            //   value,
-            //   alias,
-            // ),
           ),
         ),
         DropDown(
-          width: MediaQuery.of(context).size.width,
-          label: 'Tipo de combustible',
-          requiredData: true,
-          // initialValue:
-          //     combustibleControllers[index].text,
-          dropKey: widget.dropKey, // Ahora es único
-          items: widget.listaCombustibles.map((combustible) {
-            return {'id': combustible.id, 'label': combustible.nombre};
-          }).toList(),
-          onChange: (value) {
-            widget.onChange!(value);
-          },
-        ),
+            width: MediaQuery.of(context).size.width,
+            label: 'Tipo de combustible',
+            requiredData: true,
+            initialValue: widget.combustibleController.text,
+            dropKey: widget.dropKey, // Ahora es único
+            key: ValueKey(widget.step),
+            items: widget.listaCombustibles.map((combustible) {
+              return {'id': combustible.id, 'label': combustible.nombre};
+            }).toList(),
+            onChange: (String? value) {
+              widget.onChange != null
+                  ? widget.onChange!(value)
+                  : widget.onChange!('');
+            }),
       ],
     );
   }
