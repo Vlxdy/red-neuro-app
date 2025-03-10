@@ -20,7 +20,7 @@ class _VentaTanquesScreenState extends State<VentaTanquesScreen> {
   @override
   void initState() {
     _service = VentaTanquesService('', context);
-    _service.fetchDataBidones();
+    _service.fetchDataTanques();
     super.initState();
   }
 
@@ -94,7 +94,7 @@ class _VentaTanquesScreenState extends State<VentaTanquesScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => NuevaVentaScreen(),
+                                builder: (context) => RegistarVentaTanque(),
                               ),
                             );
                           },

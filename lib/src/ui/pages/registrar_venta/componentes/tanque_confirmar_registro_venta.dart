@@ -1,8 +1,11 @@
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/ui/pages/registrar_venta/screens/venta_tanques_screen.dart';
+import 'package:control_ventas_movil/src/ui/pages/registrar_venta/componentes/navbar_registrar_venta.dart';
+import 'package:control_ventas_movil/src/ui/pages/registrar_venta/services/venta_tanque_service.dart';
+import 'package:control_ventas_movil/src/ui/pages/registrar_venta/stores/registrar_venta_store.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
-class ConfirmarRegistroScreen extends StatelessWidget {
+class ConfirmarRegistroScreen extends StatefulWidget {
   final String placa;
   final int numeroFotos;
 
@@ -11,6 +14,19 @@ class ConfirmarRegistroScreen extends StatelessWidget {
     required this.placa,
     required this.numeroFotos,
   }) : super(key: key);
+
+  @override
+  _ConfirmarRegistroScreenState createState() => _ConfirmarRegistroScreenState();
+}
+
+class _ConfirmarRegistroScreenState extends State<ConfirmarRegistroScreen> {
+  late VentaTanquesService _service;
+
+  @override
+  void initState() {
+    _service = VentaTanquesService('', context);
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,11 +56,11 @@ class ConfirmarRegistroScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Nro. de Placa de vehículo: $placa',
+              'Nro. de Placa de vehículo: ${widget.placa}',
               style: const TextStyle(fontSize: 14),
             ),
             Text(
-              'Fotografías: $numeroFotos',
+              'Fotografías: ${widget.numeroFotos}',
               style: const TextStyle(fontSize: 14),
             ),
             const Spacer(),
@@ -52,16 +68,22 @@ class ConfirmarRegistroScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 ElevatedButton.icon(
-                  onPressed: () {
+                  onPressed: () async {
+                    final store = context.read<RegistrarVentaStore>();
+
+                    await _service.registrarVentaTanqueConMultipart(
+                      pathsDeFotos: store.fotos,
+                      placa: widget.placa,
+                      idCombustible: 2,
+                      fechaRegistroApp: DateTime(2024, 03, 01, 8, 0, 1),
+                      context: context,
+                    );
+
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => VentaTanquesScreen()),
+                      MaterialPageRoute(builder: (context) => RegistrarVentaPage()),
                     );
                   },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colorPrincipal,
-                    foregroundColor: theme.white,
-                  ),
                   icon: const Icon(Icons.check),
                   label: const Text('Confirmar'),
                 ),

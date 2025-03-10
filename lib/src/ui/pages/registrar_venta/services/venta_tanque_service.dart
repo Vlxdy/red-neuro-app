@@ -1,5 +1,5 @@
+import 'dart:io';
 import 'package:control_ventas_movil/src/models/venta.dart';
-import 'package:control_ventas_movil/src/ui/pages/registrar_venta/stores/venta_bidones_store.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/stores/venta_tanques_store.dart';
 import 'package:flutter/material.dart';
 import 'package:control_ventas_movil/src/config/service_config.dart';
@@ -9,7 +9,7 @@ import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
 import 'package:control_ventas_movil/src/ui/common/snackbar/snackbar.dart';
 import 'package:control_ventas_movil/src/ui/global/loading_animation.dart';
 
-GlobalKey<ScaffoldMessengerState> bidonesMessenger =
+GlobalKey<ScaffoldMessengerState> tanquesMessenger =
 GlobalKey<ScaffoldMessengerState>();
 
 class VentaTanquesService extends ServiceConfig {
@@ -18,7 +18,7 @@ class VentaTanquesService extends ServiceConfig {
   final store = VentaTanquesStore.instance;
   final theme = ThemeController.instance;
 
-  void fetchDataBidones() {
+  void fetchDataTanques() {
     cargarVentasTanques().whenComplete(() => store.cargando = false);
   }
 
@@ -26,7 +26,6 @@ class VentaTanquesService extends ServiceConfig {
     try {
       store.cargando = true;
       LoadingAnimation.instance.state = Overlay.of(context);
-      // LoadingAnimation.instance.showLoading(mensaje: 'Cargando Bidones...');
 
       final response = await fetch(
         '/mobile/1/listar-venta?tipoVenta=Tanque adicional',
@@ -52,7 +51,7 @@ class VentaTanquesService extends ServiceConfig {
       Logger.error('Error al obtener ventas de bidones: $e');
       Logger.error('stacktrace: $stacktrace');
       showSnackBar(
-        bidonesMessenger,
+        tanquesMessenger,
         'Ocurrió un error al obtener ventas',
         state: StatusSnackBar.error,
         colorText: theme.white,
@@ -63,43 +62,38 @@ class VentaTanquesService extends ServiceConfig {
     }
   }
 
-  Future<void> incrementarVenta(String idCombustible, String observacion) async {
+  Future<void> registrarVentaTanqueConMultipart({
+    required List<String> pathsDeFotos,
+    required String placa,
+    required int idCombustible,
+    required DateTime fechaRegistroApp,
+    required BuildContext context,
+    String? observacion,
+  }) async {
     try {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (context.mounted) {
-          LoadingAnimation.instance.state = Overlay.of(context);
-          LoadingAnimation.instance.showLoading(mensaje: 'Registrando venta...');
-        }
-      });
+      final List<File> files = pathsDeFotos.map((path) => File(path)).toList();
 
-      final response = await fetch(
+      final body = {
+        'placa': placa,
+        'idCombustible': '$idCombustible',
+        'tipoVenta': 'Tanque adicional',
+        'fechaRegistroApp': fechaRegistroApp.toIso8601String(),
+        if (observacion != null && observacion.isNotEmpty) 'observacion': observacion,
+      };
+
+      final response = await multipartRequest(
         '/mobile/1/registro-venta',
-        type: HttpProtocol.post,
-        withAuthorization: true,
-        body: {
-          "tipoVenta": "Bidones",
-          "fechaRegistroApp": DateTime.now().toIso8601String(),
-          "idCombustible": 1,
-          "observacion": observacion.isEmpty ? null : observacion,
-        },
+        type: 'POST',
+        files: files,
+        nameFiles: files.map((_) => 'files').toList(),
+        body: body,
+        image: true
       );
 
       if (response.status != StatusNetwork.connected) {
         throw Exception(response.message);
       }
 
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (context.mounted) {
-          showSnackBar(
-            bidonesMessenger,
-            'Venta registrada correctamente',
-            state: StatusSnackBar.success,
-            colorText: theme.white,
-          );
-        }
-      });
-
-      fetchDataBidones();
     } catch (e, stacktrace) {
       Logger.error('Error al registrar venta: $e');
       Logger.error('Stacktrace: $stacktrace');
@@ -107,7 +101,7 @@ class VentaTanquesService extends ServiceConfig {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (context.mounted) {
           showSnackBar(
-            bidonesMessenger,
+            tanquesMessenger,
             'Ocurrió un error al registrar la venta',
             state: StatusSnackBar.error,
             colorText: theme.white,

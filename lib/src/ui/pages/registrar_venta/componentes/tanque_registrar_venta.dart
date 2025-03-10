@@ -5,16 +5,16 @@ import 'package:control_ventas_movil/src/ui/pages/registrar_venta/stores/registr
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class NuevaVentaScreen extends StatefulWidget {
+class RegistarVentaTanque extends StatefulWidget {
   final String tipoCombustible;
-  const NuevaVentaScreen({Key? key, this.tipoCombustible = 'Diesel'})
+  const RegistarVentaTanque({Key? key, this.tipoCombustible = 'Diesel'})
       : super(key: key);
 
   @override
-  State<NuevaVentaScreen> createState() => _NuevaVentaScreenState();
+  State<RegistarVentaTanque> createState() => _RegistarVentaTanqueState();
 }
 
-class _NuevaVentaScreenState extends State<NuevaVentaScreen> {
+class _RegistarVentaTanqueState extends State<RegistarVentaTanque> {
   final _placaController = TextEditingController();
   final List<String> _fotos = [];
 
