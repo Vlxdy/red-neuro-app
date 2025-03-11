@@ -1,10 +1,7 @@
-import 'dart:convert';
-
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
 import 'package:control_ventas_movil/src/constants/enums.dart';
 import 'package:control_ventas_movil/src/models/combustible.dart';
-import 'package:control_ventas_movil/src/plugins/estaciones/combustibles_store.dart';
-import 'package:control_ventas_movil/src/plugins/estaciones/estacion_servicio.dart';
+import 'package:control_ventas_movil/src/ui/common/buttons/simple_button.dart';
 import 'package:control_ventas_movil/src/ui/common/form_stepper/form_stepper.dart';
 import 'package:control_ventas_movil/src/ui/common/text_inputs/date_input.dart';
 import 'package:control_ventas_movil/src/ui/common/text_inputs/text_input.dart';
@@ -15,8 +12,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/registro_meters_store.dart';
 import 'package:control_ventas_movil/src/models/registro_meters.dart';
-import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/componentes/form_registro_contadores_final.dart';
-import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
+import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/componentes/form_registro_contadores_resumen.dart';
 
 class FormRegistroContadores extends StatefulWidget {
   final String titulo;
@@ -111,123 +107,123 @@ class _RegistroContadoresState extends State<FormRegistroContadores> {
   Widget build(BuildContext context) {
     final theme = ThemeController.instance;
     return Scaffold(
-      appBar: _buildAppBar(theme),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(widget.descripcion, style: const TextStyle(fontSize: 16)),
-              const SizedBox(height: 10),
-              DropDown(
-                width: MediaQuery.of(context).size.width,
-                label: 'Tipo de medición',
-                requiredData: true,
-                dropKey: dropKeyTipoMedicion,
-                items: widget.tipoMedicion.map((tipo) {
-                  return {
-                    'id': tipo.info,
-                    'label': tipo.info,
-                  };
-                }).toList(),
-                onChange: (value) {
-                  setState(() {
-                    _tipoSeleccionado = value;
-                  });
-                },
-                validate: (value, alias) {
-                  if (value == null || value.isEmpty) {
-                    return 'Por favor selecciona un tipo de medición';
-                  }
-                  return null;
-                },
-              ),
-              Expanded(
-                child: Column(
-                  children: [
-                    if (widget.dispensadores.length > 1) ...[
-                      SizedBox(
-                          height: 72,
-                          child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: FormStepper(
-                                longitud: widget.dispensadores.length,
-                                currentStep: _currentStep,
-                                activeColor: theme.secondary,
-                              ))),
-                    ],
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: DispensadorWidget(
-                          dispensador: widget.dispensadores[_currentStep],
-                          listaCombustibles: widget.listaCombustibles,
-                          horaController: horaControllers[_currentStep],
-                          combustibleControllers:
-                              combustibleControllers[_currentStep.toString()]!,
-                          meterControllers:
-                              meterControllers[_currentStep.toString()]!,
+        appBar: _buildAppBar(theme),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(widget.descripcion, style: const TextStyle(fontSize: 16)),
+                const SizedBox(height: 10),
+                DropDown(
+                  key: dropKey,
+                  width: MediaQuery.of(context).size.width,
+                  label: 'Tipo de medición',
+                  requiredData: true,
+                  dropKey: dropKeyTipoMedicion,
+                  items: widget.tipoMedicion.map((tipo) {
+                    return {
+                      'id': tipo.info,
+                      'label': tipo.info,
+                    };
+                  }).toList(),
+                  onChange: (value) {
+                    setState(() {
+                      _tipoSeleccionado = value;
+                    });
+                  },
+                  validate: (value, alias) {
+                    if (value == null || value.isEmpty) {
+                      return 'Por favor selecciona un tipo de medición';
+                    }
+                    return null;
+                  },
+                ),
+                Expanded(
+                  child: Column(
+                    children: [
+                      if (widget.dispensadores.length > 1) ...[
+                        SizedBox(
+                            height: 72,
+                            child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: FormStepper(
+                                  longitud: widget.dispensadores.length,
+                                  currentStep: _currentStep,
+                                  activeColor: theme.secondary,
+                                ))),
+                      ],
+                      Expanded(
+                        child: SingleChildScrollView(
+                          child: DispensadorWidget(
+                            dispensador: widget.dispensadores[_currentStep],
+                            listaCombustibles: widget.listaCombustibles,
+                            horaController: horaControllers[_currentStep],
+                            combustibleControllers: combustibleControllers[
+                                _currentStep.toString()]!,
+                            meterControllers:
+                                meterControllers[_currentStep.toString()]!,
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
-      ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            ElevatedButton(
-              onPressed: () {
-                if (_currentStep > 0) {
-                  setState(() {
-                    _currentStep -= 1;
-                  });
-                } else {
-                  Navigator.pop(context);
-                }
-              },
-              child: Text(_currentStep == 0 ? 'Cancelar' : 'Anterior'),
+        bottomNavigationBar: SizedBox(
+          height: 80,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                SimpleButton(
+                  textColor: theme.black,
+                  outlined: true,
+                  onTap: () {
+                    if (_currentStep > 0) {
+                      setState(() {
+                        _currentStep -= 1;
+                      });
+                    } else {
+                      Navigator.pop(context);
+                    }
+                  },
+                  title: (_currentStep == 0 ? 'Cancelar' : 'Anterior'),
+                ),
+                SimpleButton(
+                  onTap: () {
+                    if (_currentStep < widget.dispensadores.length - 1) {
+                      if (_formKey.currentState != null &&
+                          _formKey.currentState!.validate()) {
+                        setState(() {
+                          _currentStep += 1;
+                        });
+                      }
+                    } else {
+                      _guardarFormulario();
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const FormRegistroContadoresFinal(),
+                        ),
+                      );
+                    }
+                  },
+                  title: (_currentStep == widget.dispensadores.length - 1
+                      ? 'Finalizar registro'
+                      : 'Siguiente'),
+                ),
+              ],
             ),
-            ElevatedButton(
-              onPressed: () {
-                if (_currentStep < widget.dispensadores.length - 1) {
-                  if (_formKey.currentState != null &&
-                      _formKey.currentState!.validate()) {
-                    setState(() {
-                      _currentStep += 1;
-                    });
-                  }
-                } else {
-                  _guardarFormulario();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const FormRegistroContadoresFinal(),
-                    ),
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.secondary,
-              ),
-              child: Text(
-                _currentStep == widget.dispensadores.length - 1
-                    ? 'Finalizar registro'
-                    : 'Siguiente',
-                style: const TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+          ),
+        ));
   }
 
   AppBar _buildAppBar(ThemeController theme) {
@@ -327,7 +323,6 @@ class DispensadorWidgetState extends State<DispensadorWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeController.instance;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -339,8 +334,11 @@ class DispensadorWidgetState extends State<DispensadorWidget> {
           children: [
             const SizedBox(height: 10),
             CustomTimePicker(
+              key: ValueKey('hora${widget.dispensador.idDispensador}'),
               title: 'Hora de Registro',
-              initialValue: widget.dispensador.horaRegistro,
+              initialValue: widget.horaController.text.isNotEmpty
+                  ? widget.horaController.text
+                  : widget.dispensador.horaRegistro,
               controller: widget.horaController,
               placeholder: 'Seleccionar hora',
               requiredData: true,
@@ -441,6 +439,7 @@ class MangueraWidgetState extends State<MangueraWidget> {
         ),
         const SizedBox(height: 16),
         CustomTextInput(
+          key: ValueKey('volumen${widget.keyManguera}'),
           controller: widget.meterController,
           title: 'Meter',
           requiredData: true,
@@ -461,43 +460,4 @@ class MangueraWidgetState extends State<MangueraWidget> {
       ],
     );
   }
-}
-
-void showRegistroContadoresModal(BuildContext context) {
-  final estacionServicio = EstacionServicioStore.instance.estacionServicio;
-  String horaActual = DateFormat('HH:mm').format(DateTime.now());
-
-  List<Combustible> listaCombustibles = CombustiblesStore.instance.combustibles;
-
-  List<TipoMedicion> tiposMedicion = TipoMedicion.values;
-
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    isDismissible: false,
-    enableDrag: false,
-    builder: (context) => FractionallySizedBox(
-      heightFactor: 0.95,
-      child: FormRegistroContadores(
-        titulo: "Registro de contadores",
-        descripcion:
-            "Registrarás el valor de cada meter de manguera de los dispensadores de la EESS",
-        tipoMedicion: tiposMedicion,
-        listaCombustibles: listaCombustibles,
-        dispensadores: (estacionServicio.dispensadores ?? [])
-            .map((d) => Dispensador(
-                  idDispensador: d.id,
-                  codigo: d.codigo,
-                  horaRegistro: horaActual,
-                  mangueras: (d.mangueras ?? [])
-                      .map((m) => Manguera(
-                            idManguera: m.id,
-                            codigo: m.codigo,
-                          ))
-                      .toList(),
-                ))
-            .toList(),
-      ),
-    ),
-  );
 }

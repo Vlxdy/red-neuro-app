@@ -1,3 +1,5 @@
+import 'package:control_ventas_movil/src/ui/common/alerts/confirmation_alert_dialog.dart';
+import 'package:control_ventas_movil/src/ui/common/buttons/simple_button.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/meters_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -21,6 +23,40 @@ class _FormRegistroContadoresFinal extends State<FormRegistroContadoresFinal> {
     super.initState();
   }
 
+  void _mostrarDialogoConfirmacion() {
+    showDialog(
+      context: context,
+      builder: (context) => ConfirmationDialog(
+        title: 'Confirmación',
+        text: '¿Está seguro de guardar el registro de contadores?',
+        onConfirm: () {
+          service.guardarMetersRegistro(context);
+          Navigator.of(context)
+            ..pop()
+            ..pop();
+        },
+      ),
+    );
+  }
+
+  void _mostrarDialogoCancelar(store) {
+    showDialog(
+      context: context,
+      builder: (context) => ConfirmationDialog(
+        icon: Icons.cancel,
+        title: 'Cancelar',
+        text: '¿Está seguro de cancelar el registro de contadores?\n'
+            'Se perderán todos los datos registrados',
+        onConfirm: () {
+          store.limpiarRegistros();
+          Navigator.of(context)
+            ..pop()
+            ..pop();
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final store = context.watch<RegistroMetersStore>();
@@ -42,12 +78,7 @@ class _FormRegistroContadoresFinal extends State<FormRegistroContadoresFinal> {
             ),
             IconButton(
               icon: const Icon(Icons.close),
-              onPressed: () {
-                store.limpiarRegistros();
-                Navigator.of(context)
-                  ..pop()
-                  ..pop();
-              },
+              onPressed: () => _mostrarDialogoCancelar(store),
             ),
           ],
         ),
@@ -85,12 +116,13 @@ class _FormRegistroContadoresFinal extends State<FormRegistroContadoresFinal> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 10),
+                      const Divider(),
                       Text(
                         'Dispensador ${dispensador.codigo}',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: theme.secondary,
-                          fontSize: 15, // Increased font size
+                          fontSize: 15,
                         ),
                       ),
                       RichText(
@@ -108,6 +140,7 @@ class _FormRegistroContadoresFinal extends State<FormRegistroContadoresFinal> {
                           ],
                         ),
                       ),
+                      const SizedBox(height: 5),
                       ...dispensador.mangueras.map((manguera) {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -160,34 +193,28 @@ class _FormRegistroContadoresFinal extends State<FormRegistroContadoresFinal> {
           },
         ),
       ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            ElevatedButton(
-              onPressed: () {
-                store.limpiarRegistros();
-                Navigator.pop(context);
-              },
-              child: const Text('Atrás'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                service.guardarMetersRegistro(context);
-                Navigator.of(context)
-                  ..pop()
-                  ..pop();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.secondary,
+      bottomNavigationBar: SizedBox(
+        height: 80,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              SimpleButton(
+                textColor: theme.black,
+                outlined: true,
+                onTap: () {
+                  store.limpiarRegistros();
+                  Navigator.pop(context);
+                },
+                title: 'Atrás',
               ),
-              child: const Text(
-                'Guardar',
-                style: TextStyle(color: Colors.white),
+              SimpleButton(
+                onTap: _mostrarDialogoConfirmacion,
+                title: 'Guardar',
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

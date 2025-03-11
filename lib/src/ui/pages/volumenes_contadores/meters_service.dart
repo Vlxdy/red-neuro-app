@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:control_ventas_movil/src/config/routes.dart';
 import 'package:control_ventas_movil/src/config/service_config.dart';
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
@@ -32,7 +30,7 @@ class MeterService extends ServiceConfig {
       final idBitadora = BitacoraStore.instance.bitacora.id;
       final response = await fetch('/mobile/$idBitadora/listar-meter',
           type: HttpProtocol.get);
-      Logger.success('response -> ${response.data}');
+      /* Logger.success('response -> ${response.data}'); */
       if (response.status == StatusNetwork.noInternet) {
         showSnackBar(
           metersMessenger,
@@ -89,12 +87,12 @@ class MeterService extends ServiceConfig {
 /*       final json = response.data;
       await BitacoraStore.instance.actualizar(json, fechaRegistro) */
 
-      /*   showSnackBar(
-        controlMessenger,
-        'Control iniciado correctamente',
+      showSnackBar(
+        metersMessenger,
+        'Registro guardado correctamente',
         state: StatusSnackBar.success,
         colorText: theme.white,
-      ); */
+      );
 
       LoadingAnimation.instance.hideLoading();
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -106,12 +104,12 @@ class MeterService extends ServiceConfig {
     } catch (e, stacktrace) {
       Logger.error('Error al guardar registros meters: $e');
       Logger.error('Stacktrace: $stacktrace');
-      /* showSnackBar(
-        controlMessenger,
-        'Ocurrió un error al iniciar el control',
+      showSnackBar(
+        metersMessenger,
+        e.toString(),
         state: StatusSnackBar.error,
         colorText: theme.white,
-      ); */
+      );
     } finally {
       LoadingAnimation.instance.hideLoading();
     }

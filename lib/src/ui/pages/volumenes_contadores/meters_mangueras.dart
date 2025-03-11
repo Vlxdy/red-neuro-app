@@ -1,5 +1,9 @@
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
+import 'package:control_ventas_movil/src/constants/enums.dart';
+import 'package:control_ventas_movil/src/models/combustible.dart';
 import 'package:control_ventas_movil/src/models/registro_meters.dart';
+import 'package:control_ventas_movil/src/plugins/estaciones/combustibles_store.dart';
+import 'package:control_ventas_movil/src/plugins/estaciones/estacion_servicio.dart';
 import 'package:control_ventas_movil/src/ui/common/buttons/simple_button.dart';
 import 'package:control_ventas_movil/src/ui/common/components/skeleton.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/meters_service.dart';
@@ -44,6 +48,46 @@ class _MetersManguerasScreen extends State<MetersManguerasScreen> {
     setState(() {
       isLoading = false;
     });
+  }
+
+  Future<void> showRegistroContadoresModal(BuildContext context) async {
+    final estacionServicio = EstacionServicioStore.instance.estacionServicio;
+    String horaActual = DateFormat('HH:mm').format(DateTime.now());
+
+    List<Combustible> listaCombustibles =
+        CombustiblesStore.instance.combustibles;
+
+    List<TipoMedicion> tiposMedicion = TipoMedicion.values;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: false,
+      enableDrag: false,
+      builder: (context) => FractionallySizedBox(
+        heightFactor: 0.95,
+        child: FormRegistroContadores(
+          titulo: "Registro de contadores",
+          descripcion:
+              "Registrarás el valor de cada meter de manguera de los dispensadores de la EESS",
+          tipoMedicion: tiposMedicion,
+          listaCombustibles: listaCombustibles,
+          dispensadores: (estacionServicio.dispensadores ?? [])
+              .map((d) => Dispensador(
+                    idDispensador: d.id,
+                    codigo: d.codigo,
+                    horaRegistro: horaActual,
+                    mangueras: (d.mangueras ?? [])
+                        .map((m) => Manguera(
+                              idManguera: m.id,
+                              codigo: m.codigo,
+                            ))
+                        .toList(),
+                  ))
+              .toList(),
+        ),
+      ),
+    );
   }
 
   @override
@@ -119,8 +163,9 @@ class _MetersManguerasScreen extends State<MetersManguerasScreen> {
                                   itemCount: data.length,
                                   itemBuilder: (context, index) {
                                     final volumen = data[index];
-                                    final hora = DateFormat('HH:mm')
-                                        .format(DateTime.parse(volumen.hora));
+                                    final hora = volumen.hora;
+                                    /* final hora = DateFormat('HH:mm')
+                                        .format(DateTime.parse(volumen.hora)); */
 
                                     return Container(
                                       margin: const EdgeInsets.symmetric(
