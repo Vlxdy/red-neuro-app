@@ -16,6 +16,7 @@ class CustomTimePicker extends StatefulWidget {
   final String? labelColor;
   final int? linesLabel;
   final bool obscure;
+  final String? initialValue;
 
   const CustomTimePicker({
     super.key,
@@ -32,6 +33,7 @@ class CustomTimePicker extends StatefulWidget {
     this.labelColor,
     this.linesLabel = 1,
     this.obscure = false,
+    this.initialValue, // Added to constructor
   });
 
   @override
@@ -41,15 +43,25 @@ class CustomTimePicker extends StatefulWidget {
 class _CustomTimePickerState extends State<CustomTimePicker> {
   bool _error = false;
 
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialValue != null && widget.controller != null) {
+      widget.controller!.text = widget.initialValue!;
+    }
+  }
+
   void _selectTime(BuildContext context) async {
-    final TimeOfDay initialTime = TimeOfDay.now();
+    final TimeOfDay initialTime = widget.controller?.text.isNotEmpty == true
+        ? TimeOfDay.fromDateTime(
+            DateTime.parse("2000-01-01 ${widget.controller!.text}:00"))
+        : TimeOfDay.now();
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: initialTime,
     );
     if (picked != null && picked != initialTime) {
       setState(() {
-        // Set the picked time into the controller's text
         widget.controller?.text = picked.format(context);
       });
     }
@@ -63,11 +75,11 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
         if (widget.onTap != null) {
           widget.onTap!();
         } else {
-          _selectTime(context); // Open the time picker when tapped
+          _selectTime(context);
         }
       },
       child: Container(
-        height: 60 + ((widget.linesLabel! - 1) * 10) + (_error ? 16 : 0),
+        height: 60 + ((widget.linesLabel! - 1) * 10) + (_error ? 20 : 0),
         width: double.infinity,
         decoration: BoxDecoration(
           border: Border.all(
@@ -128,6 +140,23 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
                   disabledBorder: InputBorder.none,
                   focusedErrorBorder: InputBorder.none,
                 ),
+                validator: (value) {
+                  String? result;
+                  setState(() {
+                    _error = false;
+                    if (widget.requiredData) {
+                      if (widget.validate != null) {
+                        result = widget.validate!(value, widget.title);
+                        if (result != '') {
+                          _error = true;
+                        } else {
+                          result = null;
+                        }
+                      }
+                    }
+                  });
+                  return result;
+                },
               ),
             ],
           ),

@@ -75,7 +75,8 @@ class _DropDownState extends State<DropDown> {
 
   @override
   void initState() {
-    value = widget.initialValue;
+    // value = widget.initialValue;
+    value = widget.initialValue != '' ? widget.initialValue : null;
     super.initState();
   }
 

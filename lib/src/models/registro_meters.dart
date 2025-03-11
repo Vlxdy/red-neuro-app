@@ -9,7 +9,7 @@ class DropDownType {
 /* Modelo para llenar el formulario Vólumenes y contadores */
 
 class RegistroMeterStore {
-  final DropDownType tipoMedicion;
+  final String tipoMedicion;
   final List<DispensadorStore> dispensadores;
 
   RegistroMeterStore({
@@ -75,7 +75,7 @@ class DispensadorStore {
 class MangueraStore {
   final String idManguera;
   final String codigo;
-  final DropDownType combustible;
+  final Combustible combustible;
   final int meter;
 
   MangueraStore({
