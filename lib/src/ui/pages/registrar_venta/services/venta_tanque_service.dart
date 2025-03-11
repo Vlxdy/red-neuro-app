@@ -1,6 +1,8 @@
 import 'dart:io';
+import 'package:control_ventas_movil/src/models/combustible.dart';
 import 'package:control_ventas_movil/src/models/venta.dart';
 import 'package:control_ventas_movil/src/plugins/estaciones/bitacora_store.dart';
+import 'package:control_ventas_movil/src/plugins/estaciones/combustibles_store.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/stores/venta_tanques_store.dart';
 import 'package:flutter/material.dart';
 import 'package:control_ventas_movil/src/config/service_config.dart';
@@ -42,9 +44,19 @@ class VentaTanquesService extends ServiceConfig {
       if (response.status == StatusNetwork.connected) {
         final datos = response.data;
 
-        store.ventas = (datos['list'] as List<dynamic>)
-            .map((item) => Venta.fromJson(item))
-            .toList();
+        List<Combustible> listaCombustibles = CombustiblesStore.instance.combustibles;
+
+        Map<String, int> ventasMap = {
+          for (var item in (datos['list'] as List<dynamic>))
+            item["codigo"] as String: int.tryParse(item["cantidadVentas"].toString()) ?? 0
+        };
+
+        store.ventas = listaCombustibles.map((combustible) {
+          return Venta(
+            codigo: combustible.codigo,
+            cantidadVentas: ventasMap[combustible.codigo] ?? 0,
+          );
+        }).toList();
       } else {
         Logger.error('Error al obtener datos. Status: ${response.status}');
       }

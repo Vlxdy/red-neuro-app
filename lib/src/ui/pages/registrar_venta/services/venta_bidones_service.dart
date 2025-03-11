@@ -1,3 +1,4 @@
+import 'package:control_ventas_movil/src/models/combustible.dart';
 import 'package:control_ventas_movil/src/models/venta.dart';
 import 'package:control_ventas_movil/src/plugins/estaciones/bitacora_store.dart';
 import 'package:control_ventas_movil/src/plugins/estaciones/combustibles_store.dart';
@@ -28,16 +29,6 @@ class VentaBidonesService extends ServiceConfig {
   Future<void> cargarVentasBidones() async {
     try {
 
-      final dataa = CombustiblesStore.instance;
-      print('yoss:3');
-      for (final x in dataa.combustibles) {
-        print(x.codigo);
-        print(x.color);
-        print(x.descripcion);
-        print(x.id);
-        print('-'*10);
-      }
-      print('yoss:4');
       store.cargando = true;
       LoadingAnimation.instance.state = Overlay.of(context);
       // LoadingAnimation.instance.showLoading(mensaje: 'Cargando Bidones...');
@@ -54,10 +45,19 @@ class VentaBidonesService extends ServiceConfig {
 
       if (response.status == StatusNetwork.connected) {
         final datos = response.data;
+        List<Combustible> listaCombustibles = CombustiblesStore.instance.combustibles;
 
-        store.ventas = (datos['list'] as List<dynamic>)
-            .map((item) => Venta.fromJson(item))
-            .toList();
+        Map<String, int> ventasMap = {
+          for (var item in (datos['list'] as List<dynamic>))
+            item["codigo"] as String: int.tryParse(item["cantidadVentas"].toString()) ?? 0
+        };
+
+        store.ventas = listaCombustibles.map((combustible) {
+          return Venta(
+            codigo: combustible.codigo,
+            cantidadVentas: ventasMap[combustible.codigo] ?? 0,
+          );
+        }).toList();
 
       } else {
         Logger.error('Error al obtener datos. Status: ${response.status}');
