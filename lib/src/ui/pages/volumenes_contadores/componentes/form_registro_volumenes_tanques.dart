@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
 import 'package:control_ventas_movil/src/constants/enums.dart';
 import 'package:control_ventas_movil/src/models/combustible.dart';
+import 'package:control_ventas_movil/src/models/estacion_servicio.dart';
 import 'package:control_ventas_movil/src/models/registro_meters.dart';
 import 'package:control_ventas_movil/src/models/volumenes_tanques.dart';
 import 'package:control_ventas_movil/src/ui/common/drop_down/drop_down.dart';
@@ -8,7 +11,6 @@ import 'package:control_ventas_movil/src/ui/common/form_stepper/form_stepper.dar
 import 'package:control_ventas_movil/src/ui/common/selector_image/multiple_campo_fotografia.dart';
 import 'package:control_ventas_movil/src/ui/common/text_inputs/date_input.dart';
 import 'package:control_ventas_movil/src/ui/common/text_inputs/text_input.dart';
-import 'package:control_ventas_movil/src/ui/pages/control/control_store.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/registro_volumenes_store.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/volumenes_tanques_service.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
@@ -18,7 +20,7 @@ import 'package:provider/provider.dart';
 class FormVolumenesTanques extends StatefulWidget {
   final String titulo;
   final String descripcion;
-  final List<VolumenTanque> tanques;
+  final List<TanquesEstacion> tanques;
   final List<TipoMedicion> tiposMedicion;
   final List<Combustible> listaCombustibles;
 
@@ -61,6 +63,7 @@ class _FormVolumenesTanques extends State<FormVolumenesTanques> {
   DropDownType? selectedTipoMedicion;
   int _currentStep = 0;
   bool _finalizado = false;
+  bool? _tieneFotos;
 
   @override
   void initState() {
@@ -88,23 +91,31 @@ class _FormVolumenesTanques extends State<FormVolumenesTanques> {
   }
 
   void _finalizarDatosFormulario() {
+    late DateTime fechaHoy = DateTime.now();
+
     datosFormulario = FormularioRegistroVolumenes(
       datos: List<ItemVolumenTanque>.generate(widget.tanques.length, (index) {
+        final [hours, minutes] = horaControllers[index].text.split(':');
+        DateTime dateWithTime = DateTime.parse(fechaHoy.toIso8601String());
+        dateWithTime = DateTime(
+            dateWithTime.year,
+            dateWithTime.month,
+            dateWithTime.day,
+            int.tryParse(hours) ?? 0,
+            int.tryParse(minutes) ?? 0);
         return ItemVolumenTanque(
           idTanque: widget.tanques[index].id,
-          nombre: widget.tanques[index].tanques?.nombre ?? '',
-          hora: horaControllers[index].text,
+          hora: dateWithTime.toIso8601String(),
           tipoMedicion: _tipoSeleccionado ?? '',
           volumen: int.tryParse(volumenControllers[index].text) ?? 0,
           idCombustible: combustibleControllers[index].text,
-          fechaRegistroApp: DateTime.now(),
+          fechaRegistroApp: fechaHoy.toIso8601String(),
         );
       }),
     );
     setState(() {
       _finalizado = true;
     });
-    // print(datosFormulario); // Aquí podrías enviar los datos al backend
   }
 
   void _guardarFormulario() {
@@ -114,6 +125,7 @@ class _FormVolumenesTanques extends State<FormVolumenesTanques> {
   @override
   Widget build(BuildContext context) {
     final theme = ThemeController.instance;
+    final store = context.watch<RegistroVolumenesStore>();
 
     return Scaffold(
       appBar: AppBar(title: const Text("Registro de Medición")),
@@ -148,6 +160,7 @@ class _FormVolumenesTanques extends State<FormVolumenesTanques> {
                         setState(() {
                           _tipoSeleccionado = value;
                         });
+                        store.setTipoMedicion = value!;
                       },
                       validate: (value, alias) => service
                           .validateData(context, value, alias, required: true),
@@ -165,7 +178,8 @@ class _FormVolumenesTanques extends State<FormVolumenesTanques> {
                                       currentStep: _currentStep,
                                       activeColor: theme.secondary,
                                     ))),
-                          ],
+                          ] else
+                            const SizedBox(height: 10),
                           Expanded(
                             child: SingleChildScrollView(
                               child: VolumenTanqueWidget(
@@ -176,7 +190,7 @@ class _FormVolumenesTanques extends State<FormVolumenesTanques> {
                                 volumenController:
                                     volumenControllers[_currentStep],
                                 dropKey: dropKeys[_currentStep],
-                                volumenTanque: widget.tanques[_currentStep],
+                                tanque: widget.tanques[_currentStep],
                                 onChange: (String? value) {
                                   setState(() {
                                     combustibleControllers[_currentStep].text =
@@ -184,6 +198,7 @@ class _FormVolumenesTanques extends State<FormVolumenesTanques> {
                                   });
                                 },
                                 step: _currentStep,
+                                tieneFotos: _tieneFotos,
                               ),
                             ),
                           ),
@@ -201,33 +216,42 @@ class _FormVolumenesTanques extends State<FormVolumenesTanques> {
           children: [
             ElevatedButton(
               onPressed: () {
-                if (_currentStep > 0) {
-                  if (_finalizado) {
-                    setState(() {
-                      _finalizado = false;
-                    });
-                  } else {
+                if (_finalizado) {
+                  setState(() {
+                    _finalizado = false;
+                  });
+                } else {
+                  if (_currentStep > 0) {
                     setState(() {
                       _currentStep--;
                     });
+                  } else {
+                    Navigator.pop(context);
                   }
-                } else {
-                  Navigator.pop(context);
                 }
               },
-              child: Text(_currentStep == 0 ? 'Cancelar' : 'Anterior'),
+              child: Text(_finalizado
+                  ? 'Anterior'
+                  : _currentStep == 0
+                      ? 'Cancelar'
+                      : 'Anterior'),
             ),
             ElevatedButton(
               onPressed: () {
+                setState(() => _tieneFotos =
+                    store.tieneFotos(widget.tanques[_currentStep].id));
                 if (_currentStep < widget.tanques.length - 1) {
-                  if (service.validateForm(_formKey)) {
-                    setState(() => _currentStep++);
+                  if (service.validateForm(_formKey) && _tieneFotos!) {
+                    setState(() {
+                      _currentStep++;
+                      _tieneFotos = null;
+                    });
                   }
                 } else {
                   if (_finalizado) {
                     _guardarFormulario();
                   } else {
-                    if (service.validateForm(_formKey)) {
+                    if (service.validateForm(_formKey) && _tieneFotos!) {
                       _finalizarDatosFormulario();
                     }
                   }
@@ -259,7 +283,7 @@ class Tanque {
 }
 
 class VolumenTanqueWidget extends StatefulWidget {
-  final VolumenTanque volumenTanque;
+  final TanquesEstacion tanque;
   final List<Combustible> listaCombustibles;
   final TextEditingController horaController;
   final TextEditingController combustibleController;
@@ -267,10 +291,11 @@ class VolumenTanqueWidget extends StatefulWidget {
   final GlobalKey<DropdownButton2State> dropKey;
   final Function(String?)? onChange;
   final int step;
+  final bool? tieneFotos;
 
   const VolumenTanqueWidget({
     super.key,
-    required this.volumenTanque,
+    required this.tanque,
     required this.listaCombustibles,
     required this.horaController,
     required this.combustibleController,
@@ -278,6 +303,7 @@ class VolumenTanqueWidget extends StatefulWidget {
     required this.dropKey,
     this.onChange,
     required this.step,
+    this.tieneFotos,
   });
 
   @override
@@ -290,10 +316,17 @@ class VolumenTanqueWidgetState extends State<VolumenTanqueWidget> {
     final theme = ThemeController.instance;
     final step = widget.step;
     final store = context.watch<RegistroVolumenesStore>();
+    final itemResumen = store.obtenerDatos(widget.tanque.id) ??
+        ItemResumen(nombre: widget.tanque.nombre);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Text(
+          'Tanque: ${widget.tanque.nombre}',
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: 8),
         Padding(
           padding: const EdgeInsets.only(bottom: 8.0),
           child: CustomTimePicker(
@@ -307,6 +340,12 @@ class VolumenTanqueWidgetState extends State<VolumenTanqueWidget> {
                 return '$alias es obligatorio';
               }
               return null;
+            },
+            onChange: (value) => {
+              store.actualizarDatos(
+                itemResumen.copyWith(hora: value),
+                widget.tanque.id,
+              )
             },
           ),
         ),
@@ -327,6 +366,12 @@ class VolumenTanqueWidgetState extends State<VolumenTanqueWidget> {
               }
               return null;
             },
+            onChange: (value) => {
+              store.actualizarDatos(
+                itemResumen.copyWith(volumen: int.parse(value)),
+                widget.tanque.id,
+              )
+            },
           ),
         ),
         DropDown(
@@ -334,7 +379,7 @@ class VolumenTanqueWidgetState extends State<VolumenTanqueWidget> {
           label: 'Tipo de combustible',
           requiredData: true,
           initialValue: widget.combustibleController.text,
-          dropKey: widget.dropKey, // Ahora es único
+          dropKey: widget.dropKey,
           key: ValueKey(widget.step),
           items: widget.listaCombustibles.map((combustible) {
             return {'id': combustible.id, 'label': combustible.nombre};
@@ -343,6 +388,13 @@ class VolumenTanqueWidgetState extends State<VolumenTanqueWidget> {
             widget.onChange != null
                 ? widget.onChange!(value)
                 : widget.onChange!('');
+            store.actualizarDatos(
+              itemResumen.copyWith(
+                  combustible: widget.listaCombustibles
+                      .firstWhere((combustible) => combustible.id == value)
+                      .nombre),
+              widget.tanque.id,
+            );
           },
           validate: (value, alias) {
             if (value == null || value.isEmpty) {
@@ -356,14 +408,19 @@ class VolumenTanqueWidgetState extends State<VolumenTanqueWidget> {
           'Fotografías',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
+        if (widget.tieneFotos != null && widget.tieneFotos == false)
+          Text(
+            'Debe subir por lo menos una foto',
+            style: TextStyle(color: theme.error),
+          ),
         MultipleCampoFotografia(
           titulo: 'Respaldo',
-          paths: store.fotos,
-          onClick: (path) => store.fotos = path,
-          onDelete: (index) => store.eliminarFoto(index),
+          paths: store.obtenerFotos(widget.tanque.id),
+          onClick: (path) => store.actualizarFoto(path, widget.tanque.id),
+          onDelete: (index) => store.eliminarFoto(index, widget.tanque.id),
           key: Key('foto$step'),
           max: 2,
-        ),
+        )
       ],
     );
   }
@@ -388,25 +445,116 @@ class ResumenWidget extends StatefulWidget {
 class ResumenWidgetState extends State<ResumenWidget> {
   @override
   Widget build(BuildContext context) {
+    final store = context.watch<RegistroVolumenesStore>();
+    final tipoMedicion = store.tipoMedicion;
+    final keys = store.datos.keys;
     final theme = ThemeController.instance;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(widget.descripcion, style: const TextStyle(fontSize: 16)),
-        const SizedBox(height: 10),
-        ...widget.formulario.datos.map((dato) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Tanque: ${dato.hora}'),
-              Text('Nombre: ${dato.nombre}'),
-              Text('Combustible: ${dato.idCombustible}'),
-              Text('Volumen: ${dato.volumen}'),
-              const SizedBox(height: 10),
-            ],
-          );
-        }),
-      ],
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(widget.descripcion, style: const TextStyle(fontSize: 16)),
+          const SizedBox(height: 10),
+          RichText(
+            text: TextSpan(
+              text: 'Tipo de Medición: ',
+              style: TextStyle(color: theme.secondary),
+              children: <TextSpan>[
+                TextSpan(
+                  text: tipoMedicion,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: theme.secondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(),
+          if (keys.isEmpty) const Text("No hay datos disponibles"),
+          ...keys.map((key) {
+            final fotos = store.obtenerFotos(key);
+            final dato = store.obtenerDatos(key);
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Tanque ${dato?.nombre}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: theme.secondary,
+                    fontSize: 15,
+                  ),
+                ),
+                RichText(
+                  text: TextSpan(
+                    text: 'Hora: ',
+                    style: TextStyle(color: theme.secondary),
+                    children: <TextSpan>[
+                      TextSpan(
+                        text: dato?.hora,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: theme.secondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                RichText(
+                  text: TextSpan(
+                    text: 'Combustible: ',
+                    style: TextStyle(color: theme.secondary),
+                    children: <TextSpan>[
+                      TextSpan(
+                        text: dato?.combustible,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: theme.secondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                RichText(
+                  text: TextSpan(
+                    text: 'Volumen: ',
+                    style: TextStyle(color: theme.secondary),
+                    children: <TextSpan>[
+                      TextSpan(
+                        text: dato!.volumen.toString(),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: theme.secondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (fotos.isNotEmpty) const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8.0,
+                  runSpacing: 8.0,
+                  children: fotos.map((foto) {
+                    return ClipRRect(
+                      borderRadius: BorderRadius.circular(4.0),
+                      child: Image.file(
+                        File(foto),
+                        fit: BoxFit.cover,
+                        width: 120,
+                        height: 120,
+                      ),
+                    );
+                  }).toList(),
+                ),
+                const Divider(),
+              ],
+            );
+          }),
+        ],
+      ),
     );
   }
 }

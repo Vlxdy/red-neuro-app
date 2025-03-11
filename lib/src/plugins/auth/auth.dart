@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:control_ventas_movil/src/constants/constants.dart';
-import 'package:control_ventas_movil/src/models/combustible.dart';
 import 'package:control_ventas_movil/src/plugins/auth/ciudadania.dart';
 import 'package:control_ventas_movil/src/plugins/estaciones/bitacora_store.dart';
 import 'package:control_ventas_movil/src/plugins/estaciones/combustibles_store.dart';

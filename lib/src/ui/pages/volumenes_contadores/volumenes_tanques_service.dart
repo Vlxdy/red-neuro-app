@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:control_ventas_movil/src/config/service_config.dart';
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
@@ -9,6 +10,7 @@ import 'package:control_ventas_movil/src/plugins/estaciones/estacion_servicio.da
 import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
 import 'package:control_ventas_movil/src/ui/common/snackbar/snackbar.dart';
 import 'package:control_ventas_movil/src/ui/global/loading_animation.dart';
+import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/registro_volumenes_store.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/volumenes_tanques.dart';
 import 'package:flutter/material.dart';
 
@@ -16,6 +18,8 @@ class VolumenesTanquesService extends ServiceConfig {
   VolumenesTanquesService(super.urlBase, super.context);
   final theme = ThemeController.instance;
   final idBitacora = BitacoraStore.instance.bitacora.id;
+  final store = RegistroVolumenesStore.instance;
+  final keys = RegistroVolumenesStore.instance.fotos.keys;
   Future<List<VolumenTanque>> fetchData() {
     return getVolumenesTanques();
   }
@@ -24,60 +28,81 @@ class VolumenesTanquesService extends ServiceConfig {
     try {
       final idEstacionServicio =
           EstacionServicioStore.instance.estacionServicio.id;
-
       Logger.info(jsonEncode(idEstacionServicio));
       Logger.info(jsonEncode(idEstacionServicio));
-
       final response = await fetch(
           '/mobile/bitacora/$idBitacora/estacion-servicio/$idEstacionServicio/tanques-volumenes',
           type: HttpProtocol.get);
       Logger.success('response -> ${response.data}');
       if (response.data['list'] != null) {
-        return (response.data['list'] as List)
+        final volumenes = (response.data['list'] as List)
             .map((item) => VolumenTanque.fromJson(item))
             .toList();
+        showSnackBar(
+          volumenTanquesMessenger,
+          'Registros obtenidos correctamente',
+          state: StatusSnackBar.success,
+          colorText: theme.white,
+        );
+        return volumenes;
       }
-
-      return [];
     } catch (e, stacktrace) {
+      showSnackBar(
+        volumenTanquesMessenger,
+        'Ocurrió un error al obtener los registros.',
+        state: StatusSnackBar.error,
+        colorText: theme.white,
+      );
       Logger.error('Exception al obtener listado del registro de volumenes $e');
       Logger.error('stacktrace $stacktrace');
-      return [];
     }
+    return [];
   }
 
   Future<void> registrarVolumenes(
       BuildContext context, FormularioRegistroVolumenes datos) async {
     try {
-      LoadingAnimation.instance.state = Overlay.of(context);
-      LoadingAnimation.instance.showLoading(mensaje: 'Iniciando control...');
+      if (context.mounted) {
+        // Solo muestra el loading si el widget está montado
+        LoadingAnimation.instance.state = Overlay.of(context);
+        LoadingAnimation.instance
+            .showLoading(mensaje: 'Registrando volúmenes...');
+      }
 
-      Logger.info(jsonEncode(datos.toMap()));
-      Logger.info('--------------------------');
-      final response = await fetch(
-          '/mobile/bitacora/$idBitacora/registro-tanque-volumenes',
-          type: HttpProtocol.post,
-          withAuthorization: true,
-          body: {...datos.toMap()});
+      final body = {
+        ...datos.toMap(),
+      };
+      final Map<String, List<File>> archivos = {
+        for (var key in keys) key: store.obtenerFotografias(key)
+      };
+
+      final response = await multipartRequestFilesKeys(
+        '/bitacora/$idBitacora/registro-tanque-volumenes',
+        withAuthorization: true,
+        body: body,
+        files: archivos,
+      );
+
       if (response.status != StatusNetwork.connected) {
         throw Exception(response.message);
       }
       final json = response.data;
+      //Actualizar estado en la bitacora
       // await BitacoraStore.instance.actualizar(json, fechaRegistro);
       showSnackBar(
         volumenTanquesMessenger,
-        'Control iniciado correctamente',
+        'Se han registrado los valores correctamente',
         state: StatusSnackBar.success,
         colorText: theme.white,
       );
-
       LoadingAnimation.instance.hideLoading();
+      Navigator.pop(context);
     } catch (e, stacktrace) {
-      Logger.error('Error al iniciar control: $e');
+      Logger.error('Error al iniciar registar volúmenes: $e');
       Logger.error('Stacktrace: $stacktrace');
       showSnackBar(
         volumenTanquesMessenger,
-        'Ocurrió un error al iniciar el control',
+        'Ocurrió un error al registar volúmenes  $e',
         state: StatusSnackBar.error,
         colorText: theme.white,
       );
