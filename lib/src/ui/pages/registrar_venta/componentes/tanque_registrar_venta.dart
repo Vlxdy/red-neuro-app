@@ -1,31 +1,36 @@
+import 'package:control_ventas_movil/src/config/routes.dart';
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
 import 'package:control_ventas_movil/src/ui/common/selector_image/multiple_campo_fotografia.dart';
-import 'package:control_ventas_movil/src/ui/pages/registrar_venta/componentes/tanque_confirmar_registro_venta.dart';
+import 'package:control_ventas_movil/src/ui/pages/registrar_venta/services/venta_tanque_service.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/stores/registrar_venta_store.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
-class NuevaVentaScreen extends StatefulWidget {
+class RegistarVentaTanque extends StatefulWidget {
   final String tipoCombustible;
-  const NuevaVentaScreen({Key? key, this.tipoCombustible = 'Diesel'})
-      : super(key: key);
+  final String idCombustible;
 
+  const RegistarVentaTanque({
+    Key? key,
+    required this.idCombustible,
+    required this.tipoCombustible,
+  }) : super(key: key);
   @override
-  State<NuevaVentaScreen> createState() => _NuevaVentaScreenState();
+  State<RegistarVentaTanque> createState() => _RegistarVentaTanqueState();
 }
 
-class _NuevaVentaScreenState extends State<NuevaVentaScreen> {
+class _RegistarVentaTanqueState extends State<RegistarVentaTanque> {
   final _placaController = TextEditingController();
   final List<String> _fotos = [];
-
   bool _agregarObs = false;
   String _observacion = '';
+
   final theme = ThemeController.instance;
 
   @override
   Widget build(BuildContext context) {
     final store = context.watch<RegistrarVentaStore>();
-
 
     return Scaffold(
       backgroundColor: theme.white,
@@ -35,70 +40,71 @@ class _NuevaVentaScreenState extends State<NuevaVentaScreen> {
           'Venta de ${widget.tipoCombustible} a vehículos\ncon TANQUE ADICIONALL',
           style: TextStyle(fontSize: 16, color: theme.secondary),
         ),
-        leading: Icon(Icons.local_gas_station, color: theme.secondary,),
+        leading: Icon(Icons.local_gas_station, color: theme.secondary),
       ),
       body: Column(
         children: [
           Expanded(
             child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Registrarás una nueva venta de ${widget.tipoCombustible.toUpperCase()}',
-                      style: TextStyle(fontSize: 14, color: theme.grey),
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Registrarás una nueva venta de ${widget.tipoCombustible.toUpperCase()}',
+                    style: TextStyle(fontSize: 14, color: theme.grey),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _placaController,
+                    decoration: const InputDecoration(
+                      labelText: 'Nro. de Placa de vehículo',
+                      hintText: 'Ej. 5461PYP',
+                      border: OutlineInputBorder(),
                     ),
-                    const SizedBox(height: 16),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Fotografías',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  MultipleCampoFotografia(
+                    titulo: 'Fotografías',
+                    paths: store.fotos,
+                    onClick: (path) => store.fotos = path,
+                    onDelete: (index) => store.eliminarFoto(index),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildPhotoSection(),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Checkbox(
+                        value: _agregarObs,
+                        onChanged: (value) {
+                          setState(() {
+                            _agregarObs = value ?? false;
+                            if (!_agregarObs) _observacion = '';
+                          });
+                        },
+                      ),
+                      const Text('Agregar una observación'),
+                    ],
+                  ),
+                  if (_agregarObs) ...[
                     TextField(
-                      controller: _placaController,
+                      onChanged: (value) => _observacion = value,
                       decoration: const InputDecoration(
-                        labelText: 'Nro. de Placa de vehículo',
-                        hintText: 'Ej. 5461PYP',
+                        labelText: 'Observación',
                         border: OutlineInputBorder(),
                       ),
+                      maxLines: 3,
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      'Fotografías',
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    MultipleCampoFotografia(
-                      titulo: 'Fotografías',
-                      paths: store.fotos,
-                      onClick: (path) => store.fotos = path,
-                      onDelete: (index) => store.eliminarFoto(index),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildPhotoSection(),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Checkbox(
-                          value: _agregarObs,
-                          onChanged: (value) {
-                            setState(() {
-                              _agregarObs = value ?? false;
-                              if (!_agregarObs) _observacion = '';
-                            });
-                          },
-                        ),
-                        const Text('Agregar una observación'),
-                      ],
-                    ),
-                    if (_agregarObs) ...[
-                      TextField(
-                        onChanged: (value) => _observacion = value,
-                        decoration: const InputDecoration(
-                          labelText: 'Observación',
-                          border: OutlineInputBorder(),
-                        ),
-                        maxLines: 3,
-                      ),
-                      const SizedBox(height: 16),
-                    ],
                   ],
-                )),
+                ],
+              ),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -106,11 +112,11 @@ class _NuevaVentaScreenState extends State<NuevaVentaScreen> {
               children: [
                 ElevatedButton.icon(
                   onPressed: () {
-                    Navigator.pushReplacement(
+                    _mostrarDialogoConfirmacion(
                       context,
-                      MaterialPageRoute(
-                          builder: (context) => ConfirmarRegistroScreen(
-                              placa: _placaController.text, numeroFotos: 2)),
+                      widget.idCombustible,
+                      _placaController.text,
+                      store.fotos.length,
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -127,9 +133,7 @@ class _NuevaVentaScreenState extends State<NuevaVentaScreen> {
                 ),
                 const SizedBox(height: 10),
                 TextButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
+                  onPressed: () => Navigator.pop(context),
                   style: TextButton.styleFrom(
                     foregroundColor: theme.secondary,
                     side: BorderSide(color: theme.secondary),
@@ -185,6 +189,101 @@ class _NuevaVentaScreenState extends State<NuevaVentaScreen> {
           style: TextStyle(fontSize: 12, color: theme.grey),
         ),
       ],
+    );
+  }
+
+  Future<void> _mostrarDialogoConfirmacion(
+    BuildContext context,
+    String idCombustible,
+    String placa,
+    int numeroFotos,
+  ) async {
+    final theme = ThemeController.instance;
+    final store = context.read<RegistrarVentaStore>();
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text(
+            'Confirmar registro de la venta',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                '¿Deseas finalizar el registro de la venta?',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Las capturas de datos que tomaste serán registradas.',
+                style: TextStyle(fontSize: 14, color: theme.grey),
+              ),
+              const SizedBox(height: 8),
+              RichText(
+                text: TextSpan(
+                  style: TextStyle(fontSize: 15, color: theme.secondary),
+                  children: [
+                    const TextSpan(text: 'Nro. de Placa de vehículo: '),
+                    TextSpan(
+                      text: '$placa',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+              ),
+              RichText(
+                text: TextSpan(
+                  style: TextStyle(fontSize: 15, color: theme.secondary),
+                  children: [
+                    const TextSpan(text: 'Fotografías: '),
+                    TextSpan(
+                      text: '$numeroFotos',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    )
+                  ],
+                ),
+              )
+            ],
+          ),
+          actions: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () async {
+                    if (context.mounted) {
+                      final _service = VentaTanquesService('', context);
+                      await _service.registrarVentaTanqueConMultipart(
+                        pathsDeFotos: store.fotos,
+                        placa: placa,
+                        idCombustible: idCombustible,
+                        observacion: _observacion,
+                        fechaRegistroApp: DateTime.now(),
+                        context: context,
+                      );
+                      GoRouter.of(context).goNamed(RouteNames.registrarVenta);
+                    }
+                  },
+                  label: const Text('Confirmar'),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.secondary,
+                      foregroundColor: theme.white),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Volver'),
+                ),
+              ],
+            )
+          ],
+        );
+      },
     );
   }
 }

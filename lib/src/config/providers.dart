@@ -5,6 +5,7 @@ import 'package:control_ventas_movil/src/ui/pages/inicio/inicio_store.dart';
 import 'package:control_ventas_movil/src/ui/pages/principal_page/principal_page_store.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/stores/registrar_venta_store.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/stores/venta_bidones_store.dart';
+import 'package:control_ventas_movil/src/ui/pages/registrar_venta/stores/venta_tanques_store.dart';
 import 'package:control_ventas_movil/src/ui/pages/resumen_dia/resumen_dia_store.dart';
 import 'package:flutter/material.dart';
 import 'package:control_ventas_movil/src/ui/global/loading_animation.dart';
@@ -23,6 +24,7 @@ List<SingleChildWidget> proveedores(BuildContext context) => [
       ChangeNotifierProvider(create: (context) => RegistrarVentaStore.instance),
       ChangeNotifierProvider(create: (context) => CameraScreenStore.instance),
       ChangeNotifierProvider(create: (context) => VentaBidonesStore.instance),
+      ChangeNotifierProvider(create: (context) => VentaTanquesStore.instance),
       ChangeNotifierProvider(create: (context) => ControlStore.instance),
       ChangeNotifierProvider(create: (context) => RegistroMetersStore.instance),
       ChangeNotifierProvider(create: (context) => ResumenDiaStore.instance),
