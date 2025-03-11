@@ -111,41 +111,47 @@ class VentaCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              ...combustibles.map(
-                (combustible) => ListTile(
-                  leading: CircleAvatar(
-                    backgroundColor: (combustible.color != null)
-                        ? Color(
-                            int.parse('0xFF${combustible.color!.substring(1)}'))
-                        : theme.primary,
-                    child: Icon(Icons.local_gas_station, color: theme.white),
-                  ),
-                  title: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        combustible.codigo,
+              Expanded(
+                child: ListView.builder(
+                  itemCount: combustibles.length,
+                  itemBuilder: (context, index) {
+                    final combustible = combustibles[index];
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: (combustible.color != null)
+                            ? Color(int.parse('0xFF${combustible.color!.substring(1)}'))
+                            : theme.primary,
+                        child: Icon(Icons.local_gas_station, color: theme.white),
+                      ),
+                      title: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            combustible.codigo,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: theme.black,
+                            ),
+                          ),
+                          Text(
+                            combustible.nombre ?? '',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: theme.black,
+                            ),
+                          ),
+                        ],
+                      ),
+                      trailing: Text(
+                        combustible.cantidad,
                         style: TextStyle(
+                          fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: theme.black,
                         ),
                       ),
-                      Text(
-                        combustible.nombre ?? '',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: theme.black,
-                        ),
-                      ),
-                    ],
-                  ),
-                  trailing: Text(
-                    combustible.cantidad,
-                    style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: theme.black),
-                  ),
+                    );
+                  },
                 ),
               ),
               const SizedBox(height: 10),
