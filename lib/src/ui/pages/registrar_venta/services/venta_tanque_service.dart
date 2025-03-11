@@ -1,8 +1,9 @@
+import 'dart:io';
 import 'package:control_ventas_movil/src/models/combustible.dart';
 import 'package:control_ventas_movil/src/models/venta.dart';
 import 'package:control_ventas_movil/src/plugins/estaciones/bitacora_store.dart';
 import 'package:control_ventas_movil/src/plugins/estaciones/combustibles_store.dart';
-import 'package:control_ventas_movil/src/ui/pages/registrar_venta/stores/venta_bidones_store.dart';
+import 'package:control_ventas_movil/src/ui/pages/registrar_venta/stores/venta_tanques_store.dart';
 import 'package:flutter/material.dart';
 import 'package:control_ventas_movil/src/config/service_config.dart';
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
@@ -11,30 +12,27 @@ import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
 import 'package:control_ventas_movil/src/ui/common/snackbar/snackbar.dart';
 import 'package:control_ventas_movil/src/ui/global/loading_animation.dart';
 
-GlobalKey<ScaffoldMessengerState> bidonesMessenger =
-GlobalKey<ScaffoldMessengerState>();
+GlobalKey<ScaffoldMessengerState> tanquesMessenger = GlobalKey<ScaffoldMessengerState>();
 
-class VentaBidonesService extends ServiceConfig {
-  VentaBidonesService(super.urlBase, super.context);
+class VentaTanquesService extends ServiceConfig {
+  VentaTanquesService(super.urlBase, super.context);
 
-  final store = VentaBidonesStore.instance;
+  final store = VentaTanquesStore.instance;
   final theme = ThemeController.instance;
 
   final idBitacora = BitacoraStore.instance.bitacora.id;
 
-  void fetchDataBidones() {
-    cargarVentasBidones().whenComplete(() => store.cargando = false);
+  void fetchDataTanques() {
+    cargarVentasTanques().whenComplete(() => store.cargando = false);
   }
 
-  Future<void> cargarVentasBidones() async {
+  Future<void> cargarVentasTanques() async {
     try {
-
       store.cargando = true;
       LoadingAnimation.instance.state = Overlay.of(context);
-      // LoadingAnimation.instance.showLoading(mensaje: 'Cargando Bidones...');
 
       final response = await fetch(
-        '/mobile/$idBitacora/listar-venta?tipoVenta=Bidones',
+        '/mobile/$idBitacora/listar-venta?tipoVenta=Tanque adicional',
         type: HttpProtocol.get,
         withAuthorization: true,
       );
@@ -45,6 +43,7 @@ class VentaBidonesService extends ServiceConfig {
 
       if (response.status == StatusNetwork.connected) {
         final datos = response.data;
+
         List<Combustible> listaCombustibles = CombustiblesStore.instance.combustibles;
 
         Map<String, int> ventasMap = {
@@ -58,7 +57,6 @@ class VentaBidonesService extends ServiceConfig {
             cantidadVentas: ventasMap[combustible.codigo] ?? 0,
           );
         }).toList();
-
       } else {
         Logger.error('Error al obtener datos. Status: ${response.status}');
       }
@@ -66,7 +64,7 @@ class VentaBidonesService extends ServiceConfig {
       Logger.error('Error al obtener ventas de bidones: $e');
       Logger.error('stacktrace: $stacktrace');
       showSnackBar(
-        bidonesMessenger,
+        tanquesMessenger,
         'Ocurrió un error al obtener ventas',
         state: StatusSnackBar.error,
         colorText: theme.white,
@@ -77,43 +75,37 @@ class VentaBidonesService extends ServiceConfig {
     }
   }
 
-  Future<void> incrementarVenta(String idCombustible, String observacion) async {
+  Future<void> registrarVentaTanqueConMultipart({
+    required List<String> pathsDeFotos,
+    required String placa,
+    required String idCombustible,
+    required DateTime fechaRegistroApp,
+    required BuildContext context,
+    String? observacion,
+  }) async {
     try {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (context.mounted) {
-          LoadingAnimation.instance.state = Overlay.of(context);
-          LoadingAnimation.instance.showLoading(mensaje: 'Registrando venta...');
-        }
-      });
+      final List<File> files = pathsDeFotos.map((path) => File(path)).toList();
 
-      final response = await fetch(
-        '/mobile/$idBitacora/registro-venta',
-        type: HttpProtocol.post,
-        withAuthorization: true,
-        body: {
-          "tipoVenta": "Bidones",
-          "fechaRegistroApp": DateTime.now().toIso8601String(),
-          "idCombustible": idCombustible,
-          "observacion": observacion.isEmpty ? null : observacion,
-        },
-      );
+      final body = {
+        'placa': placa,
+        'idCombustible': '$idCombustible',
+        'tipoVenta': 'Tanque adicional',
+        'fechaRegistroApp': fechaRegistroApp.toIso8601String(),
+        if (observacion != null && observacion.isNotEmpty)
+          'observacion': observacion,
+      };
+
+      final response = await multipartRequest(
+          '/mobile/$idBitacora/registro-venta',
+          type: 'POST',
+          files: files,
+          nameFiles: files.map((_) => 'files').toList(),
+          body: body,
+          image: true);
 
       if (response.status != StatusNetwork.connected) {
         throw Exception(response.message);
       }
-
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (context.mounted) {
-          showSnackBar(
-            bidonesMessenger,
-            'Venta registrada correctamente',
-            state: StatusSnackBar.success,
-            colorText: theme.white,
-          );
-        }
-      });
-
-      fetchDataBidones();
     } catch (e, stacktrace) {
       Logger.error('Error al registrar venta: $e');
       Logger.error('Stacktrace: $stacktrace');
@@ -121,7 +113,7 @@ class VentaBidonesService extends ServiceConfig {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (context.mounted) {
           showSnackBar(
-            bidonesMessenger,
+            tanquesMessenger,
             'Ocurrió un error al registrar la venta',
             state: StatusSnackBar.error,
             colorText: theme.white,
