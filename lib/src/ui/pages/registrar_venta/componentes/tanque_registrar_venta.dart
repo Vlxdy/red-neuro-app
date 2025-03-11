@@ -9,9 +9,13 @@ import 'package:provider/provider.dart';
 
 class RegistarVentaTanque extends StatefulWidget {
   final String tipoCombustible;
-  const RegistarVentaTanque({Key? key, this.tipoCombustible = 'Diesel'})
-      : super(key: key);
+  final String idCombustible;
 
+  const RegistarVentaTanque({
+    Key? key,
+    required this.idCombustible,
+    required this.tipoCombustible,
+  }) : super(key: key);
   @override
   State<RegistarVentaTanque> createState() => _RegistarVentaTanqueState();
 }
@@ -110,6 +114,7 @@ class _RegistarVentaTanqueState extends State<RegistarVentaTanque> {
                   onPressed: () {
                     _mostrarDialogoConfirmacion(
                       context,
+                      widget.idCombustible,
                       _placaController.text,
                       store.fotos.length,
                     );
@@ -189,6 +194,7 @@ class _RegistarVentaTanqueState extends State<RegistarVentaTanque> {
 
   Future<void> _mostrarDialogoConfirmacion(
     BuildContext context,
+    String idCombustible,
     String placa,
     int numeroFotos,
   ) async {
@@ -249,17 +255,18 @@ class _RegistarVentaTanqueState extends State<RegistarVentaTanque> {
               children: [
                 ElevatedButton.icon(
                   onPressed: () async {
-                    final _service = VentaTanquesService('', context);
-                    await _service.registrarVentaTanqueConMultipart(
-                      pathsDeFotos: store.fotos,
-                      placa: placa,
-                      idCombustible: 2,
-                      observacion: _observacion,
-                      fechaRegistroApp: DateTime.now(),
-                      context: context,
-                    );
-                    Navigator.of(context).pop();
-                    GoRouter.of(context).goNamed(RouteNames.registrarVenta);
+                    if (context.mounted) {
+                      final _service = VentaTanquesService('', context);
+                      await _service.registrarVentaTanqueConMultipart(
+                        pathsDeFotos: store.fotos,
+                        placa: placa,
+                        idCombustible: idCombustible,
+                        observacion: _observacion,
+                        fechaRegistroApp: DateTime.now(),
+                        context: context,
+                      );
+                      GoRouter.of(context).goNamed(RouteNames.registrarVenta);
+                    }
                   },
                   label: const Text('Confirmar'),
                   style: ElevatedButton.styleFrom(

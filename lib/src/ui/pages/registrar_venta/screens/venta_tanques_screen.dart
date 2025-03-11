@@ -1,4 +1,6 @@
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
+import 'package:control_ventas_movil/src/models/combustible.dart';
+import 'package:control_ventas_movil/src/plugins/estaciones/combustibles_store.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/componentes/combustible_card.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/componentes/tanque_registrar_venta.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/services/venta_tanque_service.dart';
@@ -32,6 +34,7 @@ class _VentaTanquesScreenState extends State<VentaTanquesScreen> {
   @override
   Widget build(BuildContext context) {
     final store = Provider.of<VentaTanquesStore>(context);
+    List<Combustible> listaCombustibles = CombustiblesStore.instance.combustibles;
 
     return Scaffold(
       backgroundColor: theme.background,
@@ -86,15 +89,19 @@ class _VentaTanquesScreenState extends State<VentaTanquesScreen> {
                       itemCount: store.ventas.length,
                       itemBuilder: (context, index) {
                         final venta = store.ventas[index];
+                        Combustible combustible = listaCombustibles.firstWhere(
+                              (c) => c.codigo == venta.codigo,
+                          orElse: () => Combustible.empty,
+                        );
                         return CombustibleCard(
-                          title: venta.codigo,
+                          title: combustible.nombre!,
                           ventasRegistradas: venta.cantidadVentas,
                           color: index.isEven ? theme.primary : theme.secondary,
                           onPressedNuevaVenta: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => RegistarVentaTanque(),
+                                builder: (context) => RegistarVentaTanque(idCombustible: combustible.id, tipoCombustible:  combustible.nombre!),
                               ),
                             );
                           },

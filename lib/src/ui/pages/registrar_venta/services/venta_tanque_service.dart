@@ -66,7 +66,7 @@ class VentaTanquesService extends ServiceConfig {
   Future<void> registrarVentaTanqueConMultipart({
     required List<String> pathsDeFotos,
     required String placa,
-    required int idCombustible,
+    required String idCombustible,
     required DateTime fechaRegistroApp,
     required BuildContext context,
     String? observacion,

@@ -1,5 +1,6 @@
 import 'package:control_ventas_movil/src/models/venta.dart';
 import 'package:control_ventas_movil/src/plugins/estaciones/bitacora_store.dart';
+import 'package:control_ventas_movil/src/plugins/estaciones/combustibles_store.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/stores/venta_bidones_store.dart';
 import 'package:flutter/material.dart';
 import 'package:control_ventas_movil/src/config/service_config.dart';
@@ -26,6 +27,17 @@ class VentaBidonesService extends ServiceConfig {
 
   Future<void> cargarVentasBidones() async {
     try {
+
+      final dataa = CombustiblesStore.instance;
+      print('yoss:3');
+      for (final x in dataa.combustibles) {
+        print(x.codigo);
+        print(x.color);
+        print(x.descripcion);
+        print(x.id);
+        print('-'*10);
+      }
+      print('yoss:4');
       store.cargando = true;
       LoadingAnimation.instance.state = Overlay.of(context);
       // LoadingAnimation.instance.showLoading(mensaje: 'Cargando Bidones...');
@@ -81,7 +93,7 @@ class VentaBidonesService extends ServiceConfig {
         body: {
           "tipoVenta": "Bidones",
           "fechaRegistroApp": DateTime.now().toIso8601String(),
-          "idCombustible": 1,
+          "idCombustible": idCombustible,
           "observacion": observacion.isEmpty ? null : observacion,
         },
       );
