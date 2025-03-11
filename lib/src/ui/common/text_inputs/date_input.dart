@@ -79,7 +79,7 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
         }
       },
       child: Container(
-        height: 60 + ((widget.linesLabel! - 1) * 10) + (_error ? 16 : 0),
+        height: 60 + ((widget.linesLabel! - 1) * 10) + (_error ? 20 : 0),
         width: double.infinity,
         decoration: BoxDecoration(
           border: Border.all(
@@ -140,6 +140,23 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
                   disabledBorder: InputBorder.none,
                   focusedErrorBorder: InputBorder.none,
                 ),
+                validator: (value) {
+                  String? result;
+                  setState(() {
+                    _error = false;
+                    if (widget.requiredData) {
+                      if (widget.validate != null) {
+                        result = widget.validate!(value, widget.title);
+                        if (result != '') {
+                          _error = true;
+                        } else {
+                          result = null;
+                        }
+                      }
+                    }
+                  });
+                  return result;
+                },
               ),
             ],
           ),

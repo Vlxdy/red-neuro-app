@@ -13,6 +13,7 @@ import 'package:provider/provider.dart';
 
 final GlobalKey<ScaffoldMessengerState> volumenTanquesMessenger =
     GlobalKey<ScaffoldMessengerState>();
+
 class VolumenesTanques extends StatefulWidget {
   const VolumenesTanques({super.key});
 
@@ -50,23 +51,38 @@ class VolumenesTanquesScreen extends State<VolumenesTanques> {
                 "Registrarás el volumen de combustible em los tanques de la EESS",
             tiposMedicion: tiposMedicion,
             listaCombustibles: listaCombustibles,
-            tanques: [
-              VolumenTanque(
-                  id: "1",
-                  hora: "00:02",
-                  tipoMedicion: "x",
-                  volumen: "300",
-                  tanques: TanqueVolumenTanque(
-                    nombre: "Tanque 1",
-                    id: "1",
-                  )),
-              VolumenTanque(
-                  id: "1", hora: "00:02", tipoMedicion: "x", volumen: "300"),
-              VolumenTanque(
-                  id: "1", hora: "00:02", tipoMedicion: "x", volumen: "300"),
-              VolumenTanque(
-                  id: "1", hora: "00:02", tipoMedicion: "x", volumen: "300"),
-            ]),
+            tanques: volumenes.isNotEmpty
+                ? volumenes
+                : [
+                    VolumenTanque(
+                        id: "1",
+                        hora: "00:02",
+                        tipoMedicion: "x",
+                        volumen: "300",
+                        tanques: TanqueVolumenTanque(
+                          nombre: "Tanque 1",
+                          id: "1",
+                        )),
+                    VolumenTanque(
+                        id: "1",
+                        hora: "00:02",
+                        tipoMedicion: "x",
+                        volumen: "300",
+                        tanques: TanqueVolumenTanque(
+                          nombre: "Tanque 2",
+                          id: "3",
+                        )),
+                    VolumenTanque(
+                        id: "1",
+                        hora: "00:02",
+                        tipoMedicion: "x",
+                        volumen: "300"),
+                    VolumenTanque(
+                        id: "1",
+                        hora: "00:02",
+                        tipoMedicion: "x",
+                        volumen: "300"),
+                  ]),
       ),
     );
   }

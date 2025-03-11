@@ -38,7 +38,6 @@ class VolumenTanque {
       'volumen': volumen,
       'combustible': combustible,
       'tanques': tanques,
-
     };
   }
 }
@@ -92,6 +91,52 @@ class TanqueVolumenTanque {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'nombre': nombre,
+    };
+  }
+}
+
+class FormularioRegistroVolumenes {
+  final List<ItemVolumenTanque> datos;
+
+  FormularioRegistroVolumenes({
+    required this.datos,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'datos': datos.map((item) => item.toMap()).toList(),
+    };
+  }
+}
+
+class ItemVolumenTanque {
+  final String idTanque;
+  final String hora;
+  final String tipoMedicion;
+  final int volumen;
+  final String idCombustible;
+  final DateTime fechaRegistroApp;
+  final String nombre;
+
+  ItemVolumenTanque({
+    required this.idTanque,
+    required this.hora,
+    required this.tipoMedicion,
+    required this.volumen,
+    required this.idCombustible,
+    required this.fechaRegistroApp,
+    required this.nombre,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'idTanque': idTanque,
+      'hora': hora,
+      'idCombustible': idCombustible,
+      'tipoMedicion': tipoMedicion,
+      'volumen': volumen,
+      'fechaRegistroApp': fechaRegistroApp.toIso8601String(),
       'nombre': nombre,
     };
   }
