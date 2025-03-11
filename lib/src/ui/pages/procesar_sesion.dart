@@ -30,6 +30,7 @@ class ProcesarSesion extends StatefulWidget {
 class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
   final auth = Auth.instance;
   late TextEditingController _pinSeguridad;
+  final seguridad = Seguridad.instance;
 
   @override
   void initState() {
@@ -41,76 +42,48 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
   void inicializar() async {
     Logger.info('Verificar sesion');
     final context = navigatorKey.currentContext!;
-    bool localAuthentication = false;
-    final seguridad = Seguridad.instance;
-
+    bool verificado = false;
     try {
-      if (await seguridad.hasFingeprintEnabled) {
-        Logger.info('autenticar con huella!!');
-        localAuthentication = await LocalSecure.autenticar(
-          titulo: 'Control Ventas Movil',
-          message: 'Escanea tu huella dactilar para continuar',
-        );
-        Logger.info('Biometrico autenticado $localAuthentication');
-        if (!localAuthentication) {
-          if (context.mounted) {
-            final resultadoPin = await formPinSeguridad(context);
-            if (resultadoPin != null && resultadoPin) {
-              if (resultadoPin != null && resultadoPin) {
-                Logger.info('redirigir a home!!! ${_pinSeguridad.text}');
-                final pinAlmacenado = await Seguridad.instance.apiPinSeguridad;
-                if (pinAlmacenado == _pinSeguridad.text) {
-                  if (context.mounted) {
-                    Auth.instance.isLocked = false;
-                    GoRouter.of(context).goNamed(RouteNames.home);
-                  }
-                } else {
-                  showSnackBar(procesarSesionMessenger,
-                      'El pin ingresado es incorrecto.',
-                      state: StatusSnackBar.error, colorText: Colors.white);
-                  _pinSeguridad.text = "";
-                }
-                return;
-              }
-            }
-          }
-          Logger.info('Seguir bloqueado!!!');
-          return;
-        }
-      } else {
-        if (context.mounted) {
-          final resultadoPin = await formPinSeguridad(context);
-          if (resultadoPin != null && resultadoPin) {
-            Logger.info('redirigir a home!!! ${_pinSeguridad.text}');
-            final pinAlmacenado = await Seguridad.instance.apiPinSeguridad;
-            if (pinAlmacenado == _pinSeguridad.text) {
-              if (context.mounted) {
-                Auth.instance.isLocked = false;
-                GoRouter.of(context).goNamed(RouteNames.home);
-              }
-            } else {
-              showSnackBar(
-                  procesarSesionMessenger, 'El pin ingresado es incorrecto.',
-                  state: StatusSnackBar.error, colorText: Colors.white);
-              _pinSeguridad.text = "";
-            }
-            return;
-          }
-        }
-      }
-
-      if (localAuthentication) {
+      final hasFingerprint = await seguridad.hasFingeprintEnabled;
+      Logger.info('has fingreprint: $hasFingerprint');
+      if (!context.mounted) return;
+      verificado = hasFingerprint
+          ? await verificarHuella(context)
+          : await verificarPin(context);
+      if (verificado && context.mounted) {
         Logger.info('redirigir a home!!!');
-        if (context.mounted) {
-          Auth.instance.isLocked = false;
-          GoRouter.of(context).goNamed(RouteNames.home);
-        }
-        return;
+        Auth.instance.isLocked = false;
+        GoRouter.of(context).goNamed(RouteNames.home);
       }
+      return;
     } catch (e) {
       Logger.error('Error al inicializar sesion de forma local $e');
       // Logger.error('Stacktrace $stackTrace');
     }
+  }
+
+  Future<bool> verificarPin(BuildContext context) async {
+    final resultadoPin = await formPinSeguridad(context);
+    if (resultadoPin == null || _pinSeguridad.text.isEmpty) return false;
+    final pinAlmacenado = await seguridad.apiPinSeguridad;
+    if (pinAlmacenado != _pinSeguridad.text) {
+      showSnackBar(procesarSesionMessenger, 'El pin ingresado es incorrecto.',
+          state: StatusSnackBar.error, colorText: Colors.white);
+    }
+    _pinSeguridad.text = '';
+    return pinAlmacenado == _pinSeguridad.text;
+  }
+
+  Future<bool> verificarHuella(BuildContext context) async {
+    bool localAuthentication = await LocalSecure.autenticar(
+      titulo: 'Control Ventas Movil',
+      message: 'Escanea tu huella dactilar para continuar',
+    );
+    Logger.info('Biometrico autenticado $localAuthentication');
+    if (!localAuthentication && context.mounted) {
+      return await verificarPin(context);
+    }
+    return localAuthentication;
   }
 
   Future<dynamic> formPinSeguridad(BuildContext context) {
@@ -133,10 +106,6 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
                       maxLength: 6,
                       controller: _pinSeguridad,
                       title: 'Número de 6 dígitos',
-                      // onChange: (value) {
-                      //   Logger.info('valor pin $value');
-                      //   // service.store.form.username = value,
-                      // },
                       validate: (value, alias) => validateData(
                             context,
                             value,
