@@ -1,10 +1,61 @@
+import 'package:control_ventas_movil/src/ui/common/alerts/confirmation_alert_dialog.dart';
+import 'package:control_ventas_movil/src/ui/common/buttons/simple_button.dart';
+import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/meters_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/registro_meters_store.dart';
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
 
-class FormRegistroContadoresFinal extends StatelessWidget {
+class FormRegistroContadoresFinal extends StatefulWidget {
   const FormRegistroContadoresFinal({super.key});
+
+  @override
+  State<FormRegistroContadoresFinal> createState() =>
+      _FormRegistroContadoresFinal();
+}
+
+class _FormRegistroContadoresFinal extends State<FormRegistroContadoresFinal> {
+  late MeterService service;
+
+  @override
+  void initState() {
+    service = MeterService('', context);
+    super.initState();
+  }
+
+  void _mostrarDialogoConfirmacion() {
+    showDialog(
+      context: context,
+      builder: (context) => ConfirmationDialog(
+        title: 'Confirmación',
+        text: '¿Está seguro de guardar el registro de contadores?',
+        onConfirm: () {
+          service.guardarMetersRegistro(context);
+          Navigator.of(context)
+            ..pop()
+            ..pop();
+        },
+      ),
+    );
+  }
+
+  void _mostrarDialogoCancelar(store) {
+    showDialog(
+      context: context,
+      builder: (context) => ConfirmationDialog(
+        icon: Icons.cancel,
+        title: 'Cancelar',
+        text: '¿Está seguro de cancelar el registro de contadores?\n'
+            'Se perderán todos los datos registrados',
+        onConfirm: () {
+          store.limpiarRegistros();
+          Navigator.of(context)
+            ..pop()
+            ..pop();
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,10 +78,7 @@ class FormRegistroContadoresFinal extends StatelessWidget {
             ),
             IconButton(
               icon: const Icon(Icons.close),
-              onPressed: () {
-                store.limpiarRegistros();
-                Navigator.pop(context);
-              },
+              onPressed: () => _mostrarDialogoCancelar(store),
             ),
           ],
         ),
@@ -54,7 +102,7 @@ class FormRegistroContadoresFinal extends StatelessWidget {
                     style: TextStyle(color: theme.secondary),
                     children: <TextSpan>[
                       TextSpan(
-                        text: registro.tipoMedicion.nombre,
+                        text: registro.tipoMedicion,
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: theme.secondary,
@@ -68,12 +116,13 @@ class FormRegistroContadoresFinal extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 10),
+                      const Divider(),
                       Text(
                         'Dispensador ${dispensador.codigo}',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: theme.secondary,
-                          fontSize: 15, // Increased font size
+                          fontSize: 15,
                         ),
                       ),
                       RichText(
@@ -91,6 +140,7 @@ class FormRegistroContadoresFinal extends StatelessWidget {
                           ],
                         ),
                       ),
+                      const SizedBox(height: 5),
                       ...dispensador.mangueras.map((manguera) {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -143,31 +193,28 @@ class FormRegistroContadoresFinal extends StatelessWidget {
           },
         ),
       ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            ElevatedButton(
-              onPressed: () {
-                store.limpiarRegistros();
-                Navigator.pop(context);
-              },
-              child: const Text('Atrás'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.secondary,
+      bottomNavigationBar: SizedBox(
+        height: 80,
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              SimpleButton(
+                textColor: theme.black,
+                outlined: true,
+                onTap: () {
+                  store.limpiarRegistros();
+                  Navigator.pop(context);
+                },
+                title: 'Atrás',
               ),
-              child: const Text(
-                'Guardar',
-                style: TextStyle(color: Colors.white),
+              SimpleButton(
+                onTap: _mostrarDialogoConfirmacion,
+                title: 'Guardar',
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

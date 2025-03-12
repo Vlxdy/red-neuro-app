@@ -1,3 +1,5 @@
+import 'package:control_ventas_movil/src/models/combustible.dart';
+import 'package:control_ventas_movil/src/plugins/estaciones/combustibles_store.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/componentes/combustible_card.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/services/venta_bidones_service.dart';
 import 'package:control_ventas_movil/src/ui/pages/registrar_venta/stores/venta_bidones_store.dart';
@@ -32,8 +34,9 @@ class _VentaBidonesScreenState extends State<VentaBidonesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final store = Provider.of<VentaBidonesStore>(context);
+    final store = context.watch<VentaBidonesStore>();
 
+    List<Combustible> listaCombustibles = CombustiblesStore.instance.combustibles;
     return ScaffoldMessenger(
       key: bidonesMessenger,
       child: Scaffold(
@@ -69,7 +72,6 @@ class _VentaBidonesScreenState extends State<VentaBidonesScreen> {
                     onRefresh: _refreshList,
                     child: GridView.builder(
                       shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
                       gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                         maxCrossAxisExtent: 300,
                         mainAxisExtent: 200,
@@ -79,12 +81,16 @@ class _VentaBidonesScreenState extends State<VentaBidonesScreen> {
                       itemCount: store.ventas.length,
                       itemBuilder: (context, index) {
                         final venta = store.ventas[index];
+                        Combustible combustible = listaCombustibles.firstWhere(
+                              (c) => c.codigo == venta.codigo,
+                          orElse: () => Combustible.empty,
+                        );
                         return CombustibleCard(
-                          title: venta.codigo,
+                          title: combustible.nombre!,
                           ventasRegistradas: venta.cantidadVentas,
-                          color: index & 1 == 0 ? theme.primary : theme.secondary ,
+                          color: (index + 1) % 4 == 1 || (index + 1) % 4 == 0 ? theme.primary : theme.secondary ,
                           onPressedNuevaVenta: () {
-                            _mostrarDialogoRegistro(venta.codigo);
+                            _mostrarDialogoRegistro(combustible.id);
                           },
                         );
                       },

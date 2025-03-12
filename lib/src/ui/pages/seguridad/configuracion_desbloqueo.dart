@@ -22,7 +22,7 @@ class ConfiguracionDesbloqueo extends StatefulWidget {
 }
 
 class _ConfiguracionDesbloqueoState extends State<ConfiguracionDesbloqueo> {
-  late bool usarSensor = true;
+  bool usarSensor = true;
 
   @override
   void initState() {

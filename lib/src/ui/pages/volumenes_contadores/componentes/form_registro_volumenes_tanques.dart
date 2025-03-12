@@ -205,6 +205,94 @@ class _FormVolumenesTanques extends State<FormVolumenesTanques> {
                         ],
                       ),
                     ),
+                    // Stepper(
+                    //   type: StepperType.horizontal,
+                    //   currentStep: _currentStep,
+                    //   elevation: 0, // Sin elevación
+                    //   controlsBuilder:
+                    //       (BuildContext context, ControlsDetails details) {
+                    //     return const SizedBox.shrink();
+                    //   },
+
+                    //   steps: [
+                    //     ...widget.tanques.asMap().entries.map(
+                    //       (entry) {
+                    //         int index = entry.key;
+
+                    //         return Step(
+                    //           title: const Text(""),
+                    //           content: Column(
+                    //             children: [
+                    //               Padding(
+                    //                 padding: const EdgeInsets.only(bottom: 8.0),
+                    //                 child: CustomTimePicker(
+                    //                   title: 'Hora de Registro',
+                    //                   controller: horaControllers[index],
+                    //                   placeholder: 'Seleccionar hora',
+                    //                   requiredData: true,
+                    //                   onTap: () {
+                    //                     print("Date field tapped");
+                    //                   },
+                    //                   validate: (value, alias) {
+                    //                     if (value == null || value.isEmpty) {
+                    //                       return '$alias es obligatorio';
+                    //                     }
+                    //                     return '';
+                    //                   },
+                    //                 ),
+                    //               ),
+                    //               Padding(
+                    //                 padding: const EdgeInsets.only(bottom: 8.0),
+                    //                 child: CustomTextInput(
+                    //                   requiredData: true,
+                    //                   controller: volumenControllers[index],
+                    //                   title: 'Volumen',
+                    //                   onChange: (value) => () {},
+                    //                   // validate: (value, alias) =>
+                    //                   //     service.validateData(
+                    //                   //   context,
+                    //                   //   value,
+                    //                   //   alias,
+                    //                   // ),
+                    //                 ),
+                    //               ),
+                    //               DropDown(
+                    //                 width: MediaQuery.of(context).size.width,
+                    //                 label: 'Tipo de combustible',
+                    //                 requiredData: true,
+                    //                 // initialValue:
+                    //                 //     combustibleControllers[index].text,
+                    //                 dropKey: dropKeys[index], // Ahora es único
+                    //                 items: widget.listaCombustibles
+                    //                     .map((combustible) {
+                    //                   return {
+                    //                     'id': combustible.id,
+                    //                     'label': combustible.nombre
+                    //                   };
+                    //                 }).toList(),
+                    //                 onChange: (value) {
+                    //                   setState(() {
+                    //                     combustibleControllers[index].text =
+                    //                         value ?? '';
+                    //                   });
+                    //                 },
+                    //               ),
+                    //             ],
+                    //           ),
+                    //           isActive: _currentStep >= index,
+                    //         );
+                    //       },
+                    //     ),
+                    //     Step(
+                    //       title: const Text(""),
+                    //       content: ElevatedButton(
+                    //         onPressed: _guardarFormulario,
+                    //         child: const Text("Resumen"),
+                    //       ),
+                    //       isActive: _currentStep == widget.tanques.length,
+                    //     ),
+                    //   ],
+                    // ),
                   ],
                 ),
         ),

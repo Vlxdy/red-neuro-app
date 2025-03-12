@@ -23,7 +23,7 @@ class SimpleButton extends StatelessWidget {
       this.textColor,
       this.onTap,
       this.fullWidth = true,
-      this.elevated = false,
+      this.elevated = true,
       this.title = "",
       this.suffixicon,
       this.preffixicon,
@@ -122,6 +122,6 @@ class SimpleButton extends StatelessWidget {
   }
 
   Color get _boxShadowColor {
-    return elevated ? theme.grey.withValues(alpha: 0.2) : Colors.transparent;
+    return elevated ? theme.grey.withValues(alpha: 0.1) : Colors.transparent;
   }
 }
