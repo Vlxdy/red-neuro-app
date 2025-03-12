@@ -77,12 +77,14 @@ class MangueraStore {
   final String codigo;
   final Combustible combustible;
   final int meter;
+  final String? tipoMedicion;
 
   MangueraStore({
     required this.idManguera,
     required this.codigo,
     required this.combustible,
     required this.meter,
+    this.tipoMedicion,
   });
 
   // Convertir el objeto a un mapa para guardarlo o serializarlo
@@ -92,6 +94,7 @@ class MangueraStore {
       'codigo': codigo,
       'combustible': combustible,
       'meter': meter,
+      'tipoMedicion': tipoMedicion,
     };
   }
 
@@ -102,6 +105,7 @@ class MangueraStore {
       codigo: map['codigo'],
       combustible: map['combustible'],
       meter: map['meter'],
+      tipoMedicion: map['tipoMedicion'],
     );
   }
 }
@@ -112,12 +116,14 @@ class DataListMangueras {
   final String codigo;
   final Combustible combustible;
   final String meter;
+  final String tipoMedicion;
 
   DataListMangueras({
     required this.id,
     required this.codigo,
     required this.combustible,
     required this.meter,
+    required this.tipoMedicion,
   });
 
   factory DataListMangueras.fromJson(Map<String, dynamic> json) {
@@ -126,6 +132,7 @@ class DataListMangueras {
       codigo: json['codigo'],
       combustible: Combustible.fromJson(json['combustible']),
       meter: json['meter'],
+      tipoMedicion: json['tipoMedicion'],
     );
   }
 
@@ -135,6 +142,7 @@ class DataListMangueras {
       'codigo': codigo,
       'combustible': combustible.toJson(),
       'meter': meter,
+      'tipoMedicion': tipoMedicion,
     };
   }
 }

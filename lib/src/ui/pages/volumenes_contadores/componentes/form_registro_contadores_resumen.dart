@@ -2,19 +2,22 @@ import 'package:control_ventas_movil/src/ui/common/alerts/confirmation_alert_dia
 import 'package:control_ventas_movil/src/ui/common/buttons/simple_button.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/meters_service.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/registro_meters_store.dart';
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
 
 class FormRegistroContadoresFinal extends StatefulWidget {
-  const FormRegistroContadoresFinal({super.key});
+  final BuildContext context;
+  final RegistroMetersStore store;
+  const FormRegistroContadoresFinal(
+      {super.key, required this.context, required this.store});
 
   @override
   State<FormRegistroContadoresFinal> createState() =>
-      _FormRegistroContadoresFinal();
+      _FormRegistroContadoresResumen();
 }
 
-class _FormRegistroContadoresFinal extends State<FormRegistroContadoresFinal> {
+class _FormRegistroContadoresResumen
+    extends State<FormRegistroContadoresFinal> {
   late MeterService service;
 
   @override
@@ -23,23 +26,26 @@ class _FormRegistroContadoresFinal extends State<FormRegistroContadoresFinal> {
     super.initState();
   }
 
-  void _mostrarDialogoConfirmacion() {
+/*   void _mostrarDialogoConfirmacion() {
     showDialog(
       context: context,
       builder: (context) => ConfirmationDialog(
         title: 'Confirmación',
         text: '¿Está seguro de guardar el registro de contadores?',
-        onConfirm: () {
-          service.guardarMetersRegistro(context);
-          Navigator.of(context)
-            ..pop()
-            ..pop();
+        onConfirm: () async {
+          await service.guardarMetersRegistro(context);
         },
       ),
-    );
-  }
+    ).whenComplete(() {
+      if (mounted) {
+        Navigator.of(context)
+          ..pop()
+          ..pop();
+      }
+    });
+  } */
 
-  void _mostrarDialogoCancelar(store) {
+  void _mostrarDialogoCancelar() {
     showDialog(
       context: context,
       builder: (context) => ConfirmationDialog(
@@ -48,7 +54,7 @@ class _FormRegistroContadoresFinal extends State<FormRegistroContadoresFinal> {
         text: '¿Está seguro de cancelar el registro de contadores?\n'
             'Se perderán todos los datos registrados',
         onConfirm: () {
-          store.limpiarRegistros();
+          RegistroMetersStore.instance.limpiarRegistros();
           Navigator.of(context)
             ..pop()
             ..pop();
@@ -59,7 +65,6 @@ class _FormRegistroContadoresFinal extends State<FormRegistroContadoresFinal> {
 
   @override
   Widget build(BuildContext context) {
-    final store = context.watch<RegistroMetersStore>();
     final theme = ThemeController.instance;
     return Scaffold(
       appBar: AppBar(
@@ -78,7 +83,7 @@ class _FormRegistroContadoresFinal extends State<FormRegistroContadoresFinal> {
             ),
             IconButton(
               icon: const Icon(Icons.close),
-              onPressed: () => _mostrarDialogoCancelar(store),
+              onPressed: () => _mostrarDialogoCancelar(),
             ),
           ],
         ),
@@ -86,9 +91,9 @@ class _FormRegistroContadoresFinal extends State<FormRegistroContadoresFinal> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView.builder(
-          itemCount: store.registros.length,
+          itemCount: widget.store.registros.length,
           itemBuilder: (context, index) {
-            final registro = store.registros[index];
+            final registro = widget.store.registros[index];
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -204,13 +209,13 @@ class _FormRegistroContadoresFinal extends State<FormRegistroContadoresFinal> {
                 textColor: theme.black,
                 outlined: true,
                 onTap: () {
-                  store.limpiarRegistros();
+                  RegistroMetersStore.instance.limpiarRegistros();
                   Navigator.pop(context);
                 },
                 title: 'Atrás',
               ),
               SimpleButton(
-                onTap: _mostrarDialogoConfirmacion,
+                onTap: () => service.guardarMetersRegistro(context),
                 title: 'Guardar',
               ),
             ],

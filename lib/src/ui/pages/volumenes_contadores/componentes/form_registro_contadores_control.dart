@@ -101,6 +101,16 @@ class _RegistroContadoresState extends State<FormRegistroContadores> {
         }));
 
     context.read<RegistroMetersStore>().guardarRegistro([datosFormulario]);
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FormRegistroContadoresFinal(
+          context: context,
+          store: context.read<RegistroMetersStore>(),
+        ),
+      ),
+    );
   }
 
   @override
@@ -207,13 +217,6 @@ class _RegistroContadoresState extends State<FormRegistroContadores> {
                       }
                     } else {
                       _guardarFormulario();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              const FormRegistroContadoresFinal(),
-                        ),
-                      );
                     }
                   },
                   title: (_currentStep == widget.dispensadores.length - 1
