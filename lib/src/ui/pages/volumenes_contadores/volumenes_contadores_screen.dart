@@ -23,37 +23,61 @@ class _VolumenesContadoresScreenState extends State<VolumenesContadoresScreen> {
   Widget build(BuildContext context) {
     final theme = ThemeController.instance;
     final List<_CardItem> items = [
-      _CardItem(
-        icon: SolarIconsOutline.gasStation,
-        title: 'Volúmenes Tanques',
-        index: 0,
-      ),
-      _CardItem(
-        icon: SolarIconsOutline.bus,
-        title: 'Cantidad Mangueras',
-        index: 1,
-      ),
+      _CardItem(0,
+          icon: SolarIconsOutline.gasStation,
+          title: 'Volúmenes y tanques',
+          color: theme.primary),
+      _CardItem(1,
+          icon: Icons.speed,
+          title: 'Cantidad de mangueras',
+          color: theme.secondary),
     ];
 
     return Scaffold(
       backgroundColor: theme.background,
-      appBar: AppBar(
-        backgroundColor: theme.background,
-        title: const Text('Volúmenes y Contadores'),
-        leading: _selectedIndex != null
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => setState(() {
-                  _selectedIndex = null;
-                }),
-              )
-            : null,
-      ),
+      appBar: _selectedIndex != null
+          ? AppBar(
+              backgroundColor: theme.background,
+              title: const Text(
+                'Volver',
+                style: TextStyle(fontSize: 14),
+              ),
+              leading: _selectedIndex != null
+                  ? IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: () => setState(() {
+                        _selectedIndex = null;
+                      }),
+                    )
+                  : null,
+            )
+          : null,
       body: _selectedIndex == null
           ? Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: items.map((item) {
+              child: Column(children: [
+                const SizedBox(
+                  height: 10,
+                ),
+                Row(
+                  children: [
+                    Icon(Icons.stacked_bar_chart,
+                        color: theme.primary, size: 30),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Volúmenes y contadores',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: theme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 20),
+                ...items.map((
+                  item,
+                ) {
                   return SizedBox(
                     height: 200,
                     child: InkWell(
@@ -74,9 +98,9 @@ class _VolumenesContadoresScreenState extends State<VolumenesContadoresScreen> {
                                 child: Opacity(
                                   opacity: 0.1,
                                   child: Icon(
-                                    Icons.add_circle,
+                                    item.icon,
                                     size: 150,
-                                    color: theme.primary,
+                                    color: item.color,
                                   ),
                                 ),
                               ),
@@ -84,7 +108,7 @@ class _VolumenesContadoresScreenState extends State<VolumenesContadoresScreen> {
                             Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: theme.primary,
+                                color: item.color.withAlpha(35),
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: Column(
@@ -95,8 +119,8 @@ class _VolumenesContadoresScreenState extends State<VolumenesContadoresScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.center,
                                     children: [
-                                      Icon(Icons.local_gas_station,
-                                          color: theme.primary, size: 28),
+                                      Icon(item.icon,
+                                          color: item.color, size: 28),
                                       const SizedBox(width: 10),
                                       Expanded(
                                         child: Text(
@@ -106,7 +130,7 @@ class _VolumenesContadoresScreenState extends State<VolumenesContadoresScreen> {
                                           style: TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.bold,
-                                            color: theme.black,
+                                            color: item.color,
                                           ),
                                         ),
                                       ),
@@ -120,8 +144,8 @@ class _VolumenesContadoresScreenState extends State<VolumenesContadoresScreen> {
                       ),
                     ),
                   );
-                }).toList(),
-              ),
+                })
+              ]),
             )
           : _pages[_selectedIndex!],
     );
@@ -132,6 +156,8 @@ class _CardItem {
   final IconData icon;
   final String title;
   final int index;
+  final Color color;
 
-  _CardItem({required this.icon, required this.title, required this.index});
+  _CardItem(this.index,
+      {required this.icon, required this.title, required this.color});
 }
