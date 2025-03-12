@@ -216,6 +216,92 @@ class ServiceConfig with Middleware, FormController {
     }
   }
 
+  Future<ResponseApi> multipartRequestFilesKeys(
+    String urlRecipe, {
+    String type = 'POST',
+    Map<String, List<File>>? files,
+    Map<String, dynamic>? body,
+    bool image = true,
+    bool withAuthorization = true,
+    int timeout = Constantes.timeout,
+  }) async {
+    if (!(await Connection.hasInternetConnected())) {
+      return ResponseApi(
+        StatusNetwork.noInternet,
+        {'message': 'No tienes conexión a internet'},
+        'No tienes conexión a internet',
+      );
+    }
+
+    final headers = await getHeaders(
+      withAuthorization: withAuthorization,
+      type: HttpTypeRequest.formdata,
+    );
+
+    final Uri uri = Uri.parse('${Constantes.apiUrl}$urlBase$urlRecipe');
+    var request = MultipartRequest(type, uri)..headers.addAll(headers);
+
+    try {
+      // Agregar los campos del body si existen
+      body?.forEach((key, value) {
+        request.fields[key] = jsonEncode(value).toString();
+      });
+
+      // Añadir los archivos por tanque organizados
+      if (files != null && files.isNotEmpty) {
+        for (var key in files.keys) {
+          for (var file in files[key]!) {
+            var multipartFile = MultipartFile(
+              key,
+              file.readAsBytes().asStream(),
+              file.lengthSync(),
+              filename: file.path.split('/').last,
+              contentType: MediaType('image', 'jpg'),
+            );
+            request.files.add(multipartFile);
+            Logger.info(request.files.toString());
+          }
+        }
+      }
+
+      Logger.info('Ejecutando>>>> $uri, body: $body, method: $type');
+
+      final response = await request.send().timeout(Duration(seconds: timeout));
+      final decode = await response.stream.transform(utf8.decoder).join();
+      final json = jsonDecode(decode);
+
+      final status = decodeStatus(response.statusCode);
+      validateResponse(status);
+
+      if (context.mounted) {
+        final responseParsed = parseResponse(json, context, status: status);
+        return ResponseApi(
+          responseParsed['status'],
+          responseParsed['data'],
+          responseParsed['message'],
+          log: json,
+        );
+      } else {
+        throw Exception('Context not found');
+      }
+    } on TimeoutException {
+      return ResponseApi(
+        StatusNetwork.timeout,
+        {'message': 'Tiempo de espera excedido'},
+        'Tiempo de espera excedido',
+      );
+    } catch (e, stacktrace) {
+      Logger.error('Exception fetch >>>> ${e.toString()}');
+      Logger.error('Stacktrace: $stacktrace');
+
+      return ResponseApi(
+        StatusNetwork.exception,
+        {'message': 'Ocurrió un error inesperado', 'log': e.toString()},
+        'Ocurrió un error inesperado',
+      );
+    }
+  }
+
   Future<bool> hasInternetConnection() async {
     return await Connection.hasInternetConnected();
   }

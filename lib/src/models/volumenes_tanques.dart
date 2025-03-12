@@ -116,8 +116,7 @@ class ItemVolumenTanque {
   final String tipoMedicion;
   final int volumen;
   final String idCombustible;
-  final DateTime fechaRegistroApp;
-  final String nombre;
+  final String fechaRegistroApp;
 
   ItemVolumenTanque({
     required this.idTanque,
@@ -126,7 +125,6 @@ class ItemVolumenTanque {
     required this.volumen,
     required this.idCombustible,
     required this.fechaRegistroApp,
-    required this.nombre,
   });
 
   Map<String, dynamic> toMap() {
@@ -136,8 +134,49 @@ class ItemVolumenTanque {
       'idCombustible': idCombustible,
       'tipoMedicion': tipoMedicion,
       'volumen': volumen,
-      'fechaRegistroApp': fechaRegistroApp.toIso8601String(),
+      'fechaRegistroApp': fechaRegistroApp,
+    };
+  }
+}
+
+class ItemResumen {
+  final String? hora;
+  final String? tipoMedicion;
+  final int? volumen;
+  final String? combustible;
+  final String? nombre;
+
+  ItemResumen({
+    this.hora,
+    this.tipoMedicion,
+    this.volumen,
+    this.combustible,
+    this.nombre,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'hora': hora,
+      'combustible': combustible,
+      'tipoMedicion': tipoMedicion,
+      'volumen': volumen,
       'nombre': nombre,
     };
+  }
+
+  ItemResumen copyWith({
+    String? hora,
+    String? tipoMedicion,
+    int? volumen,
+    String? combustible,
+    String? nombre,
+  }) {
+    return ItemResumen(
+      hora: hora ?? this.hora,
+      tipoMedicion: tipoMedicion ?? this.tipoMedicion,
+      volumen: volumen ?? this.volumen,
+      combustible: combustible ?? this.combustible,
+      nombre: nombre ?? this.nombre,
+    );
   }
 }

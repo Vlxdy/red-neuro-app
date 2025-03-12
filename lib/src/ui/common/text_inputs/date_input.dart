@@ -64,6 +64,7 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
       setState(() {
         widget.controller?.text = picked.format(context);
       });
+      widget.onChange?.call(widget.controller!.text);
     }
   }
 
