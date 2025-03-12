@@ -26,7 +26,8 @@ class VolumenesTanquesScreen extends State<VolumenesTanques> {
   //service
   late VolumenesTanquesService service;
   bool isLoading = true;
-  late Future<List<VolumenTanque>> futurevolumenes;
+  late List<VolumenTanque> futurevolumenes;
+  final store = RegistroVolumenesStore.instance;
   @override
   void initState() {
     super.initState();
@@ -35,13 +36,8 @@ class VolumenesTanquesScreen extends State<VolumenesTanques> {
   }
 
   Future<void> _refresh() async {
-    setState(() {
-      isLoading = true;
-    });
-    futurevolumenes = service.fetchData();
-    setState(() {
-      isLoading = false;
-    });
+    service.fetchData();
+    futurevolumenes = store.listaVolumenes;
   }
 
   void _mostrarModal(List<VolumenTanque> volumenes) {
@@ -75,7 +71,6 @@ class VolumenesTanquesScreen extends State<VolumenesTanques> {
   @override
   Widget build(BuildContext context) {
     final theme = ThemeController.instance;
-
     return ScaffoldMessenger(
         key: volumenTanquesMessenger,
         child: RefreshIndicator(
@@ -85,7 +80,7 @@ class VolumenesTanquesScreen extends State<VolumenesTanques> {
               body: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
-                  children: isLoading
+                  children: store.cargando
                       ? [
                           const SkeletonGrid(
                               rows: 5, columns: 1, itemHeight: 25)
@@ -111,10 +106,8 @@ class VolumenesTanquesScreen extends State<VolumenesTanques> {
                               Expanded(
                                 child: ElevatedButton(
                                   onPressed: () async {
-                                    final volumenes =
-                                        await futurevolumenes; // Espera a que se carguen los datos
-                                    _mostrarModal(
-                                        volumenes); // Ahora mandamos los datos ya cargados
+                                    final volumenes = futurevolumenes;
+                                    _mostrarModal(volumenes);
                                   },
                                   child: const Text('+ Registrar volúmenes'),
                                 ),
@@ -125,7 +118,7 @@ class VolumenesTanquesScreen extends State<VolumenesTanques> {
                           Flexible(
                               child: SingleChildScrollView(
                             child: FutureBuilder<List<VolumenTanque>>(
-                              future: futurevolumenes,
+                              future: Future.value(futurevolumenes),
                               builder: (context, snapshot) {
                                 if (snapshot.connectionState ==
                                     ConnectionState.waiting) {
