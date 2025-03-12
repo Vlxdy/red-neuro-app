@@ -23,14 +23,12 @@ class MeterService extends ServiceConfig {
 
   Future<void> getMetersListado() async {
     try {
-      /* LoadingAnimation.instance.state = Overlay.of(context); */
-      /*   LoadingAnimation.instance
-          .showLoading(mensaje: 'Iniciando obtención de meters...'); */
+      DataListadoMetersStore.instance.clearData();
       Logger.info('Obteniendo resgistros ...');
       final idBitadora = BitacoraStore.instance.bitacora.id;
       final response = await fetch('/mobile/$idBitadora/listar-meter',
           type: HttpProtocol.get);
-      /* Logger.success('response -> ${response.data}'); */
+      Logger.success('response -> ${response.data}');
       if (response.status == StatusNetwork.noInternet) {
         showSnackBar(
           metersMessenger,
@@ -69,8 +67,11 @@ class MeterService extends ServiceConfig {
     final idBitadora = BitacoraStore.instance.bitacora.id;
 
     try {
-      LoadingAnimation.instance.state = Overlay.of(context);
-      LoadingAnimation.instance.showLoading(mensaje: 'Guardando registro...');
+      if (context.mounted) {
+        // Solo muestra el loading si el widget está montado
+        LoadingAnimation.instance.state = Overlay.of(context);
+        LoadingAnimation.instance.showLoading(mensaje: 'Guardando registro...');
+      }
       Logger.info('Guardando registro meters: $store');
       Logger.info(store.registros.toString());
 
@@ -84,15 +85,17 @@ class MeterService extends ServiceConfig {
       if (response.status != StatusNetwork.connected) {
         throw Exception(response.message);
       }
-/*       final json = response.data;
-      await BitacoraStore.instance.actualizar(json, fechaRegistro) */
-
       showSnackBar(
         metersMessenger,
         'Registro guardado correctamente',
         state: StatusSnackBar.success,
         colorText: theme.white,
       );
+      if (context.mounted) {
+        Navigator.of(context)
+          ..pop()
+          ..pop();
+      }
 
       LoadingAnimation.instance.hideLoading();
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -100,7 +103,7 @@ class MeterService extends ServiceConfig {
           GoRouter.of(context).goNamed(RouteNames.home);
         }
       });
-      store.limpiarRegistros();
+      RegistroMetersStore.instance.limpiarRegistros();
     } catch (e, stacktrace) {
       Logger.error('Error al guardar registros meters: $e');
       Logger.error('Stacktrace: $stacktrace');

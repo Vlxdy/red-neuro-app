@@ -37,3 +37,6 @@ class DataListadoMetersStore with ChangeNotifier {
     notifyListeners();
   }
 }
+//para el formulario de guardar 
+ //   EstadoRegistroStore.instance.actualizarMeters(_tipoSeleccionado!);
+//  void _guardarFormulario() { //en control meters form
