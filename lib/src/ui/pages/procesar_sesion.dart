@@ -66,12 +66,13 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
     final resultadoPin = await formPinSeguridad(context);
     if (resultadoPin == null || _pinSeguridad.text.isEmpty) return false;
     final pinAlmacenado = await seguridad.apiPinSeguridad;
-    if (pinAlmacenado != _pinSeguridad.text) {
+    final pinIntroducido = _pinSeguridad.text;
+    if (pinAlmacenado != pinIntroducido) {
       showSnackBar(procesarSesionMessenger, 'El pin ingresado es incorrecto.',
           state: StatusSnackBar.error, colorText: Colors.white);
     }
     _pinSeguridad.text = '';
-    return pinAlmacenado == _pinSeguridad.text;
+    return pinAlmacenado == pinIntroducido;
   }
 
   Future<bool> verificarHuella(BuildContext context) async {
