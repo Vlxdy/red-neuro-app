@@ -4,7 +4,23 @@ import 'package:flutter/material.dart';
 
 class RegistroVolumenesStore with ChangeNotifier {
   RegistroVolumenesStore._();
+
   static final RegistroVolumenesStore instance = RegistroVolumenesStore._();
+  List<VolumenTanque> _listaVolumenes = [];
+  bool _cargando = false;
+
+  List<VolumenTanque> get listaVolumenes => _listaVolumenes;
+  bool get cargando => _cargando;
+
+  set setlistaVolumenes(List<VolumenTanque> value) {
+    _listaVolumenes = value;
+    notifyListeners();
+  }
+
+  set cargando(bool val) {
+    _cargando = val;
+    notifyListeners();
+  }
 
   final Map<String, List<String>> _fotos = {};
   late String _tipoMedicion;

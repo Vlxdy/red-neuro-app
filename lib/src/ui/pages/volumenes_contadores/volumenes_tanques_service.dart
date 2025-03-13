@@ -20,16 +20,15 @@ class VolumenesTanquesService extends ServiceConfig {
   final idBitacora = BitacoraStore.instance.bitacora.id;
   final store = RegistroVolumenesStore.instance;
   final keys = RegistroVolumenesStore.instance.fotos.keys;
-  Future<List<VolumenTanque>> fetchData() {
-    return getVolumenesTanques();
+
+  void fetchData() {
+    getVolumenesTanques().whenComplete(() => store.cargando = false);
   }
 
-  Future<List<VolumenTanque>> getVolumenesTanques() async {
+  Future<void> getVolumenesTanques() async {
     try {
       final idEstacionServicio =
           EstacionServicioStore.instance.estacionServicio.id;
-      Logger.info(jsonEncode(idEstacionServicio));
-      Logger.info(jsonEncode(idEstacionServicio));
       final response = await fetch(
           '/mobile/bitacora/$idBitacora/estacion-servicio/$idEstacionServicio/tanques-volumenes',
           type: HttpProtocol.get);
@@ -38,13 +37,13 @@ class VolumenesTanquesService extends ServiceConfig {
         final volumenes = (response.data['list'] as List)
             .map((item) => VolumenTanque.fromJson(item))
             .toList();
+        store.setlistaVolumenes = volumenes;
         showSnackBar(
           volumenTanquesMessenger,
           'Registros obtenidos correctamente',
           state: StatusSnackBar.success,
           colorText: theme.white,
         );
-        return volumenes;
       }
     } catch (e, stacktrace) {
       showSnackBar(
@@ -56,7 +55,6 @@ class VolumenesTanquesService extends ServiceConfig {
       Logger.error('Exception al obtener listado del registro de volumenes $e');
       Logger.error('stacktrace $stacktrace');
     }
-    return [];
   }
 
   Future<void> registrarVolumenes(
