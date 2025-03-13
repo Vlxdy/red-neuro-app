@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:control_ventas_movil/src/config/service_config.dart';
@@ -21,7 +20,7 @@ class VolumenesTanquesService extends ServiceConfig {
   final store = RegistroVolumenesStore.instance;
   final keys = RegistroVolumenesStore.instance.fotos.keys;
 
-  void fetchData() {
+  Future<void> fetchData() async {
     getVolumenesTanques().whenComplete(() => store.cargando = false);
   }
 
