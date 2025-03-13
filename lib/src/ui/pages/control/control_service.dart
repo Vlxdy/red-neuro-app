@@ -31,8 +31,8 @@ class ControlService extends ServiceConfig {
         throw Exception('No hay conexión a internet');
       }
       if (response.status == StatusNetwork.connected) {
-        Logger.info(response.data['estaciones-de-servicios'][0].toString());
-        store.estaciones = (response.data['estaciones-de-servicios'][0] as List)
+        Logger.info(response.data['estacionesDeServicios'][0].toString());
+        store.estaciones = (response.data['estacionesDeServicios'][0] as List)
             .map((item) => EstacionServicio.fromJson(item))
             .toList();
         store.horarios = (response.data['horarios'][0] as List)
