@@ -85,21 +85,14 @@ class RegistroVolumenesStore with ChangeNotifier {
 
   void getTipoMedicionMeters() {
     tiposMedicionTanques = TipoMedicion.values.toList();
-    print(
-        'asasstiposMedicionTanquestiposMedicionTanques $tiposMedicionTanques');
     if (_listaVolumenes.isNotEmpty) {
       var tipoMedicion = _listaVolumenes[0].tipoMedicion.toString();
-      print('tipoMediciontipoMedicion $tipoMedicion');
       if (tipoMedicion == TipoMedicion.inicialJornada.info) {
         tiposMedicionTanques.remove(
             TipoMedicion.values.firstWhere((e) => e.info == tipoMedicion));
-        print(
-            'aatiposMedicionTanquestiposMedicionTanques $tiposMedicionTanques');
       } else if (tipoMedicion == TipoMedicion.finJornada.info) {
         tiposMedicionTanques = [];
       }
     }
-    print(
-        'tiposMedicionTanquestiposMedicionTanquestiposMedicionTanques $tiposMedicionTanques');
   }
 }

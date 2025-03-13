@@ -35,6 +35,7 @@ class RegistroMetersStore with ChangeNotifier {
   }
 
   void getTipoMedicionMeters() {
+    tiposMedicionMeters = TipoMedicion.values.toList();
     if (_dataListadoMeters.volumenes.isNotEmpty) {
       var tipoMedicion = _dataListadoMeters
           .volumenes.first.dispensadores[0].mangueras[0].tipoMedicion
