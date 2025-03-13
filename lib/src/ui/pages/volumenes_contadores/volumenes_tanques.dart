@@ -11,6 +11,7 @@ import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/registro_
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/volumenes_tanques_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 final GlobalKey<ScaffoldMessengerState> volumenTanquesMessenger =
     GlobalKey<ScaffoldMessengerState>();
@@ -25,19 +26,15 @@ class VolumenesTanques extends StatefulWidget {
 class VolumenesTanquesScreen extends State<VolumenesTanques> {
   //service
   late VolumenesTanquesService service;
-  bool isLoading = true;
-  late List<VolumenTanque> futurevolumenes;
-  final store = RegistroVolumenesStore.instance;
   @override
   void initState() {
     super.initState();
     service = VolumenesTanquesService('/mobile', context);
-    _refresh();
+    service.fetchData();
   }
 
   Future<void> _refresh() async {
-    service.fetchData();
-    futurevolumenes = store.listaVolumenes;
+    await service.fetchData();
   }
 
   void _mostrarModal(List<VolumenTanque> volumenes) {
@@ -64,13 +61,15 @@ class VolumenesTanquesScreen extends State<VolumenesTanques> {
       ),
     ).whenComplete(() async {
       RegistroVolumenesStore.instance.limpiarDatos();
-      await _refresh();
+      _refresh();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = ThemeController.instance;
+    final store = context.watch<RegistroVolumenesStore>();
+
     return ScaffoldMessenger(
         key: volumenTanquesMessenger,
         child: RefreshIndicator(
@@ -106,7 +105,7 @@ class VolumenesTanquesScreen extends State<VolumenesTanques> {
                               Expanded(
                                 child: ElevatedButton(
                                   onPressed: () async {
-                                    final volumenes = futurevolumenes;
+                                    final volumenes = store.listaVolumenes;
                                     _mostrarModal(volumenes);
                                   },
                                   child: const Text('+ Registrar volúmenes'),
@@ -118,7 +117,7 @@ class VolumenesTanquesScreen extends State<VolumenesTanques> {
                           Flexible(
                               child: SingleChildScrollView(
                             child: FutureBuilder<List<VolumenTanque>>(
-                              future: Future.value(futurevolumenes),
+                              future: Future.value(store.listaVolumenes),
                               builder: (context, snapshot) {
                                 if (snapshot.connectionState ==
                                     ConnectionState.waiting) {
