@@ -26,6 +26,7 @@ class MetersManguerasScreen extends StatefulWidget {
 class _MetersManguerasScreen extends State<MetersManguerasScreen> {
   late MeterService service;
   bool isLoading = true;
+  late List<TipoMedicion> listaMeters;
 
   @override
   void initState() {
@@ -35,6 +36,7 @@ class _MetersManguerasScreen extends State<MetersManguerasScreen> {
       setState(() {
         isLoading = false;
       });
+      listaMeters = RegistroMetersStore.instance.getTipoMedicionMeters();
     });
   }
 
@@ -44,6 +46,7 @@ class _MetersManguerasScreen extends State<MetersManguerasScreen> {
     });
     service = MeterService('', context);
     await service.getMetersListado();
+    listaMeters = RegistroMetersStore.instance.getTipoMedicionMeters();
     setState(() {
       isLoading = false;
     });
@@ -56,8 +59,6 @@ class _MetersManguerasScreen extends State<MetersManguerasScreen> {
     List<Combustible> listaCombustibles =
         CombustiblesStore.instance.combustibles;
 
-    List<TipoMedicion> tiposMedicion = TipoMedicion.values;
-
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -69,7 +70,7 @@ class _MetersManguerasScreen extends State<MetersManguerasScreen> {
           titulo: "Registro de contadores",
           descripcion:
               "Registrarás el valor de cada meter de manguera de los dispensadores de la EESS",
-          tipoMedicion: tiposMedicion,
+          tipoMedicion: listaMeters,
           listaCombustibles: listaCombustibles,
           dispensadores: (estacionServicio.dispensadores ?? [])
               .map((d) => Dispensador(
@@ -98,8 +99,7 @@ class _MetersManguerasScreen extends State<MetersManguerasScreen> {
   Widget build(BuildContext context) {
     final theme = ThemeController.instance;
     final futureMeters =
-        Future.value(DataListadoMetersStore.instance.dataListadoMeters);
-
+        Future.value(RegistroMetersStore.instance.dataListadoMeters);
     if (isLoading) {
       return const SkeletonGrid(rows: 5, columns: 1, itemHeight: 25);
     }
@@ -129,33 +129,14 @@ class _MetersManguerasScreen extends State<MetersManguerasScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    FutureBuilder<DataListadoMeters>(
-                      future: futureMeters,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const SizedBox.shrink();
-                        }
-
-                        final data = snapshot.data?.volumenes ?? [];
-                        if (data.isEmpty ||
-                            data[0]
-                                    .dispensadores[0]
-                                    .mangueras[0]
-                                    .tipoMedicion !=
-                                TipoMedicion.finJornada.info) {
-                          return SimpleButton(
-                            title: 'Registrar contadores',
-                            preffixicon: Icons.add,
-                            background: theme.primary,
-                            textColor: theme.white,
-                            onTap: () => _showRegistroContadoresModal(),
-                          );
-                        }
-
-                        return const SizedBox.shrink();
-                      },
-                    ),
+                    if (listaMeters.isNotEmpty)
+                      SimpleButton(
+                        title: 'Registrar contadores',
+                        preffixicon: Icons.add,
+                        background: theme.primary,
+                        textColor: theme.white,
+                        onTap: () => _showRegistroContadoresModal(),
+                      ),
                     const SizedBox(height: 10),
                     Expanded(
                       child: FutureBuilder<DataListadoMeters>(
