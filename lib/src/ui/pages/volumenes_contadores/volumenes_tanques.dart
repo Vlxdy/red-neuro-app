@@ -1,9 +1,9 @@
 import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/constants/enums.dart';
 import 'package:control_ventas_movil/src/models/combustible.dart';
 import 'package:control_ventas_movil/src/models/volumenes_tanques.dart';
 import 'package:control_ventas_movil/src/plugins/estaciones/combustibles_store.dart';
 import 'package:control_ventas_movil/src/plugins/estaciones/estacion_servicio.dart';
+import 'package:control_ventas_movil/src/ui/common/buttons/simple_button.dart';
 import 'package:control_ventas_movil/src/ui/common/components/skeleton.dart';
 import 'package:control_ventas_movil/src/ui/common/customdatatable/custom_datatable.dart';
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/componentes/form_registro_volumenes_tanques.dart';
@@ -42,8 +42,6 @@ class VolumenesTanquesScreen extends State<VolumenesTanques> {
     List<Combustible> listaCombustibles =
         CombustiblesStore.instance.combustibles;
 
-    List<TipoMedicion> tiposMedicion = TipoMedicion.values;
-
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -55,7 +53,7 @@ class VolumenesTanquesScreen extends State<VolumenesTanques> {
             titulo: "Registro de contadores",
             descripcion:
                 "Registrarás el volumen de combustible em los tanques de la EESS",
-            tiposMedicion: tiposMedicion,
+            tiposMedicion: RegistroVolumenesStore.instance.tiposMedicionTanques,
             listaCombustibles: listaCombustibles,
             tanques: tanques!),
       ),
@@ -100,19 +98,19 @@ class VolumenesTanquesScreen extends State<VolumenesTanques> {
                               ),
                             ],
                           ),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: ElevatedButton(
-                                  onPressed: () async {
-                                    final volumenes = store.listaVolumenes;
-                                    _mostrarModal(volumenes);
-                                  },
-                                  child: const Text('+ Registrar volúmenes'),
-                                ),
-                              ),
-                            ],
-                          ),
+                          const SizedBox(height: 16),
+                          if (RegistroVolumenesStore
+                              .instance.tiposMedicionTanques.isNotEmpty)
+                            SimpleButton(
+                              title: 'Registrar volúmenes',
+                              preffixicon: Icons.add,
+                              background: theme.primary,
+                              textColor: theme.white,
+                              onTap: () async {
+                                final volumenes = store.listaVolumenes;
+                                _mostrarModal(volumenes);
+                              },
+                            ),
                           const SizedBox(height: 10),
                           Flexible(
                               child: SingleChildScrollView(
@@ -134,6 +132,7 @@ class VolumenesTanquesScreen extends State<VolumenesTanques> {
 
                                 final volumenes = snapshot.data!;
                                 return CustomDesktopDataTable(
+                                  columnSpacing: 18,
                                   columnas: [
                                     CriterioOrdenType(nombre: 'Hora'),
                                     CriterioOrdenType(nombre: 'Tanque'),

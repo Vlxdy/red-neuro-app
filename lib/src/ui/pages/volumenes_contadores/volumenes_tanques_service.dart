@@ -44,6 +44,7 @@ class VolumenesTanquesService extends ServiceConfig {
           colorText: theme.white,
         );
       }
+      RegistroVolumenesStore.instance.getTipoMedicionMeters();
     } catch (e, stacktrace) {
       showSnackBar(
         volumenTanquesMessenger,

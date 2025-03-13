@@ -15,7 +15,7 @@ import 'package:go_router/go_router.dart';
 class MeterService extends ServiceConfig {
   MeterService(super.urlBase, super.context);
   final theme = ThemeController.instance;
-  final store = DataListadoMetersStore.instance;
+  final store = RegistroMetersStore.instance;
 
   void fetchData() {
     getMetersListado();
@@ -23,7 +23,6 @@ class MeterService extends ServiceConfig {
 
   Future<void> getMetersListado() async {
     try {
-      DataListadoMetersStore.instance.clearData();
       Logger.info('Obteniendo resgistros ...');
       final idBitadora = BitacoraStore.instance.bitacora.id;
       final response = await fetch('/mobile/$idBitadora/listar-meter',
@@ -48,6 +47,7 @@ class MeterService extends ServiceConfig {
         state: StatusSnackBar.success,
         colorText: theme.white,
       );
+      RegistroMetersStore.instance.getTipoMedicionMeters();
     } catch (e, stacktrace) {
       Logger.error('Exception al obtener listado del registro de meters $e');
       Logger.error('stacktrace $stacktrace');

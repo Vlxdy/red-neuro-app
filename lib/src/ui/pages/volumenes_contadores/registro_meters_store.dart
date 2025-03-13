@@ -1,9 +1,11 @@
+import 'package:control_ventas_movil/src/constants/enums.dart';
 import 'package:flutter/material.dart';
 import 'package:control_ventas_movil/src/models/registro_meters.dart';
 
 class RegistroMetersStore with ChangeNotifier {
   RegistroMetersStore._();
   static final instance = RegistroMetersStore._();
+  late List<TipoMedicion> tiposMedicionMeters = TipoMedicion.values.toList();
 
   List<RegistroMeterStore> _registrosMeters = [];
 
@@ -18,11 +20,6 @@ class RegistroMetersStore with ChangeNotifier {
     _registrosMeters = [];
     notifyListeners();
   }
-}
-
-class DataListadoMetersStore with ChangeNotifier {
-  DataListadoMetersStore._();
-  static final instance = DataListadoMetersStore._();
 
   DataListadoMeters _dataListadoMeters = DataListadoMeters(volumenes: []);
   DataListadoMeters get dataListadoMeters => _dataListadoMeters;
@@ -32,9 +29,24 @@ class DataListadoMetersStore with ChangeNotifier {
     notifyListeners();
   }
 
-  void clearData() {
+  void limpiarDataListado() {
     _dataListadoMeters = DataListadoMeters(volumenes: []);
     notifyListeners();
+  }
+
+  void getTipoMedicionMeters() {
+    tiposMedicionMeters = TipoMedicion.values.toList();
+    if (_dataListadoMeters.volumenes.isNotEmpty) {
+      var tipoMedicion = _dataListadoMeters
+          .volumenes.first.dispensadores[0].mangueras[0].tipoMedicion
+          .toString();
+      if (tipoMedicion == TipoMedicion.inicialJornada.info) {
+        tiposMedicionMeters.remove(
+            TipoMedicion.values.firstWhere((e) => e.info == tipoMedicion));
+      } else if (tipoMedicion == TipoMedicion.finJornada.info) {
+        tiposMedicionMeters = [];
+      }
+    }
   }
 }
 //para el formulario de guardar 

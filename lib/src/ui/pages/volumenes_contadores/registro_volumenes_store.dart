@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:control_ventas_movil/src/constants/enums.dart';
 import 'package:control_ventas_movil/src/models/volumenes_tanques.dart';
 import 'package:flutter/material.dart';
 
@@ -8,7 +9,7 @@ class RegistroVolumenesStore with ChangeNotifier {
   static final RegistroVolumenesStore instance = RegistroVolumenesStore._();
   List<VolumenTanque> _listaVolumenes = [];
   bool _cargando = false;
-
+  late List<TipoMedicion> tiposMedicionTanques = TipoMedicion.values.toList();
   List<VolumenTanque> get listaVolumenes => _listaVolumenes;
   bool get cargando => _cargando;
 
@@ -80,5 +81,18 @@ class RegistroVolumenesStore with ChangeNotifier {
 
   ItemResumen? obtenerDatos(String index) {
     return _datos.containsKey(index) ? _datos[index] : null;
+  }
+
+  void getTipoMedicionMeters() {
+    tiposMedicionTanques = TipoMedicion.values.toList();
+    if (_listaVolumenes.isNotEmpty) {
+      var tipoMedicion = _listaVolumenes[0].tipoMedicion.toString();
+      if (tipoMedicion == TipoMedicion.inicialJornada.info) {
+        tiposMedicionTanques.remove(
+            TipoMedicion.values.firstWhere((e) => e.info == tipoMedicion));
+      } else if (tipoMedicion == TipoMedicion.finJornada.info) {
+        tiposMedicionTanques = [];
+      }
+    }
   }
 }
