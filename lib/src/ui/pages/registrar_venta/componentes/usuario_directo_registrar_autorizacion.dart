@@ -136,8 +136,7 @@ class _UsuarioDirectoScreenState extends State<UsuarioDirectoScreen2> {
                 TextButton.icon(
                   onPressed: () => Navigator.pop(context),
                   icon: Icon(Icons.cancel, color: theme.error),
-                  label: Text('Cancelar',
-                      style: TextStyle(color: theme.error)),
+                  label: Text('Cancelar', style: TextStyle(color: theme.error)),
                 ),
                 ElevatedButton.icon(
                   onPressed: () {
@@ -189,7 +188,7 @@ class _UsuarioDirectoScreenState extends State<UsuarioDirectoScreen2> {
         title: Row(
           children: [
             Icon(Icons.local_gas_station, color: theme.secondary, size: 28),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             Expanded(
               child: Text(
                 'Venta de combustible a\nUsuarios Directos',
@@ -205,8 +204,6 @@ class _UsuarioDirectoScreenState extends State<UsuarioDirectoScreen2> {
           ],
         ),
       ),
-
-
       body: SafeArea(
         child: Column(
           children: [
@@ -274,8 +271,8 @@ class _UsuarioDirectoScreenState extends State<UsuarioDirectoScreen2> {
                             margin: const EdgeInsets.only(top: 8),
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color:
-                                  theme.primary.withOpacity(0.05), // Fondo claro
+                              color: theme.primary
+                                  .withOpacity(0.05), // Fondo claro
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Row(
@@ -300,7 +297,7 @@ class _UsuarioDirectoScreenState extends State<UsuarioDirectoScreen2> {
                                               .containsKey('observacion') &&
                                           autorizacion['observacion']!
                                               .isNotEmpty) ...[
-                                         Text(
+                                        Text(
                                           'Observación',
                                           style: TextStyle(
                                               fontSize: 14,
@@ -310,16 +307,14 @@ class _UsuarioDirectoScreenState extends State<UsuarioDirectoScreen2> {
                                         Text(
                                           autorizacion['observacion']!,
                                           style: TextStyle(
-                                              fontSize: 12,
-                                              color: theme.black),
+                                              fontSize: 12, color: theme.black),
                                         ),
                                       ],
                                     ],
                                   ),
                                 ),
                                 IconButton(
-                                  icon: Icon(Icons.delete,
-                                      color: theme.grey),
+                                  icon: Icon(Icons.delete, color: theme.grey),
                                   onPressed: () => _eliminarAutorizacion(index),
                                 ),
                               ],
@@ -385,9 +380,7 @@ class _UsuarioDirectoScreenState extends State<UsuarioDirectoScreen2> {
           Text(
             '$label: ',
             style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: theme.black),
+                fontSize: 14, fontWeight: FontWeight.bold, color: theme.black),
           ),
           Text(
             value,
