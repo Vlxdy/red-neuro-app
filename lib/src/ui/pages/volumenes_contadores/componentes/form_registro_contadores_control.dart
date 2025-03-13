@@ -232,8 +232,7 @@ class _RegistroContadoresState extends State<FormRegistroContadores> {
   AppBar _buildAppBar(ThemeController theme) {
     final store = context.watch<RegistroMetersStore>();
     return AppBar(
-      automaticallyImplyLeading:
-          false, // Oculta la flecha de retroceso predeterminada
+      automaticallyImplyLeading: false,
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -247,10 +246,10 @@ class _RegistroContadoresState extends State<FormRegistroContadores> {
             ],
           ),
           IconButton(
-            icon: const Icon(Icons.close), // Ícono "X" para cerrar el modal
+            icon: const Icon(Icons.close),
             onPressed: () {
               store.limpiarRegistros();
-              Navigator.pop(context); // Cierra el modal
+              Navigator.pop(context);
             },
           ),
         ],

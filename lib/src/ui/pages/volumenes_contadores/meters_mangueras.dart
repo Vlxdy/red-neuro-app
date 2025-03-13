@@ -26,7 +26,6 @@ class MetersManguerasScreen extends StatefulWidget {
 class _MetersManguerasScreen extends State<MetersManguerasScreen> {
   late MeterService service;
   bool isLoading = true;
-  late List<TipoMedicion> listaMeters;
 
   @override
   void initState() {
@@ -36,7 +35,6 @@ class _MetersManguerasScreen extends State<MetersManguerasScreen> {
       setState(() {
         isLoading = false;
       });
-      listaMeters = RegistroMetersStore.instance.getTipoMedicionMeters();
     });
   }
 
@@ -46,7 +44,6 @@ class _MetersManguerasScreen extends State<MetersManguerasScreen> {
     });
     service = MeterService('', context);
     await service.getMetersListado();
-    listaMeters = RegistroMetersStore.instance.getTipoMedicionMeters();
     setState(() {
       isLoading = false;
     });
@@ -70,7 +67,7 @@ class _MetersManguerasScreen extends State<MetersManguerasScreen> {
           titulo: "Registro de contadores",
           descripcion:
               "Registrarás el valor de cada meter de manguera de los dispensadores de la EESS",
-          tipoMedicion: listaMeters,
+          tipoMedicion: RegistroMetersStore.instance.tiposMedicionMeters,
           listaCombustibles: listaCombustibles,
           dispensadores: (estacionServicio.dispensadores ?? [])
               .map((d) => Dispensador(
@@ -129,7 +126,8 @@ class _MetersManguerasScreen extends State<MetersManguerasScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    if (listaMeters.isNotEmpty)
+                    if (RegistroMetersStore
+                        .instance.tiposMedicionMeters.isNotEmpty)
                       SimpleButton(
                         title: 'Registrar contadores',
                         preffixicon: Icons.add,

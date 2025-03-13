@@ -47,6 +47,7 @@ class MeterService extends ServiceConfig {
         state: StatusSnackBar.success,
         colorText: theme.white,
       );
+      RegistroMetersStore.instance.getTipoMedicionMeters();
     } catch (e, stacktrace) {
       Logger.error('Exception al obtener listado del registro de meters $e');
       Logger.error('stacktrace $stacktrace');

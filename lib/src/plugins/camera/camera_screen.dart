@@ -55,13 +55,14 @@ class CameraScreenState extends State<CameraScreen> {
 
   void _initCamera(CameraDescription? cameraDescription) async {
     try {
-      _controller = CameraController(cameraDescription!, ResolutionPreset.veryHigh,
+      _controller = CameraController(
+          cameraDescription!, ResolutionPreset.veryHigh,
           enableAudio: false, imageFormatGroup: ImageFormatGroup.jpeg);
       _controller.addListener(() {
         if (mounted) setState(() {});
         if (_controller.value.hasError) {
           throw ErrorDescription(
-            'Error Camera: ${_controller.value.errorDescription}');
+              'Error Camera: ${_controller.value.errorDescription}');
         }
       });
       _initializeControllerFuture = _controller.initialize().then((_) async {
@@ -102,9 +103,9 @@ class CameraScreenState extends State<CameraScreen> {
         return <CameraItem>[];
       }
       return cameras
-        .where((camera) => camera.lensDirection == CameraLensDirection.back)
-        .map((camera) => CameraItem(camera, false))
-        .toList();
+          .where((camera) => camera.lensDirection == CameraLensDirection.back)
+          .map((camera) => CameraItem(camera, false))
+          .toList();
     }).then((cameras) {
       if (cameras.isEmpty) {
         setState(() {
@@ -125,7 +126,8 @@ class CameraScreenState extends State<CameraScreen> {
     _isTakingPicture = true;
     final XFile? xFileImage = await _takePicture();
     if (xFileImage != null) {
-      File newCameraImage = await cameraService.processImage(xFileImage, screenInfo);
+      File newCameraImage =
+          await cameraService.processImage(xFileImage, screenInfo);
       setState(() {
         _photo = newCameraImage;
       });
@@ -153,39 +155,40 @@ class CameraScreenState extends State<CameraScreen> {
   Widget iconCameras(CameraScreenStore cameraStore) {
     if (backCameras.isEmpty || cameraStore.cargando) return const SizedBox();
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: backCameras.mapIndexed((index, camera) => IconButton(
-        padding: const EdgeInsets.only(bottom: 15),
-        constraints: const BoxConstraints(),
-        iconSize: 50,
-        icon: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              backCameras[index].camera!.name,
-              style: TextStyle(
-                fontSize: 10,
-                color: backCameras[index].active
-                  ? ThemeController.instance.neutral
-                  : ThemeController.instance.white,
-              ),
-            ),
-            Icon(
-              CupertinoIcons.camera_circle,
-              color: backCameras[index].active
-                ? ThemeController.instance.neutral
-                : ThemeController.instance.white,
-            ),
-          ],
-        ),
-        onPressed: () {
-          setCameraActive(index);
-          Logger.info('camera button pressed: $index');
-          _initCamera(backCameras[index].camera);
-        },
-      )).toList()
-    );
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: backCameras
+            .mapIndexed((index, camera) => IconButton(
+                  padding: const EdgeInsets.only(bottom: 15),
+                  constraints: const BoxConstraints(),
+                  iconSize: 50,
+                  icon: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        backCameras[index].camera!.name,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: backCameras[index].active
+                              ? ThemeController.instance.neutral
+                              : ThemeController.instance.white,
+                        ),
+                      ),
+                      Icon(
+                        CupertinoIcons.camera_circle,
+                        color: backCameras[index].active
+                            ? ThemeController.instance.neutral
+                            : ThemeController.instance.white,
+                      ),
+                    ],
+                  ),
+                  onPressed: () {
+                    setCameraActive(index);
+                    Logger.info('camera button pressed: $index');
+                    _initCamera(backCameras[index].camera);
+                  },
+                ))
+            .toList());
   }
 
   Widget showPosition(CameraScreenStore cameraStore) {
@@ -199,32 +202,34 @@ class CameraScreenState extends State<CameraScreen> {
       ];
     } else {
       children = cameraStore.posicion == null
-        ? [
-            Text(
-              'No se pudo obtener la posición!',
-              style: getStyle(bold: true),
-            )
-          ]
-        : [
-            Row(
-              children: [
-                Text('Latitud: ', style: getStyle(underline: true, bold: true)),
-                Text(
-                  '${cameraStore.posicion?.latitude ?? '---'}',
-                  style: getStyle(),
-                )
-              ],
-            ),
-            Row(
-              children: [
-                Text('Longitud: ', style: getStyle(underline: true, bold: true)),
-                Text(
-                  '${cameraStore.posicion?.longitude ?? '---'}',
-                  style: getStyle(),
-                )
-              ],
-            )
-          ];
+          ? [
+              Text(
+                'No se pudo obtener la posición!',
+                style: getStyle(bold: true),
+              )
+            ]
+          : [
+              Row(
+                children: [
+                  Text('Latitud: ',
+                      style: getStyle(underline: true, bold: true)),
+                  Text(
+                    '${cameraStore.posicion?.latitude ?? '---'}',
+                    style: getStyle(),
+                  )
+                ],
+              ),
+              Row(
+                children: [
+                  Text('Longitud: ',
+                      style: getStyle(underline: true, bold: true)),
+                  Text(
+                    '${cameraStore.posicion?.longitude ?? '---'}',
+                    style: getStyle(),
+                  )
+                ],
+              )
+            ];
     }
     children.insert(0, const SizedBox(height: 10));
     return Align(
@@ -236,26 +241,21 @@ class CameraScreenState extends State<CameraScreen> {
   }
 
   TextStyle getStyle({bool underline = false, bool bold = false}) => TextStyle(
-    fontFamily: 'OpenSans',
-    color: Colors.white
-        .withOpacity(!_isInitialized ? 0.5 : 1),
-    fontSize: 16,
-    fontWeight: bold ? FontWeight.bold : FontWeight.normal,
-    decoration: underline
-      ? TextDecoration.underline
-      : TextDecoration.none
-  );
+      fontFamily: 'OpenSans',
+      color: Colors.white.withOpacity(!_isInitialized ? 0.5 : 1),
+      fontSize: 16,
+      fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+      decoration: underline ? TextDecoration.underline : TextDecoration.none);
 
   List<Widget> showShutter(CameraScreenStore cameraStore, Size size) {
     double widgetSize = size.height * 0.13;
     if (cameraStore.cargando) {
       return [
         SizedBox(
-          height: widgetSize,
-          width: widgetSize,
-          child: CircularProgressIndicator(
-            color: Colors.white.withOpacity(!_isInitialized ? 0.5 : 1)
-          ))
+            height: widgetSize,
+            width: widgetSize,
+            child: CircularProgressIndicator(
+                color: Colors.white.withOpacity(!_isInitialized ? 0.5 : 1)))
       ];
     }
     return [
@@ -265,8 +265,7 @@ class CameraScreenState extends State<CameraScreen> {
         decoration: BoxDecoration(
             shape: BoxShape.circle,
             border: Border.all(
-                color: Colors.white.withOpacity(
-                    !_isInitialized ? 0.5 : 1),
+                color: Colors.white.withOpacity(!_isInitialized ? 0.5 : 1),
                 width: 3)),
       ),
       Container(
@@ -275,8 +274,7 @@ class CameraScreenState extends State<CameraScreen> {
         margin: EdgeInsets.all(size.height * 0.015),
         decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.white.withOpacity(
-                !_isInitialized ? 0.5 : 1)),
+            color: Colors.white.withOpacity(!_isInitialized ? 0.5 : 1)),
       ),
     ];
   }
@@ -285,10 +283,8 @@ class CameraScreenState extends State<CameraScreen> {
   Widget build(BuildContext context) {
     final theme = ThemeController.instance;
     final size = MediaQuery.of(context).size;
-    final screenInfo = ScreenInfo(
-      MediaQuery.of(context).devicePixelRatio,
-      size
-    );
+    final screenInfo =
+        ScreenInfo(MediaQuery.of(context).devicePixelRatio, size);
     final cameraStore = context.watch<CameraScreenStore>();
 
     if (_cameraNotAvailable) {
@@ -349,33 +345,34 @@ class CameraScreenState extends State<CameraScreen> {
               Stack(
                 children: [
                   Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Container(
-                      margin: EdgeInsets.only(bottom: size.height * 0.05),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: <Widget>[
-                          GestureDetector(
-                              onTap: () => _isInitialized && !cameraStore.cargando
-                                  ? _onTakePictureButtonPress(screenInfo)
-                                  : null,
-                              child: Stack(
-                                children: showShutter(cameraStore, size),
-                              )),
-                          SizedBox(height: size.height * 0.01),
-                          !cameraStore.cargando
-                            ? Text('Tomar foto', style: getStyle())
-                            : const SizedBox(),
-                        ],
-                      ),
-                    )),
+                      alignment: Alignment.bottomCenter,
+                      child: Container(
+                        margin: EdgeInsets.only(bottom: size.height * 0.05),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: <Widget>[
+                            GestureDetector(
+                                onTap: () =>
+                                    _isInitialized && !cameraStore.cargando
+                                        ? _onTakePictureButtonPress(screenInfo)
+                                        : null,
+                                child: Stack(
+                                  children: showShutter(cameraStore, size),
+                                )),
+                            SizedBox(height: size.height * 0.01),
+                            !cameraStore.cargando
+                                ? Text('Tomar foto', style: getStyle())
+                                : const SizedBox(),
+                          ],
+                        ),
+                      )),
                   backCameras.length > 1
-                    ? Align(
-                        alignment: Alignment.centerRight,
-                        child: iconCameras(cameraStore),
-                      )
-                    : const SizedBox(),
+                      ? Align(
+                          alignment: Alignment.centerRight,
+                          child: iconCameras(cameraStore),
+                        )
+                      : const SizedBox(),
                   showPosition(cameraStore)
                 ],
               ),

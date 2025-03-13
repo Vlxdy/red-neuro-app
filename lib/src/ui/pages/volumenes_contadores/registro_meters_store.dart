@@ -5,7 +5,7 @@ import 'package:control_ventas_movil/src/models/registro_meters.dart';
 class RegistroMetersStore with ChangeNotifier {
   RegistroMetersStore._();
   static final instance = RegistroMetersStore._();
-  List<TipoMedicion> tiposMedicionMeters = TipoMedicion.values.toList();
+  late List<TipoMedicion> tiposMedicionMeters = TipoMedicion.values.toList();
 
   List<RegistroMeterStore> _registrosMeters = [];
 
@@ -34,7 +34,7 @@ class RegistroMetersStore with ChangeNotifier {
     notifyListeners();
   }
 
-  List<TipoMedicion> getTipoMedicionMeters() {
+  void getTipoMedicionMeters() {
     if (_dataListadoMeters.volumenes.isNotEmpty) {
       var tipoMedicion = _dataListadoMeters
           .volumenes.first.dispensadores[0].mangueras[0].tipoMedicion
@@ -43,11 +43,9 @@ class RegistroMetersStore with ChangeNotifier {
         tiposMedicionMeters.remove(
             TipoMedicion.values.firstWhere((e) => e.info == tipoMedicion));
       } else if (tipoMedicion == TipoMedicion.finJornada.info) {
-        return [];
+        tiposMedicionMeters = [];
       }
     }
-
-    return tiposMedicionMeters;
   }
 }
 //para el formulario de guardar 

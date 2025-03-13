@@ -6,6 +6,7 @@ import 'package:control_ventas_movil/src/models/combustible.dart';
 import 'package:control_ventas_movil/src/models/estacion_servicio.dart';
 import 'package:control_ventas_movil/src/models/registro_meters.dart';
 import 'package:control_ventas_movil/src/models/volumenes_tanques.dart';
+import 'package:control_ventas_movil/src/ui/common/buttons/simple_button.dart';
 import 'package:control_ventas_movil/src/ui/common/drop_down/drop_down.dart';
 import 'package:control_ventas_movil/src/ui/common/form_stepper/form_stepper.dart';
 import 'package:control_ventas_movil/src/ui/common/selector_image/multiple_campo_fotografia.dart';
@@ -15,6 +16,7 @@ import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/registro_
 import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/volumenes_tanques_service.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 class FormVolumenesTanques extends StatefulWidget {
@@ -128,239 +130,259 @@ class _FormVolumenesTanques extends State<FormVolumenesTanques> {
     final store = context.watch<RegistroVolumenesStore>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Registro de Medición")),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: _finalizado
-              ? ResumenWidget(
-                  formulario: datosFormulario,
-                  descripcion: widget.descripcion,
-                )
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(widget.descripcion,
-                        style: const TextStyle(fontSize: 16)),
-                    const SizedBox(height: 10),
-                    DropDown(
-                      width: MediaQuery.of(context).size.width,
-                      label: 'Tipo de medición',
-                      requiredData: true,
-                      dropKey: dropKey,
-                      initialValue: _tipoSeleccionado,
-                      items: widget.tiposMedicion.map((tipo) {
-                        return {
-                          'id': tipo.info,
-                          'label': tipo.info,
-                        };
-                      }).toList(),
-                      onChange: (value) {
-                        setState(() {
-                          _tipoSeleccionado = value;
-                        });
-                        store.setTipoMedicion = value!;
-                      },
-                      validate: (value, alias) => service
-                          .validateData(context, value, alias, required: true),
-                    ),
-                    Expanded(
-                      child: Column(
-                        children: [
-                          if (widget.tanques.length > 1) ...[
-                            SizedBox(
-                                height: 72,
-                                child: SingleChildScrollView(
-                                    scrollDirection: Axis.horizontal,
-                                    child: FormStepper(
-                                      longitud: widget.tanques.length,
-                                      currentStep: _currentStep,
-                                      activeColor: theme.secondary,
-                                    ))),
-                          ] else
-                            const SizedBox(height: 10),
-                          Expanded(
-                            child: SingleChildScrollView(
-                              child: VolumenTanqueWidget(
-                                listaCombustibles: widget.listaCombustibles,
-                                combustibleController:
-                                    combustibleControllers[_currentStep],
-                                horaController: horaControllers[_currentStep],
-                                volumenController:
-                                    volumenControllers[_currentStep],
-                                dropKey: dropKeys[_currentStep],
-                                tanque: widget.tanques[_currentStep],
-                                onChange: (String? value) {
-                                  setState(() {
-                                    combustibleControllers[_currentStep].text =
-                                        value ?? '';
-                                  });
-                                },
-                                step: _currentStep,
-                                tieneFotos: _tieneFotos,
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.menu_book, color: theme.secondary),
+                  const SizedBox(width: 8),
+                  Text("Registro de Medición",
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, color: theme.secondary)),
+                ],
+              ),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: _finalizado
+                ? ResumenWidget(
+                    formulario: datosFormulario,
+                    descripcion: widget.descripcion,
+                  )
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(widget.descripcion,
+                          style: const TextStyle(fontSize: 16)),
+                      const SizedBox(height: 10),
+                      DropDown(
+                        width: MediaQuery.of(context).size.width,
+                        label: 'Tipo de medición',
+                        requiredData: true,
+                        dropKey: dropKey,
+                        initialValue: _tipoSeleccionado,
+                        items: widget.tiposMedicion.map((tipo) {
+                          return {
+                            'id': tipo.info,
+                            'label': tipo.info,
+                          };
+                        }).toList(),
+                        onChange: (value) {
+                          setState(() {
+                            _tipoSeleccionado = value;
+                          });
+                          store.setTipoMedicion = value!;
+                        },
+                        validate: (value, alias) => service.validateData(
+                            context, value, alias,
+                            required: true),
+                      ),
+                      Expanded(
+                        child: Column(
+                          children: [
+                            if (widget.tanques.length > 1) ...[
+                              SizedBox(
+                                  height: 72,
+                                  child: SingleChildScrollView(
+                                      scrollDirection: Axis.horizontal,
+                                      child: FormStepper(
+                                        longitud: widget.tanques.length,
+                                        currentStep: _currentStep,
+                                        activeColor: theme.secondary,
+                                      ))),
+                            ] else
+                              const SizedBox(height: 10),
+                            Expanded(
+                              child: SingleChildScrollView(
+                                child: VolumenTanqueWidget(
+                                  listaCombustibles: widget.listaCombustibles,
+                                  combustibleController:
+                                      combustibleControllers[_currentStep],
+                                  horaController: horaControllers[_currentStep],
+                                  volumenController:
+                                      volumenControllers[_currentStep],
+                                  dropKey: dropKeys[_currentStep],
+                                  tanque: widget.tanques[_currentStep],
+                                  onChange: (String? value) {
+                                    setState(() {
+                                      combustibleControllers[_currentStep]
+                                          .text = value ?? '';
+                                    });
+                                  },
+                                  step: _currentStep,
+                                  tieneFotos: _tieneFotos,
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    // Stepper(
-                    //   type: StepperType.horizontal,
-                    //   currentStep: _currentStep,
-                    //   elevation: 0, // Sin elevación
-                    //   controlsBuilder:
-                    //       (BuildContext context, ControlsDetails details) {
-                    //     return const SizedBox.shrink();
-                    //   },
+                      // Stepper(
+                      //   type: StepperType.horizontal,
+                      //   currentStep: _currentStep,
+                      //   elevation: 0, // Sin elevación
+                      //   controlsBuilder:
+                      //       (BuildContext context, ControlsDetails details) {
+                      //     return const SizedBox.shrink();
+                      //   },
 
-                    //   steps: [
-                    //     ...widget.tanques.asMap().entries.map(
-                    //       (entry) {
-                    //         int index = entry.key;
+                      //   steps: [
+                      //     ...widget.tanques.asMap().entries.map(
+                      //       (entry) {
+                      //         int index = entry.key;
 
-                    //         return Step(
-                    //           title: const Text(""),
-                    //           content: Column(
-                    //             children: [
-                    //               Padding(
-                    //                 padding: const EdgeInsets.only(bottom: 8.0),
-                    //                 child: CustomTimePicker(
-                    //                   title: 'Hora de Registro',
-                    //                   controller: horaControllers[index],
-                    //                   placeholder: 'Seleccionar hora',
-                    //                   requiredData: true,
-                    //                   onTap: () {
-                    //                     print("Date field tapped");
-                    //                   },
-                    //                   validate: (value, alias) {
-                    //                     if (value == null || value.isEmpty) {
-                    //                       return '$alias es obligatorio';
-                    //                     }
-                    //                     return '';
-                    //                   },
-                    //                 ),
-                    //               ),
-                    //               Padding(
-                    //                 padding: const EdgeInsets.only(bottom: 8.0),
-                    //                 child: CustomTextInput(
-                    //                   requiredData: true,
-                    //                   controller: volumenControllers[index],
-                    //                   title: 'Volumen',
-                    //                   onChange: (value) => () {},
-                    //                   // validate: (value, alias) =>
-                    //                   //     service.validateData(
-                    //                   //   context,
-                    //                   //   value,
-                    //                   //   alias,
-                    //                   // ),
-                    //                 ),
-                    //               ),
-                    //               DropDown(
-                    //                 width: MediaQuery.of(context).size.width,
-                    //                 label: 'Tipo de combustible',
-                    //                 requiredData: true,
-                    //                 // initialValue:
-                    //                 //     combustibleControllers[index].text,
-                    //                 dropKey: dropKeys[index], // Ahora es único
-                    //                 items: widget.listaCombustibles
-                    //                     .map((combustible) {
-                    //                   return {
-                    //                     'id': combustible.id,
-                    //                     'label': combustible.nombre
-                    //                   };
-                    //                 }).toList(),
-                    //                 onChange: (value) {
-                    //                   setState(() {
-                    //                     combustibleControllers[index].text =
-                    //                         value ?? '';
-                    //                   });
-                    //                 },
-                    //               ),
-                    //             ],
-                    //           ),
-                    //           isActive: _currentStep >= index,
-                    //         );
-                    //       },
-                    //     ),
-                    //     Step(
-                    //       title: const Text(""),
-                    //       content: ElevatedButton(
-                    //         onPressed: _guardarFormulario,
-                    //         child: const Text("Resumen"),
-                    //       ),
-                    //       isActive: _currentStep == widget.tanques.length,
-                    //     ),
-                    //   ],
-                    // ),
-                  ],
-                ),
+                      //         return Step(
+                      //           title: const Text(""),
+                      //           content: Column(
+                      //             children: [
+                      //               Padding(
+                      //                 padding: const EdgeInsets.only(bottom: 8.0),
+                      //                 child: CustomTimePicker(
+                      //                   title: 'Hora de Registro',
+                      //                   controller: horaControllers[index],
+                      //                   placeholder: 'Seleccionar hora',
+                      //                   requiredData: true,
+                      //                   onTap: () {
+                      //                     print("Date field tapped");
+                      //                   },
+                      //                   validate: (value, alias) {
+                      //                     if (value == null || value.isEmpty) {
+                      //                       return '$alias es obligatorio';
+                      //                     }
+                      //                     return '';
+                      //                   },
+                      //                 ),
+                      //               ),
+                      //               Padding(
+                      //                 padding: const EdgeInsets.only(bottom: 8.0),
+                      //                 child: CustomTextInput(
+                      //                   requiredData: true,
+                      //                   controller: volumenControllers[index],
+                      //                   title: 'Volumen',
+                      //                   onChange: (value) => () {},
+                      //                   // validate: (value, alias) =>
+                      //                   //     service.validateData(
+                      //                   //   context,
+                      //                   //   value,
+                      //                   //   alias,
+                      //                   // ),
+                      //                 ),
+                      //               ),
+                      //               DropDown(
+                      //                 width: MediaQuery.of(context).size.width,
+                      //                 label: 'Tipo de combustible',
+                      //                 requiredData: true,
+                      //                 // initialValue:
+                      //                 //     combustibleControllers[index].text,
+                      //                 dropKey: dropKeys[index], // Ahora es único
+                      //                 items: widget.listaCombustibles
+                      //                     .map((combustible) {
+                      //                   return {
+                      //                     'id': combustible.id,
+                      //                     'label': combustible.nombre
+                      //                   };
+                      //                 }).toList(),
+                      //                 onChange: (value) {
+                      //                   setState(() {
+                      //                     combustibleControllers[index].text =
+                      //                         value ?? '';
+                      //                   });
+                      //                 },
+                      //               ),
+                      //             ],
+                      //           ),
+                      //           isActive: _currentStep >= index,
+                      //         );
+                      //       },
+                      //     ),
+                      //     Step(
+                      //       title: const Text(""),
+                      //       content: ElevatedButton(
+                      //         onPressed: _guardarFormulario,
+                      //         child: const Text("Resumen"),
+                      //       ),
+                      //       isActive: _currentStep == widget.tanques.length,
+                      //     ),
+                      //   ],
+                      // ),
+                    ],
+                  ),
+          ),
         ),
-      ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            ElevatedButton(
-              onPressed: () {
-                if (_finalizado) {
-                  setState(() {
-                    _finalizado = false;
-                  });
-                } else {
-                  if (_currentStep > 0) {
-                    setState(() {
-                      _currentStep--;
-                    });
-                  } else {
-                    Navigator.pop(context);
-                  }
-                }
-              },
-              child: Text(_finalizado
-                  ? 'Anterior'
-                  : _currentStep == 0
-                      ? 'Cancelar'
-                      : 'Anterior'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                setState(() => _tieneFotos =
-                    store.tieneFotos(widget.tanques[_currentStep].id));
-                if (_currentStep < widget.tanques.length - 1) {
-                  if (service.validateForm(_formKey) && _tieneFotos!) {
-                    setState(() {
-                      _currentStep++;
-                      _tieneFotos = null;
-                    });
-                  }
-                } else {
-                  if (_finalizado) {
-                    _guardarFormulario();
-                  } else {
-                    if (service.validateForm(_formKey) && _tieneFotos!) {
-                      _finalizarDatosFormulario();
+        bottomNavigationBar: SizedBox(
+          height: 80,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                SimpleButton(
+                  textColor: theme.black,
+                  outlined: true,
+                  onTap: () {
+                    if (_finalizado) {
+                      setState(() {
+                        _finalizado = false;
+                      });
+                    } else {
+                      if (_currentStep > 0) {
+                        setState(() {
+                          _currentStep--;
+                        });
+                      } else {
+                        Navigator.pop(context);
+                      }
                     }
-                  }
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: theme.secondary,
-              ),
-              child: Text(
-                _currentStep == widget.tanques.length - 1
-                    ? _finalizado
-                        ? 'Enviar'
-                        : 'Finalizar registro'
-                    : 'Siguiente',
-                style: const TextStyle(color: Colors.white),
-              ),
+                  },
+                  title: (_finalizado
+                      ? 'Anterior'
+                      : _currentStep == 0
+                          ? 'Cancelar'
+                          : 'Anterior'),
+                ),
+                SimpleButton(
+                    onTap: () {
+                      setState(() => _tieneFotos =
+                          store.tieneFotos(widget.tanques[_currentStep].id));
+                      if (_currentStep < widget.tanques.length - 1) {
+                        if (service.validateForm(_formKey) && _tieneFotos!) {
+                          setState(() {
+                            _currentStep++;
+                            _tieneFotos = null;
+                          });
+                        }
+                      } else {
+                        if (_finalizado) {
+                          _guardarFormulario();
+                        } else {
+                          if (service.validateForm(_formKey) && _tieneFotos!) {
+                            _finalizarDatosFormulario();
+                          }
+                        }
+                      }
+                    },
+                    title: (_currentStep == widget.tanques.length - 1
+                        ? _finalizado
+                            ? 'Enviar'
+                            : 'Finalizar registro'
+                        : 'Siguiente')),
+              ],
             ),
-          ],
-        ),
-      ),
-    );
+          ),
+        ));
   }
 }
 
@@ -419,6 +441,9 @@ class VolumenTanqueWidgetState extends State<VolumenTanqueWidget> {
           padding: const EdgeInsets.only(bottom: 8.0),
           child: CustomTimePicker(
             title: 'Hora de Registro',
+            initialValue: widget.horaController.text.isNotEmpty
+                ? widget.horaController.text
+                : DateFormat('HH:mm').format(DateTime.now()),
             controller: widget.horaController,
             placeholder: 'Seleccionar hora',
             requiredData: true,
