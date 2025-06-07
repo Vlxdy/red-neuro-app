@@ -1,6 +1,6 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
-import 'package:control_ventas_movil/src/config/theme_controller.dart';
+import 'package:camino_seguro/src/config/theme_controller.dart';
 
 class SimpleButton extends StatelessWidget {
   final Color? background;

@@ -1,4 +1,4 @@
-import 'package:control_ventas_movil/src/models/combustible.dart';
+import 'package:camino_seguro/src/models/combustible.dart';
 
 class DropDownType {
   String id;

@@ -1,9 +1,9 @@
-import 'package:control_ventas_movil/src/config/providers.dart';
-import 'package:control_ventas_movil/src/config/routes.dart';
-import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/constants/keys.dart';
-import 'package:control_ventas_movil/src/plugins/auth/auth.dart';
-import 'package:control_ventas_movil/src/plugins/utils/preferences.dart';
+// ignore: depend_on_referenced_packages
+import 'package:camino_seguro/src/config/routes.dart';
+import 'package:camino_seguro/src/config/theme_controller.dart';
+import 'package:camino_seguro/src/constants/keys.dart';
+import 'package:camino_seguro/src/plugins/auth/auth.dart';
+import 'package:camino_seguro/src/plugins/utils/preferences.dart';
 import 'package:go_router/go_router.dart';
 
 class InitAppController {
@@ -32,14 +32,12 @@ class InitAppController {
     }
 
     await auth.loginSuccess();
-    resetProviders(); // Reset valores mas importantes de providers
-    final pinSeguridad =
-        await _preferencesService.getStringSecure(Keys.pinSeguridad);
+    final fingerprintActivo =
+        await _preferencesService.getStringSecure(Keys.fingerprintActivo);
 
     if (!context.mounted) return;
-
-    if (pinSeguridad.isEmpty) {
-      GoRouter.of(context).goNamed(RouteNames.configurarPinSeguridad);
+    if (fingerprintActivo.isEmpty) {
+      GoRouter.of(context).goNamed(RouteNames.configurarDesbloqueo);
       return;
     }
     GoRouter.of(context).goNamed(RouteNames.procesarSesion);

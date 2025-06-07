@@ -1,5 +1,5 @@
-import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/ui/common/snackbar/snackbar.dart';
+import 'package:camino_seguro/src/config/theme_controller.dart';
+import 'package:camino_seguro/src/ui/common/snackbar/snackbar.dart';
 import 'package:flutter/material.dart';
 
 class SimpleAlert extends StatefulWidget {

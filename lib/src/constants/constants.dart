@@ -8,21 +8,9 @@ class Constantes {
   static final imageCompressionQuality =
       dotenv.get('IMAGE_COMPRESSION_QUALITY');
   static const gpsTimeout = 20;
-}
-
-enum TipoAsociacion { propietario, poseedor, conductor }
-
-extension ExtTipoAsociacion on TipoAsociacion {
-  String get name {
-    switch (this) {
-      case TipoAsociacion.propietario:
-        return 'PROPIETARIO';
-      case TipoAsociacion.poseedor:
-        return 'POSEEDOR';
-      case TipoAsociacion.conductor:
-        return 'CONDUCTOR';
-    }
-  }
+  static const appId = 'bo.gob.agetic.lince2';
+  static final mapsApiUrl = dotenv.get('MAPS_API_URL');
+  static final mapsApiKey = dotenv.get('MAPS_API_KEY');
 }
 
 class PatternRegexp {

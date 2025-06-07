@@ -1,19 +1,13 @@
-import 'package:control_ventas_movil/src/config/form_controller.dart';
-import 'package:control_ventas_movil/src/config/routes.dart';
-import 'package:control_ventas_movil/src/constants/constants.dart';
-import 'package:control_ventas_movil/src/plugins/auth/auth.dart';
-import 'package:control_ventas_movil/src/plugins/seguridad/seguridad.dart';
-import 'package:control_ventas_movil/src/plugins/utils/local_secure.dart';
-import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
-import 'package:control_ventas_movil/src/ui/common/buttons/simple_button.dart';
-import 'package:control_ventas_movil/src/ui/common/dialogs/custom_dialog.dart';
-import 'package:control_ventas_movil/src/ui/common/dialogs/dialogos.dart';
-import 'package:control_ventas_movil/src/ui/common/snackbar/snackbar.dart';
-import 'package:control_ventas_movil/src/ui/common/text_inputs/text_input.dart';
-import 'package:control_ventas_movil/src/ui/pages/seguridad/pin_olvidado.dart';
+import 'package:camino_seguro/src/config/form_controller.dart';
+import 'package:camino_seguro/src/config/routes.dart';
+import 'package:camino_seguro/src/plugins/auth/auth.dart';
+import 'package:camino_seguro/src/plugins/seguridad/seguridad.dart';
+import 'package:camino_seguro/src/plugins/utils/local_secure.dart';
+import 'package:camino_seguro/src/plugins/utils/logger.dart';
+import 'package:camino_seguro/src/ui/common/buttons/simple_button.dart';
 import 'package:flutter/material.dart';
-import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/constants/resources.dart';
+import 'package:camino_seguro/src/config/theme_controller.dart';
+import 'package:camino_seguro/src/constants/resources.dart';
 import 'package:go_router/go_router.dart';
 import 'package:solar_icons/solar_icons.dart';
 
@@ -29,97 +23,40 @@ class ProcesarSesion extends StatefulWidget {
 
 class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
   final auth = Auth.instance;
-  late TextEditingController _pinSeguridad;
   final seguridad = Seguridad.instance;
 
   @override
   void initState() {
     super.initState();
-    _pinSeguridad = TextEditingController();
     inicializar();
   }
 
   void inicializar() async {
-    Logger.info('Verificar sesion');
+    Logger.info('Verificar sesión (solo huella)');
     final context = navigatorKey.currentContext!;
-    bool verificado = false;
     try {
       final hasFingerprint = await seguridad.hasFingeprintEnabled;
-      Logger.info('has fingreprint: $hasFingerprint');
-      if (!context.mounted) return;
-      verificado = hasFingerprint
-          ? await verificarHuella(context)
-          : await verificarPin(context);
-      if (verificado && context.mounted) {
-        Logger.info('redirigir a home!!!');
+      Logger.info('has fingerprint: $hasFingerprint');
+      if (!context.mounted || !hasFingerprint) return;
+
+      final autenticado = await verificarHuella(context);
+      if (autenticado && context.mounted) {
+        Logger.info('Autenticación por huella exitosa');
         Auth.instance.isLocked = false;
         GoRouter.of(context).goNamed(RouteNames.home);
       }
-      return;
     } catch (e) {
-      Logger.error('Error al inicializar sesion de forma local $e');
-      // Logger.error('Stacktrace $stackTrace');
+      Logger.error('Error en autenticación biométrica: $e');
     }
-  }
-
-  Future<bool> verificarPin(BuildContext context) async {
-    final resultadoPin = await formPinSeguridad(context);
-    if (resultadoPin == null || _pinSeguridad.text.isEmpty) return false;
-    final pinAlmacenado = await seguridad.apiPinSeguridad;
-    final pinIntroducido = _pinSeguridad.text;
-    if (pinAlmacenado != pinIntroducido) {
-      showSnackBar(procesarSesionMessenger, 'El pin ingresado es incorrecto.',
-          state: StatusSnackBar.error, colorText: Colors.white);
-    }
-    _pinSeguridad.text = '';
-    return pinAlmacenado == pinIntroducido;
   }
 
   Future<bool> verificarHuella(BuildContext context) async {
-    bool localAuthentication = await LocalSecure.autenticar(
-      titulo: 'Control Ventas Movil',
+    final autenticado = await LocalSecure.autenticar(
+      titulo: 'Control de ubicaciones',
       message: 'Escanea tu huella dactilar para continuar',
     );
-    Logger.info('Biometrico autenticado $localAuthentication');
-    if (!localAuthentication && context.mounted) {
-      return await verificarPin(context);
-    }
-    return localAuthentication;
-  }
-
-  Future<dynamic> formPinSeguridad(BuildContext context) {
-    return showDialog(
-        context: context,
-        builder: (context) {
-          return Dialog(
-            child: CutomDialog(
-              title: 'Pin de seguridad',
-              onConfirm: () {
-                Logger.info('validar pin de seguridad $_pinSeguridad');
-              },
-              subtitle: 'Ingresa tu pin de seguridad',
-              content: Column(
-                children: [
-                  CustomTextInput(
-                      onlyNumbers: true,
-                      placeholder: 'Ingresa un número de 6 dígitos',
-                      requiredData: true,
-                      maxLength: 6,
-                      controller: _pinSeguridad,
-                      title: 'Número de 6 dígitos',
-                      validate: (value, alias) => validateData(
-                            context,
-                            value,
-                            alias,
-                            max: 6,
-                            min: 6,
-                            regExp: PatternRegexp.number,
-                          ))
-                ],
-              ),
-            ),
-          );
-        });
+    Logger.info('Biométrico autenticado: $autenticado');
+    return autenticado;
   }
 
   @override
@@ -149,7 +86,7 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
                     decoration: const BoxDecoration(
                         image: DecorationImage(
                             fit: BoxFit.contain,
-                            image: AssetImage(Recursos.logoAnh))),
+                            image: AssetImage(Recursos.logoPrincipal))),
                   ),
                   InkWell(
                     onTap: () {
@@ -169,18 +106,11 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
                   ),
                 ],
               ),
-              // SizedBox(
-              //   height: 40,
-              // ),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Image.asset(
-                    //   Recursos.lock,
-                    //   width: 80,
-                    // ),
                     Icon(
                       SolarIconsBold.lockKeyhole,
                       color: theme.warning,
@@ -204,24 +134,6 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
                       title: 'Desbloquear',
                     ),
                     const SizedBox(height: 15),
-                    const Text(
-                      'Usa tu pin de seguridad',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                    const SizedBox(height: 15),
-                    TextButton(
-                        onPressed: () async {
-                          await Dialogo.showNativeModalBottomSheet(
-                              widget: const PinOlvidado(),
-                              context: context,
-                              isDismissible: true,
-                              dragable: true);
-                        },
-                        child: Text(
-                          '¿No recuerdas tu pin?',
-                          style: TextStyle(color: theme.fontColor),
-                        )),
-                    const SizedBox(height: 48),
                   ],
                 ),
               ),

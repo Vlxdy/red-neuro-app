@@ -1,6 +1,6 @@
 import 'dart:io';
-import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/extensions/strings_extensions.dart';
+import 'package:camino_seguro/src/config/theme_controller.dart';
+import 'package:camino_seguro/src/extensions/strings_extensions.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';

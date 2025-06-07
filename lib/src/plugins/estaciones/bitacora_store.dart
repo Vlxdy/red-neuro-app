@@ -1,9 +1,9 @@
 import 'dart:convert';
-import 'package:control_ventas_movil/src/constants/keys.dart';
-import 'package:control_ventas_movil/src/models/bitacora.dart';
-import 'package:control_ventas_movil/src/plugins/estaciones/estacion_servicio.dart';
-import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
-import 'package:control_ventas_movil/src/plugins/utils/preferences.dart';
+import 'package:camino_seguro/src/constants/keys.dart';
+import 'package:camino_seguro/src/models/bitacora.dart';
+import 'package:camino_seguro/src/plugins/estaciones/estacion_servicio.dart';
+import 'package:camino_seguro/src/plugins/utils/logger.dart';
+import 'package:camino_seguro/src/plugins/utils/preferences.dart';
 import 'package:flutter/material.dart';
 
 class BitacoraStore with ChangeNotifier {

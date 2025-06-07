@@ -1,6 +1,6 @@
-import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/extensions/strings_extensions.dart';
-import 'package:control_ventas_movil/src/plugins/auth/auth.dart';
+import 'package:camino_seguro/src/config/theme_controller.dart';
+import 'package:camino_seguro/src/extensions/strings_extensions.dart';
+import 'package:camino_seguro/src/plugins/auth/auth.dart';
 import 'package:flutter/material.dart';
 
 class AvatarPerfil extends StatelessWidget {

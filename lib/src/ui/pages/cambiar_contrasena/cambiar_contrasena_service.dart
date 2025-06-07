@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:control_ventas_movil/src/config/service_config.dart';
-import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/constants/network.dart';
-import 'package:control_ventas_movil/src/plugins/utils/encode.dart';
-import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
-import 'package:control_ventas_movil/src/ui/common/snackbar/snackbar.dart';
-import 'package:control_ventas_movil/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
-import 'package:control_ventas_movil/src/ui/pages/cambiar_contrasena/cambiar_contrasena_store.dart';
+import 'package:camino_seguro/src/config/service_config.dart';
+import 'package:camino_seguro/src/config/theme_controller.dart';
+import 'package:camino_seguro/src/constants/network.dart';
+import 'package:camino_seguro/src/plugins/utils/encode.dart';
+import 'package:camino_seguro/src/plugins/utils/logger.dart';
+import 'package:camino_seguro/src/ui/common/snackbar/snackbar.dart';
+import 'package:camino_seguro/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
+import 'package:camino_seguro/src/ui/pages/cambiar_contrasena/cambiar_contrasena_store.dart';
 
 class CambiarContrasenaService extends ServiceConfig {
   CambiarContrasenaService(super.urlBase, super.context);

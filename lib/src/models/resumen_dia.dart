@@ -2,8 +2,8 @@
 
 import 'dart:convert';
 
-import 'package:control_ventas_movil/src/models/combustible.dart';
-import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
+import 'package:camino_seguro/src/models/combustible.dart';
+import 'package:camino_seguro/src/plugins/utils/logger.dart';
 
 class ResumenDia {
   List<VentasResumen> ventas;

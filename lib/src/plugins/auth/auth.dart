@@ -1,17 +1,13 @@
 import 'dart:convert';
 
-import 'package:control_ventas_movil/src/constants/constants.dart';
-import 'package:control_ventas_movil/src/plugins/estaciones/bitacora_store.dart';
-import 'package:control_ventas_movil/src/plugins/estaciones/combustibles_store.dart';
-import 'package:control_ventas_movil/src/plugins/estaciones/estacion_servicio.dart';
-import 'package:control_ventas_movil/src/plugins/estaciones/regimiento_store.dart';
-import 'package:control_ventas_movil/src/plugins/seguridad/seguridad.dart';
-import 'package:control_ventas_movil/src/plugins/utils/connection.dart';
+import 'package:camino_seguro/src/constants/constants.dart';
+import 'package:camino_seguro/src/plugins/seguridad/seguridad.dart';
+import 'package:camino_seguro/src/plugins/utils/connection.dart';
 import 'package:flutter/material.dart';
-import 'package:control_ventas_movil/src/constants/keys.dart';
-import 'package:control_ventas_movil/src/models/user.dart';
-import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
-import 'package:control_ventas_movil/src/plugins/utils/preferences.dart';
+import 'package:camino_seguro/src/constants/keys.dart';
+import 'package:camino_seguro/src/models/user.dart';
+import 'package:camino_seguro/src/plugins/utils/logger.dart';
+import 'package:camino_seguro/src/plugins/utils/preferences.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 
 import 'package:http/http.dart' as http;
@@ -46,10 +42,6 @@ class Auth {
 
   final _store = AuthStore.instance;
   final seguridad = Seguridad.instance;
-  final regimiento = RegimientoStore.instance;
-  final estacionServicio = EstacionServicioStore.instance;
-  final bitacora = BitacoraStore.instance;
-  final combustibles = CombustiblesStore.instance;
   PackageInfo _info = PackageInfo(
       appName: '',
       buildNumber: '',
@@ -98,7 +90,6 @@ class Auth {
 
   Future<String?> logout() async {
     try {
-      //TODO: add logout methods for providers
       await clearCredentials();
       // await clearLocalSecurity()
       await seguridad.clearLocalSecurity();
@@ -134,10 +125,6 @@ class Auth {
   Future<void> loginSuccess() async {
     _user = await profileAsync();
     _store.isLogged = true;
-    await regimiento.regimientoAsync();
-    await bitacora.bitacoraAsync();
-    await estacionServicio.estacionServicioAsync();
-    await combustibles.combustiblesAsync();
   }
 
   Future<void> clearCredentials() async {

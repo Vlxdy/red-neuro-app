@@ -1,7 +1,7 @@
-import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/plugins/auth/auth.dart';
-import 'package:control_ventas_movil/src/ui/global/template_page.dart';
-import 'package:control_ventas_movil/src/ui/pages/perfil/componentes/perfil_info_card.dart';
+import 'package:camino_seguro/src/config/theme_controller.dart';
+import 'package:camino_seguro/src/plugins/auth/auth.dart';
+import 'package:camino_seguro/src/ui/global/template_page.dart';
+import 'package:camino_seguro/src/ui/pages/perfil/componentes/perfil_info_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

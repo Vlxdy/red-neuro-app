@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/ui/global/template_page.dart';
-import 'package:control_ventas_movil/src/ui/pages/login/componentes/account_login.dart';
-import 'package:control_ventas_movil/src/ui/pages/login/componentes/header.dart';
+import 'package:camino_seguro/src/config/theme_controller.dart';
+import 'package:camino_seguro/src/ui/global/template_page.dart';
+import 'package:camino_seguro/src/ui/pages/login/componentes/account_login.dart';
+import 'package:camino_seguro/src/ui/pages/login/componentes/header.dart';
 
 GlobalKey<ScaffoldMessengerState> loginMessenger =
     GlobalKey<ScaffoldMessengerState>();

@@ -1,5 +1,5 @@
-import 'package:control_ventas_movil/src/constants/custom_theme.dart';
-import 'package:control_ventas_movil/src/plugins/utils/preferences.dart';
+import 'package:camino_seguro/src/constants/custom_theme.dart';
+import 'package:camino_seguro/src/plugins/utils/preferences.dart';
 import 'package:flutter/material.dart';
 
 class ThemeController {
@@ -10,20 +10,20 @@ class ThemeController {
   bool get isLight => brightness.value;
   bool get isDark => !brightness.value;
 
-  //Colors
-  // Primary
+// Colors
+// Primary (naranjas)
   Color get primary20 =>
-      isLight ? Theming.primaryColor20 : Theming.primaryDarkColor20;
+      isLight ? const Color(0xFFFFF3E0) : const Color(0xFFFFE0B2); // muy claro
   Color get primary50 =>
-      isLight ? Theming.primaryColor50 : Theming.primaryDarkColor50;
+      isLight ? const Color(0xFFFFE0B2) : const Color(0xFFFFCC80);
   Color get primary200 =>
-      isLight ? Theming.primaryColor200 : Theming.primaryDarkColor200;
+      isLight ? const Color(0xFFFFB74D) : const Color(0xFFFFA726);
   Color get primary =>
-      isLight ? Theming.primaryColor500 : Theming.primaryDarkColor500;
+      isLight ? const Color(0xFFFF9800) : const Color(0xFFFF9800); // principal
   Color get primary700 =>
-      isLight ? Theming.primaryColor700 : Theming.primaryDarkColor700;
+      isLight ? const Color(0xFFFB8C00) : const Color(0xFFF57C00);
   Color get primary900 =>
-      isLight ? Theming.primaryColor900 : Theming.primaryDarkColor900;
+      isLight ? const Color(0xFFEF6C00) : const Color(0xFFE65100);
 
   // secondary
   Color get secondary => Theming.primaryDarkColor100;

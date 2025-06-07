@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import 'package:control_ventas_movil/src/constants/keys.dart';
-import 'package:control_ventas_movil/src/models/combustible.dart';
-import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
-import 'package:control_ventas_movil/src/plugins/utils/preferences.dart';
+import 'package:camino_seguro/src/constants/keys.dart';
+import 'package:camino_seguro/src/models/combustible.dart';
+import 'package:camino_seguro/src/plugins/utils/logger.dart';
+import 'package:camino_seguro/src/plugins/utils/preferences.dart';
 import 'package:flutter/material.dart';
 
 class CombustiblesStore with ChangeNotifier {
@@ -14,7 +14,7 @@ class CombustiblesStore with ChangeNotifier {
   final PreferencesService _preferencesService = PreferencesService.instance;
 
   List<Combustible> get combustibles => _combustibles;
-  
+
   set setCombustibles(List<Combustible> value) {
     _combustibles = value;
     notifyListeners();
@@ -25,7 +25,8 @@ class CombustiblesStore with ChangeNotifier {
     Logger.info(jsonList.toString());
 
     try {
-      final nuevosCombustibles = jsonList.map((item) => Combustible.fromJson(item)).toList();
+      final nuevosCombustibles =
+          jsonList.map((item) => Combustible.fromJson(item)).toList();
 
       await _preferencesService.setString(
         Keys.combustibles,
@@ -41,7 +42,7 @@ class CombustiblesStore with ChangeNotifier {
 
   Future<List<Combustible>> combustiblesAsync() async {
     if (_combustibles.isNotEmpty) return _combustibles;
-    
+
     List<Combustible> antiguosCombustibles = [];
     try {
       final decode = await _preferencesService.getString(Keys.combustibles);
@@ -54,7 +55,7 @@ class CombustiblesStore with ChangeNotifier {
       Logger.error('Exception al obtener combustibles -> ${e.toString()}');
       Logger.error('Stacktrace: $stacktrace');
     }
-    
+
     setCombustibles = antiguosCombustibles;
     return antiguosCombustibles;
   }

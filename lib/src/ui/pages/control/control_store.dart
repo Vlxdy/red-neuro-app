@@ -1,5 +1,5 @@
-import 'package:control_ventas_movil/src/models/estacion_servicio.dart';
-import 'package:control_ventas_movil/src/models/horario.dart';
+import 'package:camino_seguro/src/models/estacion_servicio.dart';
+import 'package:camino_seguro/src/models/horario.dart';
 import 'package:flutter/foundation.dart';
 
 class ControlStore with ChangeNotifier {

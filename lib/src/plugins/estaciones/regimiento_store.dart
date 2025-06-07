@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import 'package:control_ventas_movil/src/constants/keys.dart';
-import 'package:control_ventas_movil/src/models/regimiento.dart';
-import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
-import 'package:control_ventas_movil/src/plugins/utils/preferences.dart';
+import 'package:camino_seguro/src/constants/keys.dart';
+import 'package:camino_seguro/src/models/regimiento.dart';
+import 'package:camino_seguro/src/plugins/utils/logger.dart';
+import 'package:camino_seguro/src/plugins/utils/preferences.dart';
 import 'package:flutter/material.dart';
 
 class RegimientoStore with ChangeNotifier {

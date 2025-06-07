@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
+import 'package:camino_seguro/src/plugins/utils/logger.dart';
 import 'package:http/http.dart' as http;
 
 class Connection {
@@ -29,7 +29,7 @@ class Connection {
   static Future<double> _checkUploadLatency() async {
     final uri = Uri.parse('https://postman-echo.com/post');
     const dataSizeInKB = 90;
-    final data = List<int>.generate(dataSizeInKB * 1024 , (i) => i % 256);
+    final data = List<int>.generate(dataSizeInKB * 1024, (i) => i % 256);
     try {
       final stopwatch = Stopwatch()..start();
 

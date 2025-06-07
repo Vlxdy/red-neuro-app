@@ -1,6 +1,6 @@
-import 'package:control_ventas_movil/src/config/theme_controller.dart';
+import 'package:camino_seguro/src/config/theme_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:control_ventas_movil/src/constants/resources.dart';
+import 'package:camino_seguro/src/constants/resources.dart';
 
 class HeaderLoginAccount extends StatelessWidget {
   const HeaderLoginAccount(this.offline, {super.key});
@@ -15,8 +15,8 @@ class HeaderLoginAccount extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              height: 100,
-              width: 190,
+              height: 200,
+              width: 200,
               decoration: const BoxDecoration(
                   image: DecorationImage(
                       image: AssetImage(Recursos.logoPrincipal),

@@ -1,16 +1,14 @@
-import 'package:control_ventas_movil/src/config/routes.dart';
-import 'package:control_ventas_movil/src/config/service_config.dart';
-import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/constants/keys.dart';
-import 'package:control_ventas_movil/src/constants/network.dart';
-import 'package:control_ventas_movil/src/plugins/auth/auth.dart';
-import 'package:control_ventas_movil/src/plugins/estaciones/regimiento_store.dart';
-import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
-import 'package:control_ventas_movil/src/ui/common/snackbar/snackbar.dart';
-import 'package:control_ventas_movil/src/ui/global/loading_animation.dart';
-import 'package:control_ventas_movil/src/ui/pages/login/componentes/login_account_page.dart';
-import 'package:control_ventas_movil/src/ui/pages/login/login_store.dart';
-import 'package:control_ventas_movil/src/ui/pages/recuperar_contrasena/recuperar_contrasena.dart';
+import 'package:camino_seguro/src/config/routes.dart';
+import 'package:camino_seguro/src/config/service_config.dart';
+import 'package:camino_seguro/src/config/theme_controller.dart';
+import 'package:camino_seguro/src/constants/network.dart';
+import 'package:camino_seguro/src/plugins/auth/auth.dart';
+import 'package:camino_seguro/src/plugins/utils/logger.dart';
+import 'package:camino_seguro/src/ui/common/snackbar/snackbar.dart';
+import 'package:camino_seguro/src/ui/global/loading_animation.dart';
+import 'package:camino_seguro/src/ui/pages/login/componentes/login_account_page.dart';
+import 'package:camino_seguro/src/ui/pages/login/login_store.dart';
+import 'package:camino_seguro/src/ui/pages/recuperar_contrasena/recuperar_contrasena.dart';
 import 'package:go_router/go_router.dart';
 
 class LoginService extends ServiceConfig {
@@ -22,7 +20,7 @@ class LoginService extends ServiceConfig {
   void login() async {
     try {
       LoadingAnimation.instance.showLoading();
-      final response = await fetch('/auth-app-control',
+      final response = await fetch('/auth',
           type: HttpProtocol.post,
           body: store.form.toJson(),
           withAuthorization: false);
@@ -34,7 +32,6 @@ class LoginService extends ServiceConfig {
       } else {
         Logger.warning('respuesta ${response.data}');
         await Auth.instance.login(response.data);
-        await RegimientoStore.instance.actualizar(response.data['regimiento']);
 
         if (context.mounted) {
           // context.goNamed(RouteNames.controlScreen);

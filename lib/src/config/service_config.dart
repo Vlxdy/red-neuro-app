@@ -2,13 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:control_ventas_movil/src/config/form_controller.dart';
-import 'package:control_ventas_movil/src/config/middleware.dart';
-import 'package:control_ventas_movil/src/constants/constants.dart';
-import 'package:control_ventas_movil/src/constants/network.dart';
-import 'package:control_ventas_movil/src/plugins/auth/auth.dart';
-import 'package:control_ventas_movil/src/plugins/utils/connection.dart';
-import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
+import 'package:camino_seguro/src/config/form_controller.dart';
+import 'package:camino_seguro/src/config/middleware.dart';
+import 'package:camino_seguro/src/constants/constants.dart';
+import 'package:camino_seguro/src/constants/network.dart';
+import 'package:camino_seguro/src/plugins/auth/auth.dart';
+import 'package:camino_seguro/src/plugins/utils/connection.dart';
+import 'package:camino_seguro/src/plugins/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:http_parser/http_parser.dart';
@@ -56,81 +56,95 @@ class ServiceConfig with Middleware, FormController {
     return headers;
   }
 
-  Future<ResponseApi> fetch(String urlRecipe,
-      {HttpProtocol? type = HttpProtocol.get,
-      Object? body,
-      bool withAuthorization = true,
-      String? customToken}) async {
+  Future<ResponseApi> fetch(
+    String urlRecipe, {
+    HttpProtocol? type = HttpProtocol.get,
+    Object? body,
+    bool withAuthorization = true,
+    String? customToken,
+    Map<String, String>? params,
+  }) async {
     if (!await Connection.hasInternetConnected()) {
       return ResponseApi(
-          StatusNetwork.noInternet,
-          {'message': 'No tienes conexión a internet'},
-          'No tienes conexión a internet');
+        StatusNetwork.noInternet,
+        {'message': 'No tienes conexión a internet'},
+        'No tienes conexión a internet',
+      );
     }
 
     StatusNetwork status = StatusNetwork.noContent;
     final Response response;
-    // final String url = '${Constantes.apiUrl}$urlBase$urlRecipe';
-    final String url = '${Constantes.apiUrl}$urlRecipe';
+
+    // Construimos la URI incluyendo los parámetros
+    final uri = Uri.parse('${Constantes.apiUrl}$urlRecipe')
+        .replace(queryParameters: params);
 
     try {
       final headers = await getHeaders(
-          withAuthorization: withAuthorization, customToken: customToken);
+        withAuthorization: withAuthorization,
+        customToken: customToken,
+      );
+
       Logger.info(
-          'Ejecutando>>>> $url, body: $body, headers: $headers method: $type');
+        'Ejecutando>>>> $uri, body: $body, headers: $headers method: $type',
+      );
+
       switch (type) {
         case HttpProtocol.get:
-          response = await get(Uri.parse(url), headers: headers)
+          response = await get(uri, headers: headers)
               .timeout(const Duration(seconds: Constantes.timeout));
           break;
         case HttpProtocol.post:
-          response = await post(Uri.parse(url),
-                  headers: headers, body: jsonEncode(body))
+          response = await post(uri, headers: headers, body: jsonEncode(body))
               .timeout(const Duration(seconds: Constantes.timeout));
           break;
         case HttpProtocol.patch:
-          response = await patch(Uri.parse(url),
-                  headers: headers, body: jsonEncode(body))
+          response = await patch(uri, headers: headers, body: jsonEncode(body))
               .timeout(const Duration(seconds: Constantes.timeout));
           break;
         case HttpProtocol.put:
-          response = await put(Uri.parse(url),
-                  headers: headers, body: jsonEncode(body))
+          response = await put(uri, headers: headers, body: jsonEncode(body))
               .timeout(const Duration(seconds: Constantes.timeout));
           break;
         case HttpProtocol.delete:
-          response = await delete(Uri.parse(url),
-                  headers: headers, body: jsonEncode(body))
+          response = await delete(uri, headers: headers, body: jsonEncode(body))
               .timeout(const Duration(seconds: Constantes.timeout));
           break;
         default:
-          response = await get(Uri.parse(url), headers: headers)
+          response = await get(uri, headers: headers)
               .timeout(const Duration(seconds: Constantes.timeout));
           break;
       }
+
       final decode = utf8.decode(response.bodyBytes);
       final json = jsonDecode(decode);
       status = decodeStatus(response.statusCode);
       validateResponse(status);
+
       if (context.mounted) {
         final responseParsed = parseResponse(json, context);
-        return ResponseApi(responseParsed['status'], responseParsed['data'],
-            responseParsed['message'],
-            log: json);
+        return ResponseApi(
+          responseParsed['status'],
+          responseParsed['data'],
+          responseParsed['message'],
+          log: json,
+        );
       } else {
         throw Exception('Context not found');
       }
     } on TimeoutException catch (_) {
       return ResponseApi(
-          StatusNetwork.timeout,
-          {'message': 'Tiempo de espera excedido'},
-          'Tiempo de espera excedido');
+        StatusNetwork.timeout,
+        {'message': 'Tiempo de espera excedido'},
+        'Tiempo de espera excedido',
+      );
     } catch (e) {
       Logger.error('exception fetch >>>> ${e.toString()}');
       return ResponseApi(
-          StatusNetwork.exception,
-          {'message': 'Ocurrió un error inesperado', 'log': e.toString()},
-          'Ocurrió un error inesperado');
+        StatusNetwork.exception,
+        {'message': 'Ocurrió un error inesperado', 'log': e.toString()},
+        'Ocurrió un error inesperado',
+      );
     }
   }
 

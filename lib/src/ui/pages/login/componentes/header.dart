@@ -1,4 +1,4 @@
-import 'package:control_ventas_movil/src/constants/resources.dart';
+import 'package:camino_seguro/src/constants/resources.dart';
 import 'package:flutter/material.dart';
 
 class HeaderLogin extends StatelessWidget {

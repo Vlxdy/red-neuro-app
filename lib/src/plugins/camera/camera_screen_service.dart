@@ -1,10 +1,10 @@
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/constants/constants.dart';
-import 'package:control_ventas_movil/src/plugins/camera/camera_screen_store.dart';
-import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
+import 'package:camino_seguro/src/config/theme_controller.dart';
+import 'package:camino_seguro/src/constants/constants.dart';
+import 'package:camino_seguro/src/plugins/camera/camera_screen_store.dart';
+import 'package:camino_seguro/src/plugins/utils/logger.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_editor/image_editor.dart';
@@ -21,9 +21,8 @@ class ScreenInfo {
   double devicePixelRatio;
   Size size;
   ScreenInfo(this.devicePixelRatio, this.size);
-  ScreenInfo.fromObject(ScreenInfo screenInfo):
-    this(screenInfo.devicePixelRatio, screenInfo.size);
-
+  ScreenInfo.fromObject(ScreenInfo screenInfo)
+      : this(screenInfo.devicePixelRatio, screenInfo.size);
 }
 
 class CameraScreenService {
@@ -46,7 +45,8 @@ class CameraScreenService {
     return ImagePaths(filePath, filePathCompressed);
   }
 
-  Future<File> _compressImage(String pathImage, String filePathCompressed) async {
+  Future<File> _compressImage(
+      String pathImage, String filePathCompressed) async {
     int imageCompressionQuality =
         int.tryParse(Constantes.imageCompressionQuality) ?? 30;
     var xFileCompressed = await FlutterImageCompress.compressAndGetFile(
@@ -62,13 +62,11 @@ class CameraScreenService {
     _screenInfo = ScreenInfo.fromObject(screenInfo);
     String pathImage = xFileImage.path;
     final paths = await _getImagePaths();
-    File fileCompressed = await _compressImage(
-        pathImage, paths.filePathCompressed);
+    File fileCompressed =
+        await _compressImage(pathImage, paths.filePathCompressed);
     if (store.posicion != null) {
-      final imageEdited = await _putCoordinates(
-          fileCompressed,
-          store.posicion!
-        );
+      final imageEdited =
+          await _putCoordinates(fileCompressed, store.posicion!);
       if (imageEdited != null) {
         File newEditedImage = await imageEdited.rename(paths.filePath);
         return newEditedImage;
@@ -87,31 +85,27 @@ class CameraScreenService {
     final textLat = 'Latitud: ${position.latitude}';
     final textLon = 'Longitud: ${position.longitude}';
     textOptionLat.addText(EditorText(
-      text: textLat,
-      offset: Offset(1, getPixel(1, getDouble: true)),
-      fontSizePx: getPixel(25),
-      textColor: ThemeController.instance.white,
-      textAlign: TextAlign.left
-    ));
+        text: textLat,
+        offset: Offset(1, getPixel(1, getDouble: true)),
+        fontSizePx: getPixel(25),
+        textColor: ThemeController.instance.white,
+        textAlign: TextAlign.left));
     final textOptionLon = AddTextOption();
     textOptionLon.addText(EditorText(
-      text: textLon,
-      offset: Offset(1, getPixel(15, getDouble: true)),
-      fontSizePx: getPixel(25),
-      textColor: ThemeController.instance.white,
-      textAlign: TextAlign.left
-    ));
+        text: textLon,
+        offset: Offset(1, getPixel(15, getDouble: true)),
+        fontSizePx: getPixel(25),
+        textColor: ThemeController.instance.white,
+        textAlign: TextAlign.left));
     final dimRect = getMaxLengthStr(textLat, textLon);
     final rectPart = RectDrawPart(
-      rect: Rect.fromPoints(
-        const Offset(1,1),
-        Offset(getPixel(dimRect * 13, getDouble: true), getPixel(60, getDouble: true))
-      ),
-      paint: DrawPaint(
-        color: ThemeController.instance.black,
-        paintingStyle: PaintingStyle.fill
-      )
-    );
+        rect: Rect.fromPoints(
+            const Offset(1, 1),
+            Offset(getPixel(dimRect * 13, getDouble: true),
+                getPixel(60, getDouble: true))),
+        paint: DrawPaint(
+            color: ThemeController.instance.black,
+            paintingStyle: PaintingStyle.fill));
     final imageOption = ImageEditorOption();
     imageOption.addOptions([
       DrawOption()..addDrawPart(rectPart),
@@ -120,9 +114,7 @@ class CameraScreenService {
     ]);
     try {
       final result = await ImageEditor.editImageAndGetFile(
-        image: await image.readAsBytes(),
-        imageEditorOption: imageOption
-      );
+          image: await image.readAsBytes(), imageEditorOption: imageOption);
       await File(image.path).delete();
       return result;
     } catch (e) {
@@ -135,7 +127,7 @@ class CameraScreenService {
     return str1.length > str2.length ? str1.length : str2.length;
   }
 
-  dynamic getPixel(int dim, { bool getDouble = false }) {
+  dynamic getPixel(int dim, {bool getDouble = false}) {
     final result = dim * _screenInfo.devicePixelRatio;
     return getDouble ? result : result.round();
   }

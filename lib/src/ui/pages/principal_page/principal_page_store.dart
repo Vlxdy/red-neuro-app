@@ -1,12 +1,11 @@
-import 'package:control_ventas_movil/src/models/conductor.dart';
-import 'package:control_ventas_movil/src/models/vehiculo.dart';
+import 'package:camino_seguro/src/models/conductor.dart';
+import 'package:camino_seguro/src/models/vehiculo.dart';
 import 'package:flutter/material.dart';
 
 class PrincipalPageStore with ChangeNotifier {
   PrincipalPageStore._();
   static final instance = PrincipalPageStore._();
 
-  
   bool _cargando = false;
   bool get cargando => _cargando;
   set cargando(bool val) {

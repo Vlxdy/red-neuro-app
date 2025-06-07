@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:control_ventas_movil/src/constants/network.dart';
-import 'package:control_ventas_movil/src/plugins/auth/auth.dart';
-import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
+import 'package:camino_seguro/src/constants/network.dart';
+import 'package:camino_seguro/src/plugins/auth/auth.dart';
+import 'package:camino_seguro/src/plugins/utils/logger.dart';
 
 mixin Middleware {
   validateResponse(StatusNetwork status) {
@@ -20,22 +20,20 @@ mixin Middleware {
   }
 
   Map<String, dynamic> parseResponse(
-    Map<String, dynamic> json,
-    BuildContext context,
-    { StatusNetwork status = StatusNetwork.noContent }
-  ) {
+      Map<String, dynamic> json, BuildContext context,
+      {StatusNetwork status = StatusNetwork.noContent}) {
     try {
       final Map<String, dynamic> data = {};
       data['status'] = json.containsKey('finalizado') && json['finalizado']
-        ? StatusNetwork.connected
-        : StatusNetwork.exception;
+          ? StatusNetwork.connected
+          : StatusNetwork.exception;
       if (status == StatusNetwork.unprocessableEntity) {
         data['status'] = StatusNetwork.unprocessableEntity;
       }
 
       data['message'] = json['mensaje'] ??
-        json['message'] ??
-        'Se realizó la tarea correctamente';
+          json['message'] ??
+          'Se realizó la tarea correctamente';
 
       if (json.containsKey('datos') ||
           json.containsKey('resultado') ||

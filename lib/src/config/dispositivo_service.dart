@@ -1,11 +1,11 @@
-import 'package:control_ventas_movil/src/config/service_config.dart';
-import 'package:control_ventas_movil/src/constants/keys.dart';
-import 'package:control_ventas_movil/src/constants/network.dart';
-import 'package:control_ventas_movil/src/plugins/auth/auth.dart';
-import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
-import 'package:control_ventas_movil/src/plugins/utils/preferences.dart';
-import 'package:control_ventas_movil/src/plugins/utils/utils.dart';
-import 'package:control_ventas_movil/src/ui/global/alerta_actualizacion.dart';
+import 'package:camino_seguro/src/config/service_config.dart';
+import 'package:camino_seguro/src/constants/keys.dart';
+import 'package:camino_seguro/src/constants/network.dart';
+import 'package:camino_seguro/src/plugins/auth/auth.dart';
+import 'package:camino_seguro/src/plugins/utils/logger.dart';
+import 'package:camino_seguro/src/plugins/utils/preferences.dart';
+import 'package:camino_seguro/src/plugins/utils/utils.dart';
+import 'package:camino_seguro/src/ui/global/alerta_actualizacion.dart';
 
 class ItemVersion {
   int major = 0;
@@ -60,7 +60,8 @@ class DispositivoService extends ServiceConfig {
       var idUsuario = await _auth.idUsuario;
       if (idUsuario == null) return null;
       final response = await fetch('', type: HttpProtocol.get);
-      Logger.success('response -> ${response.log} status -> ${response.status}');
+      Logger.success(
+          'response -> ${response.log} status -> ${response.status}');
       if (response.status == StatusNetwork.connected) {
         final versionOnline = ItemVersion.fromString(response.data['version']);
         String strVLocal = await Utils.versionAplicacion();

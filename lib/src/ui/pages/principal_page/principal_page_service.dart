@@ -1,11 +1,11 @@
-import 'package:control_ventas_movil/src/config/service_config.dart';
-import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/constants/network.dart';
-import 'package:control_ventas_movil/src/models/conductor.dart';
-import 'package:control_ventas_movil/src/plugins/auth/auth.dart';
-import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
-import 'package:control_ventas_movil/src/plugins/utils/preferences.dart';
-import 'package:control_ventas_movil/src/ui/pages/principal_page/principal_page_store.dart';
+import 'package:camino_seguro/src/config/service_config.dart';
+import 'package:camino_seguro/src/config/theme_controller.dart';
+import 'package:camino_seguro/src/constants/network.dart';
+import 'package:camino_seguro/src/models/conductor.dart';
+import 'package:camino_seguro/src/plugins/auth/auth.dart';
+import 'package:camino_seguro/src/plugins/utils/logger.dart';
+import 'package:camino_seguro/src/plugins/utils/preferences.dart';
+import 'package:camino_seguro/src/ui/pages/principal_page/principal_page_store.dart';
 
 class PrincipalPageService extends ServiceConfig {
   PrincipalPageService(super.urlBase, super.context);

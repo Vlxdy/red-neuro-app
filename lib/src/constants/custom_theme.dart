@@ -1,54 +1,53 @@
 import 'package:flutter/material.dart';
 
 class Theming {
-  // primary
-  static const primaryColor20 = Color(0xFFF5FCFD);
-  static const primaryColor50 = Color(0xFFD6F7FD);
-  static const primaryColor100 = Color(0xFFADECFB);
-  static const primaryColor200 = Color(0xFF6DD7F5);
-  static const primaryColor500 = Color(0xFF00BBE2);
-  static const primaryColor700 = Color(0xFF007A9D);
-  static const primaryColor900 = Color(0xFF00475D);
+  // primary - tonos naranjas para light theme
+  static const primaryColor20 = Color(0xFFFFF3E0);
+  static const primaryColor50 = Color(0xFFFFE0B2);
+  static const primaryColor100 = Color(0xFFFFCC80);
+  static const primaryColor200 = Color(0xFFFFB74D);
+  static const primaryColor500 = Color(0xFFFF9800); // principal
+  static const primaryColor700 = Color(0xFFFB8C00);
+  static const primaryColor900 = Color(0xFFEF6C00);
 
-  // TODO: pendiente colores dark
-  static const primaryDarkColor20 = Color(0xFF1C1B63);
-  static const primaryDarkColor50 = Color(0xFF1D1C4A);
-  static const primaryDarkColor100 = Color(0xFF5E518F);
-  static const primaryDarkColor200 = Color(0xFF3532A1);
-  static const primaryDarkColor500 = Color(0xFF666EEE);
-  static const primaryDarkColor700 = Color(0xFF8392F6);
-  static const primaryDarkColor900 = Color(0xFFEEF3FF);
+  // primary - tonos naranjas para dark theme
+  static const primaryDarkColor20 = Color(0xFFFFE0B2);
+  static const primaryDarkColor50 = Color(0xFFFFCC80);
+  static const primaryDarkColor100 = Color(0xFFFFB74D);
+  static const primaryDarkColor200 = Color(0xFFFFA726);
+  static const primaryDarkColor500 = Color(0xFFFF9800);
+  static const primaryDarkColor700 = Color(0xFFF57C00);
+  static const primaryDarkColor900 = Color(0xFFE65100);
 
-  /// secondary
-  static const secondaryColor500 = Color(0xFFE36B14);
+  /// secondary (puedes usar un tono intermedio naranja)
+  static const secondaryColor500 = Color(0xFFFFA726);
 
-  // accent
-  static const accentColor50 = Color(0xFFF4F7FA);
-  static const accentColor100 = Color(0xFFD1F6EE);
-  static const accentColor200 = Color(0xFF5EE1D3);
-  static const accentColor500 = Color(0xFF28BCAC);
-  static const accentColor700 = Color(0xFF219184);
-  static const accentColor900 = Color(0xFF219184);
+  // accent - escala amarilla/naranja clara
+  static const accentColor50 = Color(0xFFFFF8E1);
+  static const accentColor100 = Color(0xFFFFECB3);
+  static const accentColor200 = Color(0xFFFFE082);
+  static const accentColor500 = Color(0xFFFFC107);
+  static const accentColor700 = Color(0xFFFFB300);
+  static const accentColor900 = Color(0xFFFFA000);
 
   // neutral
-  static const neutral = Color(0xFF4B92D4);
-  static const success = Color(0xFF00C584);
-  static const warning = Color(0xFFFFA141);
-  static const error = Color(0xFFF70B40);
-  static const grey = Color(0xFF808080);
+  static const neutral = Color(0xFFFFA000);
+  static const success = Color(0xFF43A047);
+  static const warning = Color(0xFFFFB300);
+  static const error = Color(0xFFE53935);
+  static const grey = Color(0xFF9E9E9E);
 
-  static const neutralDark = Color(0xFF70A0EA);
-  static const successDark = Color(0xFF4DCFC0);
-  static const warningDark = Color(0xFFEEA63A);
-  static const errorDark = Color(0xFFFF4159);
-  static const greyDark = Color(0xFFCCCCCC);
+  static const neutralDark = Color(0xFFFFB74D);
+  static const successDark = Color(0xFF2E7D32);
+  static const warningDark = Color(0xFFFFA000);
+  static const errorDark = Color(0xFFC62828);
+  static const greyDark = Color(0xFF616161);
 
   // background
-  // static const background = Color(0xFFF9F9F9);
-  // static const background = Color(0xFFF6F6F6);
-  static const background = Color(0xFFF2F2F2);
-  static const backgroundDark = Color(0xFF1A1A1A);
+  static const background = Color(0xFFFFF3E0); // fondo cálido claro
+  static const backgroundDark = Color(0xFF212121); // fondo cálido oscuro
 
+  // monocromáticos (se mantiene igual)
   static const monochromatic10 = Color(0xFFFFFFFF);
   static const monochromatic9 = Color(0xFFF2F2F2);
   static const monochromatic8 = Color(0xFFCCCCCC);
@@ -64,13 +63,13 @@ class Theming {
   static const black = Color(0xFF0F0F0F);
   static const white = Color(0xFFFFFFFF);
 
-  //Ciudadania
-  static const ciudadania = Color(0xFF3C5BAA);
-  static const ciudadaniaDark = Color(0xFFA7C8FF);
-  static const otherAccent = Color(0xFF6c78bc);
+  //Ciudadania (puedes personalizar si deseas una variante naranja)
+  static const ciudadania = Color(0xFFFF7043);
+  static const ciudadaniaDark = Color(0xFFBF360C);
 
-  static const bgCard = Color(0xff141122);
-  // static const bgCard = Color(0x0408151A);
-  static const bgCard2 = Color(0xff08151A);
-  static const bgBlue = Color(0xff555D8D);
+  static const otherAccent = Color(0xFFFFCC80);
+
+  static const bgCard = Color(0xFFFFF3E0);
+  static const bgCard2 = Color(0xFFFFE0B2);
+  static const bgBlue = Color(0xFFFFB74D);
 }

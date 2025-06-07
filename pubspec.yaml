@@ -1,4 +1,4 @@
-name: control_ventas_movil
+name: camino_seguro
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -50,7 +50,7 @@ dependencies:
   hive_flutter: 1.1.0
   path_provider: 2.1.5
   http_parser: 4.1.1
-  collection: 1.19.0
+  collection: ^1.19.1
   dropdown_button2: 2.3.9
   device_info_plus: 11.2.0
   # intl: 0.20.1
@@ -67,6 +67,10 @@ dependencies:
   geolocator: 13.0.2
   flutter_image_compress: 2.3.0
   image_editor: 1.6.0
+  camera_android: ^0.10.10+1
+  flutter_map: ^6.1.0
+  latlong2: ^0.9.0
+  flutter_polyline_points: ^2.0.0
 
 dev_dependencies:
   flutter_test:
@@ -86,9 +90,9 @@ dev_dependencies:
 # following page: https://dart.dev/tools/pub/pubspec
 
 flutter_icons:
-  android: "ic_launcher"
+  android: true
   ios: false
-  image_path: "assets/icons/playstore.png"
+  image_path: "assets/icons/icon.png"
 
 # The following section is specific to Flutter packages.
 flutter:

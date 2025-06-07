@@ -1,5 +1,5 @@
 // import 'package:ciudadania_digital/common/utils.dart';
-import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
+import 'package:camino_seguro/src/plugins/utils/logger.dart';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:local_auth_android/local_auth_android.dart';

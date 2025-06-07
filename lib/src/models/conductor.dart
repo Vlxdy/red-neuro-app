@@ -1,4 +1,4 @@
-import 'package:control_ventas_movil/src/plugins/utils/utils.dart';
+import 'package:camino_seguro/src/plugins/utils/utils.dart';
 
 class CConductor {
   String? nombreCompleto;

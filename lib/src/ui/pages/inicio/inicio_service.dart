@@ -1,9 +1,8 @@
-
-import 'package:control_ventas_movil/src/config/service_config.dart';
-import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/plugins/auth/auth.dart';
-import 'package:control_ventas_movil/src/plugins/utils/preferences.dart';
-import 'package:control_ventas_movil/src/ui/pages/inicio/inicio_store.dart';
+import 'package:camino_seguro/src/config/service_config.dart';
+import 'package:camino_seguro/src/config/theme_controller.dart';
+import 'package:camino_seguro/src/plugins/auth/auth.dart';
+import 'package:camino_seguro/src/plugins/utils/preferences.dart';
+import 'package:camino_seguro/src/ui/pages/inicio/inicio_store.dart';
 
 class InicioService extends ServiceConfig {
   InicioService(super.urlBase, super.context);

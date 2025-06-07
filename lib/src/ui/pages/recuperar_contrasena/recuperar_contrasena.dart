@@ -1,9 +1,9 @@
-import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/ui/common/buttons/simple_button.dart';
-import 'package:control_ventas_movil/src/ui/common/text_inputs/text_input.dart';
-import 'package:control_ventas_movil/src/ui/global/template_page.dart';
-import 'package:control_ventas_movil/src/ui/pages/login/componentes/header.dart';
-import 'package:control_ventas_movil/src/ui/pages/login/login_service.dart';
+import 'package:camino_seguro/src/config/theme_controller.dart';
+import 'package:camino_seguro/src/ui/common/buttons/simple_button.dart';
+import 'package:camino_seguro/src/ui/common/text_inputs/text_input.dart';
+import 'package:camino_seguro/src/ui/global/template_page.dart';
+import 'package:camino_seguro/src/ui/pages/login/componentes/header.dart';
+import 'package:camino_seguro/src/ui/pages/login/login_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' as services;
 

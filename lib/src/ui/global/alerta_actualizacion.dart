@@ -1,7 +1,7 @@
-import 'package:control_ventas_movil/src/config/routes.dart';
-import 'package:control_ventas_movil/src/constants/keys.dart';
-import 'package:control_ventas_movil/src/plugins/utils/preferences.dart';
-import 'package:control_ventas_movil/src/ui/common/alerts/confirmation_alert_dialog.dart';
+import 'package:camino_seguro/src/config/routes.dart';
+import 'package:camino_seguro/src/constants/keys.dart';
+import 'package:camino_seguro/src/plugins/utils/preferences.dart';
+import 'package:camino_seguro/src/ui/common/alerts/confirmation_alert_dialog.dart';
 import 'package:flutter/material.dart';
 
 class DialogService {
@@ -16,8 +16,10 @@ class DialogService {
         return Dialog(
           child: ConfirmationDialog(
             withCancel: false,
-            title: 'Existe una nueva versión de la aplicación, es recomendable que descargue la última versión',
-            text: 'Por favor comuniquese con el personal de soporte para obtener una nueva versión',
+            title:
+                'Existe una nueva versión de la aplicación, es recomendable que descargue la última versión',
+            text:
+                'Por favor comuniquese con el personal de soporte para obtener una nueva versión',
             textConfirm: 'Aceptar',
             onConfirm: () async {
               final preference = PreferencesService.instance;

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/ui/common/buttons/simple_button.dart';
-import 'package:control_ventas_movil/src/ui/common/text_inputs/text_input.dart';
-import 'package:control_ventas_movil/src/ui/pages/cambiar_contrasena/cambiar_contrasena_service.dart';
-import 'package:control_ventas_movil/src/ui/pages/cambiar_contrasena/cambiar_contrasena_store.dart';
+import 'package:camino_seguro/src/config/theme_controller.dart';
+import 'package:camino_seguro/src/ui/common/buttons/simple_button.dart';
+import 'package:camino_seguro/src/ui/common/text_inputs/text_input.dart';
+import 'package:camino_seguro/src/ui/pages/cambiar_contrasena/cambiar_contrasena_service.dart';
+import 'package:camino_seguro/src/ui/pages/cambiar_contrasena/cambiar_contrasena_store.dart';
 import 'package:provider/provider.dart';
 import 'package:zxcvbn/zxcvbn.dart';
 

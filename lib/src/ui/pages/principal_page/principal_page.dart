@@ -1,13 +1,13 @@
-import 'package:control_ventas_movil/src/config/routes.dart';
-import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/constants/constants.dart';
-import 'package:control_ventas_movil/src/constants/resources.dart';
-import 'package:control_ventas_movil/src/extensions/strings_extensions.dart';
-import 'package:control_ventas_movil/src/plugins/auth/auth.dart';
-import 'package:control_ventas_movil/src/ui/common/components/custom_simple_circle.dart';
-import 'package:control_ventas_movil/src/ui/global/template_page.dart';
-import 'package:control_ventas_movil/src/ui/pages/principal_page/principal_page_service.dart';
-import 'package:control_ventas_movil/src/ui/pages/principal_page/principal_page_store.dart';
+import 'package:camino_seguro/src/config/routes.dart';
+import 'package:camino_seguro/src/config/theme_controller.dart';
+import 'package:camino_seguro/src/constants/constants.dart';
+import 'package:camino_seguro/src/constants/resources.dart';
+import 'package:camino_seguro/src/extensions/strings_extensions.dart';
+import 'package:camino_seguro/src/plugins/auth/auth.dart';
+import 'package:camino_seguro/src/ui/common/components/custom_simple_circle.dart';
+import 'package:camino_seguro/src/ui/global/template_page.dart';
+import 'package:camino_seguro/src/ui/pages/principal_page/principal_page_service.dart';
+import 'package:camino_seguro/src/ui/pages/principal_page/principal_page_store.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -117,8 +117,8 @@ class _PrincipalPage extends State<PrincipalPage> with WidgetsBindingObserver {
                                                 const BorderRadius.horizontal(
                                                     left: Radius.circular(30)),
                                             image: const DecorationImage(
-                                                image:
-                                                    AssetImage(Recursos.bgCar),
+                                                image: AssetImage(
+                                                    Recursos.geolocalizacion),
                                                 fit: BoxFit.contain))),
                                   ),
                                 ),
@@ -152,18 +152,7 @@ class _PrincipalPage extends State<PrincipalPage> with WidgetsBindingObserver {
                                                         horizontal: 8,
                                                         vertical: 3),
                                                 decoration: BoxDecoration(
-                                                    color: asignacionUsuario
-                                                                .tipo ==
-                                                            TipoAsociacion
-                                                                .poseedor.name
-                                                        ? theme.secondary
-                                                        : asignacionUsuario
-                                                                    .tipo ==
-                                                                TipoAsociacion
-                                                                    .conductor
-                                                                    .name
-                                                            ? theme.secondary
-                                                            : theme.primary,
+                                                    color: theme.primary,
                                                     borderRadius:
                                                         BorderRadius.circular(
                                                             50)),
@@ -174,7 +163,8 @@ class _PrincipalPage extends State<PrincipalPage> with WidgetsBindingObserver {
                                                         fontSize: 11,
                                                         fontWeight:
                                                             FontWeight.w600,
-                                                        color: theme.fontColor)),
+                                                        color:
+                                                            theme.fontColor)),
                                               ),
                                               const SizedBox(
                                                 height: 12,

@@ -1,6 +1,6 @@
-import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/ui/pages/inicio/inicio_service.dart';
-import 'package:control_ventas_movil/src/ui/pages/inicio/inicio_store.dart';
+import 'package:camino_seguro/src/config/theme_controller.dart';
+import 'package:camino_seguro/src/ui/pages/inicio/inicio_service.dart';
+import 'package:camino_seguro/src/ui/pages/inicio/inicio_store.dart';
 import 'package:flutter/material.dart';
 
 final GlobalKey<ScaffoldMessengerState> inicioMessenger =

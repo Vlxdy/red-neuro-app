@@ -1,8 +1,8 @@
-import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/ui/common/buttons/simple_button.dart';
-import 'package:control_ventas_movil/src/ui/common/drop_down/drop_down.dart';
-import 'package:control_ventas_movil/src/ui/pages/control/control_service.dart';
-import 'package:control_ventas_movil/src/ui/pages/control/control_store.dart';
+import 'package:camino_seguro/src/config/theme_controller.dart';
+import 'package:camino_seguro/src/ui/common/buttons/simple_button.dart';
+import 'package:camino_seguro/src/ui/common/drop_down/drop_down.dart';
+import 'package:camino_seguro/src/ui/pages/control/control_service.dart';
+import 'package:camino_seguro/src/ui/pages/control/control_store.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';

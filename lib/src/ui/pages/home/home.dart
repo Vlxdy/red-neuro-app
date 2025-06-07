@@ -1,16 +1,14 @@
-import 'package:control_ventas_movil/src/config/routes.dart';
-import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/models/bitacora.dart';
-import 'package:control_ventas_movil/src/plugins/auth/auth.dart';
-import 'package:control_ventas_movil/src/plugins/estaciones/bitacora_store.dart';
-import 'package:control_ventas_movil/src/plugins/estaciones/estacion_servicio.dart';
-import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
-import 'package:control_ventas_movil/src/ui/common/keep_alive_page.dart';
-import 'package:control_ventas_movil/src/ui/global/template_page.dart';
-import 'package:control_ventas_movil/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
-import 'package:control_ventas_movil/src/ui/pages/mi_cuenta/mi_cuenta.dart';
-import 'package:control_ventas_movil/src/ui/pages/resumen_dia/resumen_dia.dart';
-import 'package:control_ventas_movil/src/ui/pages/volumenes_contadores/volumenes_contadores_screen.dart';
+import 'package:camino_seguro/src/config/routes.dart';
+import 'package:camino_seguro/src/config/theme_controller.dart';
+import 'package:camino_seguro/src/models/area.dart';
+import 'package:camino_seguro/src/plugins/auth/auth.dart';
+import 'package:camino_seguro/src/plugins/estaciones/estacion_servicio.dart';
+import 'package:camino_seguro/src/plugins/utils/logger.dart';
+import 'package:camino_seguro/src/ui/common/keep_alive_page.dart';
+import 'package:camino_seguro/src/ui/global/template_page.dart';
+import 'package:camino_seguro/src/ui/pages/areas/screens/areas.dart';
+import 'package:camino_seguro/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
+import 'package:camino_seguro/src/ui/pages/mi_cuenta/mi_cuenta.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -29,61 +27,185 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
+  int _selectedSubItem = 0;
+  bool showSubmenu = false;
+
   final PageController controller = PageController(initialPage: 0);
+  final PageController controllerSubmenu = PageController(initialPage: 0);
   late List<ChildrenItem> _itemsChildren;
 
   @override
   void initState() {
     super.initState();
-    verificarBitacora(BitacoraStore.instance.bitacora);
+    _cargarParametricas();
   }
 
-  void _onItemTapped(int index, VoidCallback? ontap, String titulo) {
-    if (ontap != null) {
-      ontap();
+  void _onItemTapped(int index, VoidCallback? onTap, String titulo) {
+    if (onTap != null) {
+      onTap();
     } else {
       setState(() {
         _selectedIndex = index;
+        showSubmenu = false;
       });
-      Logger.info('Vista $titulo');
+      Logger.info('Vista \$titulo');
       controller.jumpToPage(index);
     }
   }
 
-  void verificarBitacora(Bitacora bitacora) {
-    if (bitacora.id == '' || bitacora.fecha?.day != DateTime.now().day) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (context.mounted) {
-          GoRouter.of(context).goNamed(RouteNames.controlScreen);
-        }
-      });
-    }
+  void _onItemTappedSubmenu(String titulo, int indexPadre, int subIndex) {
+    setState(() {
+      _selectedIndex = indexPadre;
+      _selectedSubItem = subIndex;
+      showSubmenu = false;
+    });
+    Logger.info('Vista \$titulo');
+    controllerSubmenu.jumpToPage(subIndex);
   }
 
-  Widget buildNavItem(IconData icon, String label, int index,
-      VoidCallback? ontap, Color? color) {
+  void _cargarParametricas() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (context.mounted) {
+        // final paramService = ParametricasService('', context);
+        // paramService.cargarParametricas();
+      }
+    });
+  }
+
+  void _showMenu(
+      List<ChildrenItem> itemsSubmenu, int indexPadre, String titulo) {
+    final theme = ThemeController.instance;
+    setState(() {
+      showSubmenu = true;
+    });
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                titulo.replaceAll('\n', ' '),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: theme.secondary,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 12),
+              GridView.builder(
+                shrinkWrap: true,
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 250,
+                  mainAxisExtent: 100,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                ),
+                itemCount: itemsSubmenu.length,
+                itemBuilder: (context, subIndex) {
+                  final subitem = itemsSubmenu[subIndex];
+                  return InkWell(
+                    onTap: () {
+                      _onItemTappedSubmenu(
+                          subitem.titulo, indexPadre, subIndex);
+                      Navigator.pop(context);
+                    },
+                    borderRadius: BorderRadius.circular(16),
+                    child: Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 2,
+                      child: Stack(
+                        children: [
+                          Positioned.fill(
+                            child: Align(
+                              alignment: Alignment.center,
+                              child: Opacity(
+                                opacity: 0.1,
+                                child: Icon(
+                                  subitem.iconoImagenSeleccionada,
+                                  size: 50,
+                                  color: subitem.color,
+                                ),
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: subitem.color?.withAlpha(35),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(subitem.iconoImagenSeleccionada,
+                                    color: subitem.color, size: 28),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    subitem.titulo,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: subitem.color,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 10),
+            ],
+          ),
+        );
+      },
+    ).whenComplete(() {
+      setState(() {
+        showSubmenu = false;
+      });
+    });
+  }
+
+  Widget buildNavItem(
+    IconData icon,
+    String label,
+    int index,
+    VoidCallback? onTap,
+    Color? color,
+  ) {
     final bool isSelected = _selectedIndex == index;
     final theme = ThemeController.instance;
 
     return GestureDetector(
-      onTap: () => _onItemTapped(index, ontap, label),
+      onTap: onTap != null
+          ? () => onTap()
+          : () => _onItemTapped(index, onTap, label),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            color: color ?? (isSelected ? theme.primary : null),
-          ),
-          Flexible(
-            child: Text(
-              label,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: color ?? (isSelected ? theme.primary : null),
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                fontSize: 11,
-                overflow: TextOverflow.ellipsis,
-              ),
+          Icon(icon, color: color ?? (isSelected ? theme.primary : null)),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: color ?? (isSelected ? theme.primary : null),
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              fontSize: 11,
             ),
           ),
         ],
@@ -95,164 +217,197 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final theme = ThemeController.instance;
     final isLocked = Auth.instance.isLocked;
-    final estacionServicio = EstacionServicioStore.instance.estacionServicio;
+    final estacion = EstacionServicioStore.instance.estacionServicio;
     final now = DateFormat('dd/MM/yyyy').format(DateTime.now());
-    // Widget controlPage = const Control();
+
     _itemsChildren = [
       ChildrenItem(
-        iconoImagen: SolarIconsOutline.chart_2,
-        iconoImagenSeleccionada: SolarIconsBold.chart_2,
-        titulo: 'Resumen\ndel Día',
-        children: const KeepAlivePage(child: ResumenDelDiaPage()),
+        iconoImagen: SolarIconsOutline.peopleNearby,
+        iconoImagenSeleccionada: SolarIconsBold.peopleNearby,
+        titulo: 'Dependientes',
+        children: const KeepAlivePage(child: Areas()),
       ),
       ChildrenItem(
-        iconoImagen: SolarIconsOutline.checklistMinimalistic,
-        iconoImagenSeleccionada: SolarIconsBold.checklistMinimalistic,
-        titulo: 'Sincronizar\nReportes',
+        iconoImagen: SolarIconsOutline.map,
+        iconoImagenSeleccionada: SolarIconsBold.map,
+        titulo: 'Áreas',
+        children: const Areas(),
+      ),
+      ChildrenItem(
+        iconoImagen: SolarIconsOutline.mapPoint,
+        iconoImagenSeleccionada: SolarIconsBold.mapPoint,
+        titulo: 'Ubicaciones',
         children: const CambiarContrasena(),
       ),
       ChildrenItem(
-        iconoImagen: SolarIconsOutline.gasStation,
-        iconoImagenSeleccionada: SolarIconsBold.gasStation,
-        titulo: 'Volúmenes y\nContadores',
-        children: const VolumenesContadoresScreen(),
+        iconoImagen: SolarIconsOutline.settings,
+        iconoImagenSeleccionada: SolarIconsBold.settings,
+        titulo: 'Configuración',
+        children: const Areas(),
+        itemsSubmenu: [
+          ChildrenItem(
+            color: theme.primary,
+            iconoImagen: SolarIconsOutline.gasStation,
+            iconoImagenSeleccionada: SolarIconsBold.gasStation,
+            titulo: 'Perfil',
+            children: const KeepAlivePage(child: Areas()),
+            onTap: () => GoRouter.of(context).goNamed(RouteNames.perfil),
+          ),
+          ChildrenItem(
+            color: theme.secondary,
+            iconoImagen: SolarIconsOutline.speedometerMiddle,
+            iconoImagenSeleccionada: SolarIconsBold.speedometerMiddle,
+            titulo: 'Cambiar contraseña',
+            children: const CambiarContrasena(),
+          ),
+        ],
       ),
-      ChildrenItem(
-          iconoImagen: SolarIconsOutline.sidebar,
-          iconoImagenSeleccionada: SolarIconsBold.sidebar,
-          titulo: 'Registrar\nVentas',
-          onTap: () async =>
-              await context.pushNamed<String>(RouteNames.registrarVenta)),
     ];
 
     return TemplatePage(
       page: ScaffoldMessenger(
-          child: Scaffold(
-        backgroundColor: theme.background,
-        appBar: AppBar(
-          toolbarHeight: 0,
-          scrolledUnderElevation: 0,
-          elevation: 0,
-          systemOverlayStyle: SystemUiOverlayStyle(
+        key: homeMessenger,
+        child: Scaffold(
+          backgroundColor: theme.background,
+          appBar: AppBar(
+            toolbarHeight: 0,
+            backgroundColor: Colors.transparent,
+            systemOverlayStyle: SystemUiOverlayStyle(
               statusBarBrightness:
                   theme.isDark ? Brightness.dark : Brightness.light,
-              statusBarColor: theme.transparent),
-          backgroundColor: Colors.transparent,
-          centerTitle: false,
-        ),
-        body: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-                Icon(Icons.info, color: theme.primary, size: 28),
-                const SizedBox(width: 20),
-                Icon(Icons.notifications, color: theme.primary, size: 28),
-                const SizedBox(width: 10),
-                IconButton(
-                    onPressed: () {
-                      Auth.instance.isLocked = true;
-                      GoRouter.of(context).goNamed(RouteNames.procesarSesion);
-                    },
-                    icon: Icon(
-                      color: theme.warning,
-                      isLocked
-                          ? SolarIconsBold.lockKeyhole
-                          : SolarIconsBold.lockKeyholeUnlocked,
-                      size: 28,
-                    )),
-                IconButton(
-                    onPressed: () {
-                      setState(() {
-                        Logger.info('Vista Mi Cuenta');
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const Micuenta(),
-                          ),
-                        );
-                      });
-                    },
-                    icon: Icon(
-                      color: theme.primary,
-                      SolarIconsBold.settings,
-                      size: 28,
-                    )),
-              ]),
+              statusBarColor: Colors.transparent,
             ),
-            const SizedBox(
-              height: 10,
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Row(
-                  mainAxisSize: MainAxisSize.max,
+          ),
+          body: Column(
+            children: [
+              // HEADER
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
-                      estacionServicio.nombre,
+                      estacion.nombre,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: theme.black,
                       ),
                     ),
-                    Text(
-                      '$now ${estacionServicio.horaInicio} - ${estacionServicio.horaFin}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: theme.black,
-                      ),
+                    Row(
+                      children: [
+                        IconButton(
+                          onPressed: () {
+                            Auth.instance.isLocked = true;
+                            GoRouter.of(context)
+                                .goNamed(RouteNames.procesarSesion);
+                          },
+                          icon: Icon(
+                            isLocked
+                                ? SolarIconsBold.lockKeyhole
+                                : SolarIconsBold.lockKeyholeUnlocked,
+                            color: theme.warning,
+                            size: 28,
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const Micuenta(),
+                            ),
+                          ),
+                          icon: Icon(
+                            SolarIconsBold.settings,
+                            color: theme.primary,
+                            size: 28,
+                          ),
+                        ),
+                      ],
                     ),
-                  ]),
-            ),
-            Expanded(
-              child: PageView(
-                physics: const NeverScrollableScrollPhysics(),
-                controller: controller,
-                onPageChanged: (pageIndex) {
-                  setState(() {
-                    _selectedIndex = pageIndex;
-                  });
-                },
-                children: _itemsChildren
-                    .map((item) => item.children ?? Container())
-                    .toList(),
+                  ],
+                ),
               ),
-            ),
-          ],
-        ),
-        bottomNavigationBar: BottomAppBar(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: _itemsChildren.asMap().entries.map((entry) {
-              int index = entry.key;
-              ChildrenItem item = entry.value;
-              return buildNavItem(
-                index == _selectedIndex
-                    ? item.iconoImagenSeleccionada
-                    : item.iconoImagen,
-                item.titulo,
-                index,
-                item.children != null ? null : item.onTap,
-                item.color,
-              );
-            }).toList(),
+              // CONTENT
+              Expanded(
+                child: PageView(
+                  physics: const NeverScrollableScrollPhysics(),
+                  controller: controller,
+                  onPageChanged: (i) => setState(() => _selectedIndex = i),
+                  children: _itemsChildren.map((item) {
+                    if (item.itemsSubmenu != null) {
+                      // Si tiene submenu, mostrar controles de submenu
+                      return Column(
+                        children: [
+                          Expanded(
+                            child: PageView(
+                              controller: controllerSubmenu,
+                              children: item.itemsSubmenu!
+                                  .map((sub) => sub.children ?? Container())
+                                  .toList(),
+                            ),
+                          ),
+                          BottomNavigationBar(
+                            currentIndex: _selectedSubItem,
+                            items: item.itemsSubmenu!
+                                .asMap()
+                                .entries
+                                .map((e) => BottomNavigationBarItem(
+                                      icon: Icon(e.value.iconoImagen),
+                                      label: e.value.titulo,
+                                    ))
+                                .toList(),
+                            onTap: (idx) => _onItemTappedSubmenu(
+                              item.itemsSubmenu![idx].titulo,
+                              _selectedIndex,
+                              idx,
+                            ),
+                          ),
+                        ],
+                      );
+                    }
+                    return item.children ?? Container();
+                  }).toList(),
+                ),
+              ),
+              // NAVIGATION
+              BottomAppBar(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: _itemsChildren.asMap().entries.map((entry) {
+                    final idx = entry.key;
+                    final itm = entry.value;
+                    return buildNavItem(
+                      _selectedIndex == idx
+                          ? itm.iconoImagenSeleccionada
+                          : itm.iconoImagen,
+                      itm.titulo,
+                      idx,
+                      itm.itemsSubmenu != null
+                          ? () => _showMenu(itm.itemsSubmenu!, idx, itm.titulo)
+                          : itm.onTap,
+                      itm.color,
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
           ),
         ),
-      )),
+      ),
     );
   }
 }
 
 class ChildrenItem {
-  IconData iconoImagen;
-  IconData iconoImagenSeleccionada;
-  String titulo;
-  Widget? children;
-  VoidCallback? onTap;
-  Color? color;
+  final IconData iconoImagen;
+  final IconData iconoImagenSeleccionada;
+  final String titulo;
+  final Widget? children;
+  final VoidCallback? onTap;
+  final List<ChildrenItem>? itemsSubmenu;
+  final Color? color;
 
   ChildrenItem({
     required this.iconoImagen,
@@ -260,6 +415,7 @@ class ChildrenItem {
     required this.titulo,
     this.children,
     this.onTap,
+    this.itemsSubmenu,
     this.color,
   });
 }

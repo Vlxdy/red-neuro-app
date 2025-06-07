@@ -1,6 +1,6 @@
-import 'package:control_ventas_movil/src/constants/constants.dart';
-import 'package:control_ventas_movil/src/plugins/camera/camera_screen_store.dart';
-import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
+import 'package:camino_seguro/src/constants/constants.dart';
+import 'package:camino_seguro/src/plugins/camera/camera_screen_store.dart';
+import 'package:camino_seguro/src/plugins/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -38,8 +38,8 @@ class Geolocation {
         accuracy: LocationAccuracy.medium,
         timeLimit: Duration(seconds: Constantes.gpsTimeout),
       );
-      final posicion = await Geolocator
-        .getCurrentPosition(locationSettings: settings);
+      final posicion =
+          await Geolocator.getCurrentPosition(locationSettings: settings);
       if (posicion.latitude == 0 || posicion.longitude == 0) {
         throw ErrorDescription('Posición inválida');
       }

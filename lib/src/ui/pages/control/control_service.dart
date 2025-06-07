@@ -1,16 +1,16 @@
-import 'package:control_ventas_movil/src/config/routes.dart';
-import 'package:control_ventas_movil/src/constants/network.dart';
-import 'package:control_ventas_movil/src/models/estacion_servicio.dart';
-import 'package:control_ventas_movil/src/models/horario.dart';
-import 'package:control_ventas_movil/src/plugins/estaciones/bitacora_store.dart';
+import 'package:camino_seguro/src/config/routes.dart';
+import 'package:camino_seguro/src/constants/network.dart';
+import 'package:camino_seguro/src/models/estacion_servicio.dart';
+import 'package:camino_seguro/src/models/horario.dart';
+import 'package:camino_seguro/src/plugins/estaciones/bitacora_store.dart';
 import 'package:flutter/material.dart';
-import 'package:control_ventas_movil/src/config/service_config.dart';
-import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/plugins/utils/logger.dart';
-import 'package:control_ventas_movil/src/ui/common/snackbar/snackbar.dart';
-import 'package:control_ventas_movil/src/ui/global/loading_animation.dart';
-import 'package:control_ventas_movil/src/ui/pages/control/control_store.dart';
-import 'package:control_ventas_movil/src/ui/pages/control/control.dart';
+import 'package:camino_seguro/src/config/service_config.dart';
+import 'package:camino_seguro/src/config/theme_controller.dart';
+import 'package:camino_seguro/src/plugins/utils/logger.dart';
+import 'package:camino_seguro/src/ui/common/snackbar/snackbar.dart';
+import 'package:camino_seguro/src/ui/global/loading_animation.dart';
+import 'package:camino_seguro/src/ui/pages/control/control_store.dart';
+import 'package:camino_seguro/src/ui/pages/control/control.dart';
 import 'package:go_router/go_router.dart';
 
 class ControlService extends ServiceConfig {

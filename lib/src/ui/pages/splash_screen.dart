@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:control_ventas_movil/src/config/init_app.dart';
-import 'package:control_ventas_movil/src/config/theme_controller.dart';
-import 'package:control_ventas_movil/src/constants/resources.dart';
+import 'package:camino_seguro/src/config/init_app.dart';
+import 'package:camino_seguro/src/config/theme_controller.dart';
+import 'package:camino_seguro/src/constants/resources.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
