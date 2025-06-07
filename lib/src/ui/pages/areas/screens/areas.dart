@@ -70,11 +70,13 @@ class AreasScreen extends State<Areas> {
             TextButton(
               child: const Text("Aceptar"),
               onPressed: () async {
-                Navigator.of(context).pop();
-                if (areaEditar != null) {
-                  await service.cambiarEstadoArea(context, areaEditar);
-                  _refresh();
-                }
+                WidgetsBinding.instance.addPostFrameCallback((_) async {
+                  if (!mounted) return;
+                  if (areaEditar != null) {
+                    await service.cambiarEstadoArea(context, areaEditar);
+                    _refresh();
+                  }
+                });
               },
             ),
           ],
@@ -108,14 +110,14 @@ class AreasScreen extends State<Areas> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.map, size: 28),
+                      Icon(Icons.map, size: 28, color: theme.primary),
                       const SizedBox(width: 8),
                       Text(
                         'Áreas permitidas',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: theme.secondary,
+                          color: theme.primary,
                         ),
                       ),
                     ],

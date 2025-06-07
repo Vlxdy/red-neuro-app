@@ -1,11 +1,11 @@
 import 'package:camino_seguro/src/config/theme_controller.dart';
-import 'package:camino_seguro/src/models/area.dart';
 import 'package:camino_seguro/src/models/dependiente.dart';
 import 'package:camino_seguro/src/ui/common/buttons/simple_button.dart';
 import 'package:camino_seguro/src/ui/common/components/skeleton.dart';
 import 'package:camino_seguro/src/ui/common/customdatatable/custom_datatable.dart';
-import 'package:camino_seguro/src/ui/pages/areas/stores/registro_areas_store.dart';
-import 'package:camino_seguro/src/ui/pages/dependoentes/services/dependiente_service.dart';
+import 'package:camino_seguro/src/ui/pages/dependientes/componentes/form_registro_dependientes.dart';
+import 'package:camino_seguro/src/ui/pages/dependientes/services/dependientes.dart';
+import 'package:camino_seguro/src/ui/pages/dependientes/stores/registro_dependientes_store.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -20,11 +20,12 @@ class Dependientes extends StatefulWidget {
 }
 
 class DependientesScreen extends State<Dependientes> {
+  //service
   late DependientesService service;
   @override
   void initState() {
     super.initState();
-    service = DependientesService('/', context);
+    service = DependientesService('/mobile', context);
     service.fetchData();
   }
 
@@ -32,7 +33,8 @@ class DependientesScreen extends State<Dependientes> {
     await service.fetchData();
   }
 
-  void _mostrarModal(RegistroAreasStore store, Dependiente? areaEditar) {
+  void _mostrarModal(
+      RegistroDependientesStore store, Dependiente? dependienteEditar) {
     showModalBottomSheet(
         context: context,
         isScrollControlled: true,
@@ -40,6 +42,11 @@ class DependientesScreen extends State<Dependientes> {
         enableDrag: false,
         builder: (context) => FractionallySizedBox(
               heightFactor: 0.95,
+              child: FormDependientes(
+                titulo: "Registro de dependiente",
+                descripcion: "Registrarás un nuevo dependiente",
+                dependienteEditar: dependienteEditar,
+              ),
             )).whenComplete(() async {
       store.limpiarDatos();
       _refresh();
@@ -47,14 +54,14 @@ class DependientesScreen extends State<Dependientes> {
   }
 
   void _cambiarEstado(
-      RegistroAreasStore store, Dependiente? dependienteEditar) {
+      RegistroDependientesStore store, Dependiente? dependienteEditar) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text("Confirmación"),
           content: Text(
-              "¿Está seguro de que desea ${dependienteEditar?.estado == 'ACTIVO' ? 'deshabilitar' : 'habilitar'} esta área?"),
+              "¿Está seguro de que desea ${dependienteEditar?.estado == 'ACTIVO' ? 'deshabilitar' : 'habilitar'} esta dependiente?"),
           actions: [
             TextButton(
               child: const Text("Cancelar"),
@@ -64,12 +71,16 @@ class DependientesScreen extends State<Dependientes> {
             ),
             TextButton(
               child: const Text("Aceptar"),
-              onPressed: () async {
+              onPressed: () {
                 Navigator.of(context).pop();
-                if (dependienteEditar != null) {
-                  // await service.cambiarEstadoArea(context, dependienteEditar);
-                  _refresh();
-                }
+                WidgetsBinding.instance.addPostFrameCallback((_) async {
+                  if (!mounted) return;
+                  if (dependienteEditar != null) {
+                    await service.cambiarEstadoDependiente(
+                        context, dependienteEditar);
+                    _refresh();
+                  }
+                });
               },
             ),
           ],
@@ -89,7 +100,7 @@ class DependientesScreen extends State<Dependientes> {
   @override
   Widget build(BuildContext context) {
     final theme = ThemeController.instance;
-    final store = context.watch<RegistroAreasStore>();
+    final store = context.watch<RegistroDependientesStore>();
     return ScaffoldMessenger(
       key: dependientesMessenger,
       child: RefreshIndicator(
@@ -101,24 +112,34 @@ class DependientesScreen extends State<Dependientes> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  // const CustomTitle(
-                  //   title: 'Áreas permitidas',
-                  //   icon: Icons.map,
-                  // ),
-                  if (store.tiposMedicionTanques.isNotEmpty)
-                    SimpleButton(
-                      title: 'Nueva área',
-                      preffixicon: Icons.add,
-                      background: theme.primary,
-                      textColor: theme.white,
-                      onTap: () async {
-                        _mostrarModal(store, null);
-                      },
-                    ),
+                  Row(
+                    children: [
+                      Icon(Icons.people, size: 28, color: theme.primary),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Dependientes',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: theme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  SimpleButton(
+                    title: 'Nuevo dependiente',
+                    preffixicon: Icons.add,
+                    background: theme.primary,
+                    textColor: theme.white,
+                    onTap: () async {
+                      _mostrarModal(store, null);
+                    },
+                  ),
                   const SizedBox(height: 10),
                   Expanded(
-                    child: FutureBuilder<List<Area>>(
-                      future: Future.value(store.listaAreas),
+                    child: FutureBuilder<List<Dependiente>>(
+                      future: Future.value(store.listaDependientes),
                       builder: (context, snapshot) {
                         if (store.cargando) {
                           return const SkeletonGrid(
@@ -137,7 +158,7 @@ class DependientesScreen extends State<Dependientes> {
                           );
                         }
 
-                        final areas = snapshot.data!;
+                        final dependientes = snapshot.data!;
                         return LayoutBuilder(
                           builder: (context, constraints) {
                             return ListView(
@@ -152,15 +173,16 @@ class DependientesScreen extends State<Dependientes> {
                                       CriterioOrdenType(nombre: 'Estado'),
                                       CriterioOrdenType(nombre: 'Accion'),
                                     ],
-                                    contenidoTabla: areas.map((area) {
+                                    contenidoTabla:
+                                        dependientes.map((dependiente) {
                                       return [
                                         Center(
                                           child: Text(
-                                            dividirNombre(area.nombre),
+                                            dividirNombre(dependiente.nombre),
                                             textAlign: TextAlign.center,
                                           ),
                                         ),
-                                        Center(child: Text(area.estado)),
+                                        Center(child: Text(dependiente.estado)),
                                         Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
@@ -171,20 +193,23 @@ class DependientesScreen extends State<Dependientes> {
                                                 color: Colors.blue,
                                               ),
                                               onPressed: () {
-                                                // _mostrarModal(store, area);
+                                                _mostrarModal(
+                                                    store, dependiente);
                                               },
                                             ),
                                             IconButton(
                                               icon: Icon(
-                                                area.estado == 'ACTIVO'
+                                                dependiente.estado == 'ACTIVO'
                                                     ? Icons.toggle_on
                                                     : Icons.toggle_off,
-                                                color: area.estado == 'ACTIVO'
+                                                color: dependiente.estado ==
+                                                        'ACTIVO'
                                                     ? Colors.green
                                                     : Colors.grey,
                                               ),
                                               onPressed: () async {
-                                                // _cambiarEstado(store, area);
+                                                _cambiarEstado(
+                                                    store, dependiente);
                                                 _refresh();
                                               },
                                             ),

@@ -93,7 +93,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             return MaterialApp.router(
               locale: _locale,
               debugShowCheckedModeBanner: false,
-              title: 'Control cuotas',
+              title: 'Camino seguro',
               theme: ThemeData(
                   useMaterial3: true,
                   textTheme: textTheme,

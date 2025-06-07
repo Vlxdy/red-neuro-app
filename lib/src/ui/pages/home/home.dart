@@ -1,6 +1,5 @@
 import 'package:camino_seguro/src/config/routes.dart';
 import 'package:camino_seguro/src/config/theme_controller.dart';
-import 'package:camino_seguro/src/models/area.dart';
 import 'package:camino_seguro/src/plugins/auth/auth.dart';
 import 'package:camino_seguro/src/plugins/estaciones/estacion_servicio.dart';
 import 'package:camino_seguro/src/plugins/utils/logger.dart';
@@ -8,6 +7,7 @@ import 'package:camino_seguro/src/ui/common/keep_alive_page.dart';
 import 'package:camino_seguro/src/ui/global/template_page.dart';
 import 'package:camino_seguro/src/ui/pages/areas/screens/areas.dart';
 import 'package:camino_seguro/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
+import 'package:camino_seguro/src/ui/pages/dependientes/screens/dependientes.dart';
 import 'package:camino_seguro/src/ui/pages/mi_cuenta/mi_cuenta.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -225,7 +225,7 @@ class _HomePageState extends State<HomePage> {
         iconoImagen: SolarIconsOutline.peopleNearby,
         iconoImagenSeleccionada: SolarIconsBold.peopleNearby,
         titulo: 'Dependientes',
-        children: const KeepAlivePage(child: Areas()),
+        children: const KeepAlivePage(child: Dependientes()),
       ),
       ChildrenItem(
         iconoImagen: SolarIconsOutline.map,

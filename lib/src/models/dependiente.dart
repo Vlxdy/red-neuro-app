@@ -3,30 +3,34 @@ import 'package:camino_seguro/src/models/area.dart';
 class Dependiente {
   String id;
   String nombre;
+  String codigo;
   String estado;
-  List<Area> areas;
+  List<DependienteArea> dependienteArea;
 
   Dependiente({
     required this.id,
     required this.nombre,
     required this.estado,
-    required this.areas,
+    required this.dependienteArea,
+    required this.codigo,
   });
 
   static Dependiente get empty => Dependiente(
         id: '',
         nombre: '',
+        codigo: '',
         estado: '',
-        areas: [],
+        dependienteArea: [],
       );
 
   factory Dependiente.fromJson(Map<String, dynamic> json) => Dependiente(
         id: json['id'] ?? '',
         nombre: json['nombre'] ?? '',
         estado: json['estado'] ?? '',
-        areas: json['areas'] != null
-            ? List<Area>.from(
-                json['areas'].map((area) => Area.fromJson(area)),
+        codigo: json['codigo'] ?? '',
+        dependienteArea: json['dependienteArea'] != null
+            ? List<DependienteArea>.from(
+                json['areas'].map((area) => DependienteArea.fromJson(area)),
               )
             : [],
       );
@@ -34,8 +38,10 @@ class Dependiente {
   Map<String, dynamic> toJson() => {
         'id': id,
         'nombre': nombre,
+        'codigo': codigo,
         'estado': estado,
-        'areas': areas.map((area) => area.toJson()).toList(),
+        'dependienteArea':
+            dependienteArea.map((depArea) => depArea.toJson()).toList(),
       };
 }
 
@@ -62,5 +68,16 @@ class DependienteArea {
   Map<String, dynamic> toJson() => {
         'id': id,
         'area': area.toJson(),
+      };
+}
+
+class ObjetoId {
+  String id;
+  ObjetoId({required this.id});
+  factory ObjetoId.fromJson(Map<String, dynamic> json) => ObjetoId(
+        id: json['id'] ?? '',
+      );
+  Map<String, dynamic> toJson() => {
+        'id': id,
       };
 }

@@ -19,7 +19,7 @@ class HeaderLogin extends StatelessWidget {
                   fit: BoxFit.contain)),
         ),
         Text(
-          'Bienvenido a Control cuotas móvil',
+          'Bienvenido a camino seguro',
           style: Theme.of(context)
               .textTheme
               .headlineSmall!
