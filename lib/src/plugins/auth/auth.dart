@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:control_ventas_movil/src/constants/constants.dart';
-import 'package:control_ventas_movil/src/plugins/auth/ciudadania.dart';
 import 'package:control_ventas_movil/src/plugins/estaciones/bitacora_store.dart';
 import 'package:control_ventas_movil/src/plugins/estaciones/combustibles_store.dart';
 import 'package:control_ventas_movil/src/plugins/estaciones/estacion_servicio.dart';
@@ -64,7 +63,6 @@ class Auth {
   bool isLocked = true;
 
   final PreferencesService _preferencesService = PreferencesService.instance;
-  final ciudadania = CiudadaniaAuth.instance;
 
   Future<void> login(Map<String, dynamic> json) async {
     final user = Usuario.fromJson(json);
@@ -101,7 +99,6 @@ class Auth {
   Future<String?> logout() async {
     try {
       //TODO: add logout methods for providers
-      await ciudadania.cerrarSesion();
       await clearCredentials();
       // await clearLocalSecurity()
       await seguridad.clearLocalSecurity();

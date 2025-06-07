@@ -4,15 +4,14 @@ class Constantes {
   static final apiUrl = dotenv.get('URL_BASE');
   static final entorno = dotenv.get('ENVIRONMENT');
   static const secureHiveKey = 'llave_encriptacion_hive';
-  static final oidcIssuer = dotenv.get('OIDC_ISSUER');
-  static final oidcClientId = dotenv.get('OIDC_CLIENT_ID');
-  static final oidcRedirectUri = dotenv.get('OIDC_REDIRECT_URI');
   static const timeout = 30;
-  static final imageCompressionQuality = dotenv.get('IMAGE_COMPRESSION_QUALITY');
+  static final imageCompressionQuality =
+      dotenv.get('IMAGE_COMPRESSION_QUALITY');
   static const gpsTimeout = 20;
 }
 
 enum TipoAsociacion { propietario, poseedor, conductor }
+
 extension ExtTipoAsociacion on TipoAsociacion {
   String get name {
     switch (this) {
