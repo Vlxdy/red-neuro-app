@@ -20,6 +20,7 @@ class LoginService extends ServiceConfig {
   void login() async {
     try {
       LoadingAnimation.instance.showLoading();
+      Logger.info("////////////////////////////////////_Iniciar sesion");
       final response = await fetch('/auth',
           type: HttpProtocol.post,
           body: store.form.toJson(),

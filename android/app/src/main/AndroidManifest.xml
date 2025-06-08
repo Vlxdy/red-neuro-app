@@ -11,7 +11,7 @@
     <application
         android:label="Camino seguro"
         android:name="${applicationName}"
-        android:icon="@mipmap/launcher_icon">
+        android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -38,7 +38,7 @@
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="https"
-                      android:host="bo.gob.agetic.lince_2"/>
+                      android:host="com.fabian.ramos.camino_seguro"/>
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

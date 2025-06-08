@@ -1,14 +1,17 @@
 buildscript {
-  repositories {
-    google()
-    mavenCentral()
-  }
-  dependencies {
-    classpath 'com.android.tools.build:gradle:8.3.0'
-    // (aquí van otros classpath que uses, p. ej. kotlin-gradle-plugin)
-  }
-}
+    ext.kotlin_version = '2.1.0'
 
+    repositories {
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.4.0' // versión compatible
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:2.1.0" // ← NO uses $kotlin_version aquí
+        classpath 'com.google.gms:google-services:4.4.2'
+    }
+}
 allprojects {
     repositories {
         google()
