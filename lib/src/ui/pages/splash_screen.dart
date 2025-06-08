@@ -11,8 +11,6 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  // Notifications notifications = Notifications();
-
   Widget _logo() {
     return Column(children: [
       Container(

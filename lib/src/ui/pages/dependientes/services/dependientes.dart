@@ -1,7 +1,6 @@
 import 'package:camino_seguro/src/config/service_config.dart';
 import 'package:camino_seguro/src/config/theme_controller.dart';
 import 'package:camino_seguro/src/constants/network.dart';
-import 'package:camino_seguro/src/models/area.dart';
 import 'package:camino_seguro/src/models/dependiente.dart';
 import 'package:camino_seguro/src/plugins/auth/auth.dart';
 import 'package:camino_seguro/src/plugins/utils/logger.dart';

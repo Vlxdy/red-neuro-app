@@ -115,9 +115,9 @@ class _FormAreas extends State<FormAreas> {
     return Expanded(
       child: FlutterMap(
         options: MapOptions(
-          center:
+          initialCenter:
               puntos.isNotEmpty ? puntos.first : const LatLng(-16.5, -68.15),
-          zoom: 15.0,
+          initialZoom: 15.0,
           onTap: (_, latlng) {
             setState(() {
               puntos.add(latlng);
@@ -144,7 +144,7 @@ class _FormAreas extends State<FormAreas> {
               polygons: [
                 Polygon(
                   points: puntosArea,
-                  color: Colors.orange.withOpacity(0.4),
+                  color: Colors.orange.withAlpha(100),
                   borderStrokeWidth: 3,
                   borderColor: Colors.red,
                 ),

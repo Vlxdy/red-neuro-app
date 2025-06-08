@@ -34,17 +34,28 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
   void inicializar() async {
     Logger.info('Verificar sesión (solo huella)');
     final context = navigatorKey.currentContext!;
+
+    // tengo huella y esa habilitado
+    // tengo huella y no habilitado
+    // no tengo huella
+
     try {
       final hasFingerprint = await seguridad.hasFingeprintEnabled;
-      Logger.info('has fingerprint: $hasFingerprint');
-      if (!context.mounted || !hasFingerprint) return;
-
-      final autenticado = await verificarHuella(context);
-      if (autenticado && context.mounted) {
-        Logger.info('Autenticación por huella exitosa');
-        Auth.instance.isLocked = false;
-        GoRouter.of(context).goNamed(RouteNames.home);
+      if (await seguridad.hasBiometrics) {
+        if (hasFingerprint && context.mounted) {
+          final autenticado = await verificarHuella(context);
+          if (autenticado && context.mounted) {
+            Logger.info('Autenticación por huella exitosa');
+            Auth.instance.isLocked = false;
+            GoRouter.of(context).goNamed(RouteNames.home);
+          }
+          return;
+        }
+        return;
       }
+      if (!context.mounted) return;
+      Auth.instance.isLocked = false;
+      GoRouter.of(context).goNamed(RouteNames.home);
     } catch (e) {
       Logger.error('Error en autenticación biométrica: $e');
     }
@@ -87,22 +98,6 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
                         image: DecorationImage(
                             fit: BoxFit.contain,
                             image: AssetImage(Recursos.logoPrincipal))),
-                  ),
-                  InkWell(
-                    onTap: () {
-                      inicializar();
-                    },
-                    borderRadius: BorderRadius.circular(50),
-                    child: Container(
-                      alignment: Alignment.center,
-                      child: Icon(
-                        color: theme.warning,
-                        Auth.instance.isLocked
-                            ? SolarIconsBold.lockKeyhole
-                            : SolarIconsBold.lockKeyholeUnlocked,
-                        size: 25,
-                      ),
-                    ),
                   ),
                 ],
               ),

@@ -94,25 +94,12 @@ class _MicuentaState extends State<Micuenta> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
                     Text(
-                      'Ajustes',
+                      'Sesión',
                       style: TextStyle(
                           color: theme.fontColor,
                           fontWeight: FontWeight.bold,
                           fontSize: 20),
-                    ),
-                    IconButton(
-                        onPressed: () {
-                          Auth.instance.isLocked = true;
-                          GoRouter.of(context)
-                              .goNamed(RouteNames.procesarSesion);
-                        },
-                        icon: Icon(
-                          color: theme.warning,
-                          isLocked
-                              ? SolarIconsBold.lockKeyhole
-                              : SolarIconsBold.lockKeyholeUnlocked,
-                          size: 23,
-                        ))
+                    )
                   ],
                 ),
               ),
@@ -143,31 +130,14 @@ class _MicuentaState extends State<Micuenta> {
                             borderRadius: BorderRadius.circular(14),
                           ),
                           child: ListTile(
-                            onTap: () {
-                              Logger.info('modificar pin de seguridad');
-                              GoRouter.of(context)
-                                  .pushNamed(RouteNames.modificarPin);
-                            },
-                            // tileColor: Colors.red,
-                            leading: Icon(
-                              SolarIconsBold.lockKeyholeMinimalistic,
-                              color: theme.secondary,
-                            ),
-                            title: const Text(
-                              'Modificar pin de seguridad',
-                              // style: TextStyle(color: theme.error),
-                            ),
-                          ),
-                        ),
-                        Container(
-                          margin: const EdgeInsets.symmetric(vertical: 5),
-                          decoration: BoxDecoration(
-                            color: theme.white,
-                            // backgroundBlendMode: BlendMode.colorBurn,
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: ListTile(
-                            onTap: () {
+                            onTap: () async {
+                              if (!await seguridad.hasBiometrics) {
+                                showSnackBar(miCuentaMessenger,
+                                    'No tienes un sensor de huella disponible',
+                                    state: StatusSnackBar.error,
+                                    colorText: theme.white);
+                                return;
+                              }
                               Logger.info('modificar fingerprint');
                               if (fingerprintEnabled != null &&
                                   hasFingerprint != null &&

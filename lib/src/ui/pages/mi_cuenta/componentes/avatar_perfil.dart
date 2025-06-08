@@ -46,13 +46,6 @@ class AvatarPerfil extends StatelessWidget {
               .titleLarge!
               .copyWith(color: theme.fontColor, fontWeight: FontWeight.w500),
         ),
-        Text(
-          '${perfil.tipoDocumento} ${perfil.nroDocumento}',
-          style: Theme.of(context)
-              .textTheme
-              .bodySmall!
-              .copyWith(color: theme.fontColor, fontWeight: FontWeight.w500),
-        ),
         const SizedBox(height: 8),
         // Text(
         //   perfil.codigo ?? '',
