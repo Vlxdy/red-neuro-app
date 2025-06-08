@@ -26,7 +26,6 @@ class DependientesScreen extends State<Dependientes> {
   void initState() {
     super.initState();
     service = DependientesService('/mobile', context);
-    service.fetchData();
   }
 
   Future<void> _refresh() async {
@@ -72,7 +71,6 @@ class DependientesScreen extends State<Dependientes> {
             TextButton(
               child: const Text("Aceptar"),
               onPressed: () {
-                Navigator.of(context).pop();
                 WidgetsBinding.instance.addPostFrameCallback((_) async {
                   if (!mounted) return;
                   if (dependienteEditar != null) {
@@ -211,6 +209,16 @@ class DependientesScreen extends State<Dependientes> {
                                                 _cambiarEstado(
                                                     store, dependiente);
                                                 _refresh();
+                                              },
+                                            ),
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.visibility,
+                                                color: Colors.blue,
+                                              ),
+                                              onPressed: () {
+                                                _mostrarModal(
+                                                    store, dependiente);
                                               },
                                             ),
                                           ],

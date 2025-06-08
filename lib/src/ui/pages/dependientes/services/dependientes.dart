@@ -42,17 +42,9 @@ class DependientesService extends ServiceConfig {
             .map((e) => Dependiente.fromJson(e))
             .toList();
       }
-
-      // await _registrarVolumenOffline(response.data['filas']);
-      showSnackBar(
-        dependientesMessenger,
-        'Registros obtenidos correctamente',
-        state: StatusSnackBar.success,
-        colorText: theme.white,
-      );
+      Logger.info('Registros obtenidos correctamente');
     } catch (e) {
-      Logger.error('Exception al obtener listado del registro de volumenes $e');
-      Logger.info('[getVolumenesTanques] intentando obtener registros offline');
+      Logger.error('Exception al obtener listado de dependientes $e');
     } finally {}
   }
 

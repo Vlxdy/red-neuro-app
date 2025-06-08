@@ -26,7 +26,6 @@ class AreasScreen extends State<Areas> {
   void initState() {
     super.initState();
     service = AreasService('/mobile', context);
-    service.fetchData();
   }
 
   Future<void> _refresh() async {

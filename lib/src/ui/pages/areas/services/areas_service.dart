@@ -46,17 +46,9 @@ class AreasService extends ServiceConfig {
             .map((e) => Area.fromJson(e))
             .toList();
       }
-
-      // await _registrarVolumenOffline(response.data['filas']);
-      showSnackBar(
-        areasMessenger,
-        'Registros obtenidos correctamente',
-        state: StatusSnackBar.success,
-        colorText: theme.white,
-      );
+      Logger.error('Registros obtenidos correctamente');
     } catch (e) {
-      Logger.error('Exception al obtener listado del registro de volumenes $e');
-      Logger.info('[getVolumenesTanques] intentando obtener registros offline');
+      Logger.error('Exception al obtener listado del areas $e');
     } finally {}
   }
 
@@ -180,7 +172,7 @@ class AreasService extends ServiceConfig {
 
       return result;
     } catch (e) {
-      print('Error en calcularRutaDesdeBackend: $e');
+      Logger.info('Error en calcularRutaDesdeBackend: $e');
       return [];
     }
   }

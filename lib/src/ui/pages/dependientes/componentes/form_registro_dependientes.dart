@@ -1,5 +1,4 @@
 import 'package:camino_seguro/src/config/theme_controller.dart';
-import 'package:camino_seguro/src/models/area.dart';
 import 'package:camino_seguro/src/models/dependiente.dart';
 import 'package:camino_seguro/src/ui/common/buttons/simple_button.dart';
 import 'package:camino_seguro/src/ui/common/components/bottom_navigation.dart';
@@ -10,7 +9,6 @@ import 'package:camino_seguro/src/ui/pages/dependientes/screens/dependientes.dar
 import 'package:camino_seguro/src/ui/pages/dependientes/services/dependientes.dart';
 import 'package:camino_seguro/src/ui/pages/dependientes/stores/registro_dependientes_store.dart';
 import 'package:flutter/material.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:multi_select_flutter/dialog/multi_select_dialog_field.dart';
 import 'package:multi_select_flutter/util/multi_select_item.dart';
 import 'package:provider/provider.dart';
@@ -119,7 +117,6 @@ class _FormDependientes extends State<FormDependientes> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                // MultiSelect
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
                   child: MultiSelectDialogField<String>(
@@ -128,6 +125,10 @@ class _FormDependientes extends State<FormDependientes> {
                         .map((a) => MultiSelectItem(a.id, a.nombre))
                         .toList(),
                     title: const Text("Áreas permitidas"),
+                    initialValue: [
+                      ...?widget.dependienteEditar?.dependienteArea
+                          .map((area) => area.id)
+                    ],
                     selectedColor: Colors.blue,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(5),
@@ -138,7 +139,6 @@ class _FormDependientes extends State<FormDependientes> {
                       areasDependiente = values.map((idArea) {
                         return ObjetoId(id: idArea);
                       }).toList();
-                      ;
                     },
                   ),
                 ),
