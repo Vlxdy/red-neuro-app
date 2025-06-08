@@ -134,4 +134,24 @@ class DependientesService extends ServiceConfig {
       LoadingAnimation.instance.hideLoading();
     }
   }
+
+  Future<void> getUbicaciones() async {
+    try {
+      // final response = await fetch('/dependientes/ubicaciones',
+      //     type: HttpProtocol.get, params: {'limite': '50'});
+      // Logger.success('response -> ${response.data}');
+      Logger.success('enttraaaaa');
+      // if (response.status != StatusNetwork.connected) {
+      //   throw ErrorDescription('La petición no se pudo completar');
+      // }
+      // if (response.status == StatusNetwork.connected) {
+      //   store.setlistaDependientes = (response.data['filas'] as List)
+      //       .map((e) => Dependiente.fromJson(e))
+      //       .toList();
+      // }
+      Logger.info('Se obtuvieron las ubicaciones');
+    } catch (e) {
+      Logger.error('no se pudp $e');
+    } finally {}
+  }
 }
