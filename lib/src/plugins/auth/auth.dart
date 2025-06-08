@@ -229,7 +229,10 @@ class Auth {
 
         final response = await http.post(
           Uri.parse(url),
-          headers: {'Content-Type': 'application/json'},
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ${await apiToken}'
+          },
           body: jsonEncode({'token': tokenFCM, 'idUsuario': userId}),
         );
 
