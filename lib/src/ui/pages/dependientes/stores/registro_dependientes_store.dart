@@ -8,13 +8,20 @@ class RegistroDependientesStore with ChangeNotifier {
   static final RegistroDependientesStore instance =
       RegistroDependientesStore._();
   List<Dependiente> _listaDependientes = [];
+  List<DependienteRuta> _listaDependientesRuta = [];
   bool _cargando = false;
   late List<TipoMedicion> tiposMedicionTanques = TipoMedicion.values.toList();
   List<Dependiente> get listaDependientes => _listaDependientes;
+  List<DependienteRuta> get listaDependientesRuta => _listaDependientesRuta;
   bool get cargando => _cargando;
 
   set setlistaDependientes(List<Dependiente> value) {
     _listaDependientes = value;
+    notifyListeners();
+  }
+
+  set setlistaDependientesRuta(List<DependienteRuta> value) {
+    _listaDependientesRuta = value;
     notifyListeners();
   }
 

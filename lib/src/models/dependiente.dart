@@ -81,3 +81,58 @@ class ObjetoId {
         'id': id,
       };
 }
+
+class DependientesRutaResponse {
+  final List<DependienteRuta> list;
+
+  DependientesRutaResponse({required this.list});
+
+  factory DependientesRutaResponse.fromJson(Map<String, dynamic> json) {
+    return DependientesRutaResponse(
+      list: (json['list'] as List<dynamic>)
+          .map((e) => DependienteRuta.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+}
+
+class DependienteRuta {
+  final String codigo;
+  final RutaDeHoy rutadeHoy;
+
+  DependienteRuta({
+    required this.codigo,
+    required this.rutadeHoy,
+  });
+
+  factory DependienteRuta.fromJson(Map<String, dynamic> json) {
+    return DependienteRuta(
+      codigo: json['codigo'],
+      rutadeHoy: RutaDeHoy.fromJson(json['rutadeHoy'] as Map<String, dynamic>),
+    );
+  }
+}
+
+class RutaDeHoy {
+  final String type;
+  final List<List<double>> coordinates;
+
+  RutaDeHoy({
+    required this.type,
+    required this.coordinates,
+  });
+
+  factory RutaDeHoy.fromJson(Map<String, dynamic> json) {
+    // json['coordinates'] es List<List<num>>, lo convertimos a double
+    final rawCoords = json['coordinates'] as List<dynamic>;
+    final coords = rawCoords.map<List<double>>((row) {
+      final listRow = row as List<dynamic>;
+      return listRow.map((v) => (v as num).toDouble()).toList();
+    }).toList();
+
+    return RutaDeHoy(
+      type: json['type'] as String,
+      coordinates: coords,
+    );
+  }
+}
