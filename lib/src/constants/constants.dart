@@ -11,7 +11,7 @@ class Constantes {
   static const appId = 'bo.gob.agetic.lince2';
   static final mapsApiUrl = dotenv.get('MAPS_API_URL');
   static final mapsApiKey = dotenv.get('MAPS_API_KEY');
-  static final sockets = dotenv.get('URL_SOCKETS');
+  static final sockets = dotenv.get('SOCKETS');
 }
 
 class PatternRegexp {

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:camino_seguro/src/config/service_config.dart';
 import 'package:camino_seguro/src/config/theme_controller.dart';
 import 'package:camino_seguro/src/constants/network.dart';
@@ -26,6 +28,7 @@ class DependientesService extends ServiceConfig {
 
   Future<void> fetchData() async {
     await getDependientes();
+    await getUbicaciones();
   }
 
   Future<void> getDependientes() async {
@@ -137,21 +140,24 @@ class DependientesService extends ServiceConfig {
 
   Future<void> getUbicaciones() async {
     try {
-      // final response = await fetch('/dependientes/ubicaciones',
-      //     type: HttpProtocol.get, params: {'limite': '50'});
-      // Logger.success('response -> ${response.data}');
-      Logger.success('enttraaaaa');
-      // if (response.status != StatusNetwork.connected) {
-      //   throw ErrorDescription('La petición no se pudo completar');
-      // }
-      // if (response.status == StatusNetwork.connected) {
-      //   store.setlistaDependientes = (response.data['filas'] as List)
-      //       .map((e) => Dependiente.fromJson(e))
-      //       .toList();
-      // }
-      Logger.info('Se obtuvieron las ubicaciones');
+      final response = await fetch('/ubicaciones', type: HttpProtocol.get);
+      Logger.success('response -> ${response.data}');
+      if (response.status != StatusNetwork.connected) {
+        throw ErrorDescription('La petición no se pudo completar');
+      }
+      final ubicaciones = (response.data['list'] as List)
+          .map((e) => DependienteRuta.fromJson(e as Map<String, dynamic>))
+          .toList();
+      Logger.info(
+          'Ubicaciones obtenidas: ${jsonEncode(ubicaciones.map((e) => e.toString()).toList())}');
+
+      store.setlistaDependientesRuta = ubicaciones;
+      Logger.info(
+          '------------------------------> ${store.listaDependientesRuta[0].rutadeHoy.coordinates}');
+      if (response.status == StatusNetwork.connected) {}
+      Logger.info('Registros obtenidos correctamente');
     } catch (e) {
-      Logger.error('no se pudp $e');
+      Logger.error('Exception al obtener listado de ubicaciones $e');
     } finally {}
   }
 }

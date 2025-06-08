@@ -1,5 +1,6 @@
 import 'package:camino_seguro/src/config/theme_controller.dart';
 import 'package:camino_seguro/src/models/area.dart';
+import 'package:camino_seguro/src/models/dependiente.dart';
 import 'package:camino_seguro/src/ui/pages/areas/stores/registro_areas_store.dart';
 import 'package:camino_seguro/src/ui/pages/dependientes/stores/registro_dependientes_store.dart';
 import 'package:flutter/material.dart';
@@ -25,9 +26,25 @@ class UbicacionesScreen extends State<Ubicaciones> {
 
   Future<void> _refresh() async {}
 
-  Widget _mapaUbicacaionesWidget(List<Area> areas) {
+  Widget _mapaUbicacaionesWidget(
+      List<Area> areas, List<DependienteRuta> rutasDeHoy) {
     List<Polygon> polygons = [];
     List<Polyline> polylines = [];
+
+    for (final dep in rutasDeHoy) {
+      if (dep.rutadeHoy.coordinates.isNotEmpty) {
+        final routePoints = dep.rutadeHoy.coordinates
+            .map((coord) => LatLng(coord[1], coord[0]))
+            .toList();
+        polylines.add(
+          Polyline(
+            points: routePoints,
+            color: Colors.purple,
+            strokeWidth: 4.0,
+          ),
+        );
+      }
+    }
 
     for (final area in areas) {
       // Geometría (área)
@@ -121,8 +138,10 @@ class UbicacionesScreen extends State<Ubicaciones> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  _mapaUbicacaionesWidget(areasStore
-                      .listaAreas), // 👈 Aquí estaba el problema: faltaba el widget dentro del `Column`
+                  _mapaUbicacaionesWidget(
+                      areasStore.listaAreas,
+                      RegistroDependientesStore.instance
+                          .listaDependientesRuta), // 👈 Aquí estaba el problema: faltaba el widget dentro del `Column`
                 ],
               ),
             ),
