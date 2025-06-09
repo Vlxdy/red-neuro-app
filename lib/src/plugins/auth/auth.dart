@@ -82,7 +82,7 @@ class Auth {
     _store.isLogged = true;
 
     // 🔹 Registra el token FCM una vez autenticado
-    await _registrarTokenFCM();
+    // await _registrarTokenFCM();
   }
 
   Future<void> updateUser(Usuario user) async {
@@ -209,7 +209,7 @@ class Auth {
     _localAuth = value;
   }
 
-  Future<void> _registrarTokenFCM() async {
+  Future<void> registrarTokenFCM() async {
     try {
       Logger.info("🔐 Verificando inicialización de Firebase...");
       await Firebase.initializeApp(); // 🔹 Asegura la inicialización

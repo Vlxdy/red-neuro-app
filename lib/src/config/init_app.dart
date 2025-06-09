@@ -36,6 +36,7 @@ class InitAppController {
 
     await auth.updateAppInfo();
     await auth.validateFirstTime();
+    await Auth.instance.registrarTokenFCM();
 
     if (token.isEmpty) {
       await auth.logout();
