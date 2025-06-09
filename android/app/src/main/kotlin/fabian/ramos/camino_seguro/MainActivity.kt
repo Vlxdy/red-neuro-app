@@ -1,4 +1,4 @@
-package bo.gob.agetic.lince_2
+package com.fabian.ramos.camino_seguro
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

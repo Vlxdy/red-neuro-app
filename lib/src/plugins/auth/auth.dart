@@ -1,17 +1,17 @@
 import 'dart:convert';
-
 import 'package:camino_seguro/src/constants/constants.dart';
 import 'package:camino_seguro/src/plugins/seguridad/seguridad.dart';
 import 'package:camino_seguro/src/plugins/utils/connection.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:camino_seguro/src/constants/keys.dart';
 import 'package:camino_seguro/src/models/user.dart';
 import 'package:camino_seguro/src/plugins/utils/logger.dart';
 import 'package:camino_seguro/src/plugins/utils/preferences.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
-
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class AuthStore with ChangeNotifier {
   AuthStore._();
@@ -80,6 +80,9 @@ class Auth {
     }
 
     _store.isLogged = true;
+
+    // 🔹 Registra el token FCM una vez autenticado
+    await _registrarTokenFCM();
   }
 
   Future<void> updateUser(Usuario user) async {
@@ -91,7 +94,6 @@ class Auth {
   Future<String?> logout() async {
     try {
       await clearCredentials();
-      // await clearLocalSecurity()
       await seguridad.clearLocalSecurity();
       _store.isLogged = false;
     } catch (e) {
@@ -205,5 +207,43 @@ class Auth {
   bool get localAuth => _localAuth;
   set localAuth(bool value) {
     _localAuth = value;
+  }
+
+  Future<void> _registrarTokenFCM() async {
+    try {
+      Logger.info("🔐 Verificando inicialización de Firebase...");
+      await Firebase.initializeApp(); // 🔹 Asegura la inicialización
+
+      Logger.info("🔐 Solicitando permisos FCM...");
+      await FirebaseMessaging.instance.requestPermission();
+
+      final tokenFCM = await FirebaseMessaging.instance.getToken();
+      Logger.info("📱 Token FCM obtenido: $tokenFCM");
+
+      if (tokenFCM != null && tokenFCM.isNotEmpty) {
+        final userId = await idUsuario;
+        Logger.info("🧾 ID Usuario: $userId");
+
+        final url = '${Constantes.apiUrl}/notificaciones/registrar-token';
+        Logger.info("📡 Enviando token a $url");
+
+        final response = await http.post(
+          Uri.parse(url),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ${await apiToken}'
+          },
+          body: jsonEncode({'token': tokenFCM, 'idUsuario': userId}),
+        );
+
+        Logger.info("✅ Token enviado. Status: ${response.statusCode}");
+        Logger.info("🧾 Respuesta: ${response.body}");
+      } else {
+        Logger.error("❌ Token FCM vacío o null.");
+      }
+    } catch (e, stacktrace) {
+      Logger.error("❌ Error registrando token FCM: $e");
+      Logger.error("📌 Stacktrace:\n$stacktrace");
+    }
   }
 }
