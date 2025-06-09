@@ -98,16 +98,19 @@ class DependientesRutaResponse {
 
 class DependienteRuta {
   final String codigo;
+  final String nombre;
   final RutaDeHoy rutadeHoy;
 
   DependienteRuta({
     required this.codigo,
     required this.rutadeHoy,
+    required this.nombre,
   });
 
   factory DependienteRuta.fromJson(Map<String, dynamic> json) {
     return DependienteRuta(
       codigo: json['codigo'],
+      nombre: json['nombre'],
       rutadeHoy: RutaDeHoy.fromJson(json['rutadeHoy'] as Map<String, dynamic>),
     );
   }
