@@ -118,7 +118,7 @@ class _PrincipalPage extends State<PrincipalPage> with WidgetsBindingObserver {
                                                     left: Radius.circular(30)),
                                             image: const DecorationImage(
                                                 image: AssetImage(
-                                                    Recursos.geolocalizacion),
+                                                    Recursos.logoPrincipal),
                                                 fit: BoxFit.contain))),
                                   ),
                                 ),

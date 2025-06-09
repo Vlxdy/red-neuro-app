@@ -32,6 +32,37 @@ class DependientesScreen extends State<Dependientes> {
     await service.fetchData();
   }
 
+  void _mostrarNotificaciones(
+      RegistroDependientesStore store, Dependiente? dependienteEditar) {
+    showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        isDismissible: false,
+        enableDrag: false,
+        builder: (context) => FractionallySizedBox(
+            heightFactor: 0.95,
+            child: dependienteEditar?.notificaciones.isEmpty ?? true
+                ? const Center(
+                    child: Text('No hay notificaciones disponibles'),
+                  )
+                : ListView.builder(
+                    itemCount: dependienteEditar!.notificaciones.length,
+                    itemBuilder: (context, index) {
+                      final notificacion =
+                          dependienteEditar.notificaciones[index];
+                      return ListTile(
+                        title:
+                            Text('${dependienteEditar.nombre} fuera del area'),
+                        subtitle: Text(notificacion.cuerpo),
+                        leading: Icon(Icons.notifications,
+                            color: Theme.of(context).primaryColor),
+                      );
+                    },
+                  ))).whenComplete(() async {
+      _refresh();
+    });
+  }
+
   void _mostrarModal(
       RegistroDependientesStore store, Dependiente? dependienteEditar) {
     showModalBottomSheet(
@@ -217,7 +248,7 @@ class DependientesScreen extends State<Dependientes> {
                                                 color: Colors.blue,
                                               ),
                                               onPressed: () {
-                                                _mostrarModal(
+                                                _mostrarNotificaciones(
                                                     store, dependiente);
                                               },
                                             ),

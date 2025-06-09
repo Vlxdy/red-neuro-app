@@ -69,7 +69,8 @@ class UbicacionesScreen extends State<Ubicaciones> {
         polylines.add(Polyline(
           points: routePoints,
           color: routeColor,
-          strokeWidth: 4.0,
+          strokeWidth: 6.0,
+          isDotted: true,
         ));
 
         // Coloca un marcador en el último punto
@@ -104,9 +105,9 @@ class UbicacionesScreen extends State<Ubicaciones> {
         final pts = poly.map((c) => LatLng(c[1], c[0])).toList();
         polygons.add(Polygon(
           points: pts,
-          color: Colors.green.withAlpha(50),
-          borderColor: Colors.green,
-          borderStrokeWidth: 2,
+          color: colorFromText(area.nombre).withAlpha(50),
+          borderColor: colorFromText(area.nombre),
+          borderStrokeWidth: 1,
           isFilled: true,
         ));
       }
@@ -114,7 +115,8 @@ class UbicacionesScreen extends State<Ubicaciones> {
       if (area.ruta.coordinates.isNotEmpty) {
         final pts =
             area.ruta.coordinates.map((c) => LatLng(c[1], c[0])).toList();
-        polylines.add(Polyline(points: pts, color: Colors.red, strokeWidth: 3));
+        polylines.add(Polyline(
+            points: pts, color: colorFromText(area.nombre), strokeWidth: 3));
       }
     }
 

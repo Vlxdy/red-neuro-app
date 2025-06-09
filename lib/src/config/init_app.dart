@@ -53,12 +53,6 @@ class InitAppController {
       Logger.info('Dependientes traidos');
     });
 
-    final idUsuario = await Auth.instance.idUsuario;
-    if (idUsuario != null) {
-      await socketProvider.init(idUsuario, context);
-    } else {
-      Logger.error('idUsuario is null');
-    }
     if (!context.mounted) return;
     GoRouter.of(context).goNamed(RouteNames.procesarSesion);
   }

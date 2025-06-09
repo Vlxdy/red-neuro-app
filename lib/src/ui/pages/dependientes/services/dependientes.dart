@@ -158,12 +158,6 @@ class DependientesService extends ServiceConfig {
           '------------------------------> ${store.listaDependientesRuta[0].rutadeHoy.coordinates}');
       if (response.status == StatusNetwork.connected) {}
       Logger.info('Registros obtenidos correctamente');
-      showSnackBar(
-        ubicacionesMessenger,
-        response.message,
-        state: StatusSnackBar.info,
-        colorText: theme.white,
-      );
     } catch (e) {
       Logger.error('Exception al obtener listado de ubicaciones $e');
     } finally {}

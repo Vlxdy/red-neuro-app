@@ -27,7 +27,7 @@ class _LoginState extends State<LoginAccount> {
                 child: Opacity(
                   opacity: 0.3, // Adjust the opacity value as needed
                   child: Image.asset(
-                    Recursos.ubicacion,
+                    Recursos.logoPrincipal,
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -44,8 +44,13 @@ class _LoginState extends State<LoginAccount> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         const SizedBox(height: 70),
+                        Image.asset(
+                          Recursos.icono,
+                          height: 150,
+                          width: 150,
+                        ),
                         Text(
-                          'Geolocaliza',
+                          'Camino Seguro',
                           style: Theme.of(context)
                               .textTheme
                               .headlineLarge!
@@ -57,7 +62,7 @@ class _LoginState extends State<LoginAccount> {
                             shadows: [
                               const Shadow(
                                 offset: Offset(3.0, 3.0),
-                                color: Color.fromARGB(255, 255, 242, 0),
+                                color: Color.fromARGB(255, 237, 152, 5),
                               ),
                             ],
                           ),

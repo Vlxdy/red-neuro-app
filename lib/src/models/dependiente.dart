@@ -6,12 +6,14 @@ class Dependiente {
   String codigo;
   String estado;
   List<DependienteArea> dependienteArea;
+  List<Notificacion> notificaciones;
 
   Dependiente({
     required this.id,
     required this.nombre,
     required this.estado,
     required this.dependienteArea,
+    required this.notificaciones,
     required this.codigo,
   });
 
@@ -21,6 +23,7 @@ class Dependiente {
         codigo: '',
         estado: '',
         dependienteArea: [],
+        notificaciones: [],
       );
 
   factory Dependiente.fromJson(Map<String, dynamic> json) => Dependiente(
@@ -33,6 +36,11 @@ class Dependiente {
                 json['areas'].map((area) => DependienteArea.fromJson(area)),
               )
             : [],
+        notificaciones: json['notificaciones'] != null
+            ? List<Notificacion>.from(
+                json['areas'].map((not) => Notificacion.fromJson(not)),
+              )
+            : [],
       );
 
   Map<String, dynamic> toJson() => {
@@ -42,6 +50,67 @@ class Dependiente {
         'estado': estado,
         'dependienteArea':
             dependienteArea.map((depArea) => depArea.toJson()).toList(),
+      };
+}
+
+class Notificacion {
+  final String id;
+  final String estado;
+  final String transaccion;
+  final String usuarioCreacion;
+  final DateTime fechaCreacion;
+  final String? usuarioModificacion;
+  final DateTime fechaModificacion;
+  final String titulo;
+  final String cuerpo;
+  final String idUsuario;
+  final String idDependiente;
+
+  Notificacion({
+    required this.id,
+    required this.estado,
+    required this.transaccion,
+    required this.usuarioCreacion,
+    required this.fechaCreacion,
+    this.usuarioModificacion,
+    required this.fechaModificacion,
+    required this.titulo,
+    required this.cuerpo,
+    required this.idUsuario,
+    required this.idDependiente,
+  });
+
+  factory Notificacion.fromJson(Map<String, dynamic> json) {
+    DateTime parseDate(String? s) =>
+        s != null ? DateTime.parse(s) : DateTime.fromMillisecondsSinceEpoch(0);
+
+    return Notificacion(
+      id: json['id']?.toString() ?? '',
+      estado: json['estado'] as String? ?? '',
+      transaccion: json['transaccion'] as String? ?? '',
+      usuarioCreacion: json['usuarioCreacion'] as String? ?? '',
+      fechaCreacion: parseDate(json['fechaCreacion'] as String?),
+      usuarioModificacion: json['usuarioModificacion'] as String?,
+      fechaModificacion: parseDate(json['fechaModificacion'] as String?),
+      titulo: json['titulo'] as String? ?? '',
+      cuerpo: json['cuerpo'] as String? ?? '',
+      idUsuario: json['idUsuario']?.toString() ?? '',
+      idDependiente: json['idDependiente']?.toString() ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'estado': estado,
+        'transaccion': transaccion,
+        'usuarioCreacion': usuarioCreacion,
+        'fechaCreacion': fechaCreacion.toIso8601String(),
+        'usuarioModificacion': usuarioModificacion,
+        'fechaModificacion': fechaModificacion.toIso8601String(),
+        'titulo': titulo,
+        'cuerpo': cuerpo,
+        'idUsuario': idUsuario,
+        'idDependiente': idDependiente,
       };
 }
 

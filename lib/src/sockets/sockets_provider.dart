@@ -1,6 +1,8 @@
 // lib/src/providers/socket_provider.dart
+import 'package:camino_seguro/main.dart';
 import 'package:camino_seguro/src/config/socket_service.dart';
 import 'package:camino_seguro/src/plugins/utils/logger.dart';
+import 'package:camino_seguro/src/ui/common/snackbar/snackbar.dart';
 import 'package:camino_seguro/src/ui/pages/dependientes/services/dependientes.dart';
 import 'package:flutter/material.dart';
 
@@ -30,11 +32,18 @@ class SocketProvider extends ChangeNotifier {
     SocketService.instance.on<Map<String, dynamic>>(
       'ubicacion-actualizada',
       (data) async {
-        final id = data['codigo'] as String;
-        final lat = (data['coordenadas']['latitude'] as num).toDouble();
-        final lng = (data['coordenadas']['longitude'] as num).toDouble();
-        // _depsStore.updateUbicacion(id, lat, lng);
-        Logger.info('viene aquiiiiiiiiiiiiiiiiiiii');
+        final advertencia = data['advertencia'] as String?;
+        Logger.info('Nueva ubicación recibida');
+
+        showSnackBar(
+          rootScaffoldMessengerKey,
+          advertencia ?? 'Ubicación actualizada correctamente',
+          state: advertencia != null
+              ? StatusSnackBar.error
+              : StatusSnackBar.success,
+          colorText: Colors.white,
+        );
+
         await dependientesService.getUbicaciones();
       },
     );

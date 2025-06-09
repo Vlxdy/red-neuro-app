@@ -4,6 +4,7 @@ import 'package:camino_seguro/src/plugins/auth/auth.dart';
 import 'package:camino_seguro/src/plugins/seguridad/seguridad.dart';
 import 'package:camino_seguro/src/plugins/utils/local_secure.dart';
 import 'package:camino_seguro/src/plugins/utils/logger.dart';
+import 'package:camino_seguro/src/sockets/sockets_provider.dart';
 import 'package:camino_seguro/src/ui/common/buttons/simple_button.dart';
 import 'package:flutter/material.dart';
 import 'package:camino_seguro/src/config/theme_controller.dart';
@@ -24,11 +25,13 @@ class ProcesarSesion extends StatefulWidget {
 class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
   final auth = Auth.instance;
   final seguridad = Seguridad.instance;
+  late SocketProvider socketProvider;
 
   @override
   void initState() {
     super.initState();
     inicializar();
+    socketProvider = SocketProvider();
   }
 
   void inicializar() async {
@@ -45,6 +48,10 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
         if (hasFingerprint && context.mounted) {
           final autenticado = await verificarHuella(context);
           if (autenticado && context.mounted) {
+            final idUsuario = await Auth.instance.idUsuario;
+            if (idUsuario != null) {
+              await socketProvider.init(idUsuario, context);
+            }
             Logger.info('Autenticación por huella exitosa');
             Auth.instance.isLocked = false;
             GoRouter.of(context).goNamed(RouteNames.home);

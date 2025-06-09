@@ -16,6 +16,9 @@ import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 
+final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
+
 Future<void> initHiveStorage() async {
   await Hive.initFlutter();
   const secureStorage = FlutterSecureStorage();
@@ -94,6 +97,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
               locale: _locale,
               debugShowCheckedModeBanner: false,
               title: 'Camino seguro',
+              scaffoldMessengerKey: rootScaffoldMessengerKey,
               theme: ThemeData(
                   useMaterial3: true,
                   textTheme: textTheme,
