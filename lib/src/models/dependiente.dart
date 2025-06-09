@@ -98,16 +98,19 @@ class DependientesRutaResponse {
 
 class DependienteRuta {
   final String codigo;
+  final String nombre;
   final RutaDeHoy rutadeHoy;
 
   DependienteRuta({
     required this.codigo,
+    required this.nombre,
     required this.rutadeHoy,
   });
 
   factory DependienteRuta.fromJson(Map<String, dynamic> json) {
     // 1) Convertir código a String sea cual sea su tipo original
     final codigoRaw = json['codigo'];
+    final nombre = json['nombre'] as String? ?? '';
     final codigo = codigoRaw is String
         ? codigoRaw
         : codigoRaw != null
@@ -122,6 +125,7 @@ class DependienteRuta {
 
     return DependienteRuta(
       codigo: codigo,
+      nombre: nombre,
       rutadeHoy: ruta,
     );
   }

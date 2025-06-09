@@ -54,14 +54,14 @@ class UbicacionesScreen extends State<Ubicaciones> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.location_on, size: 24, color: Colors.purple),
+                  const Icon(Icons.location_on, size: 40, color: Colors.purple),
                   const SizedBox(height: 4),
                   Container(
                     color: Colors.white,
                     padding:
                         const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                     child: Text(
-                      dep.codigo,
+                      dep.nombre,
                       style: const TextStyle(
                         fontSize: 16,
                         color: Colors.purple,
