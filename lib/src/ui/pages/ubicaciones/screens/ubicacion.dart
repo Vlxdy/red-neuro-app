@@ -30,6 +30,7 @@ class UbicacionesScreen extends State<Ubicaciones> {
       List<Area> areas, List<DependienteRuta> rutasDeHoy) {
     List<Polygon> polygons = [];
     List<Polyline> polylines = [];
+    final markers = <Marker>[];
 
     for (final dep in rutasDeHoy) {
       if (dep.rutadeHoy.coordinates.isNotEmpty) {
@@ -41,6 +42,36 @@ class UbicacionesScreen extends State<Ubicaciones> {
             points: routePoints,
             color: Colors.purple,
             strokeWidth: 4.0,
+          ),
+        );
+        final lastPoint = routePoints[routePoints.length - 1];
+        markers.add(
+          Marker(
+            point: lastPoint,
+            width: 100,
+            height: 100,
+            child: GestureDetector(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.location_on, size: 24, color: Colors.purple),
+                  const SizedBox(height: 4),
+                  Container(
+                    color: Colors.white,
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                    child: Text(
+                      dep.nombre,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.purple,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         );
       }
@@ -101,6 +132,7 @@ class UbicacionesScreen extends State<Ubicaciones> {
             PolylineLayer(
               polylines: polylines,
             ),
+          if (markers.isNotEmpty) MarkerLayer(markers: markers)
         ],
       ),
     );
@@ -110,7 +142,6 @@ class UbicacionesScreen extends State<Ubicaciones> {
   Widget build(BuildContext context) {
     final theme = ThemeController.instance;
     final areasStore = context.watch<RegistroAreasStore>();
-    final dependientesStore = context.watch<RegistroDependientesStore>();
 
     return ScaffoldMessenger(
       key: areasMessenger,
