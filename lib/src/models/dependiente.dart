@@ -98,20 +98,31 @@ class DependientesRutaResponse {
 
 class DependienteRuta {
   final String codigo;
-  final String nombre;
   final RutaDeHoy rutadeHoy;
 
   DependienteRuta({
     required this.codigo,
     required this.rutadeHoy,
-    required this.nombre,
   });
 
   factory DependienteRuta.fromJson(Map<String, dynamic> json) {
+    // 1) Convertir código a String sea cual sea su tipo original
+    final codigoRaw = json['codigo'];
+    final codigo = codigoRaw is String
+        ? codigoRaw
+        : codigoRaw != null
+            ? codigoRaw.toString()
+            : '';
+
+    // 2) RutadeHoy: si es Map parsea, si no (p.ej. []), creamos vacío
+    final rawRuta = json['rutadeHoy'];
+    final ruta = rawRuta is Map<String, dynamic>
+        ? RutaDeHoy.fromJson(rawRuta)
+        : RutaDeHoy(type: '', coordinates: []);
+
     return DependienteRuta(
-      codigo: json['codigo'],
-      nombre: json['nombre'],
-      rutadeHoy: RutaDeHoy.fromJson(json['rutadeHoy'] as Map<String, dynamic>),
+      codigo: codigo,
+      rutadeHoy: ruta,
     );
   }
 }
@@ -126,15 +137,14 @@ class RutaDeHoy {
   });
 
   factory RutaDeHoy.fromJson(Map<String, dynamic> json) {
-    // json['coordinates'] es List<List<num>>, lo convertimos a double
-    final rawCoords = json['coordinates'] as List<dynamic>;
+    final rawCoords = json['coordinates'] as List<dynamic>? ?? [];
     final coords = rawCoords.map<List<double>>((row) {
       final listRow = row as List<dynamic>;
       return listRow.map((v) => (v as num).toDouble()).toList();
     }).toList();
 
     return RutaDeHoy(
-      type: json['type'] as String,
+      type: json['type'] as String? ?? '',
       coordinates: coords,
     );
   }

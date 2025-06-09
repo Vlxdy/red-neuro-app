@@ -61,7 +61,7 @@ class UbicacionesScreen extends State<Ubicaciones> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                     child: Text(
-                      dep.nombre,
+                      dep.codigo,
                       style: const TextStyle(
                         fontSize: 16,
                         color: Colors.purple,
