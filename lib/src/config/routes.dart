@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:camino_seguro/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
-import 'package:camino_seguro/src/ui/pages/control/control.dart';
 import 'package:camino_seguro/src/ui/pages/seguridad/configuracion_desbloqueo.dart';
 import 'package:camino_seguro/src/ui/pages/seguridad/configuracion_pin_seguridad.dart';
 import 'package:camino_seguro/src/ui/pages/home/home.dart';
@@ -115,11 +114,6 @@ List<RouteBase> routes = [
     name: RouteNames.modificarPin,
     path: '/${RouteNames.modificarPin}',
     builder: (context, state) => const ModificarPinSeguridad(),
-  ),
-  GoRoute(
-    name: RouteNames.controlScreen,
-    path: '/${RouteNames.controlScreen}',
-    builder: (context, state) => const Control(),
   ),
   GoRoute(
       name: RouteNames.vistaCamara,

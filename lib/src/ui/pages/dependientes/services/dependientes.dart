@@ -10,8 +10,6 @@ import 'package:camino_seguro/src/ui/common/snackbar/snackbar.dart';
 import 'package:camino_seguro/src/ui/global/loading_animation.dart';
 import 'package:camino_seguro/src/ui/pages/dependientes/screens/dependientes.dart';
 import 'package:camino_seguro/src/ui/pages/dependientes/stores/registro_dependientes_store.dart';
-import 'package:camino_seguro/src/ui/pages/home/home.dart';
-import 'package:camino_seguro/src/ui/pages/ubicaciones/screens/ubicacion.dart';
 import 'package:flutter/material.dart';
 
 class DependientesService extends ServiceConfig {

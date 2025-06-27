@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:camino_seguro/src/constants/keys.dart';
 import 'package:camino_seguro/src/models/bitacora.dart';
-import 'package:camino_seguro/src/plugins/estaciones/estacion_servicio.dart';
 import 'package:camino_seguro/src/plugins/utils/logger.dart';
 import 'package:camino_seguro/src/plugins/utils/preferences.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +16,6 @@ class BitacoraStore with ChangeNotifier {
 
   BitacoraStore._();
   static final instance = BitacoraStore._();
-  final _estacioStore = EstacionServicioStore.instance;
   final PreferencesService _preferencesService = PreferencesService.instance;
 
   Future<void> actualizar(Map<String, dynamic> json, DateTime fecha) async {
@@ -29,7 +27,6 @@ class BitacoraStore with ChangeNotifier {
     await _preferencesService.setString(
         Keys.bitacora, jsonEncode(nuevaBitacora.toJson()));
     setBitacora = nuevaBitacora;
-    await _estacioStore.actualizar(json);
   }
 
   Future<Bitacora> bitacoraAsync() async {

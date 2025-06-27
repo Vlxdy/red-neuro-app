@@ -1,5 +1,4 @@
 import 'package:camino_seguro/src/config/theme_controller.dart';
-import 'package:camino_seguro/src/plugins/auth/auth.dart';
 import 'package:camino_seguro/src/plugins/estaciones/bitacora_store.dart';
 import 'package:camino_seguro/src/plugins/utils/logger.dart';
 import 'package:camino_seguro/src/ui/common/keep_alive_page.dart';
@@ -12,7 +11,6 @@ import 'package:camino_seguro/src/ui/pages/perfil/perfil.dart';
 import 'package:camino_seguro/src/ui/pages/ubicaciones/screens/ubicacion.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
 import 'package:solar_icons/solar_icons.dart';
 
 final GlobalKey<ScaffoldMessengerState> homeMessenger =
@@ -229,9 +227,6 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final theme = ThemeController.instance;
-    final isLocked = Auth.instance.isLocked;
-    final bitacora = bitacoraStore.bitacora;
-    final now = DateFormat('dd/MM/yyyy').format(DateTime.now());
     _itemsMenu = [
       ChildrenItem(
         iconoImagen: SolarIconsOutline.peopleNearby,

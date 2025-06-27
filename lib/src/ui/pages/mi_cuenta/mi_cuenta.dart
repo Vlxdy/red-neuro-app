@@ -1,4 +1,3 @@
-import 'package:camino_seguro/src/config/routes.dart';
 import 'package:camino_seguro/src/config/theme_controller.dart';
 import 'package:camino_seguro/src/plugins/auth/auth.dart';
 import 'package:camino_seguro/src/plugins/seguridad/seguridad.dart';
@@ -7,7 +6,6 @@ import 'package:camino_seguro/src/ui/common/alerts/confirmation_alert_dialog.dar
 import 'package:camino_seguro/src/ui/common/snackbar/snackbar.dart';
 import 'package:camino_seguro/src/ui/pages/mi_cuenta/componentes/avatar_perfil.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:solar_icons/solar_icons.dart';
 
 GlobalKey<ScaffoldMessengerState> miCuentaMessenger =
@@ -59,7 +57,6 @@ class _MicuentaState extends State<Micuenta> {
   @override
   Widget build(BuildContext context) {
     final theme = ThemeController.instance;
-    final isLocked = Auth.instance.isLocked;
 
     return ScaffoldMessenger(
       key: miCuentaMessenger,
