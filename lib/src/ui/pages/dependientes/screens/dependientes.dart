@@ -7,6 +7,7 @@ import 'package:camino_seguro/src/ui/pages/dependientes/componentes/form_registr
 import 'package:camino_seguro/src/ui/pages/dependientes/services/dependientes.dart';
 import 'package:camino_seguro/src/ui/pages/dependientes/stores/registro_dependientes_store.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 final GlobalKey<ScaffoldMessengerState> dependientesMessenger =
@@ -41,24 +42,54 @@ class DependientesScreen extends State<Dependientes> {
         enableDrag: false,
         builder: (context) => FractionallySizedBox(
             heightFactor: 0.95,
-            child: dependienteEditar?.notificaciones.isEmpty ?? true
-                ? const Center(
-                    child: Text('No hay notificaciones disponibles'),
-                  )
-                : ListView.builder(
-                    itemCount: dependienteEditar!.notificaciones.length,
-                    itemBuilder: (context, index) {
-                      final notificacion =
-                          dependienteEditar.notificaciones[index];
-                      return ListTile(
-                        title:
-                            Text('${dependienteEditar.nombre} fuera del area'),
-                        subtitle: Text(notificacion.cuerpo),
-                        leading: Icon(Icons.notifications,
-                            color: Theme.of(context).primaryColor),
-                      );
-                    },
-                  ))).whenComplete(() async {
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    'Notificaciones - ${dependienteEditar?.nombre}',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: dependienteEditar?.notificaciones.isEmpty ?? true
+                      ? const Center(
+                          child: Text('No hay notificaciones disponibles'),
+                        )
+                      : Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: ListView.builder(
+                            itemCount: dependienteEditar!.notificaciones.length,
+                            itemBuilder: (context, index) {
+                              final notificacion =
+                                  dependienteEditar.notificaciones[index];
+                              return ListTile(
+                                title: Text(
+                                  DateFormat('dd/MM/yyyy HH:mm')
+                                      .format(notificacion.fechaCreacion),
+                                ),
+                                subtitle: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(notificacion.titulo),
+                                    Text(notificacion.cuerpo,
+                                        style: const TextStyle(
+                                            fontSize: 12, color: Colors.grey)),
+                                  ],
+                                ),
+                                leading: Icon(Icons.notifications,
+                                    color: Theme.of(context).primaryColor),
+                              );
+                            },
+                          ),
+                        ),
+                ),
+              ],
+            ))).whenComplete(() async {
       _refresh();
     });
   }

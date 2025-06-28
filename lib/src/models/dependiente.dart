@@ -38,7 +38,7 @@ class Dependiente {
             : [],
         notificaciones: json['notificaciones'] != null
             ? List<Notificacion>.from(
-                json['areas'].map((not) => Notificacion.fromJson(not)),
+                json['notificaciones'].map((not) => Notificacion.fromJson(not)),
               )
             : [],
       );
