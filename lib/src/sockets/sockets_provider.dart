@@ -44,7 +44,7 @@ class SocketProvider extends ChangeNotifier {
           colorText: Colors.white,
         );
 
-        await dependientesService.getUbicaciones();
+        await dependientesService.getUbicaciones(null);
       },
     );
   }

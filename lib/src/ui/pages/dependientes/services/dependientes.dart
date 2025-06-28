@@ -26,9 +26,9 @@ class DependientesService extends ServiceConfig {
     idUsuario = (await Auth.instance.idUsuario) ?? '';
   }
 
-  Future<void> fetchData() async {
+  Future<void> fetchData(DateTime? selectedDate) async {
     await getDependientes();
-    await getUbicaciones();
+    await getUbicaciones(selectedDate);
   }
 
   Future<void> getDependientes() async {
@@ -138,9 +138,15 @@ class DependientesService extends ServiceConfig {
     }
   }
 
-  Future<void> getUbicaciones() async {
+  Future<void> getUbicaciones(DateTime? selectedDate) async {
     try {
-      final response = await fetch('/ubicaciones', type: HttpProtocol.get);
+      final response = await fetch(
+        '/ubicaciones',
+        type: HttpProtocol.get,
+        params: {
+          'fecha': selectedDate?.toIso8601String() ?? '',
+        },
+      );
       Logger.success('response -> ${response.data}');
       if (response.status != StatusNetwork.connected) {
         throw ErrorDescription('La petición no se pudo completar');

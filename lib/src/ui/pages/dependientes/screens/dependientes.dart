@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:camino_seguro/src/config/theme_controller.dart';
 import 'package:camino_seguro/src/models/dependiente.dart';
 import 'package:camino_seguro/src/ui/common/buttons/simple_button.dart';
@@ -29,7 +31,7 @@ class DependientesScreen extends State<Dependientes> {
   }
 
   Future<void> _refresh() async {
-    await service.fetchData();
+    await service.fetchData(null);
   }
 
   void _mostrarNotificaciones(
@@ -51,8 +53,8 @@ class DependientesScreen extends State<Dependientes> {
                       final notificacion =
                           dependienteEditar.notificaciones[index];
                       return ListTile(
-                        title:
-                            Text('${dependienteEditar.nombre} fuera del area'),
+                        title: Text(
+                            '${jsonEncode(dependienteEditar)} fuera del area'),
                         subtitle: Text(notificacion.cuerpo),
                         leading: Icon(Icons.notifications,
                             color: Theme.of(context).primaryColor),

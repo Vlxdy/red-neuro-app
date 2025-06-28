@@ -49,7 +49,7 @@ class InitAppController {
     await areaService.fetchData().whenComplete(() {
       Logger.info('Areas traidas');
     });
-    await dependientesService.fetchData().whenComplete(() {
+    await dependientesService.fetchData(null).whenComplete(() {
       Logger.info('Dependientes traidos');
     });
 
