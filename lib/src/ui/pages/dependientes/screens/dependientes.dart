@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:camino_seguro/src/config/theme_controller.dart';
 import 'package:camino_seguro/src/models/dependiente.dart';
 import 'package:camino_seguro/src/ui/common/buttons/simple_button.dart';
@@ -53,8 +51,8 @@ class DependientesScreen extends State<Dependientes> {
                       final notificacion =
                           dependienteEditar.notificaciones[index];
                       return ListTile(
-                        title: Text(
-                            '${jsonEncode(dependienteEditar)} fuera del area'),
+                        title:
+                            Text('${dependienteEditar.nombre} fuera del area'),
                         subtitle: Text(notificacion.cuerpo),
                         leading: Icon(Icons.notifications,
                             color: Theme.of(context).primaryColor),
