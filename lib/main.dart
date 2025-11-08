@@ -15,6 +15,8 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
@@ -36,6 +38,9 @@ void main() async {
   await dotenv.load(fileName: ".env");
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   await initHiveStorage();
+
+  await initializeDateFormatting('es', null);
+
   final deviceInfo = await Utils.getDeviceInfo();
 
   /// Para teléfonos Android con versión menor a Android 7.1
@@ -56,11 +61,8 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
-  Locale? _locale;
   void setLocale(Locale value) {
-    setState(() {
-      _locale = value;
-    });
+    setState(() {});
   }
 
   @override
@@ -94,7 +96,21 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             );
 
             return MaterialApp.router(
-              locale: _locale,
+              // ✅ idioma por defecto español
+              locale: const Locale('es'),
+
+              // ✅ soporta solo español (puedes agregar más si deseas)
+              supportedLocales: const [
+                Locale('es', ''), // Español
+              ],
+
+              // ✅ agrega las delegaciones necesarias
+              localizationsDelegates: const [
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+
               debugShowCheckedModeBanner: false,
               title: 'Alimenta',
               scaffoldMessengerKey: rootScaffoldMessengerKey,

@@ -29,7 +29,7 @@ class PlanNutricionalService extends ServiceConfig {
   Future<void> _ensurePerfil() async {
     if ((store.idUsuarioRol ?? '').isNotEmpty) return;
     try {
-      final response = await fetch('/api/usuarios/cuenta/perfil');
+      final response = await fetch('/usuarios/cuenta/perfil');
       if (response.status != StatusNetwork.connected) {
         store.setError(response.message);
         store.clearPlan();
@@ -84,7 +84,7 @@ class PlanNutricionalService extends ServiceConfig {
     try {
       final fechaFormateada = DateFormat('yyyy-MM-dd').format(fecha);
       final response = await fetch(
-        '/api/planes-nutricionales/paciente/$idUsuarioRol/fecha/$fechaFormateada',
+        '/planes-nutricionales/paciente/$idUsuarioRol/fecha/$fechaFormateada',
       );
       if (response.status != StatusNetwork.connected) {
         store.clearPlan();
@@ -100,7 +100,8 @@ class PlanNutricionalService extends ServiceConfig {
       final datos = PlanNutricionalResponse.fromJson(response.data);
       store.setPlan(datos.plan, encontrado: datos.encontrado);
       if (!datos.encontrado) {
-        store.setError('No se encontró un plan nutricional para la fecha seleccionada.');
+        store.setError(
+            'No se encontró un plan nutricional para la fecha seleccionada.');
       }
     } catch (e, stacktrace) {
       Logger.error('Error al obtener plan nutricional: $e');
@@ -138,7 +139,7 @@ class PlanNutricionalService extends ServiceConfig {
         'items': store.seguimientoRequest,
       };
       final response = await fetch(
-        '/api/planes-nutricionales/$idPlan/seguimiento',
+        '/planes-nutricionales/$idPlan/seguimiento',
         type: HttpProtocol.patch,
         body: body,
       );
