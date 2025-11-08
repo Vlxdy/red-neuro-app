@@ -46,29 +46,10 @@ class _LoginState extends State<LoginAccount> {
                         const SizedBox(height: 70),
                         Image.asset(
                           Recursos.icono,
-                          height: 150,
-                          width: 150,
+                          height: 250,
+                          width: 350,
                         ),
-                        Text(
-                          'Alimenta',
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineLarge!
-                              .copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontFamily:
-                                'DancingScript', // Use a handwritten-style font
-                            color: const Color.fromARGB(255, 0, 0, 0),
-                            shadows: [
-                              const Shadow(
-                                offset: Offset(3.0, 3.0),
-                                color: Color.fromARGB(255, 237, 152, 5),
-                              ),
-                            ],
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 5),
                         const Credenciales(),
                         const SizedBox(height: 20),
                       ],
