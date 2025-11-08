@@ -1,7 +1,7 @@
 import 'package:alimenta_app/src/plugins/camera/camera_screen_store.dart';
 import 'package:alimenta_app/src/ui/pages/areas/stores/registro_areas_store.dart';
 import 'package:alimenta_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena_store.dart';
-import 'package:alimenta_app/src/ui/pages/dependientes/stores/registro_dependientes_store.dart';
+import 'package:alimenta_app/src/ui/pages/plan_nutricional/stores/plan_nutricional_store.dart';
 import 'package:alimenta_app/src/ui/pages/inicio/inicio_store.dart';
 import 'package:flutter/material.dart';
 import 'package:alimenta_app/src/ui/global/loading_animation.dart';
@@ -19,7 +19,7 @@ List<SingleChildWidget> proveedores(BuildContext context) => [
       // eliminar
       ChangeNotifierProvider(create: (context) => RegistroAreasStore.instance),
       ChangeNotifierProvider(
-          create: (context) => RegistroDependientesStore.instance),
+          create: (context) => PlanNutricionalStore.instance),
     ];
 
 resetProviders() {}

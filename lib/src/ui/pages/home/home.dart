@@ -5,7 +5,7 @@ import 'package:alimenta_app/src/ui/common/keep_alive_page.dart';
 import 'package:alimenta_app/src/ui/global/template_page.dart';
 import 'package:alimenta_app/src/ui/pages/areas/screens/areas.dart';
 import 'package:alimenta_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
-import 'package:alimenta_app/src/ui/pages/dependientes/screens/dependientes.dart';
+import 'package:alimenta_app/src/ui/pages/plan_nutricional/screens/plan_nutricional_page.dart';
 import 'package:alimenta_app/src/ui/pages/mi_cuenta/mi_cuenta.dart';
 import 'package:alimenta_app/src/ui/pages/perfil/perfil.dart';
 import 'package:flutter/material.dart';
@@ -231,7 +231,7 @@ class _HomePageState extends State<HomePage> {
         iconoImagen: SolarIconsOutline.peopleNearby,
         iconoImagenSeleccionada: SolarIconsBold.peopleNearby,
         titulo: 'Plan nutricional',
-        children: const KeepAlivePage(child: Dependientes()),
+        children: const KeepAlivePage(child: PlanNutricionalPage()),
       ),
       ChildrenItem(
         iconoImagen: SolarIconsOutline.map,
