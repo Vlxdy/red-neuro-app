@@ -92,57 +92,46 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
           width: MediaQuery.of(context).size.width,
           padding: const EdgeInsets.symmetric(horizontal: 30),
           child: Column(
-            // mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    height: 120,
-                    width: 120,
-                    decoration: const BoxDecoration(
-                        image: DecorationImage(
-                            fit: BoxFit.contain,
-                            image: AssetImage(Recursos.logoPrincipal))),
+              Container(
+                height: 250,
+                width: 250,
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    fit: BoxFit.contain,
+                    image: AssetImage(Recursos.logoPrincipal),
                   ),
-                ],
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      SolarIconsBold.lockKeyhole,
-                      color: theme.warning,
-                      size: 80,
-                    ),
-                    const SizedBox(height: 15),
-                    SimpleButton(
-                      fullWidth: false,
-                      customPreffixicon: Container(
-                        margin: const EdgeInsets.only(right: 5),
-                        child: Icon(
-                          SolarIconsBold.lockKeyhole,
-                          size: 15,
-                          color: theme.white,
-                        ),
-                      ),
-                      onTap: () {
-                        Logger.info('desbloquear');
-                        inicializar();
-                      },
-                      title: 'Desbloquear',
-                    ),
-                    const SizedBox(height: 15),
-                  ],
                 ),
               ),
-              // CircularProgressIndicator(color: theme.accent100),
+              const SizedBox(height: 30),
+              Icon(
+                SolarIconsBold.lockKeyhole,
+                color: theme.warning,
+                size: 80,
+              ),
+              const SizedBox(height: 15),
+              SimpleButton(
+                fullWidth: false,
+                customPreffixicon: Container(
+                  margin: const EdgeInsets.only(right: 5),
+                  child: Icon(
+                    SolarIconsBold.lockKeyhole,
+                    size: 15,
+                    color: theme.white,
+                  ),
+                ),
+                onTap: () {
+                  Logger.info('desbloquear');
+                  inicializar();
+                },
+                title: 'Desbloquear',
+              ),
             ],
           ),
         ),
+        // CircularProgressIndicator(color: theme.accent100),
       ),
     );
   }
