@@ -19,7 +19,7 @@ class HeaderLogin extends StatelessWidget {
                   fit: BoxFit.contain)),
         ),
         Text(
-          'Bienvenido a camino seguro',
+          'Bienvenido a Alimenta',
           style: Theme.of(context)
               .textTheme
               .headlineSmall!

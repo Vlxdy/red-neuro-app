@@ -1,4 +1,4 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.fabian.ramos.camino_seguro">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.lennyflores.alimenta">
 <!-- android:taskAffinity="" -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <!-- Para huella -->
@@ -9,7 +9,7 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <application
-        android:label="Camino seguro"
+        android:label="Alimenta"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

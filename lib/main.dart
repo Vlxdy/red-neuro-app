@@ -96,7 +96,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             return MaterialApp.router(
               locale: _locale,
               debugShowCheckedModeBanner: false,
-              title: 'Camino seguro',
+              title: 'Alimenta',
               scaffoldMessengerKey: rootScaffoldMessengerKey,
               theme: ThemeData(
                   useMaterial3: true,

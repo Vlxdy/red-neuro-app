@@ -50,7 +50,7 @@ class _LoginState extends State<LoginAccount> {
                           width: 150,
                         ),
                         Text(
-                          'Camino Seguro',
+                          'Alimenta',
                           style: Theme.of(context)
                               .textTheme
                               .headlineLarge!

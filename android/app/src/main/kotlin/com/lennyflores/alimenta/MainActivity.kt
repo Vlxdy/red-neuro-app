@@ -1,4 +1,4 @@
-package com.fabian.ramos.camino_seguro
+package com.lennyflores.alimenta
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 
