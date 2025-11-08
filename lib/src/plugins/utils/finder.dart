@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:camino_seguro/src/plugins/utils/logger.dart';
+import 'package:alimenta_app/src/plugins/utils/logger.dart';
 import 'package:path_provider/path_provider.dart';
 
 enum FileExtensions { png, jpg, pdf }

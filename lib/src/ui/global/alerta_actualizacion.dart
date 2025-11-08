@@ -1,7 +1,7 @@
-import 'package:camino_seguro/src/config/routes.dart';
-import 'package:camino_seguro/src/constants/keys.dart';
-import 'package:camino_seguro/src/plugins/utils/preferences.dart';
-import 'package:camino_seguro/src/ui/common/alerts/confirmation_alert_dialog.dart';
+import 'package:alimenta_app/src/config/routes.dart';
+import 'package:alimenta_app/src/constants/keys.dart';
+import 'package:alimenta_app/src/plugins/utils/preferences.dart';
+import 'package:alimenta_app/src/ui/common/alerts/confirmation_alert_dialog.dart';
 import 'package:flutter/material.dart';
 
 class DialogService {

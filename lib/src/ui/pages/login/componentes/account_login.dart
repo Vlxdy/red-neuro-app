@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:camino_seguro/src/config/routes.dart';
-import 'package:camino_seguro/src/config/theme_controller.dart';
+import 'package:alimenta_app/src/config/routes.dart';
+import 'package:alimenta_app/src/config/theme_controller.dart';
 import 'package:go_router/go_router.dart';
 
 class AccountLogin extends StatelessWidget {

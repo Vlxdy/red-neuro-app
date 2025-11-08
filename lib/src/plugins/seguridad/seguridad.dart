@@ -1,6 +1,6 @@
-import 'package:camino_seguro/src/constants/keys.dart';
-import 'package:camino_seguro/src/plugins/utils/local_secure.dart';
-import 'package:camino_seguro/src/plugins/utils/preferences.dart';
+import 'package:alimenta_app/src/constants/keys.dart';
+import 'package:alimenta_app/src/plugins/utils/local_secure.dart';
+import 'package:alimenta_app/src/plugins/utils/preferences.dart';
 import 'package:flutter/material.dart';
 
 class SeguridadStore with ChangeNotifier {

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:camino_seguro/src/config/theme_controller.dart';
+import 'package:alimenta_app/src/config/theme_controller.dart';
 
 final _theme = ThemeController.instance;
 

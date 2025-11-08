@@ -1,5 +1,5 @@
-import 'package:camino_seguro/src/config/theme_controller.dart';
-import 'package:camino_seguro/src/ui/common/buttons/simple_button.dart';
+import 'package:alimenta_app/src/config/theme_controller.dart';
+import 'package:alimenta_app/src/ui/common/buttons/simple_button.dart';
 import 'package:flutter/material.dart';
 
 class ConfirmationDialog extends StatelessWidget {

@@ -1,9 +1,9 @@
 // lib/src/providers/socket_provider.dart
-import 'package:camino_seguro/main.dart';
-import 'package:camino_seguro/src/config/socket_service.dart';
-import 'package:camino_seguro/src/plugins/utils/logger.dart';
-import 'package:camino_seguro/src/ui/common/snackbar/snackbar.dart';
-import 'package:camino_seguro/src/ui/pages/dependientes/services/dependientes.dart';
+import 'package:alimenta_app/main.dart';
+import 'package:alimenta_app/src/config/socket_service.dart';
+import 'package:alimenta_app/src/plugins/utils/logger.dart';
+import 'package:alimenta_app/src/ui/common/snackbar/snackbar.dart';
+import 'package:alimenta_app/src/ui/pages/dependientes/services/dependientes.dart';
 import 'package:flutter/material.dart';
 
 class SocketProvider extends ChangeNotifier {

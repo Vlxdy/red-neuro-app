@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:camino_seguro/src/models/login.dart';
+import 'package:alimenta_app/src/models/login.dart';
 
 class LoginStore with ChangeNotifier {
   LoginStore._();

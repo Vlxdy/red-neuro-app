@@ -1,5 +1,5 @@
-import 'package:camino_seguro/src/constants/enums.dart';
-import 'package:camino_seguro/src/models/area.dart';
+import 'package:alimenta_app/src/constants/enums.dart';
+import 'package:alimenta_app/src/models/area.dart';
 import 'package:flutter/material.dart';
 
 class RegistroAreasStore with ChangeNotifier {

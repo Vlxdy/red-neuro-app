@@ -1,11 +1,11 @@
 import 'dart:io';
 import 'package:collection/collection.dart';
-import 'package:camino_seguro/src/plugins/camera/camera_screen_service.dart';
-import 'package:camino_seguro/src/plugins/camera/camera_screen_store.dart';
+import 'package:alimenta_app/src/plugins/camera/camera_screen_service.dart';
+import 'package:alimenta_app/src/plugins/camera/camera_screen_store.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:camino_seguro/src/config/theme_controller.dart';
-import 'package:camino_seguro/src/plugins/utils/logger.dart';
-import 'package:camino_seguro/src/ui/global/template_page.dart';
+import 'package:alimenta_app/src/config/theme_controller.dart';
+import 'package:alimenta_app/src/plugins/utils/logger.dart';
+import 'package:alimenta_app/src/ui/global/template_page.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';

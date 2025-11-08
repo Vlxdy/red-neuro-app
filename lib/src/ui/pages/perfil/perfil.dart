@@ -1,6 +1,6 @@
-import 'package:camino_seguro/src/config/theme_controller.dart';
-import 'package:camino_seguro/src/plugins/auth/auth.dart';
-import 'package:camino_seguro/src/ui/pages/perfil/componentes/perfil_info_card.dart';
+import 'package:alimenta_app/src/config/theme_controller.dart';
+import 'package:alimenta_app/src/plugins/auth/auth.dart';
+import 'package:alimenta_app/src/ui/pages/perfil/componentes/perfil_info_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

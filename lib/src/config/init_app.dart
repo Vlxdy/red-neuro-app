@@ -1,12 +1,12 @@
 // ignore: depend_on_referenced_packages
-import 'package:camino_seguro/src/config/routes.dart';
-import 'package:camino_seguro/src/config/theme_controller.dart';
-import 'package:camino_seguro/src/plugins/auth/auth.dart';
-import 'package:camino_seguro/src/plugins/seguridad/seguridad.dart';
-import 'package:camino_seguro/src/plugins/utils/logger.dart';
-import 'package:camino_seguro/src/sockets/sockets_provider.dart';
-import 'package:camino_seguro/src/ui/pages/areas/services/areas_service.dart';
-import 'package:camino_seguro/src/ui/pages/dependientes/services/dependientes.dart';
+import 'package:alimenta_app/src/config/routes.dart';
+import 'package:alimenta_app/src/config/theme_controller.dart';
+import 'package:alimenta_app/src/plugins/auth/auth.dart';
+import 'package:alimenta_app/src/plugins/seguridad/seguridad.dart';
+import 'package:alimenta_app/src/plugins/utils/logger.dart';
+import 'package:alimenta_app/src/sockets/sockets_provider.dart';
+import 'package:alimenta_app/src/ui/pages/areas/services/areas_service.dart';
+import 'package:alimenta_app/src/ui/pages/dependientes/services/dependientes.dart';
 import 'package:go_router/go_router.dart';
 
 class InitAppController {

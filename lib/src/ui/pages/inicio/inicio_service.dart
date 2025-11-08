@@ -1,8 +1,8 @@
-import 'package:camino_seguro/src/config/service_config.dart';
-import 'package:camino_seguro/src/config/theme_controller.dart';
-import 'package:camino_seguro/src/plugins/auth/auth.dart';
-import 'package:camino_seguro/src/plugins/utils/preferences.dart';
-import 'package:camino_seguro/src/ui/pages/inicio/inicio_store.dart';
+import 'package:alimenta_app/src/config/service_config.dart';
+import 'package:alimenta_app/src/config/theme_controller.dart';
+import 'package:alimenta_app/src/plugins/auth/auth.dart';
+import 'package:alimenta_app/src/plugins/utils/preferences.dart';
+import 'package:alimenta_app/src/ui/pages/inicio/inicio_store.dart';
 
 class InicioService extends ServiceConfig {
   InicioService(super.urlBase, super.context);

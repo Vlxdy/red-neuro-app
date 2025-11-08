@@ -1,5 +1,5 @@
-import 'package:camino_seguro/src/config/theme_controller.dart';
-import 'package:camino_seguro/src/extensions/colores_extension.dart';
+import 'package:alimenta_app/src/config/theme_controller.dart';
+import 'package:alimenta_app/src/extensions/colores_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

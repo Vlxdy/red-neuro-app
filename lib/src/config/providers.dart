@@ -1,11 +1,11 @@
-import 'package:camino_seguro/src/plugins/camera/camera_screen_store.dart';
-import 'package:camino_seguro/src/ui/pages/areas/stores/registro_areas_store.dart';
-import 'package:camino_seguro/src/ui/pages/cambiar_contrasena/cambiar_contrasena_store.dart';
-import 'package:camino_seguro/src/ui/pages/dependientes/stores/registro_dependientes_store.dart';
-import 'package:camino_seguro/src/ui/pages/inicio/inicio_store.dart';
+import 'package:alimenta_app/src/plugins/camera/camera_screen_store.dart';
+import 'package:alimenta_app/src/ui/pages/areas/stores/registro_areas_store.dart';
+import 'package:alimenta_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena_store.dart';
+import 'package:alimenta_app/src/ui/pages/dependientes/stores/registro_dependientes_store.dart';
+import 'package:alimenta_app/src/ui/pages/inicio/inicio_store.dart';
 import 'package:flutter/material.dart';
-import 'package:camino_seguro/src/ui/global/loading_animation.dart';
-import 'package:camino_seguro/src/ui/pages/login/login_store.dart';
+import 'package:alimenta_app/src/ui/global/loading_animation.dart';
+import 'package:alimenta_app/src/ui/pages/login/login_store.dart';
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 

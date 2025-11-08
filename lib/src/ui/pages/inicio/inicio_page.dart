@@ -1,6 +1,6 @@
-import 'package:camino_seguro/src/config/theme_controller.dart';
-import 'package:camino_seguro/src/ui/pages/inicio/inicio_service.dart';
-import 'package:camino_seguro/src/ui/pages/inicio/inicio_store.dart';
+import 'package:alimenta_app/src/config/theme_controller.dart';
+import 'package:alimenta_app/src/ui/pages/inicio/inicio_service.dart';
+import 'package:alimenta_app/src/ui/pages/inicio/inicio_store.dart';
 import 'package:flutter/material.dart';
 
 final GlobalKey<ScaffoldMessengerState> inicioMessenger =

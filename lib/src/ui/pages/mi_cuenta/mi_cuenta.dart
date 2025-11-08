@@ -1,10 +1,10 @@
-import 'package:camino_seguro/src/config/theme_controller.dart';
-import 'package:camino_seguro/src/plugins/auth/auth.dart';
-import 'package:camino_seguro/src/plugins/seguridad/seguridad.dart';
-import 'package:camino_seguro/src/plugins/utils/logger.dart';
-import 'package:camino_seguro/src/ui/common/alerts/confirmation_alert_dialog.dart';
-import 'package:camino_seguro/src/ui/common/snackbar/snackbar.dart';
-import 'package:camino_seguro/src/ui/pages/mi_cuenta/componentes/avatar_perfil.dart';
+import 'package:alimenta_app/src/config/theme_controller.dart';
+import 'package:alimenta_app/src/plugins/auth/auth.dart';
+import 'package:alimenta_app/src/plugins/seguridad/seguridad.dart';
+import 'package:alimenta_app/src/plugins/utils/logger.dart';
+import 'package:alimenta_app/src/ui/common/alerts/confirmation_alert_dialog.dart';
+import 'package:alimenta_app/src/ui/common/snackbar/snackbar.dart';
+import 'package:alimenta_app/src/ui/pages/mi_cuenta/componentes/avatar_perfil.dart';
 import 'package:flutter/material.dart';
 import 'package:solar_icons/solar_icons.dart';
 

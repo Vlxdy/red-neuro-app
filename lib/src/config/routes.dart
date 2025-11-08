@@ -1,21 +1,21 @@
 import 'dart:async';
 
-import 'package:camino_seguro/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
-import 'package:camino_seguro/src/ui/pages/seguridad/configuracion_desbloqueo.dart';
-import 'package:camino_seguro/src/ui/pages/seguridad/configuracion_pin_seguridad.dart';
-import 'package:camino_seguro/src/ui/pages/home/home.dart';
-import 'package:camino_seguro/src/ui/pages/informacion_personal/informacion_personal.dart';
-import 'package:camino_seguro/src/ui/pages/mi_cuenta/mi_cuenta.dart';
-import 'package:camino_seguro/src/ui/pages/perfil/perfil.dart';
-import 'package:camino_seguro/src/ui/pages/procesar_sesion.dart';
-import 'package:camino_seguro/src/ui/pages/recuperar_contrasena/recuperar_contrasena.dart';
-import 'package:camino_seguro/src/ui/pages/seguridad/modificar_pin_seguridad.dart';
+import 'package:alimenta_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
+import 'package:alimenta_app/src/ui/pages/seguridad/configuracion_desbloqueo.dart';
+import 'package:alimenta_app/src/ui/pages/seguridad/configuracion_pin_seguridad.dart';
+import 'package:alimenta_app/src/ui/pages/home/home.dart';
+import 'package:alimenta_app/src/ui/pages/informacion_personal/informacion_personal.dart';
+import 'package:alimenta_app/src/ui/pages/mi_cuenta/mi_cuenta.dart';
+import 'package:alimenta_app/src/ui/pages/perfil/perfil.dart';
+import 'package:alimenta_app/src/ui/pages/procesar_sesion.dart';
+import 'package:alimenta_app/src/ui/pages/recuperar_contrasena/recuperar_contrasena.dart';
+import 'package:alimenta_app/src/ui/pages/seguridad/modificar_pin_seguridad.dart';
 import 'package:flutter/material.dart';
-import 'package:camino_seguro/src/plugins/auth/auth.dart';
-import 'package:camino_seguro/src/plugins/utils/logger.dart';
-import 'package:camino_seguro/src/ui/pages/login/login.dart';
-import 'package:camino_seguro/src/ui/pages/login/componentes/login_account_page.dart';
-import 'package:camino_seguro/src/ui/pages/splash_screen.dart';
+import 'package:alimenta_app/src/plugins/auth/auth.dart';
+import 'package:alimenta_app/src/plugins/utils/logger.dart';
+import 'package:alimenta_app/src/ui/pages/login/login.dart';
+import 'package:alimenta_app/src/ui/pages/login/componentes/login_account_page.dart';
+import 'package:alimenta_app/src/ui/pages/splash_screen.dart';
 import 'package:go_router/go_router.dart';
 
 import '../plugins/camera/camera_screen.dart';

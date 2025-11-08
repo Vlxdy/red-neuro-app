@@ -1,14 +1,14 @@
-import 'package:camino_seguro/src/config/form_controller.dart';
-import 'package:camino_seguro/src/config/routes.dart';
-import 'package:camino_seguro/src/plugins/auth/auth.dart';
-import 'package:camino_seguro/src/plugins/seguridad/seguridad.dart';
-import 'package:camino_seguro/src/plugins/utils/local_secure.dart';
-import 'package:camino_seguro/src/plugins/utils/logger.dart';
-import 'package:camino_seguro/src/sockets/sockets_provider.dart';
-import 'package:camino_seguro/src/ui/common/buttons/simple_button.dart';
+import 'package:alimenta_app/src/config/form_controller.dart';
+import 'package:alimenta_app/src/config/routes.dart';
+import 'package:alimenta_app/src/plugins/auth/auth.dart';
+import 'package:alimenta_app/src/plugins/seguridad/seguridad.dart';
+import 'package:alimenta_app/src/plugins/utils/local_secure.dart';
+import 'package:alimenta_app/src/plugins/utils/logger.dart';
+import 'package:alimenta_app/src/sockets/sockets_provider.dart';
+import 'package:alimenta_app/src/ui/common/buttons/simple_button.dart';
 import 'package:flutter/material.dart';
-import 'package:camino_seguro/src/config/theme_controller.dart';
-import 'package:camino_seguro/src/constants/resources.dart';
+import 'package:alimenta_app/src/config/theme_controller.dart';
+import 'package:alimenta_app/src/constants/resources.dart';
 import 'package:go_router/go_router.dart';
 import 'package:solar_icons/solar_icons.dart';
 

@@ -1,7 +1,7 @@
-import 'package:camino_seguro/src/constants/resources.dart';
+import 'package:alimenta_app/src/constants/resources.dart';
 import 'package:flutter/material.dart';
-import 'package:camino_seguro/src/ui/global/template_page.dart';
-import 'package:camino_seguro/src/ui/pages/login/componentes/credenciales.dart';
+import 'package:alimenta_app/src/ui/global/template_page.dart';
+import 'package:alimenta_app/src/ui/pages/login/componentes/credenciales.dart';
 
 GlobalKey<ScaffoldMessengerState> loginAccountMessenger =
     GlobalKey<ScaffoldMessengerState>();

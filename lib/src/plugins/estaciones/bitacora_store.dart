@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'package:camino_seguro/src/constants/keys.dart';
-import 'package:camino_seguro/src/models/bitacora.dart';
-import 'package:camino_seguro/src/plugins/utils/logger.dart';
-import 'package:camino_seguro/src/plugins/utils/preferences.dart';
+import 'package:alimenta_app/src/constants/keys.dart';
+import 'package:alimenta_app/src/models/bitacora.dart';
+import 'package:alimenta_app/src/plugins/utils/logger.dart';
+import 'package:alimenta_app/src/plugins/utils/preferences.dart';
 import 'package:flutter/material.dart';
 
 class BitacoraStore with ChangeNotifier {

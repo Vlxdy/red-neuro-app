@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:camino_seguro/src/constants/network.dart';
-import 'package:camino_seguro/src/plugins/auth/auth.dart';
-import 'package:camino_seguro/src/plugins/utils/logger.dart';
+import 'package:alimenta_app/src/constants/network.dart';
+import 'package:alimenta_app/src/plugins/auth/auth.dart';
+import 'package:alimenta_app/src/plugins/utils/logger.dart';
 
 mixin Middleware {
   validateResponse(StatusNetwork status) {

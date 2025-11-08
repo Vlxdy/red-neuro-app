@@ -1,4 +1,4 @@
-import 'package:camino_seguro/src/config/theme_controller.dart';
+import 'package:alimenta_app/src/config/theme_controller.dart';
 import 'package:flutter/material.dart';
 
 class CriterioOrdenType {

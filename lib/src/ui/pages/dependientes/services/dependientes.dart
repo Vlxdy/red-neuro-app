@@ -1,15 +1,15 @@
 import 'dart:convert';
 
-import 'package:camino_seguro/src/config/service_config.dart';
-import 'package:camino_seguro/src/config/theme_controller.dart';
-import 'package:camino_seguro/src/constants/network.dart';
-import 'package:camino_seguro/src/models/dependiente.dart';
-import 'package:camino_seguro/src/plugins/auth/auth.dart';
-import 'package:camino_seguro/src/plugins/utils/logger.dart';
-import 'package:camino_seguro/src/ui/common/snackbar/snackbar.dart';
-import 'package:camino_seguro/src/ui/global/loading_animation.dart';
-import 'package:camino_seguro/src/ui/pages/dependientes/screens/dependientes.dart';
-import 'package:camino_seguro/src/ui/pages/dependientes/stores/registro_dependientes_store.dart';
+import 'package:alimenta_app/src/config/service_config.dart';
+import 'package:alimenta_app/src/config/theme_controller.dart';
+import 'package:alimenta_app/src/constants/network.dart';
+import 'package:alimenta_app/src/models/dependiente.dart';
+import 'package:alimenta_app/src/plugins/auth/auth.dart';
+import 'package:alimenta_app/src/plugins/utils/logger.dart';
+import 'package:alimenta_app/src/ui/common/snackbar/snackbar.dart';
+import 'package:alimenta_app/src/ui/global/loading_animation.dart';
+import 'package:alimenta_app/src/ui/pages/dependientes/screens/dependientes.dart';
+import 'package:alimenta_app/src/ui/pages/dependientes/stores/registro_dependientes_store.dart';
 import 'package:flutter/material.dart';
 
 class DependientesService extends ServiceConfig {

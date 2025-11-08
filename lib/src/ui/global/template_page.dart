@@ -1,5 +1,5 @@
-import 'package:camino_seguro/src/config/theme_controller.dart';
-import 'package:camino_seguro/src/constants/constants.dart';
+import 'package:alimenta_app/src/config/theme_controller.dart';
+import 'package:alimenta_app/src/constants/constants.dart';
 import 'package:flutter/material.dart';
 
 class TemplatePage extends StatelessWidget {

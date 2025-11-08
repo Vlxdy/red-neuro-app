@@ -1,6 +1,6 @@
-import 'package:camino_seguro/src/config/theme_controller.dart';
-import 'package:camino_seguro/src/extensions/strings_extensions.dart';
-import 'package:camino_seguro/src/plugins/auth/auth.dart';
+import 'package:alimenta_app/src/config/theme_controller.dart';
+import 'package:alimenta_app/src/extensions/strings_extensions.dart';
+import 'package:alimenta_app/src/plugins/auth/auth.dart';
 import 'package:flutter/material.dart';
 
 class AvatarPerfil extends StatelessWidget {

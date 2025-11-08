@@ -1,4 +1,4 @@
-import 'package:camino_seguro/src/models/person.dart';
+import 'package:alimenta_app/src/models/person.dart';
 
 class Usuario extends Persona {
   late String correoElectronico;

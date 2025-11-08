@@ -1,6 +1,6 @@
-import 'package:camino_seguro/src/config/theme_controller.dart';
+import 'package:alimenta_app/src/config/theme_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:camino_seguro/src/constants/resources.dart';
+import 'package:alimenta_app/src/constants/resources.dart';
 
 class HeaderLoginAccount extends StatelessWidget {
   const HeaderLoginAccount(this.offline, {super.key});

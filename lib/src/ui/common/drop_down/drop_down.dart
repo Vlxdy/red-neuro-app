@@ -1,7 +1,7 @@
-import 'package:camino_seguro/src/config/theme_controller.dart';
-import 'package:camino_seguro/src/extensions/colores_extension.dart';
-import 'package:camino_seguro/src/extensions/strings_extensions.dart';
-import 'package:camino_seguro/src/plugins/utils/logger.dart';
+import 'package:alimenta_app/src/config/theme_controller.dart';
+import 'package:alimenta_app/src/extensions/colores_extension.dart';
+import 'package:alimenta_app/src/extensions/strings_extensions.dart';
+import 'package:alimenta_app/src/plugins/utils/logger.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 

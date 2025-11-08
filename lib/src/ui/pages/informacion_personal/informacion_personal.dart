@@ -1,8 +1,8 @@
-import 'package:camino_seguro/src/config/theme_controller.dart';
-import 'package:camino_seguro/src/plugins/auth/auth.dart';
-import 'package:camino_seguro/src/plugins/utils/utils.dart';
-import 'package:camino_seguro/src/ui/global/template_page.dart';
-import 'package:camino_seguro/src/ui/pages/mi_cuenta/componentes/avatar_perfil.dart';
+import 'package:alimenta_app/src/config/theme_controller.dart';
+import 'package:alimenta_app/src/plugins/auth/auth.dart';
+import 'package:alimenta_app/src/plugins/utils/utils.dart';
+import 'package:alimenta_app/src/ui/global/template_page.dart';
+import 'package:alimenta_app/src/ui/pages/mi_cuenta/componentes/avatar_perfil.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

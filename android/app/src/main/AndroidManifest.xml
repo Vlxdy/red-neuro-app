@@ -38,7 +38,7 @@
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="https"
-                      android:host="com.fabian.ramos.camino_seguro"/>
+                      android:host="com.lennyflores.alimenta"/>
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

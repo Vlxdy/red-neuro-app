@@ -1,14 +1,14 @@
-import 'package:camino_seguro/src/config/routes.dart';
-import 'package:camino_seguro/src/config/service_config.dart';
-import 'package:camino_seguro/src/config/theme_controller.dart';
-import 'package:camino_seguro/src/constants/network.dart';
-import 'package:camino_seguro/src/plugins/auth/auth.dart';
-import 'package:camino_seguro/src/plugins/utils/logger.dart';
-import 'package:camino_seguro/src/ui/common/snackbar/snackbar.dart';
-import 'package:camino_seguro/src/ui/global/loading_animation.dart';
-import 'package:camino_seguro/src/ui/pages/login/componentes/login_account_page.dart';
-import 'package:camino_seguro/src/ui/pages/login/login_store.dart';
-import 'package:camino_seguro/src/ui/pages/recuperar_contrasena/recuperar_contrasena.dart';
+import 'package:alimenta_app/src/config/routes.dart';
+import 'package:alimenta_app/src/config/service_config.dart';
+import 'package:alimenta_app/src/config/theme_controller.dart';
+import 'package:alimenta_app/src/constants/network.dart';
+import 'package:alimenta_app/src/plugins/auth/auth.dart';
+import 'package:alimenta_app/src/plugins/utils/logger.dart';
+import 'package:alimenta_app/src/ui/common/snackbar/snackbar.dart';
+import 'package:alimenta_app/src/ui/global/loading_animation.dart';
+import 'package:alimenta_app/src/ui/pages/login/componentes/login_account_page.dart';
+import 'package:alimenta_app/src/ui/pages/login/login_store.dart';
+import 'package:alimenta_app/src/ui/pages/recuperar_contrasena/recuperar_contrasena.dart';
 import 'package:go_router/go_router.dart';
 
 class LoginService extends ServiceConfig {

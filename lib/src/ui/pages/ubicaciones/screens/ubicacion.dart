@@ -1,9 +1,9 @@
-import 'package:camino_seguro/src/config/theme_controller.dart';
-import 'package:camino_seguro/src/models/area.dart';
-import 'package:camino_seguro/src/models/dependiente.dart';
-import 'package:camino_seguro/src/ui/pages/areas/stores/registro_areas_store.dart';
-import 'package:camino_seguro/src/ui/pages/dependientes/services/dependientes.dart';
-import 'package:camino_seguro/src/ui/pages/dependientes/stores/registro_dependientes_store.dart';
+import 'package:alimenta_app/src/config/theme_controller.dart';
+import 'package:alimenta_app/src/models/area.dart';
+import 'package:alimenta_app/src/models/dependiente.dart';
+import 'package:alimenta_app/src/ui/pages/areas/stores/registro_areas_store.dart';
+import 'package:alimenta_app/src/ui/pages/dependientes/services/dependientes.dart';
+import 'package:alimenta_app/src/ui/pages/dependientes/stores/registro_dependientes_store.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:intl/intl.dart';

@@ -1,6 +1,6 @@
-import 'package:camino_seguro/src/constants/constants.dart';
-import 'package:camino_seguro/src/plugins/camera/camera_screen_store.dart';
-import 'package:camino_seguro/src/plugins/utils/logger.dart';
+import 'package:alimenta_app/src/constants/constants.dart';
+import 'package:alimenta_app/src/plugins/camera/camera_screen_store.dart';
+import 'package:alimenta_app/src/plugins/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 

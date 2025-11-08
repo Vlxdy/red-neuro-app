@@ -1,11 +1,11 @@
 import 'dart:io';
 
-import 'package:camino_seguro/src/config/routes.dart';
-import 'package:camino_seguro/src/config/theme_controller.dart';
-import 'package:camino_seguro/src/plugins/geolocation/geolocation.dart';
-import 'package:camino_seguro/src/plugins/utils/logger.dart';
-import 'package:camino_seguro/src/ui/common/alerts/confirmation_alert_dialog.dart';
-import 'package:camino_seguro/src/ui/common/components/image_preview.dart';
+import 'package:alimenta_app/src/config/routes.dart';
+import 'package:alimenta_app/src/config/theme_controller.dart';
+import 'package:alimenta_app/src/plugins/geolocation/geolocation.dart';
+import 'package:alimenta_app/src/plugins/utils/logger.dart';
+import 'package:alimenta_app/src/ui/common/alerts/confirmation_alert_dialog.dart';
+import 'package:alimenta_app/src/ui/common/components/image_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 

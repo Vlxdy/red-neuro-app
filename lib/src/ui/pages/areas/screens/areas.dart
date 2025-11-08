@@ -1,11 +1,11 @@
-import 'package:camino_seguro/src/config/theme_controller.dart';
-import 'package:camino_seguro/src/models/area.dart';
-import 'package:camino_seguro/src/ui/common/buttons/simple_button.dart';
-import 'package:camino_seguro/src/ui/common/components/skeleton.dart';
-import 'package:camino_seguro/src/ui/common/customdatatable/custom_datatable.dart';
-import 'package:camino_seguro/src/ui/pages/areas/componentes/form_registro_areas.dart';
-import 'package:camino_seguro/src/ui/pages/areas/services/areas_service.dart';
-import 'package:camino_seguro/src/ui/pages/areas/stores/registro_areas_store.dart';
+import 'package:alimenta_app/src/config/theme_controller.dart';
+import 'package:alimenta_app/src/models/area.dart';
+import 'package:alimenta_app/src/ui/common/buttons/simple_button.dart';
+import 'package:alimenta_app/src/ui/common/components/skeleton.dart';
+import 'package:alimenta_app/src/ui/common/customdatatable/custom_datatable.dart';
+import 'package:alimenta_app/src/ui/pages/areas/componentes/form_registro_areas.dart';
+import 'package:alimenta_app/src/ui/pages/areas/services/areas_service.dart';
+import 'package:alimenta_app/src/ui/pages/areas/stores/registro_areas_store.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

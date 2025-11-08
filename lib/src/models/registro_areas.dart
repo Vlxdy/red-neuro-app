@@ -1,4 +1,4 @@
-import 'package:camino_seguro/src/models/area.dart';
+import 'package:alimenta_app/src/models/area.dart';
 
 class RegistroAreas {
   String idBitacora;
