@@ -8,7 +8,6 @@ import 'package:alimenta_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena.
 import 'package:alimenta_app/src/ui/pages/dependientes/screens/dependientes.dart';
 import 'package:alimenta_app/src/ui/pages/mi_cuenta/mi_cuenta.dart';
 import 'package:alimenta_app/src/ui/pages/perfil/perfil.dart';
-import 'package:alimenta_app/src/ui/pages/ubicaciones/screens/ubicacion.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:solar_icons/solar_icons.dart';
@@ -231,26 +230,20 @@ class _HomePageState extends State<HomePage> {
       ChildrenItem(
         iconoImagen: SolarIconsOutline.peopleNearby,
         iconoImagenSeleccionada: SolarIconsBold.peopleNearby,
-        titulo: 'Dependientes',
+        titulo: 'Plan nutricional',
         children: const KeepAlivePage(child: Dependientes()),
       ),
       ChildrenItem(
         iconoImagen: SolarIconsOutline.map,
         iconoImagenSeleccionada: SolarIconsBold.map,
-        titulo: 'Áreas',
+        titulo: 'Lista de compras',
         children: const Areas(),
-      ),
-      ChildrenItem(
-        iconoImagen: SolarIconsOutline.mapPoint,
-        iconoImagenSeleccionada: SolarIconsBold.mapPoint,
-        titulo: 'Ubicaciones',
-        children: const Ubicaciones(),
       ),
       ChildrenItem(
           iconoImagen: SolarIconsOutline.settings,
           iconoImagenSeleccionada: SolarIconsBold.settings,
           titulo: 'Configuracion',
-          children: const Ubicaciones(),
+          // children: const Ubicaciones(),
           itemsSubmenu: [
             ChildrenItem(
                 color: theme.primary,
