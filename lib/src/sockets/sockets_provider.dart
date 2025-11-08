@@ -3,21 +3,16 @@ import 'package:alimenta_app/main.dart';
 import 'package:alimenta_app/src/config/socket_service.dart';
 import 'package:alimenta_app/src/plugins/utils/logger.dart';
 import 'package:alimenta_app/src/ui/common/snackbar/snackbar.dart';
-import 'package:alimenta_app/src/ui/pages/dependientes/services/dependientes.dart';
 import 'package:flutter/material.dart';
 
 class SocketProvider extends ChangeNotifier {
   bool _connected = false;
   bool get connected => _connected;
-  late DependientesService dependientesService;
-
   SocketProvider();
 
   /// Llamar tras el login, cuando tengas el userId
   Future<void> init(String userId, BuildContext context) async {
     SocketService.instance.connect(userId);
-    dependientesService = DependientesService('', context);
-
     // Cuando se conecte/desconecte
     SocketService.instance.on('connect', (_) {
       _connected = true;
@@ -44,7 +39,8 @@ class SocketProvider extends ChangeNotifier {
           colorText: Colors.white,
         );
 
-        await dependientesService.getUbicaciones(null);
+        // Se elimina la actualización automática de dependientes ya que el
+        // módulo de plan nutricional no utiliza esta información.
       },
     );
   }
