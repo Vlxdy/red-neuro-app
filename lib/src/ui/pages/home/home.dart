@@ -241,6 +241,12 @@ class _HomePageState extends State<HomePage> {
         children: const KeepAlivePage(child: CitasMedicasPage()),
       ),
       ChildrenItem(
+        iconoImagen: PhosphorIconsRegular.chatTeardropText,
+        iconoImagenSeleccionada: PhosphorIconsFill.chatTeardropText,
+        titulo: 'Consultas médicas',
+        children: const KeepAlivePage(child: CitasMedicasPage()),
+      ),
+      ChildrenItem(
           iconoImagen: SolarIconsOutline.settings,
           iconoImagenSeleccionada: SolarIconsBold.settings,
           titulo: 'Configuración',

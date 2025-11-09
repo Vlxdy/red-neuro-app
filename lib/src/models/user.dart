@@ -1,14 +1,20 @@
 import 'package:alimenta_app/src/models/person.dart';
-import 'package:alimenta_app/src/models/rol.dart';
 
 class Usuario extends Persona {
-  late String id;
-  late String usuario;
+  // Ya existentes
   late String correoElectronico;
+  late bool ciudadaniaDigital;
   String? urlFoto;
-  late String estado;
-  late List<Rol> roles;
+  String? id;
+  String? estado;
+  String? usuario;
+
+  // 🔹 Nuevos
+  String accessToken = '';
+  String? idUsuarioRol;
   String? idRol;
+  String? rol;
+  String? idHistoriaClinica;
 
   Usuario(
     super.fechaNacimiento,
@@ -18,17 +24,20 @@ class Usuario extends Persona {
     super.segundoApellido,
     super.tipoDocumento,
     super.telefono, {
-    required this.id,
-    required this.usuario,
+    this.id,
+    this.usuario,
     required this.correoElectronico,
     this.urlFoto,
-    required this.estado,
-    required this.roles,
+    this.estado,
+    this.ciudadaniaDigital = false,
+    this.accessToken = '',
+    this.idUsuarioRol,
     this.idRol,
+    this.rol,
+    this.idHistoriaClinica,
   });
 
-  /// ✅ Crea un usuario vacío
-  factory Usuario.empty() => Usuario(
+  static Usuario empty() => Usuario(
         '',
         '',
         '',
@@ -36,48 +45,68 @@ class Usuario extends Persona {
         '',
         '',
         '',
-        id: '',
-        usuario: '',
         correoElectronico: '',
-        estado: '',
-        roles: [],
       );
 
-  /// ✅ Crea desde JSON
-  factory Usuario.fromJson(Map<String, dynamic> json) {
-    final datos = json['datos'] ?? json; // por si llega con o sin "datos"
-    final persona = datos['persona'] ?? {};
+  /// Soporta tanto json plano como con `datos`
+  factory Usuario.fromJson(Map<String, dynamic> jsonRaw) {
+    final json = (jsonRaw['datos'] is Map<String, dynamic>)
+        ? (jsonRaw['datos'] as Map<String, dynamic>)
+        : jsonRaw;
 
-    return Usuario(
-      persona['fechaNacimiento'] ?? '',
-      persona['nombres'] ?? '',
-      persona['nroDocumento'] ?? '',
-      persona['primerApellido'] ?? '',
-      persona['segundoApellido'] ?? '',
-      persona['tipoDocumento'] ?? '',
-      persona['telefono'] ?? '',
-      id: datos['id'] ?? '',
-      usuario: datos['usuario'] ?? '',
-      correoElectronico: datos['correoElectronico'] ?? '',
-      urlFoto: datos['urlFoto'],
-      estado: datos['estado'] ?? '',
-      roles: (datos['roles'] as List<dynamic>?)
-              ?.map((r) => Rol.fromJson(r))
-              .toList() ??
-          [],
-      idRol: datos['idRol'],
+    // Persona
+    final personaMap = (json['persona'] as Map<String, dynamic>?);
+
+    final usuario = Usuario(
+      personaMap?['fechaNacimiento'] ?? '',
+      personaMap?['nombres'] ?? '',
+      personaMap?['nroDocumento'] ?? '',
+      personaMap?['primerApellido'] ?? '',
+      personaMap?['segundoApellido'] ?? '',
+      personaMap?['tipoDocumento'] ?? '',
+      personaMap?['telefono'] ?? '',
+      id: json['id']?.toString(),
+      usuario: json['usuario']?.toString(),
+      correoElectronico: json['correoElectronico']?.toString() ?? '',
+      urlFoto: json['urlFoto']?.toString(),
+      estado: json['estado']?.toString(),
+      ciudadaniaDigital: json['ciudadania_digital'] == true, // puede no venir
     );
+
+    // Tokens (acepta snake/camel)
+    usuario.accessToken =
+        (json['access_token'] ?? json['accessToken'] ?? '').toString();
+
+    // Identificadores de relación rol/usuario
+    usuario.idUsuarioRol = json['idUsuarioRol']?.toString();
+    usuario.idRol = json['idRol']?.toString();
+    usuario.rol = json['rol']?.toString();
+
+    // Historia clínica (puede venir en varios lugares; prioriza en `datos`)
+    usuario.idHistoriaClinica = json['idHistoriaClinica']?.toString();
+
+    return usuario;
   }
 
   @override
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'usuario': usuario,
-        'correoElectronico': correoElectronico,
-        'urlFoto': urlFoto,
-        'estado': estado,
-        'roles': roles.map((r) => r.toJson()).toList(),
-        'persona': super.toJson(),
-        'idRol': idRol,
-      };
+  Map<String, dynamic> toJson() {
+    final data = <String, dynamic>{};
+
+    data['persona'] = super.toJson();
+    data['id'] = id;
+    data['usuario'] = usuario;
+    data['correoElectronico'] = correoElectronico;
+    data['urlFoto'] = urlFoto;
+    data['estado'] = estado;
+    data['ciudadania_digital'] = ciudadaniaDigital;
+
+    // Nuevos
+    data['access_token'] = accessToken;
+    data['idUsuarioRol'] = idUsuarioRol;
+    data['idRol'] = idRol;
+    data['rol'] = rol;
+    data['idHistoriaClinica'] = idHistoriaClinica;
+
+    return data;
+  }
 }
