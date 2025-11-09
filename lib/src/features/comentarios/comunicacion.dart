@@ -1,19 +1,19 @@
-import 'package:flutter/material.dart';
 import 'package:alimenta_app/src/features/comentarios/services/comentarios_service.dart';
 import 'package:alimenta_app/src/features/comentarios/stores/comentarios_store.dart';
 import 'package:alimenta_app/src/features/comentarios/widgets/seccion_comentarios.dart';
 import 'package:alimenta_app/src/plugins/auth/auth.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 class ComunicacionPage extends StatelessWidget {
-  const ComunicacionPage({
-    super.key,
-  });
+  const ComunicacionPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     final profile = Auth.instance.profile;
     final idHistoriaClinica = profile.idHistoriaClinica;
-    if (idHistoriaClinica == null) {
+
+    if (idHistoriaClinica == null || idHistoriaClinica.isEmpty) {
       return const Card(
         margin: EdgeInsets.all(16),
         child: Padding(
@@ -26,17 +26,21 @@ class ComunicacionPage extends StatelessWidget {
       );
     }
 
-    final service = ComentariosService('', context);
-    final store = ComentariosStore(
-      service: service,
-      idHistoriaClinica: idHistoriaClinica,
+    return ChangeNotifierProvider<ComentariosStore>(
+      create: (context) => ComentariosStore(
+        service: ComentariosService(context),
+        idHistoriaClinica: idHistoriaClinica,
+      ),
+      child: const _ComunicacionView(),
     );
+  }
+}
 
-    return FutureBuilder(
-      future: store.cargarComentarios(),
-      builder: (context, snapshot) {
-        return SeccionComentarios(store: store);
-      },
-    );
+class _ComunicacionView extends StatelessWidget {
+  const _ComunicacionView();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SeccionComentarios();
   }
 }

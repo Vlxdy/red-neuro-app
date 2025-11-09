@@ -12,6 +12,18 @@ class Constantes {
   static final mapsApiUrl = dotenv.get('MAPS_API_URL');
   static final mapsApiKey = dotenv.get('MAPS_API_KEY');
   static final sockets = dotenv.get('SOCKETS');
+  static int get chatMaxFiles {
+    final raw = dotenv.maybeGet('CHAT_MAX_FILES');
+    return int.tryParse(raw ?? '') ?? 5;
+  }
+
+  static double get chatMaxFileMb {
+    final raw = dotenv.maybeGet('CHAT_MAX_FILE_MB');
+    return double.tryParse(raw ?? '') ?? 25;
+  }
+
+  static int get chatMaxFileBytes =>
+      (chatMaxFileMb * 1024 * 1024).round();
 }
 
 class PatternRegexp {
