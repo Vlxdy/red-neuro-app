@@ -18,20 +18,21 @@ class ComentariosSocketService {
       return;
     }
 
-    final token = await Auth.instance.apiToken;
-    final url = '${Constantes.sockets}/comentarios';
+    final String token = await Auth.instance.apiToken;
+    final String url = '${Constantes.sockets}/comentarios';
 
+    final String auth = token.replaceAll('"', "");
     _socket = io.io(
       url,
       io.OptionBuilder()
           .setTransports(['websocket'])
-          .setAuth({'token': 'Bearer $token'})
+          .setAuth({'token': auth})
           .enableForceNew()
           .disableAutoConnect()
           .build(),
     );
 
-    final completer = Completer<void>();
+    final Completer<void> completer = Completer<void>();
 
     _socket!.on('connect', (_) {
       if (!completer.isCompleted) {
@@ -39,7 +40,7 @@ class ComentariosSocketService {
       }
     });
 
-    _socket!.on('connect_error', (error) {
+    _socket!.on('connect_error', (dynamic error) {
       if (!completer.isCompleted) {
         completer.completeError(error ?? 'Error de conexión');
       }
