@@ -33,7 +33,7 @@ class AuthStore with ChangeNotifier {
 }
 
 class Auth {
-  Usuario _user = Usuario.empty;
+  Usuario _user = Usuario.empty();
   String _token = '';
   String _refreshToken = '';
 
@@ -164,7 +164,7 @@ class Auth {
 
   Future<Usuario> profileAsync() async {
     if (_user.correoElectronico.isNotEmpty) return _user;
-    Usuario user = Usuario.empty;
+    Usuario user = Usuario.empty();
     try {
       final decode = await _preferencesService.getString(Keys.profile);
       if (decode.isNotEmpty) {

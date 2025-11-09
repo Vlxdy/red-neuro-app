@@ -1,12 +1,14 @@
 import 'package:alimenta_app/src/models/person.dart';
+import 'package:alimenta_app/src/models/rol.dart';
 
 class Usuario extends Persona {
+  late String id;
+  late String usuario;
   late String correoElectronico;
-  late String celular;
-  late bool ciudadaniaDigital;
-  String? id;
-  String? estado;
-  String? usuario;
+  String? urlFoto;
+  late String estado;
+  late List<Rol> roles;
+  String? idRol;
 
   Usuario(
     super.fechaNacimiento,
@@ -15,43 +17,67 @@ class Usuario extends Persona {
     super.primerApellido,
     super.segundoApellido,
     super.tipoDocumento,
-    this.correoElectronico,
-    this.celular, {
-    this.id,
-    this.ciudadaniaDigital = false,
-    this.estado,
-    this.usuario,
+    super.telefono, {
+    required this.id,
+    required this.usuario,
+    required this.correoElectronico,
+    this.urlFoto,
+    required this.estado,
+    required this.roles,
+    this.idRol,
   });
 
-  static get empty => Usuario('', '', '', '', '', '', '', '');
+  /// ✅ Crea un usuario vacío
+  factory Usuario.empty() => Usuario(
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        id: '',
+        usuario: '',
+        correoElectronico: '',
+        estado: '',
+        roles: [],
+      );
 
-  Usuario.fromJson(Map<String, dynamic> json)
-      : super.fromJson(json['persona']) {
-    ciudadaniaDigital = json['ciudadania_digital'] ?? false;
-    correoElectronico = json['correoElectronico'] ?? '';
-    celular = json['celular'] ?? '';
-    estado = json['estado'] ?? '';
-    id = json['id'] ?? '';
-    usuario = json['usuario'] ?? '';
+  /// ✅ Crea desde JSON
+  factory Usuario.fromJson(Map<String, dynamic> json) {
+    final datos = json['datos'] ?? json; // por si llega con o sin "datos"
+    final persona = datos['persona'] ?? {};
+
+    return Usuario(
+      persona['fechaNacimiento'] ?? '',
+      persona['nombres'] ?? '',
+      persona['nroDocumento'] ?? '',
+      persona['primerApellido'] ?? '',
+      persona['segundoApellido'] ?? '',
+      persona['tipoDocumento'] ?? '',
+      persona['telefono'] ?? '',
+      id: datos['id'] ?? '',
+      usuario: datos['usuario'] ?? '',
+      correoElectronico: datos['correoElectronico'] ?? '',
+      urlFoto: datos['urlFoto'],
+      estado: datos['estado'] ?? '',
+      roles: (datos['roles'] as List<dynamic>?)
+              ?.map((r) => Rol.fromJson(r))
+              .toList() ??
+          [],
+      idRol: datos['idRol'],
+    );
   }
 
   @override
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = {};
-    data['persona'] = super.toJson();
-    data['ciudadania_digital'] = ciudadaniaDigital;
-    data['correoElectronico'] = correoElectronico;
-    data['celular'] = celular;
-    data['estado'] = estado;
-    data['id'] = id;
-    data['usuario'] = usuario;
-
-    return data;
-  }
-
-  Map<String, dynamic> toJsonUpdate() {
-    final Map<String, dynamic> data = {};
-    data.addEntries(super.toJson().entries);
-    return data;
-  }
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'usuario': usuario,
+        'correoElectronico': correoElectronico,
+        'urlFoto': urlFoto,
+        'estado': estado,
+        'roles': roles.map((r) => r.toJson()).toList(),
+        'persona': super.toJson(),
+        'idRol': idRol,
+      };
 }

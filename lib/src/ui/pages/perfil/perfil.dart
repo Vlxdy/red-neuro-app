@@ -3,7 +3,7 @@ import 'package:alimenta_app/src/plugins/auth/auth.dart';
 import 'package:alimenta_app/src/ui/pages/perfil/componentes/perfil_info_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
+import 'package:alimenta_app/src/constants/constants.dart';
 GlobalKey<ScaffoldMessengerState> perfilMessenger =
     GlobalKey<ScaffoldMessengerState>();
 
@@ -47,17 +47,38 @@ class Perfil extends StatelessWidget {
                     ),
                     Center(
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 9, vertical: 8),
+                        width: 120,
+                        height: 120,
                         decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(18),
-                            color: theme.primary),
-                        child: Text(
-                            '${profile.nombres[0]}${profile.primerApellido[0]}',
-                            style: TextStyle(
-                                color: theme.fontColor,
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold)),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: theme.isLight
+                                  ? Colors.black.withValues(alpha: 0.1)
+                                  : Colors.white.withValues(alpha: 0.05),
+                              blurRadius: 6,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                          border: Border.all(
+                            color: theme.primary.withValues(alpha: 0.6),
+                            width: 2,
+                          ),
+                        ),
+                        child: ClipOval(
+                          child: profile.urlFoto != null &&
+                                  profile.urlFoto!.isNotEmpty &&
+                                  Uri.tryParse(profile.urlFoto!) != null
+                              ? Image.network(
+                                  profile.urlFoto!.startsWith('http')
+                                      ? profile.urlFoto!
+                                      : '${Constantes.apiUrl}${profile.urlFoto!}',
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      _buildAvatarFallback(theme, profile),
+                                )
+                              : _buildAvatarFallback(theme, profile),
+                        ),
                       ),
                     ),
                     const SizedBox(
@@ -96,7 +117,7 @@ class Perfil extends StatelessWidget {
                         headerIcon: Icons.contact_page_outlined,
                         headerTitle: 'Datos de contacto',
                         items: [
-                          {"clave": "Celular", "valor": profile.celular},
+                          {"clave": "Celular", "valor": profile.telefono},
                           {
                             "clave": "Correo electrónico",
                             "valor": profile.correoElectronico
@@ -107,4 +128,20 @@ class Perfil extends StatelessWidget {
               ),
             )));
   }
+}
+
+Widget _buildAvatarFallback(ThemeController theme, dynamic profile) {
+  return Container(
+    color: theme.primary,
+    alignment: Alignment.center,
+    child: Text(
+      '${profile.nombres.isNotEmpty ? profile.nombres[0] : ''}'
+      '${profile.primerApellido.isNotEmpty ? profile.primerApellido[0] : ''}',
+      style: TextStyle(
+        color: theme.white,
+        fontSize: 40,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+  );
 }

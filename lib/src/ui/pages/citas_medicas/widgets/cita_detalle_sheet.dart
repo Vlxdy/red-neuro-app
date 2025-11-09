@@ -5,6 +5,7 @@ import 'package:alimenta_app/src/ui/pages/citas_medicas/services/citas_medicas_s
 import 'package:alimenta_app/src/ui/pages/citas_medicas/widgets/cita_form_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:alimenta_app/src/constants/constants.dart';
 
 class CitaDetalleSheet extends StatefulWidget {
   const CitaDetalleSheet({
@@ -45,8 +46,7 @@ class _CitaDetalleSheetState extends State<CitaDetalleSheet> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.cita.id != widget.cita.id) {
       _cita = widget.cita;
-      _historial
-        ..clear();
+      _historial..clear();
       _pagina = 1;
       _cargarHistorial();
     }
@@ -91,7 +91,8 @@ class _CitaDetalleSheetState extends State<CitaDetalleSheet> {
       await onRefresh();
     }
 
-    final detalleActualizado = await widget.service.obtenerDetalleCita(_cita.id);
+    final detalleActualizado =
+        await widget.service.obtenerDetalleCita(_cita.id);
     if (detalleActualizado != null && mounted) {
       setState(() {
         _cita = detalleActualizado;
@@ -115,6 +116,49 @@ class _CitaDetalleSheetState extends State<CitaDetalleSheet> {
     return estado.textColor(theme);
   }
 
+  Widget _buildAvatarUsuario(CitaHistorial evento) {
+    final theme = ThemeController.instance;
+    final usuario = evento.usuarioEjecutor;
+
+    // Si no hay usuario asociado, muestra un ícono por defecto
+    if (usuario == null) {
+      return CircleAvatar(
+        backgroundColor: theme.primary.withValues(alpha: 0.1),
+        child: Icon(Icons.person_outline, color: theme.primary),
+      );
+    }
+
+    // Construye la URL completa si es relativa
+    final String? fotoUrl =
+        usuario.urlFoto != null && usuario.urlFoto!.isNotEmpty
+            ? (usuario.urlFoto!.startsWith('http')
+                ? usuario.urlFoto!
+                : '${Constantes.apiUrl}${usuario.urlFoto!}')
+            : null;
+
+    return Container(
+      width: 42,
+      height: 42,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: theme.primary.withValues(alpha: 0.4),
+          width: 1.2,
+        ),
+      ),
+      child: ClipOval(
+        child: fotoUrl != null
+            ? Image.network(
+                fotoUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                    _buildAvatarFallback(theme, usuario),
+              )
+            : _buildAvatarFallback(theme, usuario),
+      ),
+    );
+  }
+
   Widget _buildHistorial() {
     if (_cargando) {
       return const Center(child: CircularProgressIndicator());
@@ -135,21 +179,13 @@ class _CitaDetalleSheetState extends State<CitaDetalleSheet> {
       itemBuilder: (context, index) {
         final evento = _historial[index];
         return ListTile(
-          leading: CircleAvatar(
-            backgroundColor: _estadoColor(evento.estado),
-            child: Text(
-              evento.estado.label.substring(0, 1).toUpperCase(),
-              style: TextStyle(
-                color: _estadoTexto(evento.estado),
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
+          leading: _buildAvatarUsuario(evento),
           title: Text(evento.estado.label),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (evento.estadoAnterior != null && evento.estadoAnterior!.isNotEmpty)
+              if (evento.estadoAnterior != null &&
+                  evento.estadoAnterior!.isNotEmpty)
                 Text(
                   'Estado anterior: ${evento.estadoAnterior}',
                   style: TextStyle(color: theme.monochromatic900),
@@ -379,8 +415,8 @@ class _CitaDetalleSheetState extends State<CitaDetalleSheet> {
                         ),
                       ),
                       Container(
-                        padding:
-                            const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           color: _estadoColor(_cita.estado),
                           borderRadius: BorderRadius.circular(20),
@@ -461,11 +497,14 @@ class _CitaDetalleSheetState extends State<CitaDetalleSheet> {
                               ? const SizedBox(
                                   height: 16,
                                   width: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
                                 )
                               : const Icon(Icons.expand_more),
                           label: Text(
-                            _cargandoMas ? 'Cargando...' : 'Cargar más historial',
+                            _cargandoMas
+                                ? 'Cargando...'
+                                : 'Cargar más historial',
                           ),
                         ),
                       ),
@@ -484,31 +523,110 @@ class _CitaDetalleSheetState extends State<CitaDetalleSheet> {
     required CitaPersona persona,
     required IconData icono,
   }) {
+    final theme = ThemeController.instance;
+
+    // Construimos la URL de imagen si existe
+    final String? fotoUrl =
+        persona.urlFoto != null && persona.urlFoto!.isNotEmpty
+            ? (persona.urlFoto!.startsWith('http')
+                ? persona.urlFoto!
+                : '${Constantes.apiUrl}${persona.urlFoto!}')
+            : null;
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icono),
-        const SizedBox(width: 8),
+        // Avatar circular con imagen o iniciales
+        Container(
+          width: 48,
+          height: 48,
+          margin: const EdgeInsets.only(right: 12),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: theme.primary.withValues(alpha: 0.5),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: theme.isLight
+                    ? Colors.black.withValues(alpha: 0.05)
+                    : Colors.white.withValues(alpha: 0.05),
+                blurRadius: 3,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: ClipOval(
+            child: fotoUrl != null
+                ? Image.network(
+                    fotoUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        _buildAvatarFallback(theme, persona),
+                  )
+                : _buildAvatarFallback(theme, persona),
+          ),
+        ),
+
+        // Información del usuario
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 titulo,
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
               ),
-              Text(persona.nombreCompleto.isNotEmpty
-                  ? persona.nombreCompleto
-                  : 'Sin asignar'),
+              Text(
+                persona.nombreCompleto.isNotEmpty
+                    ? persona.nombreCompleto
+                    : 'Sin asignar',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: theme.fontColor,
+                ),
+              ),
+              // En _buildPersonaSection()
               if (persona.telefono != null && persona.telefono!.isNotEmpty)
-                Text('Teléfono: ${persona.telefono}'),
+                Text(
+                  'Teléfono: ${persona.telefono}',
+                  style: TextStyle(
+                      color: theme.fontColor.withValues(alpha: 0.75),
+                      fontSize: 13),
+                ),
               if (persona.correoElectronico != null &&
                   persona.correoElectronico!.isNotEmpty)
-                Text('Correo: ${persona.correoElectronico}'),
+                Text(
+                  'Correo: ${persona.correoElectronico}',
+                  style: TextStyle(
+                      color: theme.fontColor.withValues(alpha: 0.75),
+                      fontSize: 13),
+                ),
             ],
           ),
         ),
       ],
     );
   }
+}
+
+Widget _buildAvatarFallback(ThemeController theme, dynamic persona) {
+  final iniciales =
+      '${persona.nombreCompleto.isNotEmpty ? persona.nombreCompleto[0] : ''}';
+  return Container(
+    color: theme.primary,
+    alignment: Alignment.center,
+    child: Text(
+      iniciales,
+      style: TextStyle(
+        color: theme.white,
+        fontWeight: FontWeight.bold,
+        fontSize: 20,
+      ),
+    ),
+  );
 }

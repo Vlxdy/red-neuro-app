@@ -243,7 +243,7 @@ class _HomePageState extends State<HomePage> {
       ChildrenItem(
           iconoImagen: SolarIconsOutline.settings,
           iconoImagenSeleccionada: SolarIconsBold.settings,
-          titulo: 'Configuracion',
+          titulo: 'Configuración',
           // children: const Ubicaciones(),
           itemsSubmenu: [
             ChildrenItem(
@@ -253,14 +253,14 @@ class _HomePageState extends State<HomePage> {
                 titulo: 'Perfil',
                 children: const KeepAlivePage(child: Perfil())),
             ChildrenItem(
-              color: theme.secondary,
+              color: theme.primary,
               iconoImagen: SolarIconsOutline.password,
               iconoImagenSeleccionada: SolarIconsBold.password,
               titulo: 'Cambiar contraseña',
               children: const CambiarContrasena(),
             ),
             ChildrenItem(
-              color: theme.secondary,
+              color: theme.primary,
               iconoImagen: SolarIconsOutline.password,
               iconoImagenSeleccionada: SolarIconsBold.password,
               titulo: 'Sesión',
