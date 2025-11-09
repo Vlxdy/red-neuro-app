@@ -109,7 +109,7 @@ class ComentariosService extends ServiceConfig {
 
     final datos = response.data.isEmpty
         ? {'id': idComentario, 'contenido': contenido}
-        : response.data as Map<String, dynamic>;
+        : response.data;
 
     return ComentarioChat.fromJson(
       datos,
@@ -179,8 +179,9 @@ class ComentariosService extends ServiceConfig {
       request.files.add(multipartFile);
     }
 
-    final streamedResponse =
-        await request.send().timeout(const Duration(seconds: Constantes.timeout));
+    final streamedResponse = await request
+        .send()
+        .timeout(const Duration(seconds: Constantes.timeout));
     final response = await http.Response.fromStream(streamedResponse);
 
     final status = decodeStatus(response.statusCode);
@@ -194,9 +195,12 @@ class ComentariosService extends ServiceConfig {
       throw Exception('Context not found');
     }
 
-    final parsed = parseResponse(body, context, status: status);
+    final Map<String, dynamic> rawBody = (body).cast<String, dynamic>();
+    final parsed = parseResponse(rawBody, context, status: status);
+
     if (parsed['status'] != StatusNetwork.connected) {
-      throw ErrorDescription(parsed['message']?.toString() ?? 'Error de servidor');
+      throw ErrorDescription(
+          parsed['message']?.toString() ?? 'Error de servidor');
     }
 
     final datos = parsed['data'];
@@ -204,6 +208,6 @@ class ComentariosService extends ServiceConfig {
       return datos;
     }
 
-    return body;
+    return rawBody;
   }
 }

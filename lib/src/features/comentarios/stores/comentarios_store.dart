@@ -109,20 +109,16 @@ class ComentariosStore extends ChangeNotifier {
   Future<void> _conectarSocket() async {
     try {
       await ComentariosSocketService.instance.connect();
-      ComentariosSocketService.instance
-          .joinHistoriaClinica(idHistoriaClinica);
-      ComentariosSocketService.instance
-          .onCambio(_handleSocketCambio);
+      ComentariosSocketService.instance.joinHistoriaClinica(idHistoriaClinica);
+      ComentariosSocketService.instance.onCambio(_handleSocketCambio);
     } catch (_) {
       // Ignorar errores de conexión inicial; se intentará en llamadas futuras
     }
   }
 
   void disposeSocket() {
-    ComentariosSocketService.instance
-        .offCambio(_handleSocketCambio);
-    ComentariosSocketService.instance
-        .leaveHistoriaClinica(idHistoriaClinica);
+    ComentariosSocketService.instance.offCambio(_handleSocketCambio);
+    ComentariosSocketService.instance.leaveHistoriaClinica(idHistoriaClinica);
     ComentariosSocketService.instance.disconnect();
   }
 
@@ -273,7 +269,8 @@ class ComentariosStore extends ChangeNotifier {
 
     final historia = data['historiaClinicaId']?.toString() ??
         data['historiaId']?.toString() ??
-        data['idHistoriaClinica']?.toString() ?? '';
+        data['idHistoriaClinica']?.toString() ??
+        '';
 
     if (historia.isNotEmpty && historia != idHistoriaClinica) {
       return;
@@ -284,7 +281,8 @@ class ComentariosStore extends ChangeNotifier {
         data['comentario'] ?? data['dato'] ?? data['payload'] ?? data;
 
     if (tipo == 'eliminado') {
-      final id = (data['comentarioId'] ?? data['id'] ??
+      final id = (data['comentarioId'] ??
+              data['id'] ??
               comentarioPayload['id'] ??
               comentarioPayload['comentarioId'])
           .toString();
@@ -298,7 +296,7 @@ class ComentariosStore extends ChangeNotifier {
     }
 
     final comentarioMap = Map<String, dynamic>.from(
-      comentarioPayload as Map,
+      comentarioPayload,
     );
 
     if (comentarioMap.isEmpty) {
@@ -405,7 +403,8 @@ class ComentariosStore extends ChangeNotifier {
   }
 
   void _eliminarComentario(String idComentario) {
-    final indice = _comentarios.indexWhere((element) => element.id == idComentario);
+    final indice =
+        _comentarios.indexWhere((element) => element.id == idComentario);
     if (indice != -1) {
       _comentarios.removeAt(indice);
       _comentariosIndex.remove(idComentario);

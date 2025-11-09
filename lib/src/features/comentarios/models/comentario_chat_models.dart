@@ -141,7 +141,7 @@ class ComentarioUsuario {
 
   String get nombreCompleto =>
       [nombres, primerApellido, segundoApellido]
-          .where((value) => value != null && value!.trim().isNotEmpty)
+          .where((value) => value != null && value.trim().isNotEmpty)
           .map((value) => value!.trim())
           .join(' ');
 

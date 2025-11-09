@@ -4,7 +4,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
 class EditorComentario extends StatefulWidget {
-  const EditorComentario({
+  EditorComentario({
     super.key,
     required this.enviando,
     required this.onSubmit,
@@ -13,9 +13,10 @@ class EditorComentario extends StatefulWidget {
     this.editing,
     this.onCancelReply,
     this.onCancelEdit,
-    this.maxFiles = Constantes.chatMaxFiles,
-    this.maxFileSizeBytes = Constantes.chatMaxFileBytes,
-  });
+    int? maxFiles,
+    int? maxFileSizeBytes,
+  })  : maxFiles = maxFiles ?? Constantes.chatMaxFiles,
+        maxFileSizeBytes = maxFileSizeBytes ?? Constantes.chatMaxFileBytes;
 
   final bool enviando;
   final Future<void> Function(
