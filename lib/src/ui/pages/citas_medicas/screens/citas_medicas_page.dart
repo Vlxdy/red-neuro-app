@@ -30,6 +30,8 @@ class _CitasMedicasPageState extends State<CitasMedicasPage>
   final DateFormat _horaCorta = DateFormat('HH:mm', 'es');
   final DateTime _hoy = DateUtils.dateOnly(DateTime.now());
 
+  CalendarFormat _calendarFormat = CalendarFormat.month;
+
   @override
   void initState() {
     super.initState();
@@ -295,85 +297,133 @@ class _CitasMedicasPageState extends State<CitasMedicasPage>
           const SizedBox(height: 16),
           Card(
             elevation: 2,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             child: Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: TableCalendar<Cita>(
-                locale: 'es',
-                firstDay: DateTime.utc(2015, 1, 1),
-                lastDay: DateTime.utc(2100, 12, 31),
-                focusedDay: store.diaEnfocado,
-                calendarFormat: CalendarFormat.month,
-                availableCalendarFormats: const {
-                  CalendarFormat.month: 'Mes',
-                },
-                rowHeight: 72,
-                selectedDayPredicate: (day) =>
-                    isSameDay(day, store.diaSeleccionado),
-                onDaySelected: (selectedDay, focusedDay) {
-                  store.setDiaSeleccionado(selectedDay);
-                  store.setDiaEnfocado(focusedDay);
-                },
-                onPageChanged: (focusedDay) {
-                  store.setDiaEnfocado(focusedDay);
-                  _refrescarCalendario(store);
-                },
-                calendarStyle: const CalendarStyle(
-                  outsideDaysVisible: false,
-                  todayDecoration: BoxDecoration(),
-                  selectedDecoration: BoxDecoration(),
-                  markersMaxCount: 0,
-                ),
-                headerStyle: HeaderStyle(
-                  formatButtonVisible: false,
-                  titleCentered: true,
-                  titleTextFormatter: (date, locale) =>
-                      DateFormat('MMMM yyyy', locale).format(date),
-                ),
-                eventLoader: (day) => store.obtenerEventos(day),
-                calendarBuilders: CalendarBuilders<Cita>(
-                  defaultBuilder: (context, day, focusedDay) =>
-                      _buildDiaCalendario(
-                    context,
-                    day,
-                    store,
-                    esSeleccionado: isSameDay(day, store.diaSeleccionado),
-                    esHoy: isSameDay(day, _hoy),
-                    esFueraMes: day.month != focusedDay.month,
-                  ),
-                  outsideBuilder: (context, day, focusedDay) =>
-                      _buildDiaCalendario(
-                    context,
-                    day,
-                    store,
-                    esSeleccionado: isSameDay(day, store.diaSeleccionado),
-                    esHoy: isSameDay(day, _hoy),
-                    esFueraMes: true,
-                  ),
-                  todayBuilder: (context, day, focusedDay) =>
-                      _buildDiaCalendario(
-                    context,
-                    day,
-                    store,
-                    esSeleccionado: isSameDay(day, store.diaSeleccionado),
-                    esHoy: true,
-                    esFueraMes: day.month != focusedDay.month,
-                  ),
-                  selectedBuilder: (context, day, focusedDay) =>
-                      _buildDiaCalendario(
-                    context,
-                    day,
-                    store,
-                    esSeleccionado: true,
-                    esHoy: isSameDay(day, _hoy),
-                    esFueraMes: day.month != focusedDay.month,
-                  ),
+              padding: const EdgeInsets.all(12),
+              child: AnimatedSize(
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          DateFormat('MMMM yyyy', 'es')
+                              .format(store.diaEnfocado)
+                              .toUpperCase(),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        TextButton.icon(
+                          onPressed: () {
+                            setState(() {
+                              _calendarFormat =
+                                  _calendarFormat == CalendarFormat.month
+                                      ? CalendarFormat.week
+                                      : CalendarFormat.month;
+                            });
+                          },
+                          icon: Icon(
+                            _calendarFormat == CalendarFormat.month
+                                ? Icons.expand_less
+                                : Icons.expand_more,
+                            color: _theme.primary,
+                          ),
+                          label: Text(
+                            _calendarFormat == CalendarFormat.month
+                                ? 'Ver semana'
+                                : 'Ver mes',
+                            style: TextStyle(color: _theme.primary),
+                          ),
+                        ),
+                      ],
+                    ),
+                    TableCalendar<Cita>(
+                      locale: 'es',
+                      firstDay: DateTime.utc(2015, 1, 1),
+                      lastDay: DateTime.utc(2100, 12, 31),
+                      focusedDay: store.diaEnfocado,
+                      calendarFormat: _calendarFormat,
+                      availableCalendarFormats: const {
+                        CalendarFormat.month: 'Mes',
+                        CalendarFormat.week: 'Semana',
+                      },
+                      rowHeight:
+                          _calendarFormat == CalendarFormat.month ? 72 : 48,
+                      selectedDayPredicate: (day) =>
+                          isSameDay(day, store.diaSeleccionado),
+                      onDaySelected: (selectedDay, focusedDay) {
+                        store.setDiaSeleccionado(selectedDay);
+                        store.setDiaEnfocado(focusedDay);
+                        setState(() {
+                          _calendarFormat = CalendarFormat.week;
+                        });
+                      },
+                      onPageChanged: (focusedDay) {
+                        store.setDiaEnfocado(focusedDay);
+                        _refrescarCalendario(store);
+                      },
+                      headerVisible: false,
+                      calendarStyle: const CalendarStyle(
+                        outsideDaysVisible: false,
+                        todayDecoration: BoxDecoration(),
+                        selectedDecoration: BoxDecoration(),
+                        markersMaxCount: 0,
+                      ),
+                      eventLoader: (day) => store.obtenerEventos(day),
+                      calendarBuilders: CalendarBuilders<Cita>(
+                        defaultBuilder: (context, day, focusedDay) =>
+                            _buildDiaCalendario(
+                          context,
+                          day,
+                          store,
+                          esSeleccionado: isSameDay(day, store.diaSeleccionado),
+                          esHoy: isSameDay(day, _hoy),
+                          esFueraMes: day.month != focusedDay.month,
+                        ),
+                        outsideBuilder: (context, day, focusedDay) =>
+                            _buildDiaCalendario(
+                          context,
+                          day,
+                          store,
+                          esSeleccionado: isSameDay(day, store.diaSeleccionado),
+                          esHoy: isSameDay(day, _hoy),
+                          esFueraMes: true,
+                        ),
+                        todayBuilder: (context, day, focusedDay) =>
+                            _buildDiaCalendario(
+                          context,
+                          day,
+                          store,
+                          esSeleccionado: isSameDay(day, store.diaSeleccionado),
+                          esHoy: true,
+                          esFueraMes: day.month != focusedDay.month,
+                        ),
+                        selectedBuilder: (context, day, focusedDay) =>
+                            _buildDiaCalendario(
+                          context,
+                          day,
+                          store,
+                          esSeleccionado: true,
+                          esHoy: isSameDay(day, _hoy),
+                          esFueraMes: day.month != focusedDay.month,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
+          Divider(
+              height: 1, color: _theme.monochromatic500.withValues(alpha: 0.5)),
+          const SizedBox(height: 12),
           Text(
             'Citas del ${_fechaLarga.format(store.diaSeleccionado)}',
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
@@ -388,7 +438,8 @@ class _CitasMedicasPageState extends State<CitasMedicasPage>
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 40),
               child: Center(
-                  child: Text('No hay citas registradas para este día.')),
+                child: Text('No hay citas registradas para este día.'),
+              ),
             )
           else
             ...eventosDia.map((cita) => _buildCitaCard(cita)),
@@ -602,10 +653,7 @@ class _CitasMedicasPageState extends State<CitasMedicasPage>
           heroTag: 'fab_nueva_cita',
           onPressed: _abrirFormularioNuevaCita,
           backgroundColor: _theme.primary,
-          child: const Icon(
-            Icons.add,
-            color: Colors.white,
-          ),
+          child: const Icon(Icons.add, color: Colors.white),
         ),
       ),
     );
