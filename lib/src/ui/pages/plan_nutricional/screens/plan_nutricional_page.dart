@@ -428,7 +428,8 @@ class _PlanNutricionalPageState extends State<PlanNutricionalPage>
     );
   }
 
-  Widget _buildListaAlimentos(PlanNutricionalStore store, PlanNutricional plan) {
+  Widget _buildListaAlimentos(
+      PlanNutricionalStore store, PlanNutricional plan) {
     final grupos = plan.groupAlimentosPorTipo(orden: _ordenIngestas);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || plan.id.isEmpty) return;
@@ -465,7 +466,8 @@ class _PlanNutricionalPageState extends State<PlanNutricionalPage>
                 ],
               ),
             ),
-            ...entry.value.map((alimento) => _buildAlimentoTile(store, alimento)),
+            ...entry.value
+                .map((alimento) => _buildAlimentoTile(store, alimento)),
           ],
         );
       }).toList(),
@@ -605,7 +607,8 @@ class _PlanNutricionalPageState extends State<PlanNutricionalPage>
               final estado = _buildEstadoCarga(store);
               final plan = store.plan;
               return RefreshIndicator(
-                onRefresh: () => _service.cargarPlanParaFecha(store.selectedDate),
+                onRefresh: () =>
+                    _service.cargarPlanParaFecha(store.selectedDate),
                 child: SingleChildScrollView(
                   controller: _scrollController,
                   physics: const AlwaysScrollableScrollPhysics(),
@@ -697,7 +700,7 @@ class _PlanNutricionalPageState extends State<PlanNutricionalPage>
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: _theme.neutral.withOpacity(0.4),
+                      color: _theme.neutral.withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -757,20 +760,28 @@ class _PlanNutricionalPageState extends State<PlanNutricionalPage>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildChipInfo('Calorías',
-                        '${alimento.calorias.toStringAsFixed(0)} kcal', Icons.local_fire_department_outlined),
-                    _buildChipInfo('Carbohidratos',
-                        '${alimento.carbohidratos.toStringAsFixed(1)} g', Icons.grain_outlined),
+                    _buildChipInfo(
+                        'Calorías',
+                        '${alimento.calorias.toStringAsFixed(0)} kcal',
+                        Icons.local_fire_department_outlined),
+                    _buildChipInfo(
+                        'Carbohidratos',
+                        '${alimento.carbohidratos.toStringAsFixed(1)} g',
+                        Icons.grain_outlined),
                   ],
                 ),
                 const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildChipInfo('Proteínas',
-                        '${alimento.proteinas.toStringAsFixed(1)} g', Icons.set_meal_outlined),
-                    _buildChipInfo('Grasas',
-                        '${alimento.grasa.toStringAsFixed(1)} g', Icons.water_drop_outlined),
+                    _buildChipInfo(
+                        'Proteínas',
+                        '${alimento.proteinas.toStringAsFixed(1)} g',
+                        Icons.set_meal_outlined),
+                    _buildChipInfo(
+                        'Grasas',
+                        '${alimento.grasa.toStringAsFixed(1)} g',
+                        Icons.water_drop_outlined),
                   ],
                 ),
               ],
@@ -781,7 +792,8 @@ class _PlanNutricionalPageState extends State<PlanNutricionalPage>
     );
   }
 
-  void _mostrarModalInformacion({required String title, required Widget child}) {
+  void _mostrarModalInformacion(
+      {required String title, required Widget child}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -806,7 +818,7 @@ class _PlanNutricionalPageState extends State<PlanNutricionalPage>
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: _theme.neutral.withOpacity(0.4),
+                      color: _theme.neutral.withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -855,7 +867,7 @@ class _PlanNutricionalPageState extends State<PlanNutricionalPage>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: _theme.primary.withOpacity(0.08),
+          color: _theme.primary.withValues(alpha: 0.4),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(

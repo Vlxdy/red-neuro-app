@@ -59,6 +59,7 @@ dependencies:
   intl: 0.19.0
   flutter_appauth: 8.0.3
   flutter_datetime_picker_plus: 2.2.0
+  phosphor_flutter: ^2.0.0
   solar_icons: 0.0.5
   local_auth: 2.3.0
   local_auth_darwin: 1.4.1

@@ -11,6 +11,7 @@ import 'package:alimenta_app/src/ui/pages/perfil/perfil.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:solar_icons/solar_icons.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 final GlobalKey<ScaffoldMessengerState> homeMessenger =
     GlobalKey<ScaffoldMessengerState>();
@@ -228,8 +229,8 @@ class _HomePageState extends State<HomePage> {
     final theme = ThemeController.instance;
     _itemsMenu = [
       ChildrenItem(
-        iconoImagen: SolarIconsOutline.peopleNearby,
-        iconoImagenSeleccionada: SolarIconsBold.peopleNearby,
+        iconoImagen: PhosphorIconsRegular.forkKnife,
+        iconoImagenSeleccionada: PhosphorIconsFill.forkKnife,
         titulo: 'Plan nutricional',
         children: const KeepAlivePage(child: PlanNutricionalPage()),
       ),

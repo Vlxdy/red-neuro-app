@@ -305,9 +305,18 @@ class _CitaFormSheetState extends State<CitaFormSheet> {
                               esEdicion
                                   ? Icons.save_outlined
                                   : Icons.add_circle_outline,
+                              color: _theme.white,
                             ),
                       label: Text(
                         esEdicion ? 'Guardar cambios' : 'Crear cita',
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: _theme.primary,
+                        foregroundColor: _theme.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),

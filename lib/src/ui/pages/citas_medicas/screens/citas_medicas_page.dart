@@ -617,10 +617,14 @@ class _CitasMedicasPageState extends State<CitasMedicasPage>
             );
           },
         ),
-        floatingActionButton: FloatingActionButton.extended(
+        floatingActionButton: FloatingActionButton(
+          heroTag: 'fab_nueva_cita',
           onPressed: _abrirFormularioNuevaCita,
-          icon: const Icon(Icons.add),
-          label: const Text('Nueva cita'),
+          backgroundColor: _theme.primary,
+          child: const Icon(
+            Icons.add,
+            color: Colors.white,
+          ),
         ),
       ),
     );
