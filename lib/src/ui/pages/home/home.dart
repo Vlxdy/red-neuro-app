@@ -3,7 +3,7 @@ import 'package:alimenta_app/src/plugins/estaciones/bitacora_store.dart';
 import 'package:alimenta_app/src/plugins/utils/logger.dart';
 import 'package:alimenta_app/src/ui/common/keep_alive_page.dart';
 import 'package:alimenta_app/src/ui/global/template_page.dart';
-import 'package:alimenta_app/src/ui/pages/areas/screens/areas.dart';
+import 'package:alimenta_app/src/ui/pages/citas_medicas/screens/citas_medicas_page.dart';
 import 'package:alimenta_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
 import 'package:alimenta_app/src/ui/pages/plan_nutricional/screens/plan_nutricional_page.dart';
 import 'package:alimenta_app/src/ui/pages/mi_cuenta/mi_cuenta.dart';
@@ -234,10 +234,10 @@ class _HomePageState extends State<HomePage> {
         children: const KeepAlivePage(child: PlanNutricionalPage()),
       ),
       ChildrenItem(
-        iconoImagen: SolarIconsOutline.map,
-        iconoImagenSeleccionada: SolarIconsBold.map,
-        titulo: 'Lista de compras',
-        children: const Areas(),
+        iconoImagen: SolarIconsOutline.calendar,
+        iconoImagenSeleccionada: SolarIconsBold.calendar,
+        titulo: 'Citas médicas',
+        children: const KeepAlivePage(child: CitasMedicasPage()),
       ),
       ChildrenItem(
           iconoImagen: SolarIconsOutline.settings,

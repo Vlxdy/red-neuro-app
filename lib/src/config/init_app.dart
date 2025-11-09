@@ -5,7 +5,7 @@ import 'package:alimenta_app/src/plugins/auth/auth.dart';
 import 'package:alimenta_app/src/plugins/seguridad/seguridad.dart';
 import 'package:alimenta_app/src/plugins/utils/logger.dart';
 import 'package:alimenta_app/src/sockets/sockets_provider.dart';
-import 'package:alimenta_app/src/ui/pages/areas/services/areas_service.dart';
+import 'package:alimenta_app/src/ui/pages/citas_medicas/services/citas_medicas_service.dart';
 import 'package:go_router/go_router.dart';
 
 class InitAppController {
@@ -14,7 +14,7 @@ class InitAppController {
   static InitAppController instance = InitAppController._();
   final auth = Auth.instance;
   final security = Seguridad.instance;
-  late AreasService areaService;
+  late CitasMedicasService citasService;
   late SocketProvider socketProvider;
 
   // final socketService = SocketService();
@@ -28,7 +28,7 @@ class InitAppController {
     final token = await auth.apiToken;
 
     if (!context.mounted) return;
-    areaService = AreasService('', context);
+    citasService = CitasMedicasService('', context);
     socketProvider = SocketProvider();
 
     await auth.updateAppInfo();
@@ -43,8 +43,8 @@ class InitAppController {
       return;
     }
     await auth.loginSuccess();
-    await areaService.fetchData().whenComplete(() {
-      Logger.info('Areas traidas');
+    await citasService.cargarDatosIniciales().whenComplete(() {
+      Logger.info('Citas médicas cargadas');
     });
 
     if (!context.mounted) return;
