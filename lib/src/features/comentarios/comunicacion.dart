@@ -2,19 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:alimenta_app/src/features/comentarios/services/comentarios_service.dart';
 import 'package:alimenta_app/src/features/comentarios/stores/comentarios_store.dart';
 import 'package:alimenta_app/src/features/comentarios/widgets/seccion_comentarios.dart';
+import 'package:alimenta_app/src/plugins/auth/auth.dart';
 
 class ComunicacionPage extends StatelessWidget {
-  final String? idHistoriaClinica;
-  final String baseUrl;
-
   const ComunicacionPage({
     super.key,
-    required this.idHistoriaClinica,
-    required this.baseUrl,
   });
 
   @override
   Widget build(BuildContext context) {
+    final profile = Auth.instance.profile;
+    final idHistoriaClinica = profile.idHistoriaClinica;
     if (idHistoriaClinica == null) {
       return const Card(
         margin: EdgeInsets.all(16),
@@ -28,10 +26,10 @@ class ComunicacionPage extends StatelessWidget {
       );
     }
 
-    final service = ComentariosService(baseUrl);
+    final service = ComentariosService('', context);
     final store = ComentariosStore(
       service: service,
-      idHistoriaClinica: idHistoriaClinica!,
+      idHistoriaClinica: idHistoriaClinica,
     );
 
     return FutureBuilder(
