@@ -209,89 +209,70 @@ class _CitasMedicasPageState extends State<CitasMedicasPage>
             ? _theme.monochromatic500
             : _theme.fontColor;
 
-    final fondo = esSeleccionado
-        ? _theme.primary
-        : esHoy
-            ? _theme.accent200.withValues(alpha: _theme.isLight ? 0.25 : 0.35)
-            : Colors.transparent;
+    final fondo = esSeleccionado ? _theme.primary : Colors.transparent;
+
+    final bordeHoy = esHoy && !esSeleccionado
+        ? Border.all(color: _theme.primary.withValues(alpha: 0.5), width: 1.2)
+        : null;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
-      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
-      padding: const EdgeInsets.all(6),
+      margin: const EdgeInsets.all(0.5),
+      padding: const EdgeInsets.symmetric(vertical: 3),
       decoration: BoxDecoration(
         color: fondo,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: eventos.isNotEmpty
-              ? (esSeleccionado
-                  ? _theme.primary700
-                  : _theme.secondary.withValues(alpha: 0.4))
-              : Colors.transparent,
-        ),
+        borderRadius: BorderRadius.circular(esSeleccionado ? 20 : 10),
+        border: bordeHoy,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                '${day.day}',
-                style: textoBase?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: colorTexto,
-                ),
-              ),
-              if (eventos.isNotEmpty)
-                Container(
-                  margin: const EdgeInsets.only(left: 6),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: esSeleccionado
-                        ? _theme.white.withValues(alpha: 0.2)
-                        : _theme.secondary.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    '${eventos.length}',
-                    style: textoBase?.copyWith(
-                      fontSize: 10,
-                      color: colorTexto,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          if (eventos.isNotEmpty)
-            ...eventos.take(2).map(
-                  (cita) => Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      '${_horaCorta.format(cita.fechaInicio)} • ${cita.detalle.isNotEmpty ? cita.detalle : cita.estado.label}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: textoBase?.copyWith(
-                        fontSize: 10,
-                        color: colorTexto.withValues(
-                            alpha: esSeleccionado ? 0.95 : 0.8),
-                      ),
-                    ),
-                  ),
-                ),
-          if (eventos.length > 2)
-            Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: Text(
-                '+${eventos.length - 2} más',
-                style: textoBase?.copyWith(
-                  fontSize: 9,
-                  fontStyle: FontStyle.italic,
-                  color: colorTexto.withValues(alpha: 0.7),
-                ),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '${day.day}',
+              style: textoBase?.copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: 11.5,
+                color: colorTexto,
+                height: 1.0,
               ),
             ),
-        ],
+            if (eventos.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: eventos.length == 1
+                    ? Container(
+                        width: 4,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: esSeleccionado
+                              ? _theme.white
+                              : _theme.secondary.withValues(alpha: 0.9),
+                          shape: BoxShape.circle,
+                        ),
+                      )
+                    : Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 4, vertical: 1.5),
+                        decoration: BoxDecoration(
+                          color: esSeleccionado
+                              ? _theme.white.withValues(alpha: 0.2)
+                              : _theme.secondary.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          '${eventos.length}',
+                          style: textoBase?.copyWith(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w600,
+                            color: colorTexto,
+                            height: 1.0,
+                          ),
+                        ),
+                      ),
+              ),
+          ],
+        ),
       ),
     );
   }
