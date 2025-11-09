@@ -286,7 +286,7 @@ class CitasMedicasService extends ServiceConfig {
       };
 
       final response = await fetch(
-        '/pacientes/$idPaciente/citas',
+        '/citas',
         type: HttpProtocol.post,
         body: body,
       );

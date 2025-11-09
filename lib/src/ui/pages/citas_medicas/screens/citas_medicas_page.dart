@@ -56,11 +56,13 @@ class _CitasMedicasPageState extends State<CitasMedicasPage>
   bool get wantKeepAlive => true;
 
   Future<void> _refrescarCalendario(CitasMedicasStore store) async {
-    final estados =
-        store.estadosSeleccionados.isEmpty ? null : store.estadosSeleccionados.toList();
+    final estados = store.estadosSeleccionados.isEmpty
+        ? null
+        : store.estadosSeleccionados.toList();
     final diaEnfocado = store.diaEnfocado;
     final inicioMes = DateTime(diaEnfocado.year, diaEnfocado.month, 1);
-    final finMes = DateTime(diaEnfocado.year, diaEnfocado.month + 1, 0, 23, 59, 59, 999);
+    final finMes =
+        DateTime(diaEnfocado.year, diaEnfocado.month + 1, 0, 23, 59, 59, 999);
     await _service.obtenerCitasPorRango(
       fechaInicio: inicioMes,
       fechaFin: finMes,
@@ -73,8 +75,9 @@ class _CitasMedicasPageState extends State<CitasMedicasPage>
     int? pagina,
     bool resetScroll = false,
   }) async {
-    final estados =
-        store.estadosSeleccionados.isEmpty ? null : store.estadosSeleccionados.toList();
+    final estados = store.estadosSeleccionados.isEmpty
+        ? null
+        : store.estadosSeleccionados.toList();
     await _service.obtenerAgenda(
       pagina: pagina ?? store.pagina,
       limite: store.limite,
@@ -151,7 +154,7 @@ class _CitasMedicasPageState extends State<CitasMedicasPage>
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       builder: (_) => CitaDetalleSheet(
         cita: cita,
         service: _service,
@@ -174,7 +177,7 @@ class _CitasMedicasPageState extends State<CitasMedicasPage>
     final resultado = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       builder: (_) => CitaFormSheet(service: _service),
     );
 
@@ -209,7 +212,7 @@ class _CitasMedicasPageState extends State<CitasMedicasPage>
     final fondo = esSeleccionado
         ? _theme.primary
         : esHoy
-            ? _theme.accent200.withOpacity(_theme.isLight ? 0.25 : 0.35)
+            ? _theme.accent200.withValues(alpha: _theme.isLight ? 0.25 : 0.35)
             : Colors.transparent;
 
     return AnimatedContainer(
@@ -223,7 +226,7 @@ class _CitasMedicasPageState extends State<CitasMedicasPage>
           color: eventos.isNotEmpty
               ? (esSeleccionado
                   ? _theme.primary700
-                  : _theme.secondary.withOpacity(0.4))
+                  : _theme.secondary.withValues(alpha: 0.4))
               : Colors.transparent,
         ),
       ),
@@ -242,11 +245,12 @@ class _CitasMedicasPageState extends State<CitasMedicasPage>
               if (eventos.isNotEmpty)
                 Container(
                   margin: const EdgeInsets.only(left: 6),
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: esSeleccionado
-                        ? _theme.white.withOpacity(0.2)
-                        : _theme.secondary.withOpacity(0.2),
+                        ? _theme.white.withValues(alpha: 0.2)
+                        : _theme.secondary.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -261,19 +265,20 @@ class _CitasMedicasPageState extends State<CitasMedicasPage>
           ),
           if (eventos.isNotEmpty)
             ...eventos.take(2).map(
-              (cita) => Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(
-                  '${_horaCorta.format(cita.fechaInicio)} • ${cita.detalle.isNotEmpty ? cita.detalle : cita.estado.label}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: textoBase?.copyWith(
-                    fontSize: 10,
-                    color: colorTexto.withOpacity(esSeleccionado ? 0.95 : 0.8),
+                  (cita) => Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      '${_horaCorta.format(cita.fechaInicio)} • ${cita.detalle.isNotEmpty ? cita.detalle : cita.estado.label}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textoBase?.copyWith(
+                        fontSize: 10,
+                        color: colorTexto.withValues(
+                            alpha: esSeleccionado ? 0.95 : 0.8),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
           if (eventos.length > 2)
             Padding(
               padding: const EdgeInsets.only(top: 4),
@@ -282,7 +287,7 @@ class _CitasMedicasPageState extends State<CitasMedicasPage>
                 style: textoBase?.copyWith(
                   fontSize: 9,
                   fontStyle: FontStyle.italic,
-                  color: colorTexto.withOpacity(0.7),
+                  color: colorTexto.withValues(alpha: 0.7),
                 ),
               ),
             ),
@@ -302,13 +307,15 @@ class _CitasMedicasPageState extends State<CitasMedicasPage>
           EstadoFilterChips(
             estadosSeleccionados: store.estadosSeleccionados,
             onToggle: (estado) => _alternarEstado(store, estado),
-            onClear:
-                store.estadosSeleccionados.isEmpty ? null : () => _limpiarEstados(store),
+            onClear: store.estadosSeleccionados.isEmpty
+                ? null
+                : () => _limpiarEstados(store),
           ),
           const SizedBox(height: 16),
           Card(
             elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Padding(
               padding: const EdgeInsets.all(12.0),
               child: TableCalendar<Cita>(
@@ -320,7 +327,9 @@ class _CitasMedicasPageState extends State<CitasMedicasPage>
                 availableCalendarFormats: const {
                   CalendarFormat.month: 'Mes',
                 },
-                selectedDayPredicate: (day) => isSameDay(day, store.diaSeleccionado),
+                rowHeight: 72,
+                selectedDayPredicate: (day) =>
+                    isSameDay(day, store.diaSeleccionado),
                 onDaySelected: (selectedDay, focusedDay) {
                   store.setDiaSeleccionado(selectedDay);
                   store.setDiaEnfocado(focusedDay);
@@ -329,10 +338,10 @@ class _CitasMedicasPageState extends State<CitasMedicasPage>
                   store.setDiaEnfocado(focusedDay);
                   _refrescarCalendario(store);
                 },
-                calendarStyle: CalendarStyle(
+                calendarStyle: const CalendarStyle(
                   outsideDaysVisible: false,
-                  todayDecoration: const BoxDecoration(),
-                  selectedDecoration: const BoxDecoration(),
+                  todayDecoration: BoxDecoration(),
+                  selectedDecoration: BoxDecoration(),
                   markersMaxCount: 0,
                 ),
                 headerStyle: HeaderStyle(
@@ -343,7 +352,8 @@ class _CitasMedicasPageState extends State<CitasMedicasPage>
                 ),
                 eventLoader: (day) => store.obtenerEventos(day),
                 calendarBuilders: CalendarBuilders<Cita>(
-                  defaultBuilder: (context, day, focusedDay) => _buildDiaCalendario(
+                  defaultBuilder: (context, day, focusedDay) =>
+                      _buildDiaCalendario(
                     context,
                     day,
                     store,
@@ -351,7 +361,8 @@ class _CitasMedicasPageState extends State<CitasMedicasPage>
                     esHoy: isSameDay(day, _hoy),
                     esFueraMes: day.month != focusedDay.month,
                   ),
-                  outsideBuilder: (context, day, focusedDay) => _buildDiaCalendario(
+                  outsideBuilder: (context, day, focusedDay) =>
+                      _buildDiaCalendario(
                     context,
                     day,
                     store,
@@ -359,7 +370,8 @@ class _CitasMedicasPageState extends State<CitasMedicasPage>
                     esHoy: isSameDay(day, _hoy),
                     esFueraMes: true,
                   ),
-                  todayBuilder: (context, day, focusedDay) => _buildDiaCalendario(
+                  todayBuilder: (context, day, focusedDay) =>
+                      _buildDiaCalendario(
                     context,
                     day,
                     store,
@@ -367,7 +379,8 @@ class _CitasMedicasPageState extends State<CitasMedicasPage>
                     esHoy: true,
                     esFueraMes: day.month != focusedDay.month,
                   ),
-                  selectedBuilder: (context, day, focusedDay) => _buildDiaCalendario(
+                  selectedBuilder: (context, day, focusedDay) =>
+                      _buildDiaCalendario(
                     context,
                     day,
                     store,
@@ -393,10 +406,11 @@ class _CitasMedicasPageState extends State<CitasMedicasPage>
           else if (eventosDia.isEmpty)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 40),
-              child: Center(child: Text('No hay citas registradas para este día.')),
+              child: Center(
+                  child: Text('No hay citas registradas para este día.')),
             )
           else
-            ...eventosDia.map((cita) => _buildCitaCard(cita)).toList(),
+            ...eventosDia.map((cita) => _buildCitaCard(cita)),
         ],
       ),
     );
@@ -413,8 +427,9 @@ class _CitasMedicasPageState extends State<CitasMedicasPage>
           EstadoFilterChips(
             estadosSeleccionados: store.estadosSeleccionados,
             onToggle: (estado) => _alternarEstado(store, estado),
-            onClear:
-                store.estadosSeleccionados.isEmpty ? null : () => _limpiarEstados(store),
+            onClear: store.estadosSeleccionados.isEmpty
+                ? null
+                : () => _limpiarEstados(store),
           ),
           const SizedBox(height: 16),
           TextField(
@@ -445,7 +460,8 @@ class _CitasMedicasPageState extends State<CitasMedicasPage>
                   icon: const Icon(Icons.event),
                   label: Text(
                     store.fechaFiltroAgenda != null
-                        ? DateFormat('dd/MM/yyyy').format(store.fechaFiltroAgenda!)
+                        ? DateFormat('dd/MM/yyyy')
+                            .format(store.fechaFiltroAgenda!)
                         : 'Filtrar por fecha específica',
                   ),
                 ),
@@ -495,10 +511,11 @@ class _CitasMedicasPageState extends State<CitasMedicasPage>
           else if (store.agenda.isEmpty)
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 40),
-              child: Center(child: Text('No se encontraron citas en la agenda.')),
+              child:
+                  Center(child: Text('No se encontraron citas en la agenda.')),
             )
           else
-            ...store.agenda.map((cita) => _buildCitaCard(cita)).toList(),
+            ...store.agenda.map((cita) => _buildCitaCard(cita)),
           const SizedBox(height: 16),
           _buildPaginacion(store),
         ],
@@ -519,20 +536,23 @@ class _CitasMedicasPageState extends State<CitasMedicasPage>
       elevation: 2,
       child: ListTile(
         onTap: () => _abrirDetalle(cita),
-        title: Text(cita.detalle.isNotEmpty ? cita.detalle : 'Cita sin detalle'),
+        title:
+            Text(cita.detalle.isNotEmpty ? cita.detalle : 'Cita sin detalle'),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('$fecha • $horaInicio - $horaFin'),
             const SizedBox(height: 4),
-            Text('Nutricionista: ${cita.medico.nombreCompleto.isNotEmpty ? cita.medico.nombreCompleto : 'Sin asignar'}'),
-            Text('Paciente: ${cita.paciente.nombreCompleto.isNotEmpty ? cita.paciente.nombreCompleto : 'Sin asignar'}'),
+            Text(
+                'Nutricionista: ${cita.medico.nombreCompleto.isNotEmpty ? cita.medico.nombreCompleto : 'Sin asignar'}'),
+            Text(
+                'Paciente: ${cita.paciente.nombreCompleto.isNotEmpty ? cita.paciente.nombreCompleto : 'Sin asignar'}'),
           ],
         ),
         trailing: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: estadoColor.withOpacity(_theme.isLight ? 0.8 : 0.6),
+            color: estadoColor.withValues(alpha: _theme.isLight ? 0.8 : 0.6),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(

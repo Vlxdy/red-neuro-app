@@ -287,8 +287,8 @@ class _CitaDetalleSheetState extends State<CitaDetalleSheet> {
           ],
         );
       },
-    );
-    controller.dispose();
+    ).whenComplete(() => controller.dispose());
+
     return resultado;
   }
 
