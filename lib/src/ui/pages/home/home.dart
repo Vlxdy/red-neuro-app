@@ -12,7 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:solar_icons/solar_icons.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-
+import 'package:alimenta_app/src/features/comentarios/comunicacion.dart';
 final GlobalKey<ScaffoldMessengerState> homeMessenger =
     GlobalKey<ScaffoldMessengerState>();
 
@@ -239,6 +239,12 @@ class _HomePageState extends State<HomePage> {
         iconoImagenSeleccionada: SolarIconsBold.calendar,
         titulo: 'Citas médicas',
         children: const KeepAlivePage(child: CitasMedicasPage()),
+      ),
+      ChildrenItem(
+        iconoImagen: PhosphorIconsRegular.chatTeardropText,
+        iconoImagenSeleccionada: PhosphorIconsFill.chatTeardropText,
+        titulo: 'Consultas médicas',
+        children: const KeepAlivePage(child: ComunicacionPage()),
       ),
       ChildrenItem(
           iconoImagen: SolarIconsOutline.settings,
