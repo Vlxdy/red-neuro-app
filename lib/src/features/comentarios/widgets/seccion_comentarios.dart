@@ -59,7 +59,7 @@ class _SeccionComentariosState extends State<SeccionComentarios> {
 
         final comentarios = store.comentarios;
         final profile = Auth.instance.profile;
-        final userId = profile.id ?? '';
+        final userId = profile.idUsuarioRol ?? '';
 
         return Column(
           children: [
@@ -105,7 +105,7 @@ class _SeccionComentariosState extends State<SeccionComentarios> {
                           final comentario = comentarios[index];
                           return CardComentario(
                             comentario: comentario,
-                            esPropio: comentario.usuario.idUsuario == userId,
+                            esPropio: comentario.usuario.idUsuarioRol == userId,
                             usuarioActualId: userId,
                             onResponder: (comentarioSeleccionado) {
                               store.seleccionarRespuesta(

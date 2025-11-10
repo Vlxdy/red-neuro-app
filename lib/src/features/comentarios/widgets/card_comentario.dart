@@ -1,3 +1,5 @@
+import 'package:alimenta_app/src/config/theme_controller.dart';
+import 'package:alimenta_app/src/constants/constants.dart';
 import 'package:alimenta_app/src/features/comentarios/models/comentario_chat_models.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -28,11 +30,11 @@ class CardComentario extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final backgroundColor = esPropio
-        ? colorScheme.primary.withOpacity(0.08)
-        : colorScheme.surfaceVariant;
-    final borderRadius = BorderRadius.circular(12);
+    final ColorScheme colorScheme = Theme.of(context).colorScheme;
+    final Color backgroundColor = esPropio
+        ? colorScheme.primary.withValues(alpha: 0.08)
+        : colorScheme.surfaceContainerHighest;
+    final BorderRadius borderRadius = BorderRadius.circular(12);
 
     return Container(
       margin: EdgeInsets.only(top: depth == 0 ? 12 : 8, left: depth * 24.0),
@@ -68,7 +70,7 @@ class CardComentario extends StatelessWidget {
               runSpacing: 8,
               children: comentario.archivos
                   .map(
-                    (archivo) => _AttachmentChip(
+                    (ComentarioArchivo archivo) => _AttachmentChip(
                       archivo: archivo,
                       onTap: archivo.urlDescarga.isNotEmpty &&
                               !(archivo.esTemporal)
@@ -92,13 +94,13 @@ class CardComentario extends StatelessWidget {
                       icon: const Icon(Icons.reply, size: 16),
                       label: const Text('Responder'),
                     ),
-                  if (onEditar != null)
+                  if (onEditar != null && esPropio)
                     TextButton.icon(
                       onPressed: () => onEditar!(comentario),
                       icon: const Icon(Icons.edit, size: 16),
                       label: const Text('Editar'),
                     ),
-                  if (onEliminar != null)
+                  if (onEliminar != null && esPropio)
                     TextButton.icon(
                       onPressed: () => onEliminar!(comentario),
                       icon: const Icon(Icons.delete_outline, size: 16),
@@ -113,17 +115,17 @@ class CardComentario extends StatelessWidget {
               child: Column(
                 children: comentario.respuestas
                     .map(
-                    (respuesta) => CardComentario(
-                      comentario: respuesta,
-                      esPropio: usuarioActualId != null &&
-                          respuesta.usuario.idUsuario == usuarioActualId,
-                      onResponder: null,
-                      onEditar: onEditar,
-                      onEliminar: onEliminar,
-                      onDescargarArchivo: onDescargarArchivo,
-                      depth: depth + 1,
-                      usuarioActualId: usuarioActualId,
-                    ),
+                      (ComentarioChat respuesta) => CardComentario(
+                        comentario: respuesta,
+                        esPropio: usuarioActualId != null &&
+                            respuesta.usuario.idUsuario == usuarioActualId,
+                        onResponder: null,
+                        onEditar: onEditar,
+                        onEliminar: onEliminar,
+                        onDescargarArchivo: onDescargarArchivo,
+                        depth: depth + 1,
+                        usuarioActualId: usuarioActualId,
+                      ),
                     )
                     .toList(),
               ),
@@ -134,17 +136,40 @@ class CardComentario extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context) {
-    final nombre = comentario.usuario.nombreCompleto.isNotEmpty
-        ? comentario.usuario.nombreCompleto
-        : 'Usuario';
-    final inicial = nombre.isNotEmpty ? nombre[0].toUpperCase() : '?';
-    final fecha = _dateFormat.format(comentario.fechaCreacion);
+    final theme = ThemeController.instance;
+    final usuario = comentario.usuario;
+
+    final String nombre =
+        usuario.nombreCompleto.isNotEmpty ? usuario.nombreCompleto : 'Usuario';
+    final String fecha = _dateFormat.format(comentario.fechaCreacion);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        CircleAvatar(
-          child: Text(inicial),
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: theme.primary.withValues(alpha: 0.5),
+              width: 1.5,
+            ),
+          ),
+          child: ClipOval(
+            child: usuario.urlFoto != null &&
+                    usuario.urlFoto!.isNotEmpty &&
+                    Uri.tryParse(usuario.urlFoto!) != null
+                ? Image.network(
+                    usuario.urlFoto!.startsWith('http')
+                        ? usuario.urlFoto!
+                        : '${Constantes.apiUrl}${usuario.urlFoto!}',
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) =>
+                        _buildAvatarFallback(theme, usuario),
+                  )
+                : _buildAvatarFallback(theme, usuario),
+          ),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -184,25 +209,41 @@ class _AttachmentChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = archivo.pesoBytes != null && archivo.pesoBytes! > 0
+    final String label = archivo.pesoBytes != null && archivo.pesoBytes! > 0
         ? '${archivo.nombre} • ${_formatFileSize(archivo.pesoBytes!)}'
         : archivo.nombre;
     return InputChip(
       label: Text(label),
       avatar: const Icon(Icons.attach_file, size: 18),
       onPressed: onTap,
-      disabledColor: Theme.of(context).colorScheme.surfaceVariant,
+      disabledColor: Theme.of(context).colorScheme.surfaceContainerHighest,
     );
   }
 
   String _formatFileSize(int bytes) {
-    const units = ['B', 'KB', 'MB', 'GB'];
-    var size = bytes.toDouble();
-    var unitIndex = 0;
+    const List<String> units = ['B', 'KB', 'MB', 'GB'];
+    double size = bytes.toDouble();
+    int unitIndex = 0;
     while (size >= 1024 && unitIndex < units.length - 1) {
       size /= 1024;
       unitIndex++;
     }
     return '${size.toStringAsFixed(size < 10 ? 1 : 0)} ${units[unitIndex]}';
   }
+}
+
+Widget _buildAvatarFallback(ThemeController theme, dynamic usuario) {
+  return Container(
+    color: theme.primary,
+    alignment: Alignment.center,
+    child: Text(
+      '${usuario.nombres.isNotEmpty ? usuario.nombres[0] : ''}'
+      '${usuario.primerApellido.isNotEmpty ? usuario.primerApellido[0] : ''}',
+      style: TextStyle(
+        color: theme.white,
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+  );
 }

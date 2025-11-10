@@ -111,7 +111,7 @@ class _EditorComentarioState extends State<EditorComentario> {
       return;
     }
 
-    final result = await FilePicker.platform.pickFiles(
+    final FilePickerResult? result = await FilePicker.platform.pickFiles(
       allowMultiple: true,
       allowedExtensions: _allowedExtensions,
       type: FileType.custom,
@@ -122,7 +122,7 @@ class _EditorComentarioState extends State<EditorComentario> {
       return;
     }
 
-    final selected = result.files.take(remaining).where((file) {
+    final selected = result.files.take(remaining).where((PlatformFile file) {
       if (file.size > widget.maxFileSizeBytes) {
         widget.onValidationError?.call(
           'El archivo "${file.name}" supera el límite de ${(widget.maxFileSizeBytes / (1024 * 1024)).toStringAsFixed(0)} MB.',
