@@ -3,6 +3,7 @@ import 'package:alimenta_app/src/constants/constants.dart';
 import 'package:alimenta_app/src/features/comentarios/models/comentario_chat_models.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_html/flutter_html.dart';
 
 class CardComentario extends StatelessWidget {
   const CardComentario({
@@ -47,10 +48,19 @@ class CardComentario extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildHeader(context),
-          const SizedBox(height: 8),
-          Text(
-            comentario.contenido,
-            style: Theme.of(context).textTheme.bodyMedium,
+          const SizedBox(height: 2),
+          Html(
+            data:
+                comentario.contenido, // ← este es el HTML que viene del backend
+            style: {
+              'body': Style(
+                margin: Margins.zero,
+                padding: HtmlPaddings.zero,
+                fontSize: FontSize(12),
+                color: Theme.of(context).textTheme.bodyMedium?.color,
+                fontFamily: Theme.of(context).textTheme.bodyMedium?.fontFamily,
+              ),
+            },
           ),
           if (comentario.fueEditado)
             Padding(
@@ -64,7 +74,7 @@ class CardComentario extends StatelessWidget {
               ),
             ),
           if (comentario.archivos.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: 2),
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -85,7 +95,7 @@ class CardComentario extends StatelessWidget {
               onEditar != null ||
               onEliminar != null)
             Padding(
-              padding: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.only(top: 2),
               child: Row(
                 children: [
                   if (onResponder != null && !comentario.esRespuesta)
@@ -111,7 +121,7 @@ class CardComentario extends StatelessWidget {
             ),
           if (comentario.respuestas.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.only(top: 2),
               child: Column(
                 children: comentario.respuestas
                     .map(
