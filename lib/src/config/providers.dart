@@ -1,8 +1,9 @@
 import 'package:alimenta_app/src/plugins/camera/camera_screen_store.dart';
 import 'package:alimenta_app/src/ui/pages/citas_medicas/stores/citas_medicas_store.dart';
 import 'package:alimenta_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena_store.dart';
-import 'package:alimenta_app/src/ui/pages/plan_nutricional/stores/plan_nutricional_store.dart';
 import 'package:alimenta_app/src/ui/pages/inicio/inicio_store.dart';
+import 'package:alimenta_app/src/ui/pages/plan_nutricional/stores/plan_nutricional_store.dart';
+import 'package:alimenta_app/src/ui/pages/carrito_compras/stores/carrito_compras_store.dart';
 import 'package:flutter/material.dart';
 import 'package:alimenta_app/src/ui/global/loading_animation.dart';
 import 'package:alimenta_app/src/ui/pages/login/login_store.dart';
@@ -19,6 +20,8 @@ List<SingleChildWidget> proveedores(BuildContext context) => [
       ChangeNotifierProvider(create: (context) => CitasMedicasStore.instance),
       ChangeNotifierProvider(
           create: (context) => PlanNutricionalStore.instance),
+      ChangeNotifierProvider(
+          create: (context) => CarritoComprasStore.instance),
     ];
 
 resetProviders() {}
