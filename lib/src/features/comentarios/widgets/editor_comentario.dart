@@ -1,8 +1,10 @@
+import 'dart:convert';
+
 import 'package:alimenta_app/src/constants/constants.dart';
 import 'package:alimenta_app/src/features/comentarios/models/comentario_chat_models.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:html_editor_enhanced/html_editor.dart';
+import 'package:html/parser.dart' as html_parser;
 
 class EditorComentario extends StatefulWidget {
   EditorComentario({
@@ -14,6 +16,7 @@ class EditorComentario extends StatefulWidget {
     this.editing,
     this.onCancelReply,
     this.onCancelEdit,
+    this.onCancel,
     int? maxFiles,
     int? maxFileSizeBytes,
   })  : maxFiles = maxFiles ?? Constantes.chatMaxFiles,
@@ -29,6 +32,7 @@ class EditorComentario extends StatefulWidget {
   final ComentarioChat? editing;
   final VoidCallback? onCancelReply;
   final VoidCallback? onCancelEdit;
+  final VoidCallback? onCancel;
   final int maxFiles;
   final int maxFileSizeBytes;
 
@@ -37,11 +41,9 @@ class EditorComentario extends StatefulWidget {
 }
 
 class _EditorComentarioState extends State<EditorComentario> {
-  // final TextEditingController _controller = TextEditingController();
-  final HtmlEditorController _controller = HtmlEditorController();
+  final TextEditingController _controller = TextEditingController();
   final FocusNode _focusNode = FocusNode();
   final List<ComentarioArchivoLocal> _archivos = [];
-  bool _mostrarToolbar = false;
 
   static const List<String> _allowedExtensions = [
     'pdf',
@@ -67,8 +69,18 @@ class _EditorComentarioState extends State<EditorComentario> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _focusNode.requestFocus();
+      }
+    });
+  }
+
+  @override
   void dispose() {
-    // _controller.dispose();
+    _controller.dispose();
     _focusNode.dispose();
     super.dispose();
   }
@@ -78,24 +90,26 @@ class _EditorComentarioState extends State<EditorComentario> {
     super.didUpdateWidget(oldWidget);
     if (widget.editing?.id != oldWidget.editing?.id) {
       if (widget.editing?.contenido != null) {
-        _controller.setText(widget.editing!.contenido);
+        _controller.text = _fromHtml(widget.editing!.contenido);
       }
+      _focusNode.requestFocus();
     }
 
-    if (widget.replyingTo == null && oldWidget.replyingTo != null) {
+    if (widget.replyingTo?.id != oldWidget.replyingTo?.id) {
       _focusNode.requestFocus();
     }
   }
 
   Future<void> _handleSubmit() async {
-    final contenido = (await _controller.getText()).trim();
-    if ((contenido.isEmpty || contenido == "<p></p>") && _archivos.isEmpty) {
+    final contenido = _controller.text.trim();
+    if (contenido.isEmpty && _archivos.isEmpty) {
       widget.onValidationError
           ?.call('Escribe un mensaje o adjunta al menos un archivo.');
       return;
     }
 
-    await widget.onSubmit(contenido, List.unmodifiable(_archivos));
+    final htmlContenido = _toHtml(contenido);
+    await widget.onSubmit(htmlContenido, List.unmodifiable(_archivos));
 
     if (mounted) {
       setState(() {
@@ -170,46 +184,22 @@ class _EditorComentarioState extends State<EditorComentario> {
       children: [
         if (isReplying || isEditing)
           _buildContextBanner(isEditing: isEditing, isReplying: isReplying),
-        // SizedBox(
-        //   height: 230,
-        //   child: HtmlEditor(
-        //     controller: _controller,
-        //     htmlEditorOptions: HtmlEditorOptions(
-        //       hint: 'Escribe un mensaje...',
-        //       autoAdjustHeight: false, // 👈 importante
-        //     ),
-        //     htmlToolbarOptions: const HtmlToolbarOptions(
-        //       toolbarType: ToolbarType.nativeGrid,
-        //     ),
-        //   ),
-        // ),
-        SizedBox(
-          height: 180,
-          child: HtmlEditor(
-            controller: _controller,
-            htmlEditorOptions: const HtmlEditorOptions(
-              hint: 'Escribe tu comentario...',
-              autoAdjustHeight: false,
+        ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 120, maxHeight: 220),
+          child: Scrollbar(
+            child: TextField(
+              controller: _controller,
+              focusNode: _focusNode,
+              enabled: !widget.enviando,
+              maxLines: null,
+              minLines: 4,
+              textInputAction: TextInputAction.newline,
+              decoration: const InputDecoration(
+                hintText: 'Escribe tu comentario...',
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
             ),
-            htmlToolbarOptions: HtmlToolbarOptions(
-              toolbarPosition: ToolbarPosition.aboveEditor,
-              toolbarType: ToolbarType.nativeGrid,
-              defaultToolbarButtons: const [
-                FontButtons(
-                  bold: true,
-                  italic: true,
-                  underline: false,
-                  strikethrough: false,
-                  clearAll: false,
-                ),
-                ListButtons(
-                  ul: true,
-                  ol: true,
-                  listStyles: false, // ❌ elimina “Select list style”
-                ),
-              ],
-            ),
-            otherOptions: const OtherOptions(height: 130),
           ),
         ),
 
@@ -236,53 +226,38 @@ class _EditorComentarioState extends State<EditorComentario> {
               icon: const Icon(Icons.attach_file),
               label: const Text('Adjuntar'),
             ),
-            IconButton(
-              icon: Icon(
-                _mostrarToolbar ? Icons.keyboard_hide : Icons.edit,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              tooltip: _mostrarToolbar
-                  ? 'Ocultar herramientas'
-                  : 'Mostrar herramientas',
-              onPressed: () {
-                setState(() {
-                  _mostrarToolbar = !_mostrarToolbar;
-                });
-              },
-            ),
-            FilledButton(
-              onPressed: widget.enviando ? null : _handleSubmit,
-              child: widget.enviando
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Enviar'),
+            Row(
+              children: [
+                TextButton(
+                  onPressed: widget.enviando
+                      ? null
+                      : () {
+                          widget.onCancelReply?.call();
+                          widget.onCancelEdit?.call();
+                          widget.onCancel?.call();
+                          setState(() {
+                            _archivos.clear();
+                          });
+                          _controller.clear();
+                        },
+                  child: const Text('Cancelar'),
+                ),
+                const SizedBox(width: 8),
+                FilledButton(
+                  onPressed: widget.enviando ? null : _handleSubmit,
+                  child: widget.enviando
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Enviar'),
+                ),
+              ],
             ),
           ],
         ),
 
-        // Row(
-        //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        //   children: [
-        //     TextButton.icon(
-        //       onPressed: widget.enviando ? null : _pickFiles,
-        //       icon: const Icon(Icons.attach_file),
-        //       label: const Text('Adjuntar'),
-        //     ),
-        //     FilledButton(
-        //       onPressed: widget.enviando ? null : _handleSubmit,
-        //       child: widget.enviando
-        //           ? const SizedBox(
-        //               height: 20,
-        //               width: 20,
-        //               child: CircularProgressIndicator(strokeWidth: 2),
-        //             )
-        //           : Text(isEditing ? 'Guardar cambios' : 'Enviar'),
-        //     ),
-        //   ],
-        // ),
       ],
     );
   }
@@ -315,17 +290,29 @@ class _EditorComentarioState extends State<EditorComentario> {
             onPressed: () {
               if (isEditing) {
                 widget.onCancelEdit?.call();
-                _controller.clear();
               } else {
                 widget.onCancelReply?.call();
               }
               setState(() {
                 _archivos.clear();
               });
+              widget.onCancel?.call();
+              _controller.clear();
             },
           )
         ],
       ),
     );
+  }
+
+  String _fromHtml(String html) {
+    final document = html_parser.parse(html);
+    final text = document.body?.text ?? '';
+    return text;
+  }
+
+  String _toHtml(String text) {
+    final escaped = const HtmlEscape().convert(text);
+    return '<p>${escaped.replaceAll('\n', '<br>')}</p>';
   }
 }
