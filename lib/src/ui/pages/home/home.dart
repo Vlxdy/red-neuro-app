@@ -14,6 +14,7 @@ import 'package:flutter/services.dart';
 import 'package:solar_icons/solar_icons.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:alimenta_app/src/features/comentarios/comunicacion.dart';
+
 final GlobalKey<ScaffoldMessengerState> homeMessenger =
     GlobalKey<ScaffoldMessengerState>();
 
@@ -227,61 +228,63 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeController.instance;
+    final ThemeController theme = ThemeController.instance;
     _itemsMenu = [
       ChildrenItem(
         iconoImagen: PhosphorIconsRegular.forkKnife,
         iconoImagenSeleccionada: PhosphorIconsFill.forkKnife,
-        titulo: 'Plan nutricional',
+        titulo: 'Mi plan',
         children: const KeepAlivePage(child: PlanNutricionalPage()),
       ),
       ChildrenItem(
         iconoImagen: PhosphorIconsRegular.shoppingCart,
         iconoImagenSeleccionada: PhosphorIconsFill.shoppingCart,
-        titulo: 'Carrito de compras',
+        titulo: 'Carrito',
         children: const CarritoComprasKeepAlivePage(),
       ),
       ChildrenItem(
         iconoImagen: SolarIconsOutline.calendar,
         iconoImagenSeleccionada: SolarIconsBold.calendar,
-        titulo: 'Citas médicas',
+        titulo: 'Citas',
         children: const KeepAlivePage(child: CitasMedicasPage()),
       ),
       ChildrenItem(
         iconoImagen: PhosphorIconsRegular.chatTeardropText,
         iconoImagenSeleccionada: PhosphorIconsFill.chatTeardropText,
-        titulo: 'Consultas médicas',
+        titulo: 'Consultas',
         children: const KeepAlivePage(child: ComunicacionPage()),
       ),
-      ChildrenItem(
-          iconoImagen: SolarIconsOutline.settings,
-          iconoImagenSeleccionada: SolarIconsBold.settings,
-          titulo: 'Configuración',
-          // children: const Ubicaciones(),
-          itemsSubmenu: [
-            ChildrenItem(
-                color: theme.primary,
-                iconoImagen: SolarIconsOutline.user,
-                iconoImagenSeleccionada: SolarIconsBold.user,
-                titulo: 'Perfil',
-                children: const KeepAlivePage(child: Perfil())),
-            ChildrenItem(
-              color: theme.primary,
-              iconoImagen: SolarIconsOutline.password,
-              iconoImagenSeleccionada: SolarIconsBold.password,
-              titulo: 'Cambiar contraseña',
-              children: const CambiarContrasena(),
-            ),
-            ChildrenItem(
-              color: theme.primary,
-              iconoImagen: SolarIconsOutline.password,
-              iconoImagenSeleccionada: SolarIconsBold.password,
-              titulo: 'Sesión',
-              children: const Micuenta(),
-            ),
-          ]),
-    ];
 
+      // 🔹 Nuevo submenú "Cuenta"
+      ChildrenItem(
+        iconoImagen: SolarIconsOutline.user,
+        iconoImagenSeleccionada: SolarIconsBold.user,
+        titulo: 'Cuenta',
+        itemsSubmenu: [
+          ChildrenItem(
+            color: theme.primary,
+            iconoImagen: SolarIconsOutline.user,
+            iconoImagenSeleccionada: SolarIconsBold.user,
+            titulo: 'Perfil',
+            children: const KeepAlivePage(child: Perfil()),
+          ),
+          ChildrenItem(
+            color: theme.primary,
+            iconoImagen: SolarIconsOutline.password,
+            iconoImagenSeleccionada: SolarIconsBold.password,
+            titulo: 'Contraseña',
+            children: const CambiarContrasena(),
+          ),
+          ChildrenItem(
+            color: theme.primary,
+            iconoImagen: SolarIconsOutline.logout,
+            iconoImagenSeleccionada: SolarIconsBold.logout,
+            titulo: 'Cerrar sesión',
+            children: const Micuenta(),
+          ),
+        ],
+      ),
+    ];
     return TemplatePage(
       page: ScaffoldMessenger(
           child: Scaffold(
@@ -307,7 +310,7 @@ class _HomePageState extends State<HomePage> {
                 physics: const NeverScrollableScrollPhysics(),
                 controller:
                     showSubmenu ? controllerSubmenu : controllerPrincipal,
-                onPageChanged: (pageIndex) {
+                onPageChanged: (int pageIndex) {
                   setState(() {
                     if (showSubmenu) {
                       _selectedSubItem = pageIndex;
@@ -320,11 +323,13 @@ class _HomePageState extends State<HomePage> {
                 children: _selectedSubItem != null
                     ? (_itemsMenu[_selectedIndex]
                             .itemsSubmenu
-                            ?.map((item) => item.children ?? Container())
+                            ?.map((ChildrenItem item) =>
+                                item.children ?? Container())
                             .toList() ??
                         [])
                     : _itemsMenu
-                        .map((item) => item.children ?? Container())
+                        .map(
+                            (ChildrenItem item) => item.children ?? Container())
                         .toList(),
               ),
             )
@@ -334,7 +339,10 @@ class _HomePageState extends State<HomePage> {
           color: theme.background,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: _itemsMenu.asMap().entries.map((entry) {
+            children: _itemsMenu
+                .asMap()
+                .entries
+                .map((MapEntry<int, ChildrenItem> entry) {
               int index = entry.key;
               ChildrenItem item = entry.value;
               return buildNavItem(
