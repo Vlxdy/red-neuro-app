@@ -8,6 +8,7 @@ import 'package:alimenta_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena.
 import 'package:alimenta_app/src/ui/pages/plan_nutricional/screens/plan_nutricional_page.dart';
 import 'package:alimenta_app/src/ui/pages/mi_cuenta/mi_cuenta.dart';
 import 'package:alimenta_app/src/ui/pages/perfil/perfil.dart';
+import 'package:alimenta_app/src/ui/pages/carrito_compras/screens/carrito_compras_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:solar_icons/solar_icons.dart';
@@ -233,6 +234,12 @@ class _HomePageState extends State<HomePage> {
         iconoImagenSeleccionada: PhosphorIconsFill.forkKnife,
         titulo: 'Plan nutricional',
         children: const KeepAlivePage(child: PlanNutricionalPage()),
+      ),
+      ChildrenItem(
+        iconoImagen: PhosphorIconsRegular.shoppingCart,
+        iconoImagenSeleccionada: PhosphorIconsFill.shoppingCart,
+        titulo: 'Carrito de compras',
+        children: const CarritoComprasKeepAlivePage(),
       ),
       ChildrenItem(
         iconoImagen: SolarIconsOutline.calendar,
