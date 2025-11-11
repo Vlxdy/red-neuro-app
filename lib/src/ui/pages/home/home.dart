@@ -1,10 +1,13 @@
 import 'package:alimenta_app/src/config/theme_controller.dart';
 import 'package:alimenta_app/src/plugins/estaciones/bitacora_store.dart';
+import 'package:alimenta_app/src/features/notificaciones/stores/notificaciones_store.dart';
 import 'package:alimenta_app/src/plugins/utils/logger.dart';
+import 'package:alimenta_app/src/ui/common/badges/counter_badge.dart';
 import 'package:alimenta_app/src/ui/common/keep_alive_page.dart';
 import 'package:alimenta_app/src/ui/global/template_page.dart';
 import 'package:alimenta_app/src/ui/pages/citas_medicas/screens/citas_medicas_page.dart';
 import 'package:alimenta_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
+import 'package:alimenta_app/src/ui/pages/notificaciones/notificaciones_page.dart';
 import 'package:alimenta_app/src/ui/pages/plan_nutricional/screens/plan_nutricional_page.dart';
 import 'package:alimenta_app/src/ui/pages/mi_cuenta/mi_cuenta.dart';
 import 'package:alimenta_app/src/ui/pages/perfil/perfil.dart';
@@ -14,6 +17,7 @@ import 'package:flutter/services.dart';
 import 'package:solar_icons/solar_icons.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:alimenta_app/src/features/comentarios/comunicacion.dart';
+import 'package:provider/provider.dart';
 
 final GlobalKey<ScaffoldMessengerState> homeMessenger =
     GlobalKey<ScaffoldMessengerState>();
@@ -38,6 +42,10 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      context.read<NotificacionesStore>().inicializar(context);
+    });
   }
 
   void _onItemTapped(String titulo, int index) {
@@ -92,6 +100,22 @@ class _HomePageState extends State<HomePage> {
                   itemCount: itemsSubmenu.length,
                   itemBuilder: (context, subIndex) {
                     final subitem = itemsSubmenu[subIndex];
+                    final badgeCount = subitem.badgeCount;
+                    final icono = Icon(
+                      subitem.iconoImagenSeleccionada,
+                      color: subitem.color,
+                      size: 28,
+                    );
+                    final iconWithBadge = badgeCount > 0
+                        ? CounterBadge(
+                            count: badgeCount,
+                            backgroundColor:
+                                subitem.color ?? theme.primary,
+                            borderColor: theme.white,
+                            child: icono,
+                            offset: const Offset(-10, -6),
+                          )
+                        : icono;
                     return SizedBox(
                       child: InkWell(
                         onTap: () => {
@@ -134,8 +158,7 @@ class _HomePageState extends State<HomePage> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.center,
                                       children: [
-                                        Icon(subitem.iconoImagenSeleccionada,
-                                            color: subitem.color, size: 28),
+                                        iconWithBadge,
                                         const SizedBox(width: 10),
                                         Expanded(
                                           child: Text(
@@ -172,9 +195,30 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget buildNavItem(IconData icon, String label, int index,
-      List<ChildrenItem>? itemsSubmenu, Color? color) {
+  Widget buildNavItem(
+      BuildContext context,
+      IconData icon,
+      String label,
+      int index,
+      List<ChildrenItem>? itemsSubmenu,
+      Color? color,
+      {int badgeCount = 0}) {
     final bool isSelected = _selectedIndex == index;
+
+    Widget iconWidget = Icon(
+      icon,
+      color: color ?? (isSelected ? theme.primary : null),
+    );
+
+    if (badgeCount > 0) {
+      iconWidget = CounterBadge(
+        count: badgeCount,
+        backgroundColor: theme.primary,
+        borderColor: theme.background,
+        child: iconWidget,
+        offset: const Offset(-10, -6),
+      );
+    }
 
     return GestureDetector(
       onTap: itemsSubmenu != null
@@ -191,10 +235,7 @@ class _HomePageState extends State<HomePage> {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                icon,
-                color: color ?? (isSelected ? theme.primary : null),
-              ),
+              iconWidget,
               const SizedBox(width: 2),
               itemsSubmenu != null
                   ? Transform.rotate(
@@ -229,6 +270,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final ThemeController theme = ThemeController.instance;
+    final notificacionesStore = context.watch<NotificacionesStore>();
     _itemsMenu = [
       ChildrenItem(
         iconoImagen: PhosphorIconsRegular.forkKnife,
@@ -260,6 +302,7 @@ class _HomePageState extends State<HomePage> {
         iconoImagen: SolarIconsOutline.user,
         iconoImagenSeleccionada: SolarIconsBold.user,
         titulo: 'Cuenta',
+        badgeCount: notificacionesStore.totalNoVistas,
         itemsSubmenu: [
           ChildrenItem(
             color: theme.primary,
@@ -267,6 +310,14 @@ class _HomePageState extends State<HomePage> {
             iconoImagenSeleccionada: SolarIconsBold.user,
             titulo: 'Perfil',
             children: const KeepAlivePage(child: Perfil()),
+          ),
+          ChildrenItem(
+            color: theme.primary,
+            iconoImagen: Icons.notifications_none_rounded,
+            iconoImagenSeleccionada: Icons.notifications_rounded,
+            titulo: 'Notificaciones',
+            badgeCount: notificacionesStore.totalNoVistas,
+            children: const KeepAlivePage(child: NotificacionesPage()),
           ),
           ChildrenItem(
             color: theme.primary,
@@ -346,6 +397,7 @@ class _HomePageState extends State<HomePage> {
               int index = entry.key;
               ChildrenItem item = entry.value;
               return buildNavItem(
+                context,
                 index == _selectedIndex
                     ? item.iconoImagenSeleccionada
                     : item.iconoImagen,
@@ -353,6 +405,7 @@ class _HomePageState extends State<HomePage> {
                 index,
                 item.itemsSubmenu,
                 item.color,
+                badgeCount: item.badgeCount,
               );
             }).toList(),
           ),
@@ -370,6 +423,7 @@ class ChildrenItem {
   VoidCallback? onTap;
   Color? color;
   List<ChildrenItem>? itemsSubmenu;
+  int badgeCount;
 
   ChildrenItem(
       {required this.iconoImagen,
@@ -378,5 +432,6 @@ class ChildrenItem {
       this.children,
       this.onTap,
       this.color,
-      this.itemsSubmenu});
+      this.itemsSubmenu,
+      this.badgeCount = 0});
 }
