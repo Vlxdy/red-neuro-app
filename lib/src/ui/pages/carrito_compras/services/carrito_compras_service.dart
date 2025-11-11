@@ -1,15 +1,16 @@
 import 'package:alimenta_app/src/config/service_config.dart';
 import 'package:alimenta_app/src/config/theme_controller.dart';
 import 'package:alimenta_app/src/constants/network.dart';
+import 'package:alimenta_app/src/models/user.dart';
 import 'package:alimenta_app/src/plugins/utils/logger.dart';
 import 'package:alimenta_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:alimenta_app/src/ui/pages/carrito_compras/models/producto_carrito.dart';
 import 'package:alimenta_app/src/ui/pages/carrito_compras/services/carrito_local_service.dart';
 import 'package:alimenta_app/src/ui/pages/carrito_compras/stores/carrito_compras_store.dart';
 import 'package:alimenta_app/src/ui/pages/carrito_compras/widgets/carrito_scaffold_messenger.dart';
-import 'package:alimenta_app/src/ui/pages/plan_nutricional/stores/plan_nutricional_store.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:alimenta_app/src/plugins/auth/auth.dart';
 
 class CarritoComprasService extends ServiceConfig {
   CarritoComprasService(BuildContext context)
@@ -21,52 +22,14 @@ class CarritoComprasService extends ServiceConfig {
   final CarritoComprasStore _store;
   final CarritoLocalService _localService;
   final ThemeController _theme;
+  final Usuario profile = Auth.instance.profile;
 
   Future<void> initialize() async {
     await _cargarCarritoLocal();
-    await _asegurarPerfil();
-  }
-
-  Future<void> _asegurarPerfil() async {
-    if ((_store.idUsuarioRol ?? '').isNotEmpty) return;
-    final planStore = PlanNutricionalStore.instance;
-    if ((planStore.idUsuarioRol ?? '').isNotEmpty) {
-      _store.setIdUsuarioRol(planStore.idUsuarioRol);
-      return;
-    }
-    try {
-      final response = await fetch('/usuarios/cuenta/perfil');
-      if (response.status != StatusNetwork.connected) {
-        _store.setError(response.message);
-        return;
-      }
-      final data = response.data;
-      final roles = ((data['roles'] as List<dynamic>?) ?? [])
-          .whereType<Map<String, dynamic>>()
-          .toList();
-      final pacienteRole = roles.firstWhere(
-        (rol) =>
-            (rol['rol']?.toString().toUpperCase() == 'PACIENTE') ||
-            (rol['nombre']?.toString().toUpperCase() == 'PACIENTE'),
-        orElse: () => <String, dynamic>{},
-      );
-      final idUsuarioRol = pacienteRole['idUsuarioRol']?.toString();
-      if (idUsuarioRol == null || idUsuarioRol.isEmpty) {
-        _store.setError('No se pudo identificar el perfil del paciente.');
-        return;
-      }
-      _store.setIdUsuarioRol(idUsuarioRol);
-      planStore.setIdUsuarioRol(idUsuarioRol);
-    } catch (error, stacktrace) {
-      Logger.error('Error obteniendo perfil de usuario: $error');
-      Logger.error(stacktrace.toString());
-      _store.setError('No se pudo obtener la información del perfil.');
-    }
   }
 
   Future<void> obtenerProductos() async {
-    await _asegurarPerfil();
-    final idUsuarioRol = _store.idUsuarioRol;
+    final String? idUsuarioRol = profile.idUsuarioRol;
     if (idUsuarioRol == null || idUsuarioRol.isEmpty) {
       _mostrarError('No se pudo identificar al paciente.');
       return;
@@ -92,15 +55,15 @@ class CarritoComprasService extends ServiceConfig {
         _mostrarError(response.message);
         return;
       }
-
       final datos = response.data;
-      final items = (datos['datos'] as List<dynamic>? ?? [])
+      final items = (datos['list'] as List<dynamic>? ?? [])
           .whereType<Map<String, dynamic>>()
           .map(ProductoCarrito.fromJson)
           .toList();
 
       if (items.isEmpty) {
-        _mostrarError('No se encontraron productos para el rango seleccionado.');
+        _mostrarError(
+            'No se encontraron productos para el rango seleccionado.');
         _store.limpiarResultados();
         return;
       }
