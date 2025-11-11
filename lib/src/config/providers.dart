@@ -1,3 +1,4 @@
+import 'package:alimenta_app/src/features/notificaciones/stores/notificaciones_store.dart';
 import 'package:alimenta_app/src/plugins/camera/camera_screen_store.dart';
 import 'package:alimenta_app/src/ui/pages/citas_medicas/stores/citas_medicas_store.dart';
 import 'package:alimenta_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena_store.dart';
@@ -22,6 +23,8 @@ List<SingleChildWidget> proveedores(BuildContext context) => [
           create: (context) => PlanNutricionalStore.instance),
       ChangeNotifierProvider(
           create: (context) => CarritoComprasStore.instance),
+      ChangeNotifierProvider(
+          create: (context) => NotificacionesStore.instance),
     ];
 
 resetProviders() {}
