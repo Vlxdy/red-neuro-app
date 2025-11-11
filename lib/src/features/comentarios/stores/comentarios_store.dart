@@ -136,6 +136,7 @@ class ComentariosStore extends ChangeNotifier {
       contenido: contenido,
       fechaCreacion: DateTime.now(),
       usuario: _usuarioActual(),
+      esNuevo: true,
       archivos: archivos
           .map((archivo) => ComentarioArchivo(
                 id: archivo.id,
@@ -150,6 +151,11 @@ class ComentariosStore extends ChangeNotifier {
     );
 
     _insertarComentario(comentarioTemporal);
+
+    Future.delayed(const Duration(seconds: 2), () {
+      comentarioTemporal.esNuevo = false;
+      notifyListeners();
+    });
 
     try {
       final comentario = await service.crearComentario(
@@ -313,6 +319,18 @@ class ComentariosStore extends ChangeNotifier {
       _eliminarComentario(comentario.id);
       notifyListeners();
       return;
+    }
+    // ⚡ Detectar si es nuevo o modificado
+    final esNuevoComentario = !_comentariosIndex.containsKey(comentario.id);
+    final esModificacion = tipo.contains('actualizado') || tipo.contains('modificado');
+
+    // ✅ Marcar visualmente como "nuevo o actualizado"
+    if (esNuevoComentario || esModificacion) {
+      comentario.esNuevo = true;
+      Future.delayed(const Duration(seconds: 2), () {
+        comentario.esNuevo = false;
+        notifyListeners();
+      });
     }
 
     _actualizarComentario(comentario.id, comentario);

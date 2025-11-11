@@ -170,7 +170,10 @@ class ComentarioChat {
   final List<ComentarioChat> respuestas;
   final bool eliminado;
 
-  const ComentarioChat({
+  /// Propiedad local para la UI
+  bool esNuevo;
+
+  ComentarioChat({
     required this.id,
     required this.contenido,
     required this.fechaCreacion,
@@ -180,6 +183,7 @@ class ComentarioChat {
     this.archivos = const [],
     this.respuestas = const [],
     this.eliminado = false,
+    this.esNuevo = false, // ← valor por defecto
   });
 
   bool get esRespuesta => idComentarioPadre != null;
@@ -196,6 +200,7 @@ class ComentarioChat {
     List<ComentarioArchivo>? archivos,
     List<ComentarioChat>? respuestas,
     bool? eliminado,
+    bool? esNuevo, // ← agregar aquí también
   }) {
     return ComentarioChat(
       id: id ?? this.id,
@@ -207,6 +212,7 @@ class ComentarioChat {
       archivos: archivos ?? this.archivos,
       respuestas: respuestas ?? this.respuestas,
       eliminado: eliminado ?? this.eliminado,
+      esNuevo: esNuevo ?? this.esNuevo, // ← conservar el valor
     );
   }
 
@@ -229,18 +235,12 @@ class ComentarioChat {
 
     return ComentarioChat(
       id: id,
-      contenido: _resolveString(json, ['contenido', 'texto', 'comentario'],
-          defaultValue: ''),
-      fechaCreacion:
-          _parseDateTime(json['fechaCreacion'] ?? json['createdAt']) ??
-              DateTime.now(),
-      fechaModificacion:
-          _parseDateTime(json['fechaModificacion'] ?? json['updatedAt']),
-      idComentarioPadre:
-          _resolveNullableString(json, ['idComentarioPadre', 'comentarioPadreId']),
+      contenido: _resolveString(json, ['contenido', 'texto', 'comentario'], defaultValue: ''),
+      fechaCreacion: _parseDateTime(json['fechaCreacion'] ?? json['createdAt']) ?? DateTime.now(),
+      fechaModificacion: _parseDateTime(json['fechaModificacion'] ?? json['updatedAt']),
+      idComentarioPadre: _resolveNullableString(json, ['idComentarioPadre', 'comentarioPadreId']),
       usuario: ComentarioUsuario.fromJson(
-        (json['usuario'] as Map<String, dynamic>?) ??
-            (json['autor'] as Map<String, dynamic>?),
+        (json['usuario'] as Map<String, dynamic>?) ?? (json['autor'] as Map<String, dynamic>?),
       ),
       archivos: (json['archivos'] as List<dynamic>? ?? [])
           .map(
@@ -262,6 +262,7 @@ class ComentarioChat {
           )
           .toList(),
       eliminado: json['eliminado'] == true,
+      esNuevo: false, // ← siempre falso al parsear desde backend
     );
   }
 

@@ -1,4 +1,3 @@
-import 'package:alimenta_app/src/features/comentarios/models/comentario_chat_models.dart';
 import 'package:alimenta_app/src/features/comentarios/stores/comentarios_store.dart';
 import 'package:alimenta_app/src/features/comentarios/widgets/card_comentario.dart';
 import 'package:alimenta_app/src/features/comentarios/widgets/editor_comentario.dart';
@@ -153,65 +152,86 @@ class _SeccionComentariosState extends State<SeccionComentarios> {
                                     );
                                   }
                                   final comentario = comentarios[index];
-                                  return CardComentario(
-                                    comentario: comentario,
-                                    esPropio: comentario.usuario.idUsuarioRol ==
-                                        userId,
-                                    usuarioActualId: userId,
-                                    onResponder: (comentarioSeleccionado) {
-                                      setState(() {
-                                        _mostrarEditor = true;
-                                      });
-                                      store.seleccionarRespuesta(
-                                          comentarioSeleccionado);
-                                    },
-                                    onEditar: (comentarioSeleccionado) {
-                                      if (comentarioSeleccionado
-                                              .usuario.idUsuario !=
-                                          userId) {
-                                        _showMessage(
-                                          context,
-                                          'Solo puedes editar tus propios comentarios.',
-                                        );
-                                        return;
-                                      }
-                                      setState(() {
-                                        _mostrarEditor = true;
-                                      });
-                                      store.seleccionarEdicion(
-                                          comentarioSeleccionado);
-                                    },
-                                    onEliminar: (comentarioSeleccionado) async {
-                                      if (comentarioSeleccionado
-                                              .usuario.idUsuario !=
-                                          userId) {
-                                        _showMessage(
-                                          context,
-                                          'Solo puedes eliminar tus propios comentarios.',
-                                        );
-                                        return;
-                                      }
-                                      try {
-                                        await store.eliminarComentario(
-                                            comentarioSeleccionado.id);
-                                      } catch (error) {
-                                        _showMessage(
-                                          context,
-                                          'No se pudo eliminar el comentario.',
-                                        );
-                                      }
-                                    },
-                                    onDescargarArchivo:
-                                        (ComentarioArchivo archivo) async {
-                                      try {
-                                        await store.descargarArchivo(archivo);
-                                      } catch (error) {
-                                        _showMessage(
-                                          context,
-                                          'No se pudo descargar el archivo. Intenta nuevamente.',
-                                        );
-                                      }
-                                    },
+                                  return AnimatedScale(
+                                    key: ValueKey(comentario.id),
+                                    duration: const Duration(milliseconds: 400),
+                                    curve: Curves.elasticOut,
+                                    scale: comentario.esNuevo ? 1.05 : 1.0,
+                                    child: AnimatedContainer(
+                                      duration:
+                                          const Duration(milliseconds: 600),
+                                      curve: Curves.easeOut,
+                                      margin: const EdgeInsets.symmetric(
+                                          horizontal: 12, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: comentario.esNuevo
+                                            ? Theme.of(context)
+                                                .colorScheme
+                                                .secondary
+                                                .withOpacity(0.12)
+                                            : Colors.transparent,
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: comentario.esNuevo
+                                              ? Theme.of(context)
+                                                  .colorScheme
+                                                  .secondary
+                                                  .withOpacity(0.6)
+                                              : Colors.transparent,
+                                          width: comentario.esNuevo ? 1.5 : 0.5,
+                                        ),
+                                      ),
+                                      child: CardComentario(
+                                        comentario: comentario,
+                                        esPropio:
+                                            comentario.usuario.idUsuarioRol ==
+                                                userId,
+                                        usuarioActualId: userId,
+                                        onResponder: (comentarioSeleccionado) {
+                                          setState(() => _mostrarEditor = true);
+                                          store.seleccionarRespuesta(
+                                              comentarioSeleccionado);
+                                        },
+                                        onEditar: (comentarioSeleccionado) {
+                                          if (comentarioSeleccionado
+                                                  .usuario.idUsuario !=
+                                              userId) {
+                                            _showMessage(context,
+                                                'Solo puedes editar tus propios comentarios.');
+                                            return;
+                                          }
+                                          setState(() => _mostrarEditor = true);
+                                          store.seleccionarEdicion(
+                                              comentarioSeleccionado);
+                                        },
+                                        onEliminar:
+                                            (comentarioSeleccionado) async {
+                                          if (comentarioSeleccionado
+                                                  .usuario.idUsuario !=
+                                              userId) {
+                                            _showMessage(context,
+                                                'Solo puedes eliminar tus propios comentarios.');
+                                            return;
+                                          }
+                                          try {
+                                            await store.eliminarComentario(
+                                                comentarioSeleccionado.id);
+                                          } catch (_) {
+                                            _showMessage(context,
+                                                'No se pudo eliminar el comentario.');
+                                          }
+                                        },
+                                        onDescargarArchivo: (archivo) async {
+                                          try {
+                                            await store
+                                                .descargarArchivo(archivo);
+                                          } catch (_) {
+                                            _showMessage(context,
+                                                'No se pudo descargar el archivo.');
+                                          }
+                                        },
+                                      ),
+                                    ),
                                   );
                                 },
                               ),
