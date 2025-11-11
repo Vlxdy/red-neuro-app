@@ -337,23 +337,27 @@ class ComentariosStore extends ChangeNotifier {
   }
 
   void _actualizarComentario(String idTemporal, ComentarioChat comentario) {
-    final indice = _comentarios.indexWhere((item) => item.id == idTemporal);
-    if (indice != -1 && comentario.idComentarioPadre == null) {
-      _comentarios[indice] = comentario;
-    } else if (comentario.idComentarioPadre != null) {
+    if (comentario.idComentarioPadre == null) {
+      _comentarios.removeWhere(
+        (item) => item.id == idTemporal || item.id == comentario.id,
+      );
+      _comentarios.add(comentario);
+    } else {
       final padreId = comentario.idComentarioPadre!;
       final idxPadre = _comentarios.indexWhere((item) => item.id == padreId);
       if (idxPadre != -1) {
         final padre = _comentarios[idxPadre];
         final respuestas = padre.respuestas
-            .where((res) => res.id != idTemporal)
+            .where(
+              (res) => res.id != idTemporal && res.id != comentario.id,
+            )
             .toList()
           ..add(comentario);
         respuestas.sort((a, b) => b.fechaCreacion.compareTo(a.fechaCreacion));
         _comentarios[idxPadre] = padre.copyWith(respuestas: respuestas);
+      } else {
+        _mergeComentarios([comentario]);
       }
-    } else {
-      _mergeComentarios([comentario]);
     }
 
     _reconstruirIndice();

@@ -123,7 +123,7 @@ class CardComentario extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(top: 2),
               child: Column(
-                children: comentario.respuestas
+                children: comentario.respuestas.reversed
                     .map(
                       (ComentarioChat respuesta) => CardComentario(
                         comentario: respuesta,
