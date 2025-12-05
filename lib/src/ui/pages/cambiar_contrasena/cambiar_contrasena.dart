@@ -68,9 +68,11 @@ class _CambiarContrasenaState extends State<CambiarContrasena> {
           elevation: 0,
           title: const Text('Cambiar contraseña'),
           systemOverlayStyle: SystemUiOverlayStyle(
-              statusBarBrightness:
-                  theme.isDark ? Brightness.dark : Brightness.light,
-              statusBarColor: theme.transparent),
+            statusBarBrightness: theme.isDark
+                ? Brightness.dark
+                : Brightness.light,
+            statusBarColor: theme.transparent,
+          ),
           backgroundColor: theme.transparent,
         ),
         body: Padding(
@@ -82,17 +84,18 @@ class _CambiarContrasenaState extends State<CambiarContrasena> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('* Las contraseñas deben tener 8 caracteres o más',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(color: theme.grey)),
                   Text(
-                      '* Las buenas contraseñas son dificiles de adivinar y usan palabras, números, símbolos y letras mayúsculas poco comunes.',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(color: theme.grey)),
+                    '* Las contraseñas deben tener 8 caracteres o más',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: theme.grey),
+                  ),
+                  Text(
+                    '* Las buenas contraseñas son dificiles de adivinar y usan palabras, números, símbolos y letras mayúsculas poco comunes.',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: theme.grey),
+                  ),
                   const SizedBox(height: 16),
                   CustomTextInput(
                     requiredData: true,
@@ -126,11 +129,11 @@ class _CambiarContrasenaState extends State<CambiarContrasena> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Nivel de seguridad',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
-                                      ?.copyWith(color: theme.fontColor)),
+                              Text(
+                                'Nivel de seguridad',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(color: theme.fontColor),
+                              ),
                               const SizedBox(height: 8),
                               LinearProgressIndicator(
                                 value: store.calificacion * 0.25,
@@ -153,13 +156,16 @@ class _CambiarContrasenaState extends State<CambiarContrasena> {
                   ),
                   const SizedBox(height: 16),
                   SimpleButton(
-                      title: 'Modificar',
-                      onTap: () {
-                        if (_service.validarForm(
-                            _formularioKey, 'Las contraseñas no coinciden')) {
-                          _service.cambiarContrasena();
-                        }
-                      })
+                    title: 'Modificar',
+                    onTap: () {
+                      if (_service.validarForm(
+                        _formularioKey,
+                        'Las contraseñas no coinciden',
+                      )) {
+                        _service.cambiarContrasena();
+                      }
+                    },
+                  ),
                 ],
               ),
             ),

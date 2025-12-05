@@ -10,15 +10,16 @@ class CutomDialog extends StatelessWidget {
   final String? textConfirm;
   final Widget content;
   final bool withCancel;
-  const CutomDialog(
-      {super.key,
-      this.confirmTitle,
-      this.onConfirm,
-      required this.title,
-      this.subtitle,
-      required this.content,
-      this.withCancel = true,
-      this.textConfirm});
+  const CutomDialog({
+    super.key,
+    this.confirmTitle,
+    this.onConfirm,
+    required this.title,
+    this.subtitle,
+    required this.content,
+    this.withCancel = true,
+    this.textConfirm,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -28,34 +29,35 @@ class CutomDialog extends StatelessWidget {
       width: size.width,
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
       decoration: BoxDecoration(
-          color: theme.background, borderRadius: BorderRadius.circular(16)),
+        color: theme.background,
+        borderRadius: BorderRadius.circular(16),
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text((title),
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  // color: Color(0xFFBEC3D2),
-                  color: theme.fontColor,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold)),
-          Text((subtitle ?? ''),
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  // color: Color(0xFFBEC3D2),
-                  color: theme.fontColor,
-                  fontSize: 12,
-                  fontWeight: FontWeight.normal)),
-          const SizedBox(
-            height: 15,
+          Text(
+            (title),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              // color: Color(0xFFBEC3D2),
+              color: theme.fontColor,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: content,
+          Text(
+            (subtitle ?? ''),
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              // color: Color(0xFFBEC3D2),
+              color: theme.fontColor,
+              fontSize: 12,
+              fontWeight: FontWeight.normal,
+            ),
           ),
-          const SizedBox(
-            height: 15,
-          ),
+          const SizedBox(height: 15),
+          Padding(padding: const EdgeInsets.all(16), child: content),
+          const SizedBox(height: 15),
           Row(
             children: [
               Visibility(
@@ -82,7 +84,7 @@ class CutomDialog extends StatelessWidget {
                 ),
               ),
             ],
-          )
+          ),
         ],
       ),
     );

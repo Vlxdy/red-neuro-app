@@ -24,25 +24,24 @@ class SocketProvider extends ChangeNotifier {
     });
 
     // Cuando llegue nueva ubicación
-    SocketService.instance.on<Map<String, dynamic>>(
-      'ubicacion-actualizada',
-      (data) async {
-        final advertencia = data['advertencia'] as String?;
-        Logger.info('Nueva ubicación recibida');
+    SocketService.instance.on<Map<String, dynamic>>('ubicacion-actualizada', (
+      data,
+    ) async {
+      final advertencia = data['advertencia'] as String?;
+      Logger.info('Nueva ubicación recibida');
 
-        showSnackBar(
-          rootScaffoldMessengerKey,
-          advertencia ?? 'Ubicación actualizada correctamente',
-          state: advertencia != null
-              ? StatusSnackBar.error
-              : StatusSnackBar.success,
-          colorText: Colors.white,
-        );
+      showSnackBar(
+        rootScaffoldMessengerKey,
+        advertencia ?? 'Ubicación actualizada correctamente',
+        state: advertencia != null
+            ? StatusSnackBar.error
+            : StatusSnackBar.success,
+        colorText: Colors.white,
+      );
 
-        // Se elimina la actualización automática de dependientes ya que el
-        // módulo de plan nutricional no utiliza esta información.
-      },
-    );
+      // Se elimina la actualización automática de dependientes ya que el
+      // módulo de plan nutricional no utiliza esta información.
+    });
   }
 
   @override

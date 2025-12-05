@@ -6,5 +6,5 @@ enum StatusNetwork {
   unauthorized,
   timeout,
   noContent,
-  unprocessableEntity
+  unprocessableEntity,
 }

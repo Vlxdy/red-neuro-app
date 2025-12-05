@@ -7,34 +7,13 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:intl/intl.dart';
 
 final List<dynamic> coloresTipo = [
-  {
-    "tipo": "Gas Natural Vehicular",
-    "color": const Color(0xFF006400),
-  },
-  {
-    "tipo": "Diesel Oil",
-    "color": const Color(0xFF0000FF),
-  },
-  {
-    "tipo": "Gasolina Especial",
-    "color": const Color(0xFF008000),
-  },
-  {
-    "tipo": "Gasolina Premium",
-    "color": const Color(0xFFFF8C00),
-  },
-  {
-    "tipo": "Gasolina Ron",
-    "color": const Color(0xFFB22222),
-  },
-  {
-    "tipo": "Super Etanol 92",
-    "color": const Color(0xFF008000),
-  },
-  {
-    "tipo": "Gasolina Ultra Premium 100",
-    "color": const Color(0xFF800080),
-  },
+  {"tipo": "Gas Natural Vehicular", "color": const Color(0xFF006400)},
+  {"tipo": "Diesel Oil", "color": const Color(0xFF0000FF)},
+  {"tipo": "Gasolina Especial", "color": const Color(0xFF008000)},
+  {"tipo": "Gasolina Premium", "color": const Color(0xFFFF8C00)},
+  {"tipo": "Gasolina Ron", "color": const Color(0xFFB22222)},
+  {"tipo": "Super Etanol 92", "color": const Color(0xFF008000)},
+  {"tipo": "Gasolina Ultra Premium 100", "color": const Color(0xFF800080)},
   // "Gas Natural": const Color(0xFF008000),
   // "Gasolina especial": Colors.redAccent,
   // "Gasolina Premium": Colors.yellow,
@@ -77,22 +56,25 @@ class Utils {
     return await devicePlugin.androidInfo;
   }
 
-  static armarNombre(Map<String, dynamic> data,
-      {bool noSegundoApellido = true, bool iniciales = false}) {
+  static armarNombre(
+    Map<String, dynamic> data, {
+    bool noSegundoApellido = true,
+    bool iniciales = false,
+  }) {
     final nombres = data['nombres'].isNotEmpty
         ? iniciales
-            ? data['nombres'][0]
-            : data['nombres']
+              ? data['nombres'][0]
+              : data['nombres']
         : '';
     final primerApellido = data['primerApellido'].isNotEmpty
         ? iniciales
-            ? data['primerApellido'][0]
-            : data['primerApellido']
+              ? data['primerApellido'][0]
+              : data['primerApellido']
         : '';
     final segundoApellido = data['segundoApellido'].isNotEmpty
         ? iniciales
-            ? data['segundoApellido'][0]
-            : data['segundoApellido']
+              ? data['segundoApellido'][0]
+              : data['segundoApellido']
         : '';
     final strNombre = iniciales
         ? '$nombres$primerApellido'

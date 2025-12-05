@@ -21,27 +21,28 @@ class Modulo {
   });
 
   factory Modulo.fromJson(Map<String, dynamic> json) => Modulo(
-        id: json['id'] ?? '',
-        label: json['label'] ?? '',
-        nombre: json['nombre'] ?? '',
-        url: json['url'] ?? '',
-        estado: json['estado'] ?? '',
-        propiedades: json['propiedades'] != null
-            ? PropiedadesModulo.fromJson(json['propiedades'])
-            : null,
-        subModulos: (json['subModulo'] as List<dynamic>?)
-                ?.map((s) => SubModulo.fromJson(s))
-                .toList() ??
-            [],
-      );
+    id: json['id'] ?? '',
+    label: json['label'] ?? '',
+    nombre: json['nombre'] ?? '',
+    url: json['url'] ?? '',
+    estado: json['estado'] ?? '',
+    propiedades: json['propiedades'] != null
+        ? PropiedadesModulo.fromJson(json['propiedades'])
+        : null,
+    subModulos:
+        (json['subModulo'] as List<dynamic>?)
+            ?.map((s) => SubModulo.fromJson(s))
+            .toList() ??
+        [],
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'label': label,
-        'nombre': nombre,
-        'url': url,
-        'estado': estado,
-        'propiedades': propiedades?.toJson(),
-        'subModulo': subModulos.map((s) => s.toJson()).toList(),
-      };
+    'id': id,
+    'label': label,
+    'nombre': nombre,
+    'url': url,
+    'estado': estado,
+    'propiedades': propiedades?.toJson(),
+    'subModulo': subModulos.map((s) => s.toJson()).toList(),
+  };
 }

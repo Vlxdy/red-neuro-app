@@ -26,29 +26,24 @@ class _LoginState extends State<LoginAccount> {
               Positioned.fill(
                 child: Opacity(
                   opacity: 0.3, // Adjust the opacity value as needed
-                  child: Image.asset(
-                    Recursos.logoPrincipal,
-                    fit: BoxFit.cover,
-                  ),
+                  child: Image.asset(Recursos.logoPrincipal, fit: BoxFit.cover),
                 ),
               ),
               SafeArea(
                 child: Center(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 5,
+                    ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         const SizedBox(height: 70),
-                        Image.asset(
-                          Recursos.icono,
-                          height: 250,
-                          width: 350,
-                        ),
+                        Image.asset(Recursos.icono, height: 250, width: 350),
                         const SizedBox(height: 5),
                         const Credenciales(),
                         const SizedBox(height: 20),

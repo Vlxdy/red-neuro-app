@@ -12,16 +12,18 @@ class AccountLogin extends StatelessWidget {
     return Column(
       children: [
         RichText(
-            text: TextSpan(
-          text: '¿Tienes una cuenta institucional?',
-          style: TextStyle(color: theme.grey),
-        )),
+          text: TextSpan(
+            text: '¿Tienes una cuenta institucional?',
+            style: TextStyle(color: theme.grey),
+          ),
+        ),
         TextButton(
-            onPressed: () => context.pushNamed(RouteNames.loginAccount),
-            child: Text(
-              'Iniciar sesión con cuenta',
-              style: TextStyle(color: theme.neutral),
-            ))
+          onPressed: () => context.pushNamed(RouteNames.loginAccount),
+          child: Text(
+            'Iniciar sesión con cuenta',
+            style: TextStyle(color: theme.neutral),
+          ),
+        ),
       ],
     );
   }

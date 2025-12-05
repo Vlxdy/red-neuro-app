@@ -5,13 +5,7 @@ class Horario {
   String? horaInicio;
   String? horaFin;
 
-  Horario({
-    this.id,
-    this.nombre,
-    this.estado,
-    this.horaInicio,
-    this.horaFin,
-  });
+  Horario({this.id, this.nombre, this.estado, this.horaInicio, this.horaFin});
 
   factory Horario.fromJson(Map<String, dynamic> json) {
     return Horario(

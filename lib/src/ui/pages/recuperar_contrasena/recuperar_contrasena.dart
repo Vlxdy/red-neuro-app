@@ -43,48 +43,52 @@ class _OlvideContrasenaState extends State<OlvideContrasena> {
             scrolledUnderElevation: 0,
             elevation: 0,
             systemOverlayStyle: services.SystemUiOverlayStyle(
-                statusBarBrightness:
-                    theme.isDark ? Brightness.dark : Brightness.light,
-                statusBarColor: theme.transparent),
+              statusBarBrightness: theme.isDark
+                  ? Brightness.dark
+                  : Brightness.light,
+              statusBarColor: theme.transparent,
+            ),
             backgroundColor: theme.transparent,
           ),
           body: SafeArea(
             child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Form(
-                  key: _formState,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const HeaderLogin(
-                        mensaje: '¿Olvidaste tu contraseña?',
-                      ),
-                      const SizedBox(height: 48),
-                      Text(
-                        'Ingresa tu correo electrónico, enviaremos un enlace para que puedas recuperar tu cuenta.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: theme.fontColor),
-                      ),
-                      const SizedBox(height: 16),
-                      CustomTextInput(
-                        controller: _controller,
-                        requiredData: true,
-                        title: 'Correo electrónico',
-                        validate: (value, alias) =>
-                            service.validateData(context, value, alias),
-                      ),
-                      const SizedBox(height: 8),
-                      SimpleButton(
-                          title: 'Enviar',
-                          onTap: () {
-                            if (service.validateForm(_formState)) {
-                              service.recuperarCuenta(_controller.value.text,
-                                  'Revisa tu bandeja de correo, enviamos un enlace para que puedas recuperar tu cuenta');
-                            }
-                          })
-                    ],
-                  ),
-                )),
+              padding: const EdgeInsets.all(16),
+              child: Form(
+                key: _formState,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const HeaderLogin(mensaje: '¿Olvidaste tu contraseña?'),
+                    const SizedBox(height: 48),
+                    Text(
+                      'Ingresa tu correo electrónico, enviaremos un enlace para que puedas recuperar tu cuenta.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: theme.fontColor),
+                    ),
+                    const SizedBox(height: 16),
+                    CustomTextInput(
+                      controller: _controller,
+                      requiredData: true,
+                      title: 'Correo electrónico',
+                      validate: (value, alias) =>
+                          service.validateData(context, value, alias),
+                    ),
+                    const SizedBox(height: 8),
+                    SimpleButton(
+                      title: 'Enviar',
+                      onTap: () {
+                        if (service.validateForm(_formState)) {
+                          service.recuperarCuenta(
+                            _controller.value.text,
+                            'Revisa tu bandeja de correo, enviamos un enlace para que puedas recuperar tu cuenta',
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),

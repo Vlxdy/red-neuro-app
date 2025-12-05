@@ -34,100 +34,107 @@ class _InicioPageState extends State<InicioPage> with WidgetsBindingObserver {
       child: Scaffold(
         backgroundColor: theme.background,
         body: SafeArea(
-            child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            const SizedBox(height: 15),
-            const SizedBox(
-              height: 10,
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Row(children: [
-                Icon(Icons.stacked_bar_chart, color: theme.primary, size: 30),
-                const SizedBox(width: 8),
-                Text(
-                  'Resumen del día',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: theme.primary,
-                  ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              const SizedBox(height: 15),
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.stacked_bar_chart,
+                      color: theme.primary,
+                      size: 30,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Resumen del día',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: theme.primary,
+                      ),
+                    ),
+                  ],
                 ),
-              ]),
-            ),
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
+              ),
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
                     color: theme.background,
                     borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(25),
-                        topRight: Radius.circular(25))),
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 25),
-                      Text(
-                        'Ventas',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: theme.success,
+                      topLeft: Radius.circular(25),
+                      topRight: Radius.circular(25),
+                    ),
+                  ),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 25),
+                        Text(
+                          'Ventas',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: theme.success,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Volúmenes',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: theme.primary,
+                        const SizedBox(height: 8),
+                        Text(
+                          'Volúmenes',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: theme.primary,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      _buildVolumenItem(
-                        theme,
-                        hora: '08:20',
-                        tanque: 'Tanque 1',
-                        combustible: 'DO',
-                        volumen: '23000',
-                      ),
-                      _buildVolumenItem(
-                        theme,
-                        hora: '08:10',
-                        tanque: 'Tanque 2',
-                        combustible: 'GE',
-                        volumen: '20000',
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Novedades',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: theme.primary,
+                        const SizedBox(height: 8),
+                        _buildVolumenItem(
+                          theme,
+                          hora: '08:20',
+                          tanque: 'Tanque 1',
+                          combustible: 'DO',
+                          volumen: '23000',
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      _buildNovedadItem(
-                        theme,
-                        iconData: Icons.info,
-                        titulo: 'Observaciones',
-                        cantidad: '3',
-                      ),
-                      _buildNovedadItem(
-                        theme,
-                        iconData: Icons.warning,
-                        titulo: 'Incidentes',
-                        cantidad: '1',
-                      ),
-                    ],
+                        _buildVolumenItem(
+                          theme,
+                          hora: '08:10',
+                          tanque: 'Tanque 2',
+                          combustible: 'GE',
+                          volumen: '20000',
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Novedades',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: theme.primary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        _buildNovedadItem(
+                          theme,
+                          iconData: Icons.info,
+                          titulo: 'Observaciones',
+                          cantidad: '3',
+                        ),
+                        _buildNovedadItem(
+                          theme,
+                          iconData: Icons.warning,
+                          titulo: 'Incidentes',
+                          cantidad: '1',
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
-        )),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -152,10 +159,7 @@ class _InicioPageState extends State<InicioPage> with WidgetsBindingObserver {
       child: ListTile(
         leading: Text(
           hora,
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: theme.primary,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w600, color: theme.primary),
         ),
         title: Row(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -197,10 +201,7 @@ class _InicioPageState extends State<InicioPage> with WidgetsBindingObserver {
         leading: Icon(iconData, color: theme.primary),
         title: Text(
           titulo,
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: theme.primary,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w600, color: theme.primary),
         ),
         trailing: Text(
           cantidad,
@@ -214,15 +215,15 @@ class _InicioPageState extends State<InicioPage> with WidgetsBindingObserver {
     );
   }
 
-  Widget _buildChip(ThemeController theme,
-      {required String label, required Color color}) {
+  Widget _buildChip(
+    ThemeController theme, {
+    required String label,
+    required Color color,
+  }) {
     return Chip(
       label: Text(
         label,
-        style: TextStyle(
-          color: theme.white,
-          fontWeight: FontWeight.w600,
-        ),
+        style: TextStyle(color: theme.white, fontWeight: FontWeight.w600),
       ),
       backgroundColor: color,
     );

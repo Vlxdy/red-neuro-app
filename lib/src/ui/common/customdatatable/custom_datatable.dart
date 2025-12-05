@@ -6,11 +6,7 @@ class CriterioOrdenType {
   final String? orden;
   final bool ordenar;
 
-  CriterioOrdenType({
-    required this.nombre,
-    this.orden,
-    this.ordenar = false,
-  });
+  CriterioOrdenType({required this.nombre, this.orden, this.ordenar = false});
 }
 
 class CustomDesktopDataTable extends StatefulWidget {
@@ -157,11 +153,7 @@ class CustomDesktopDataTableState extends State<CustomDesktopDataTable> {
           ),
         ] else if (widget.tituloPersonalizado != null)
           widget.tituloPersonalizado!,
-        Row(
-          children: [
-            ...widget.acciones,
-          ],
-        ),
+        Row(children: [...widget.acciones]),
       ],
     );
   }
@@ -199,10 +191,7 @@ class CustomDesktopDataTableState extends State<CustomDesktopDataTable> {
     if (widget.seleccionable == true) {
       columns.add(
         DataColumn(
-          label: Checkbox(
-            value: todoSeleccionado,
-            onChanged: _handleSelectAll,
-          ),
+          label: Checkbox(value: todoSeleccionado, onChanged: _handleSelectAll),
         ),
       );
     }
@@ -224,45 +213,38 @@ class CustomDesktopDataTableState extends State<CustomDesktopDataTable> {
   List<DataRow> _buildRows() {
     final theme = ThemeController.instance;
 
-    return List.generate(
-      widget.contenidoTabla.length,
-      (rowIndex) {
-        final cells = <DataCell>[];
+    return List.generate(widget.contenidoTabla.length, (rowIndex) {
+      final cells = <DataCell>[];
 
-        if (widget.seleccionable == true) {
-          cells.add(
-            DataCell(
-              Checkbox(
-                value: indicesSeleccionados[rowIndex],
-                onChanged: (value) => _handleSelectItem(value, rowIndex),
-              ),
+      if (widget.seleccionable == true) {
+        cells.add(
+          DataCell(
+            Checkbox(
+              value: indicesSeleccionados[rowIndex],
+              onChanged: (value) => _handleSelectItem(value, rowIndex),
             ),
-          );
-        }
-
-        cells.addAll(
-          widget.contenidoTabla[rowIndex].map(
-            (cellContent) => DataCell(cellContent),
           ),
         );
+      }
 
-        return DataRow(
-          cells: cells,
-          color: WidgetStateProperty.all(theme.primary20),
-        );
-      },
-    );
+      cells.addAll(
+        widget.contenidoTabla[rowIndex].map(
+          (cellContent) => DataCell(cellContent),
+        ),
+      );
+
+      return DataRow(
+        cells: cells,
+        color: WidgetStateProperty.all(theme.primary20),
+      );
+    });
   }
 
   Widget _buildErrorView() {
-    return const Center(
-      child: Text('Error obteniendo información'),
-    );
+    return const Center(child: Text('Error obteniendo información'));
   }
 
   Widget _buildEmptyView() {
-    return const Center(
-      child: Text('Sin registros'),
-    );
+    return const Center(child: Text('Sin registros'));
   }
 }

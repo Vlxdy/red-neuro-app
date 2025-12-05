@@ -18,22 +18,22 @@ class SubModulo {
   });
 
   factory SubModulo.fromJson(Map<String, dynamic> json) => SubModulo(
-        id: json['id'] ?? '',
-        label: json['label'] ?? '',
-        nombre: json['nombre'] ?? '',
-        url: json['url'] ?? '',
-        estado: json['estado'] ?? '',
-        propiedades: json['propiedades'] != null
-            ? PropiedadesModulo.fromJson(json['propiedades'])
-            : null,
-      );
+    id: json['id'] ?? '',
+    label: json['label'] ?? '',
+    nombre: json['nombre'] ?? '',
+    url: json['url'] ?? '',
+    estado: json['estado'] ?? '',
+    propiedades: json['propiedades'] != null
+        ? PropiedadesModulo.fromJson(json['propiedades'])
+        : null,
+  );
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'label': label,
-        'nombre': nombre,
-        'url': url,
-        'estado': estado,
-        'propiedades': propiedades?.toJson(),
-      };
+    'id': id,
+    'label': label,
+    'nombre': nombre,
+    'url': url,
+    'estado': estado,
+    'propiedades': propiedades?.toJson(),
+  };
 }

@@ -12,16 +12,20 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   Widget _logo() {
-    return Column(children: [
-      Container(
-        height: 100,
-        width: 200,
-        decoration: const BoxDecoration(
+    return Column(
+      children: [
+        Container(
+          height: 100,
+          width: 200,
+          decoration: const BoxDecoration(
             image: DecorationImage(
-                fit: BoxFit.contain,
-                image: AssetImage(Recursos.logoPrincipal))),
-      ),
-    ]);
+              fit: BoxFit.contain,
+              image: AssetImage(Recursos.logoPrincipal),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   @override

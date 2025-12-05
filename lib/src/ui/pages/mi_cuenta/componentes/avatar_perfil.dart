@@ -22,9 +22,10 @@ class AvatarPerfil extends StatelessWidget {
           child: Text(
             '${perfil.nombres[0]}${perfil.primerApellido[0]}',
             style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 24,
-                color: theme.fontColor),
+              fontWeight: FontWeight.bold,
+              fontSize: 24,
+              color: theme.fontColor,
+            ),
           ),
         ),
         // Container(
@@ -41,10 +42,10 @@ class AvatarPerfil extends StatelessWidget {
         const SizedBox(height: 20),
         Text(
           '${perfil.nombres.capitalize()} ${perfil.primerApellido.capitalize()}',
-          style: Theme.of(context)
-              .textTheme
-              .titleLarge!
-              .copyWith(color: theme.fontColor, fontWeight: FontWeight.w500),
+          style: Theme.of(context).textTheme.titleLarge!.copyWith(
+            color: theme.fontColor,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         const SizedBox(height: 8),
         // Text(

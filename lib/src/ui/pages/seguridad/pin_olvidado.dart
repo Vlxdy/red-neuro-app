@@ -20,21 +20,26 @@ class _PinOlvidadoState extends State<PinOlvidado> {
   void logout() {
     final theme = ThemeController.instance;
     showDialog(
-        context: context,
-        builder: (context) {
-          return Dialog(
-            child: ConfirmationDialog(
-              title: 'Cerrar sesión',
-              onConfirm: () async {
-                var error = await Auth.instance.logout();
-                if (error != null) {
-                  showSnackBar(pinOlvidadoMessenger, error,
-                      state: StatusSnackBar.error, colorText: theme.white);
-                }
-              },
-            ),
-          );
-        });
+      context: context,
+      builder: (context) {
+        return Dialog(
+          child: ConfirmationDialog(
+            title: 'Cerrar sesión',
+            onConfirm: () async {
+              var error = await Auth.instance.logout();
+              if (error != null) {
+                showSnackBar(
+                  pinOlvidadoMessenger,
+                  error,
+                  state: StatusSnackBar.error,
+                  colorText: theme.white,
+                );
+              }
+            },
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -44,9 +49,7 @@ class _PinOlvidadoState extends State<PinOlvidado> {
       key: pinOlvidadoMessenger,
       child: Scaffold(
         backgroundColor: theme.background,
-        appBar: AppBar(
-          toolbarHeight: 0,
-        ),
+        appBar: AppBar(toolbarHeight: 0),
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -60,19 +63,15 @@ class _PinOlvidadoState extends State<PinOlvidado> {
                         Navigator.pop(context);
                       },
                       icon: const Icon(Icons.clear),
-                    )
+                    ),
                   ],
                 ),
-                const SizedBox(
-                  height: 30,
-                ),
+                const SizedBox(height: 30),
                 const Text(
                   '¿No recuerdas tu pin?',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
-                const SizedBox(
-                  height: 40,
-                ),
+                const SizedBox(height: 40),
                 Container(
                   padding: const EdgeInsets.symmetric(vertical: 5),
                   decoration: BoxDecoration(
@@ -80,15 +79,14 @@ class _PinOlvidadoState extends State<PinOlvidado> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: const ListTile(
-                      leading: Icon(SolarIconsOutline.shieldWarning),
-                      title: Text(
-                        'Si cambiaste el pin de seguridad y no lo recuerdas, tendrás que cerrar sesión y volver a ingresar para configurar un nuevo pin de seguridad.',
-                        style: TextStyle(fontSize: 12, height: 1.2),
-                      )),
+                    leading: Icon(SolarIconsOutline.shieldWarning),
+                    title: Text(
+                      'Si cambiaste el pin de seguridad y no lo recuerdas, tendrás que cerrar sesión y volver a ingresar para configurar un nuevo pin de seguridad.',
+                      style: TextStyle(fontSize: 12, height: 1.2),
+                    ),
+                  ),
                 ),
-                const SizedBox(
-                  height: 40,
-                ),
+                const SizedBox(height: 40),
                 SimpleButton(
                   outlined: true,
                   fullWidth: false,
@@ -96,7 +94,7 @@ class _PinOlvidadoState extends State<PinOlvidado> {
                   preffixicon: SolarIconsOutline.logout_3,
                   title: 'Cerrar sesión',
                   onTap: logout,
-                )
+                ),
               ],
             ),
           ),

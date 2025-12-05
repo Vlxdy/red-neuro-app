@@ -22,8 +22,7 @@ class Constantes {
     return double.tryParse(raw ?? '') ?? 25;
   }
 
-  static int get chatMaxFileBytes =>
-      (chatMaxFileMb * 1024 * 1024).round();
+  static int get chatMaxFileBytes => (chatMaxFileMb * 1024 * 1024).round();
 }
 
 class PatternRegexp {

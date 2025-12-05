@@ -9,14 +9,15 @@ class TemplatePage extends StatelessWidget {
   final BackgroundType typeAppBar;
   final Color? colorBackground;
   final bool cargando;
-  const TemplatePage(
-      {super.key,
-      this.page,
-      this.background,
-      this.customLoading,
-      this.cargando = false,
-      this.colorBackground,
-      this.typeAppBar = BackgroundType.transparent});
+  const TemplatePage({
+    super.key,
+    this.page,
+    this.background,
+    this.customLoading,
+    this.cargando = false,
+    this.colorBackground,
+    this.typeAppBar = BackgroundType.transparent,
+  });
 
   Widget appBar(BackgroundType type) {
     // final theme = ThemeController.instance;
@@ -49,20 +50,23 @@ class TemplatePage extends StatelessWidget {
             page ?? const SizedBox(),
             cargando
                 ? customLoading != null
-                    ? customLoading!
-                    : Container(
-                        color: Colors.black26,
-                        height: double.infinity,
-                        width: double.infinity,
-                        child: Center(
-                          child:
-                              CircularProgressIndicator(color: theme.primary),
-                        ),
-                      )
+                      ? customLoading!
+                      : Container(
+                          color: Colors.black26,
+                          height: double.infinity,
+                          width: double.infinity,
+                          child: Center(
+                            child: CircularProgressIndicator(
+                              color: theme.primary,
+                            ),
+                          ),
+                        )
                 : const SizedBox(),
             environment != 'PRODUCTION'
                 ? Banner(
-                    location: BannerLocation.topStart, message: environment)
+                    location: BannerLocation.topStart,
+                    message: environment,
+                  )
                 : const SizedBox(),
           ],
         ),

@@ -84,9 +84,7 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
       key: procesarSesionMessenger,
       child: Scaffold(
         backgroundColor: theme.background,
-        appBar: AppBar(
-          toolbarHeight: 0,
-        ),
+        appBar: AppBar(toolbarHeight: 0),
         body: Container(
           decoration: const BoxDecoration(),
           width: MediaQuery.of(context).size.width,
@@ -106,11 +104,7 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
                 ),
               ),
               const SizedBox(height: 30),
-              Icon(
-                SolarIconsBold.lockKeyhole,
-                color: theme.warning,
-                size: 80,
-              ),
+              Icon(SolarIconsBold.lockKeyhole, color: theme.warning, size: 80),
               const SizedBox(height: 15),
               SimpleButton(
                 fullWidth: false,

@@ -37,16 +37,8 @@ class Usuario extends Persona {
     this.idHistoriaClinica,
   });
 
-  static Usuario empty() => Usuario(
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        '',
-        correoElectronico: '',
-      );
+  static Usuario empty() =>
+      Usuario('', '', '', '', '', '', '', correoElectronico: '');
 
   /// Soporta tanto json plano como con `datos`
   factory Usuario.fromJson(Map<String, dynamic> jsonRaw) {
@@ -74,8 +66,8 @@ class Usuario extends Persona {
     );
 
     // Tokens (acepta snake/camel)
-    usuario.accessToken =
-        (json['access_token'] ?? json['accessToken'] ?? '').toString();
+    usuario.accessToken = (json['access_token'] ?? json['accessToken'] ?? '')
+        .toString();
 
     // Identificadores de relación rol/usuario
     usuario.idUsuarioRol = json['idUsuarioRol']?.toString();

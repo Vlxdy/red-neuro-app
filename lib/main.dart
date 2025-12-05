@@ -24,12 +24,15 @@ final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
 Future<void> initHiveStorage() async {
   await Hive.initFlutter();
   const secureStorage = FlutterSecureStorage();
-  var existsKey =
-      await secureStorage.containsKey(key: Constantes.secureHiveKey);
+  var existsKey = await secureStorage.containsKey(
+    key: Constantes.secureHiveKey,
+  );
   if (!existsKey) {
     var key = Hive.generateSecureKey();
     await secureStorage.write(
-        key: Constantes.secureHiveKey, value: base64UrlEncode(key));
+      key: Constantes.secureHiveKey,
+      value: base64UrlEncode(key),
+    );
   }
 }
 
@@ -45,10 +48,12 @@ void main() async {
 
   /// Para teléfonos Android con versión menor a Android 7.1
   if (deviceInfo != null && deviceInfo.version.sdkInt < 25) {
-    ByteData data =
-        await PlatformAssetBundle().load('assets/raw/lets-encrypt-r3.pem');
-    SecurityContext.defaultContext
-        .setTrustedCertificatesBytes(data.buffer.asUint8List());
+    ByteData data = await PlatformAssetBundle().load(
+      'assets/raw/lets-encrypt-r3.pem',
+    );
+    SecurityContext.defaultContext.setTrustedCertificatesBytes(
+      data.buffer.asUint8List(),
+    );
   }
   runApp(const MyApp());
 }
@@ -83,46 +88,48 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     return MultiProvider(
       providers: proveedores(context),
       child: FutureBuilder(
-          future: InitAppController.instance.initTheme(),
-          builder: (context, snapshot) {
-            final appState = AuthStore.instance;
-            final router = GoRouter(
-              navigatorKey: navigatorKey,
-              observers: [MyRouteObserver.instance],
-              initialLocation: '/${RouteNames.splashScreen}',
-              routes: routes,
-              redirect: redirectRoutes,
-              refreshListenable: appState,
-            );
+        future: InitAppController.instance.initTheme(),
+        builder: (context, snapshot) {
+          final appState = AuthStore.instance;
+          final router = GoRouter(
+            navigatorKey: navigatorKey,
+            observers: [MyRouteObserver.instance],
+            initialLocation: '/${RouteNames.splashScreen}',
+            routes: routes,
+            redirect: redirectRoutes,
+            refreshListenable: appState,
+          );
 
-            return MaterialApp.router(
-              // ✅ idioma por defecto español
-              locale: const Locale('es'),
+          return MaterialApp.router(
+            // ✅ idioma por defecto español
+            locale: const Locale('es'),
 
-              // ✅ soporta solo español (puedes agregar más si deseas)
-              supportedLocales: const [
-                Locale('es', ''), // Español
-              ],
+            // ✅ soporta solo español (puedes agregar más si deseas)
+            supportedLocales: const [
+              Locale('es', ''), // Español
+            ],
 
-              // ✅ agrega las delegaciones necesarias
-              localizationsDelegates: const [
-                GlobalMaterialLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-                GlobalCupertinoLocalizations.delegate,
-              ],
+            // ✅ agrega las delegaciones necesarias
+            localizationsDelegates: const [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
 
-              debugShowCheckedModeBanner: false,
-              title: 'Red Neuro',
-              scaffoldMessengerKey: rootScaffoldMessengerKey,
-              theme: ThemeData(
-                  useMaterial3: true,
-                  textTheme: textTheme,
-                  fontFamily: 'Poppins'),
-              routeInformationParser: router.routeInformationParser,
-              routeInformationProvider: router.routeInformationProvider,
-              routerDelegate: router.routerDelegate,
-            );
-          }),
+            debugShowCheckedModeBanner: false,
+            title: 'Red Neuro',
+            scaffoldMessengerKey: rootScaffoldMessengerKey,
+            theme: ThemeData(
+              useMaterial3: true,
+              textTheme: textTheme,
+              fontFamily: 'Poppins',
+            ),
+            routeInformationParser: router.routeInformationParser,
+            routeInformationProvider: router.routeInformationProvider,
+            routerDelegate: router.routerDelegate,
+          );
+        },
+      ),
     );
   }
 

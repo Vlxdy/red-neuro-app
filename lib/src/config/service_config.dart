@@ -34,10 +34,11 @@ class ServiceConfig with Middleware, FormController {
   BuildContext context;
   ServiceConfig(this.urlBase, this.context);
 
-  Future<Map<String, String>> getHeaders(
-      {bool withAuthorization = true,
-      String? customToken,
-      HttpTypeRequest? type = HttpTypeRequest.json}) async {
+  Future<Map<String, String>> getHeaders({
+    bool withAuthorization = true,
+    String? customToken,
+    HttpTypeRequest? type = HttpTypeRequest.json,
+  }) async {
     Map<String, String> headers = {};
     if (type == HttpTypeRequest.json) {
       headers['Content-Type'] = 'application/json';
@@ -64,19 +65,18 @@ class ServiceConfig with Middleware, FormController {
     Map<String, String>? params,
   }) async {
     if (!await Connection.hasInternetConnected()) {
-      return ResponseApi(
-        StatusNetwork.noInternet,
-        {'message': 'No tienes conexión a internet'},
-        'No tienes conexión a internet',
-      );
+      return ResponseApi(StatusNetwork.noInternet, {
+        'message': 'No tienes conexión a internet',
+      }, 'No tienes conexión a internet');
     }
 
     StatusNetwork status = StatusNetwork.noContent;
     final Response response;
 
     // Construimos la URI incluyendo los parámetros
-    final uri = Uri.parse('${Constantes.apiUrl}$urlRecipe')
-        .replace(queryParameters: params);
+    final uri = Uri.parse(
+      '${Constantes.apiUrl}$urlRecipe',
+    ).replace(queryParameters: params);
 
     try {
       final headers = await getHeaders(
@@ -90,28 +90,44 @@ class ServiceConfig with Middleware, FormController {
 
       switch (type) {
         case HttpProtocol.get:
-          response = await get(uri, headers: headers)
-              .timeout(const Duration(seconds: Constantes.timeout));
+          response = await get(
+            uri,
+            headers: headers,
+          ).timeout(const Duration(seconds: Constantes.timeout));
           break;
         case HttpProtocol.post:
-          response = await post(uri, headers: headers, body: jsonEncode(body))
-              .timeout(const Duration(seconds: Constantes.timeout));
+          response = await post(
+            uri,
+            headers: headers,
+            body: jsonEncode(body),
+          ).timeout(const Duration(seconds: Constantes.timeout));
           break;
         case HttpProtocol.patch:
-          response = await patch(uri, headers: headers, body: jsonEncode(body))
-              .timeout(const Duration(seconds: Constantes.timeout));
+          response = await patch(
+            uri,
+            headers: headers,
+            body: jsonEncode(body),
+          ).timeout(const Duration(seconds: Constantes.timeout));
           break;
         case HttpProtocol.put:
-          response = await put(uri, headers: headers, body: jsonEncode(body))
-              .timeout(const Duration(seconds: Constantes.timeout));
+          response = await put(
+            uri,
+            headers: headers,
+            body: jsonEncode(body),
+          ).timeout(const Duration(seconds: Constantes.timeout));
           break;
         case HttpProtocol.delete:
-          response = await delete(uri, headers: headers, body: jsonEncode(body))
-              .timeout(const Duration(seconds: Constantes.timeout));
+          response = await delete(
+            uri,
+            headers: headers,
+            body: jsonEncode(body),
+          ).timeout(const Duration(seconds: Constantes.timeout));
           break;
         default:
-          response = await get(uri, headers: headers)
-              .timeout(const Duration(seconds: Constantes.timeout));
+          response = await get(
+            uri,
+            headers: headers,
+          ).timeout(const Duration(seconds: Constantes.timeout));
           break;
       }
 
@@ -132,39 +148,39 @@ class ServiceConfig with Middleware, FormController {
         throw Exception('Context not found');
       }
     } on TimeoutException catch (_) {
-      return ResponseApi(
-        StatusNetwork.timeout,
-        {'message': 'Tiempo de espera excedido'},
-        'Tiempo de espera excedido',
-      );
+      return ResponseApi(StatusNetwork.timeout, {
+        'message': 'Tiempo de espera excedido',
+      }, 'Tiempo de espera excedido');
     } catch (e) {
       Logger.error('exception fetch >>>> ${e.toString()}');
-      return ResponseApi(
-        StatusNetwork.exception,
-        {'message': 'Ocurrió un error inesperado', 'log': e.toString()},
-        'Ocurrió un error inesperado',
-      );
+      return ResponseApi(StatusNetwork.exception, {
+        'message': 'Ocurrió un error inesperado',
+        'log': e.toString(),
+      }, 'Ocurrió un error inesperado');
     }
   }
 
-  Future<ResponseApi> multipartRequest(String urlRecipe,
-      {String type = 'POST',
-      List<File>? files,
-      List<String>? nameFiles,
-      Map<String, dynamic>? body,
-      bool image = true,
-      bool withAuthorization = true,
-      int timeout = Constantes.timeout}) async {
+  Future<ResponseApi> multipartRequest(
+    String urlRecipe, {
+    String type = 'POST',
+    List<File>? files,
+    List<String>? nameFiles,
+    Map<String, dynamic>? body,
+    bool image = true,
+    bool withAuthorization = true,
+    int timeout = Constantes.timeout,
+  }) async {
     Logger.info('Numero de items ${files?.length.toString()}');
     if (!(await Connection.hasInternetConnected())) {
-      return ResponseApi(
-          StatusNetwork.noInternet,
-          {'message': 'No tienes conexión a internet'},
-          'No tienes conexión a internet');
+      return ResponseApi(StatusNetwork.noInternet, {
+        'message': 'No tienes conexión a internet',
+      }, 'No tienes conexión a internet');
     }
 
     final headers = await getHeaders(
-        withAuthorization: withAuthorization, type: HttpTypeRequest.formdata);
+      withAuthorization: withAuthorization,
+      type: HttpTypeRequest.formdata,
+    );
 
     StatusNetwork status = StatusNetwork.noContent;
     final Uri uri = Uri.parse('${Constantes.apiUrl}$urlBase$urlRecipe');
@@ -208,24 +224,26 @@ class ServiceConfig with Middleware, FormController {
       validateResponse(status);
       if (context.mounted) {
         final responseParsed = parseResponse(json, context, status: status);
-        return ResponseApi(responseParsed['status'], responseParsed['data'],
-            responseParsed['message'],
-            log: json);
+        return ResponseApi(
+          responseParsed['status'],
+          responseParsed['data'],
+          responseParsed['message'],
+          log: json,
+        );
       } else {
         throw Exception('Context not found');
       }
     } on TimeoutException catch (_) {
-      return ResponseApi(
-          StatusNetwork.timeout,
-          {'message': 'Tiempo de espera excedido'},
-          'Tiempo de espera excedido');
+      return ResponseApi(StatusNetwork.timeout, {
+        'message': 'Tiempo de espera excedido',
+      }, 'Tiempo de espera excedido');
     } catch (e, stacktrace) {
       Logger.error('exception fetch >>>> ${e.toString()}');
       Logger.error('stacktrace $stacktrace');
-      return ResponseApi(
-          StatusNetwork.exception,
-          {'message': 'Ocurrió un error inesperado', 'log': e.toString()},
-          'Ocurrió un error inesperado');
+      return ResponseApi(StatusNetwork.exception, {
+        'message': 'Ocurrió un error inesperado',
+        'log': e.toString(),
+      }, 'Ocurrió un error inesperado');
     }
   }
 
@@ -239,11 +257,9 @@ class ServiceConfig with Middleware, FormController {
     int timeout = Constantes.timeout,
   }) async {
     if (!(await Connection.hasInternetConnected())) {
-      return ResponseApi(
-        StatusNetwork.noInternet,
-        {'message': 'No tienes conexión a internet'},
-        'No tienes conexión a internet',
-      );
+      return ResponseApi(StatusNetwork.noInternet, {
+        'message': 'No tienes conexión a internet',
+      }, 'No tienes conexión a internet');
     }
 
     final headers = await getHeaders(
@@ -298,20 +314,17 @@ class ServiceConfig with Middleware, FormController {
         throw Exception('Context not found');
       }
     } on TimeoutException {
-      return ResponseApi(
-        StatusNetwork.timeout,
-        {'message': 'Tiempo de espera excedido'},
-        'Tiempo de espera excedido',
-      );
+      return ResponseApi(StatusNetwork.timeout, {
+        'message': 'Tiempo de espera excedido',
+      }, 'Tiempo de espera excedido');
     } catch (e, stacktrace) {
       Logger.error('Exception fetch >>>> ${e.toString()}');
       Logger.error('Stacktrace: $stacktrace');
 
-      return ResponseApi(
-        StatusNetwork.exception,
-        {'message': 'Ocurrió un error inesperado', 'log': e.toString()},
-        'Ocurrió un error inesperado',
-      );
+      return ResponseApi(StatusNetwork.exception, {
+        'message': 'Ocurrió un error inesperado',
+        'log': e.toString(),
+      }, 'Ocurrió un error inesperado');
     }
   }
 

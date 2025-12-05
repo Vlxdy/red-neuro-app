@@ -5,11 +5,7 @@ import 'package:flutter/material.dart';
 class CustomCircle extends StatelessWidget {
   final double customRadius;
   final Color? customColor;
-  const CustomCircle({
-    this.customColor,
-    this.customRadius = 100.0,
-    super.key,
-  });
+  const CustomCircle({this.customColor, this.customRadius = 100.0, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -19,10 +15,12 @@ class CustomCircle extends StatelessWidget {
         width: customRadius,
         height: customRadius,
         decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(customRadius),
-            // color: Color.fromRGBO(255, 255, 255, 0.05)),
-            color: customColor?.withValues(alpha: 0.1) ??
-                const Color.fromRGBO(255, 255, 255, 0.05)),
+          borderRadius: BorderRadius.circular(customRadius),
+          // color: Color.fromRGBO(255, 255, 255, 0.05)),
+          color:
+              customColor?.withValues(alpha: 0.1) ??
+              const Color.fromRGBO(255, 255, 255, 0.05),
+        ),
       ),
     );
   }

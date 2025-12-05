@@ -18,19 +18,20 @@ class DropDown extends StatefulWidget {
   final String? borderColor;
   final String? labelColor;
 
-  const DropDown(
-      {super.key,
-      this.label = '',
-      required this.dropKey,
-      required this.items,
-      this.onChange,
-      this.validate,
-      this.requiredData = false,
-      this.disable = false,
-      this.width,
-      this.borderColor,
-      this.labelColor,
-      this.initialValue});
+  const DropDown({
+    super.key,
+    this.label = '',
+    required this.dropKey,
+    required this.items,
+    this.onChange,
+    this.validate,
+    this.requiredData = false,
+    this.disable = false,
+    this.width,
+    this.borderColor,
+    this.labelColor,
+    this.initialValue,
+  });
 
   @override
   State<DropDown> createState() => _DropDownState();
@@ -46,7 +47,8 @@ class _DropDownState extends State<DropDown> {
           widget.dropKey.currentState!.callTap();
         } catch (e) {
           Logger.warning(
-              "El dropdown ya está abierto o se produjo un error al abrirlo: $e");
+            "El dropdown ya está abierto o se produjo un error al abrirlo: $e",
+          );
         }
       } else {
         Logger.warning('DropdownButton2 state is null.');
@@ -56,13 +58,15 @@ class _DropDownState extends State<DropDown> {
 
   List<DropdownMenuItem<String>> _dropItems(List<dynamic> data) {
     return data
-        .map((key) => DropdownMenuItem<String>(
-              value: key['id'].toString(),
-              child: Text(
-                key['label'].toString().capitalize(),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ))
+        .map(
+          (key) => DropdownMenuItem<String>(
+            value: key['id'].toString(),
+            child: Text(
+              key['label'].toString().capitalize(),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        )
         .toList();
   }
 
@@ -89,60 +93,67 @@ class _DropDownState extends State<DropDown> {
         children: [
           Container(
             height: 60 + (_error ? 24 : 0),
-            constraints:
-                BoxConstraints(maxWidth: widget.width ?? 150, minWidth: 80),
+            constraints: BoxConstraints(
+              maxWidth: widget.width ?? 150,
+              minWidth: 80,
+            ),
             child: DecoratedBox(
               decoration: BoxDecoration(
-                  border: Border.all(
-                      color: widget.disable
-                          ? theme.grey
-                          : _error
-                              ? theme.error
-                              : widget.borderColor != null
-                                  ? HexColor.fromHex(widget.borderColor)
-                                  : theme.grey.withValues(alpha: .4)),
-                  borderRadius: BorderRadius.circular(8)),
+                border: Border.all(
+                  color: widget.disable
+                      ? theme.grey
+                      : _error
+                      ? theme.error
+                      : widget.borderColor != null
+                      ? HexColor.fromHex(widget.borderColor)
+                      : theme.grey.withValues(alpha: .4),
+                ),
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12.0,
+                  vertical: 8,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     RichText(
-                        text: TextSpan(
-                            text: widget.label,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall!
-                                .copyWith(
-                                    color: _error
-                                        ? theme.error
-                                        : widget.disable
-                                            ? theme.grey
-                                            : widget.labelColor != null
-                                                ? HexColor.fromHex(
-                                                    widget.labelColor)
-                                                : theme.fontColor,
-                                    fontSize: 12),
-                            children: [
+                      text: TextSpan(
+                        text: widget.label,
+                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                          color: _error
+                              ? theme.error
+                              : widget.disable
+                              ? theme.grey
+                              : widget.labelColor != null
+                              ? HexColor.fromHex(widget.labelColor)
+                              : theme.fontColor,
+                          fontSize: 12,
+                        ),
+                        children: [
                           TextSpan(
                             text: widget.requiredData ? ' (*)' : '',
                             style: TextStyle(
-                                color: widget.disable
-                                    ? theme.grey
-                                    : widget.labelColor != null
-                                        ? HexColor.fromHex(widget.labelColor)
-                                        : theme.error,
-                                fontSize: 12),
-                          )
-                        ])),
+                              color: widget.disable
+                                  ? theme.grey
+                                  : widget.labelColor != null
+                                  ? HexColor.fromHex(widget.labelColor)
+                                  : theme.error,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                     Padding(
                       padding: const EdgeInsets.only(left: 0),
                       child: DropdownButtonFormField2<String>(
                         // key: widget.dropKey,
                         dropdownButtonKey: widget.dropKey,
-                        decoration:
-                            const InputDecoration.collapsed(hintText: ''),
+                        decoration: const InputDecoration.collapsed(
+                          hintText: '',
+                        ),
                         isExpanded: true,
                         isDense: true,
                         validator: (value) {

@@ -52,8 +52,11 @@ class Finder {
     }
   }
 
-  Future<String?> saveFileFromb64(String name, String b64,
-      {FileExtensions extension = FileExtensions.pdf}) async {
+  Future<String?> saveFileFromb64(
+    String name,
+    String b64, {
+    FileExtensions extension = FileExtensions.pdf,
+  }) async {
     String? path;
     String cleanName = name.trim().replaceAll(' ', '_');
     try {

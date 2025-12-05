@@ -4,7 +4,6 @@ class CodigoPinStore with ChangeNotifier {
   CodigoPinStore._();
   static final instance = CodigoPinStore._();
 
-  
   bool _cargando = false;
   bool get cargando => _cargando;
   set cargando(bool val) {

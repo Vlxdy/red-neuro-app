@@ -25,15 +25,16 @@ class _LoginState extends State<Login> {
           backgroundColor: theme.background,
           body: const SafeArea(
             child: Padding(
-                padding: EdgeInsets.all(16),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    HeaderLogin(mensaje: 'Inicia sesión con tus credenciales'),
-                    SizedBox(height: 16),
-                    AccountLogin(),
-                  ],
-                )),
+              padding: EdgeInsets.all(16),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  HeaderLogin(mensaje: 'Inicia sesión con tus credenciales'),
+                  SizedBox(height: 16),
+                  AccountLogin(),
+                ],
+              ),
+            ),
           ),
         ),
       ),

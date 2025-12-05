@@ -13,8 +13,8 @@ class PropiedadesModulo {
       );
 
   Map<String, dynamic> toJson() => {
-        'orden': orden,
-        'descripcion': descripcion,
-        'icono': icono,
-      };
+    'orden': orden,
+    'descripcion': descripcion,
+    'icono': icono,
+  };
 }

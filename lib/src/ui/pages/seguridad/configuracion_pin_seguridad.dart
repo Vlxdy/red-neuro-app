@@ -39,25 +39,30 @@ class _ConfiguracionPinSeguridadState extends State<ConfiguracionPinSeguridad>
   void logout() {
     final theme = ThemeController.instance;
     showDialog(
-        context: context,
-        builder: (context) {
-          return Dialog(
-            child: ConfirmationDialog(
-              title: 'Alerta',
-              icon: SolarIconsOutline.shieldWarning,
-              color: theme.warning,
-              textConfirm: 'Aceptar',
-              text: '¿Estás segura(o) de cancelar el inicio de sesión?',
-              onConfirm: () async {
-                var error = await Auth.instance.logout();
-                if (error != null) {
-                  showSnackBar(configuracionPinMessenger, error,
-                      state: StatusSnackBar.error, colorText: theme.white);
-                }
-              },
-            ),
-          );
-        });
+      context: context,
+      builder: (context) {
+        return Dialog(
+          child: ConfirmationDialog(
+            title: 'Alerta',
+            icon: SolarIconsOutline.shieldWarning,
+            color: theme.warning,
+            textConfirm: 'Aceptar',
+            text: '¿Estás segura(o) de cancelar el inicio de sesión?',
+            onConfirm: () async {
+              var error = await Auth.instance.logout();
+              if (error != null) {
+                showSnackBar(
+                  configuracionPinMessenger,
+                  error,
+                  state: StatusSnackBar.error,
+                  colorText: theme.white,
+                );
+              }
+            },
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -67,58 +72,55 @@ class _ConfiguracionPinSeguridadState extends State<ConfiguracionPinSeguridad>
     return ScaffoldMessenger(
       key: configuracionPinMessenger,
       child: Scaffold(
-          backgroundColor: theme.background,
-          appBar: AppBar(
-            toolbarHeight: 0,
-          ),
-          body: SafeArea(
-              child: SingleChildScrollView(
+        backgroundColor: theme.background,
+        appBar: AppBar(toolbarHeight: 0),
+        body: SafeArea(
+          child: SingleChildScrollView(
             child: Form(
               key: _scaffoldingFormKey,
               child: Column(
                 children: <Widget>[
-                  const SizedBox(
-                    height: 10,
-                  ),
+                  const SizedBox(height: 10),
                   Align(
                     alignment: Alignment.topRight,
                     child: IconButton(
-                        onPressed: logout,
-                        icon: const Icon(Icons.close_rounded)),
+                      onPressed: logout,
+                      icon: const Icon(Icons.close_rounded),
+                    ),
                   ),
-                  const SizedBox(
-                    height: 30,
-                  ),
+                  const SizedBox(height: 30),
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 40),
                     child: Text(
                       'Pin de seguridad',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
-                  const SizedBox(
-                    height: 30,
-                  ),
+                  const SizedBox(height: 30),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 40),
                     child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 5),
-                        decoration: BoxDecoration(
-                          color: theme.grey.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(10),
+                      padding: const EdgeInsets.symmetric(vertical: 5),
+                      decoration: BoxDecoration(
+                        color: theme.grey.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: ListTile(
+                        leading: Icon(
+                          SolarIconsOutline.lightbulbMinimalistic,
+                          color: theme.secondary,
                         ),
-                        child: ListTile(
-                          leading: Icon(SolarIconsOutline.lightbulbMinimalistic,
-                              color: theme.secondary),
-                          title: const Text(
-                              style: TextStyle(fontSize: 12, height: 1.4),
-                              'Configura tu pin de seguridad, te servirá para desbloquear la aplicación, podrás cambiarlo en cualquier momento.'),
-                        )),
+                        title: const Text(
+                          style: TextStyle(fontSize: 12, height: 1.4),
+                          'Configura tu pin de seguridad, te servirá para desbloquear la aplicación, podrás cambiarlo en cualquier momento.',
+                        ),
+                      ),
+                    ),
                   ),
-                  const SizedBox(
-                    height: 40,
-                  ),
+                  const SizedBox(height: 40),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 40),
                     child: Icon(
@@ -127,56 +129,55 @@ class _ConfiguracionPinSeguridadState extends State<ConfiguracionPinSeguridad>
                       size: 90,
                     ),
                   ),
-                  const SizedBox(
-                    height: 40,
-                  ),
+                  const SizedBox(height: 40),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 50),
                     child: CustomTextInput(
-                        // disable: listener.isLoading,
-                        onlyNumbers: true,
-                        placeholder: 'Ingresa un número de 6 dígitos',
-                        requiredData: true,
-                        maxLength: 6,
-                        controller: _pinSeguridad,
-                        title: 'Pin de seguridad',
-                        onChange: (value) {
-                          Logger.info('valor pin $value');
-                          security.store.pin = value;
-                          // service.store.form.username = value,
-                        },
-                        validate: (value, alias) => validateData(
-                              context,
-                              value,
-                              alias,
-                              max: 6,
-                              min: 6,
-                              // regExp: RegExp(r'^\d+$')
-                              regExp: PatternRegexp.number,
-                            )),
+                      // disable: listener.isLoading,
+                      onlyNumbers: true,
+                      placeholder: 'Ingresa un número de 6 dígitos',
+                      requiredData: true,
+                      maxLength: 6,
+                      controller: _pinSeguridad,
+                      title: 'Pin de seguridad',
+                      onChange: (value) {
+                        Logger.info('valor pin $value');
+                        security.store.pin = value;
+                        // service.store.form.username = value,
+                      },
+                      validate: (value, alias) => validateData(
+                        context,
+                        value,
+                        alias,
+                        max: 6,
+                        min: 6,
+                        // regExp: RegExp(r'^\d+$')
+                        regExp: PatternRegexp.number,
+                      ),
+                    ),
                   ),
-                  const SizedBox(
-                    height: 40,
-                  ),
+                  const SizedBox(height: 40),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 40),
                     child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 5),
-                        decoration: BoxDecoration(
-                          color: theme.grey.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(10),
+                      padding: const EdgeInsets.symmetric(vertical: 5),
+                      decoration: BoxDecoration(
+                        color: theme.grey.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: ListTile(
+                        leading: Icon(
+                          SolarIconsOutline.infoCircle,
+                          color: theme.secondary,
                         ),
-                        child: ListTile(
-                          leading: Icon(SolarIconsOutline.infoCircle,
-                              color: theme.secondary),
-                          title: const Text(
-                              style: TextStyle(fontSize: 12, height: 1.4),
-                              'Recuerda ingresar una combinación de números para tu pin de seguridad que solo tú conozcas.'),
-                        )),
+                        title: const Text(
+                          style: TextStyle(fontSize: 12, height: 1.4),
+                          'Recuerda ingresar una combinación de números para tu pin de seguridad que solo tú conozcas.',
+                        ),
+                      ),
+                    ),
                   ),
-                  const SizedBox(
-                    height: 30,
-                  ),
+                  const SizedBox(height: 30),
                   SimpleButton(
                     title: 'Continuar',
                     fullWidth: false,
@@ -186,8 +187,9 @@ class _ConfiguracionPinSeguridadState extends State<ConfiguracionPinSeguridad>
                         Logger.info('continuar para configurar huella');
                         Logger.info('valor de pin > ${security.store.pin}');
                         if (await security.hasBiometrics && context.mounted) {
-                          GoRouter.of(context)
-                              .goNamed(RouteNames.configurarDesbloqueo);
+                          GoRouter.of(
+                            context,
+                          ).goNamed(RouteNames.configurarDesbloqueo);
                           return;
                         }
 
@@ -198,11 +200,13 @@ class _ConfiguracionPinSeguridadState extends State<ConfiguracionPinSeguridad>
                         // GoRouter.of(context).goNamed(RouteNames.splashScreen);
                       }
                     },
-                  )
+                  ),
                 ],
               ),
             ),
-          ))),
+          ),
+        ),
+      ),
     );
   }
 }
