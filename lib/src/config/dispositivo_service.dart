@@ -1,11 +1,11 @@
-import 'package:alimenta_app/src/config/service_config.dart';
-import 'package:alimenta_app/src/constants/keys.dart';
-import 'package:alimenta_app/src/constants/network.dart';
-import 'package:alimenta_app/src/plugins/auth/auth.dart';
-import 'package:alimenta_app/src/plugins/utils/logger.dart';
-import 'package:alimenta_app/src/plugins/utils/preferences.dart';
-import 'package:alimenta_app/src/plugins/utils/utils.dart';
-import 'package:alimenta_app/src/ui/global/alerta_actualizacion.dart';
+import 'package:red_neuro_app/src/config/service_config.dart';
+import 'package:red_neuro_app/src/constants/keys.dart';
+import 'package:red_neuro_app/src/constants/network.dart';
+import 'package:red_neuro_app/src/plugins/auth/auth.dart';
+import 'package:red_neuro_app/src/plugins/utils/logger.dart';
+import 'package:red_neuro_app/src/plugins/utils/preferences.dart';
+import 'package:red_neuro_app/src/plugins/utils/utils.dart';
+import 'package:red_neuro_app/src/ui/global/alerta_actualizacion.dart';
 
 class ItemVersion {
   int major = 0;

@@ -2,16 +2,15 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:alimenta_app/src/config/form_controller.dart';
-import 'package:alimenta_app/src/config/middleware.dart';
-import 'package:alimenta_app/src/constants/constants.dart';
-import 'package:alimenta_app/src/constants/network.dart';
-import 'package:alimenta_app/src/plugins/auth/auth.dart';
-import 'package:alimenta_app/src/plugins/utils/connection.dart';
-import 'package:alimenta_app/src/plugins/utils/logger.dart';
+import 'package:red_neuro_app/src/config/form_controller.dart';
+import 'package:red_neuro_app/src/config/middleware.dart';
+import 'package:red_neuro_app/src/constants/constants.dart';
+import 'package:red_neuro_app/src/constants/network.dart';
+import 'package:red_neuro_app/src/plugins/auth/auth.dart';
+import 'package:red_neuro_app/src/plugins/utils/connection.dart';
+import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
-import 'package:http_parser/http_parser.dart';
 
 class ResponseApi {
   late StatusNetwork status;

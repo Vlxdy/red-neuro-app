@@ -1,5 +1,5 @@
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/ui/common/buttons/simple_button.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
 import 'package:flutter/material.dart';
 
 class ConfirmationAlertBottomSheet extends StatelessWidget {

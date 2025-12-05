@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:alimenta_app/src/constants/network.dart';
-import 'package:alimenta_app/src/plugins/auth/auth.dart';
-import 'package:alimenta_app/src/plugins/utils/logger.dart';
+import 'package:red_neuro_app/src/constants/network.dart';
+import 'package:red_neuro_app/src/plugins/auth/auth.dart';
+import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 
 mixin Middleware {
   validateResponse(StatusNetwork status) {

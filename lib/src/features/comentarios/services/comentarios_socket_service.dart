@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:alimenta_app/src/constants/constants.dart';
-import 'package:alimenta_app/src/plugins/auth/auth.dart';
+import 'package:red_neuro_app/src/constants/constants.dart';
+import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
 class ComentariosSocketService {

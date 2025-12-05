@@ -1,4 +1,4 @@
-import 'package:alimenta_app/src/models/person.dart';
+import 'package:red_neuro_app/src/models/person.dart';
 
 class Usuario extends Persona {
   // Ya existentes

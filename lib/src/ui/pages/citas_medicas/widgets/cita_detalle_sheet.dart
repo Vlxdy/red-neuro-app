@@ -1,11 +1,11 @@
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/constants/citas_estado.dart';
-import 'package:alimenta_app/src/models/cita.dart';
-import 'package:alimenta_app/src/ui/pages/citas_medicas/services/citas_medicas_service.dart';
-import 'package:alimenta_app/src/ui/pages/citas_medicas/widgets/cita_form_sheet.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/constants/citas_estado.dart';
+import 'package:red_neuro_app/src/models/cita.dart';
+import 'package:red_neuro_app/src/ui/pages/citas_medicas/services/citas_medicas_service.dart';
+import 'package:red_neuro_app/src/ui/pages/citas_medicas/widgets/cita_form_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:alimenta_app/src/constants/constants.dart';
+import 'package:red_neuro_app/src/constants/constants.dart';
 
 class CitaDetalleSheet extends StatefulWidget {
   const CitaDetalleSheet({

@@ -1,4 +1,4 @@
-import 'package:alimenta_app/src/constants/citas_estado.dart';
+import 'package:red_neuro_app/src/constants/citas_estado.dart';
 
 class Cita {
   final String id;

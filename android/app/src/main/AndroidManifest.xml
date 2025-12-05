@@ -1,15 +1,8 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.lennyflores.alimenta">
-<!-- android:taskAffinity="" -->
-    <uses-permission android:name="android.permission.INTERNET"/>
-    <!-- Para huella -->
-    <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
-    <!-- Para camara -->
-    <uses-permission android:name="android.permission.CAMERA" />
-    <!-- Para geolocalización -->
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <application
-        android:label="Alimenta"
+        android:label="red_neuro_app"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -19,7 +12,6 @@
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
-            android:enableOnBackInvokedCallback="true"
             android:windowSoftInputMode="adjustResize">
             <!-- Specifies an Android theme to apply to this Activity as soon as
                  the Android process has started. This theme is visible to the user

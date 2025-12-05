@@ -1,17 +1,17 @@
-import 'package:alimenta_app/src/config/routes.dart';
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/constants/constants.dart';
-import 'package:alimenta_app/src/plugins/auth/auth.dart';
-import 'package:alimenta_app/src/plugins/seguridad/seguridad.dart';
-import 'package:alimenta_app/src/plugins/utils/logger.dart';
-import 'package:alimenta_app/src/ui/common/alerts/confirmation_alert_dialog.dart';
-import 'package:alimenta_app/src/ui/common/buttons/simple_button.dart';
-import 'package:alimenta_app/src/ui/common/snackbar/snackbar.dart';
-import 'package:alimenta_app/src/ui/common/text_inputs/text_input.dart';
+import 'package:red_neuro_app/src/config/routes.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/constants/constants.dart';
+import 'package:red_neuro_app/src/plugins/auth/auth.dart';
+import 'package:red_neuro_app/src/plugins/seguridad/seguridad.dart';
+import 'package:red_neuro_app/src/plugins/utils/logger.dart';
+import 'package:red_neuro_app/src/ui/common/alerts/confirmation_alert_dialog.dart';
+import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
+import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
+import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:solar_icons/solar_icons.dart';
-import 'package:alimenta_app/src/config/form_controller.dart';
+import 'package:red_neuro_app/src/config/form_controller.dart';
 
 GlobalKey<ScaffoldMessengerState> configuracionPinMessenger =
     GlobalKey<ScaffoldMessengerState>();

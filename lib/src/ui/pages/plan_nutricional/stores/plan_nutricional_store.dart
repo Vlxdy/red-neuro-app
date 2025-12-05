@@ -1,4 +1,4 @@
-import 'package:alimenta_app/src/models/plan_nutricional.dart';
+import 'package:red_neuro_app/src/models/plan_nutricional.dart';
 import 'package:flutter/material.dart';
 
 class PlanNutricionalStore with ChangeNotifier {

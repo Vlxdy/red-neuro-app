@@ -1,7 +1,7 @@
 import 'dart:collection';
 
-import 'package:alimenta_app/src/features/notificaciones/services/notificaciones_service.dart';
-import 'package:alimenta_app/src/models/notificacion.dart';
+import 'package:red_neuro_app/src/features/notificaciones/services/notificaciones_service.dart';
+import 'package:red_neuro_app/src/models/notificacion.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 

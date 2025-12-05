@@ -1,7 +1,7 @@
-import 'package:alimenta_app/src/constants/resources.dart';
+import 'package:red_neuro_app/src/constants/resources.dart';
 import 'package:flutter/material.dart';
-import 'package:alimenta_app/src/ui/global/template_page.dart';
-import 'package:alimenta_app/src/ui/pages/login/componentes/credenciales.dart';
+import 'package:red_neuro_app/src/ui/global/template_page.dart';
+import 'package:red_neuro_app/src/ui/pages/login/componentes/credenciales.dart';
 
 GlobalKey<ScaffoldMessengerState> loginAccountMessenger =
     GlobalKey<ScaffoldMessengerState>();

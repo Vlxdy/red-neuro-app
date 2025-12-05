@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:alimenta_app/src/plugins/utils/logger.dart';
+import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:path_provider/path_provider.dart';
 
 enum FileExtensions { png, jpg, pdf }

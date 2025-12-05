@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:alimenta_app/src/config/init_app.dart';
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/constants/resources.dart';
+import 'package:red_neuro_app/src/config/init_app.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/constants/resources.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

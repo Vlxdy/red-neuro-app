@@ -1,13 +1,13 @@
 import 'dart:async';
 
-import 'package:alimenta_app/src/config/service_config.dart';
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/constants/network.dart';
-import 'package:alimenta_app/src/models/plan_nutricional.dart';
-import 'package:alimenta_app/src/plugins/utils/debouncer.dart';
-import 'package:alimenta_app/src/plugins/utils/logger.dart';
-import 'package:alimenta_app/src/ui/common/snackbar/snackbar.dart';
-import 'package:alimenta_app/src/ui/pages/plan_nutricional/stores/plan_nutricional_store.dart';
+import 'package:red_neuro_app/src/config/service_config.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/constants/network.dart';
+import 'package:red_neuro_app/src/models/plan_nutricional.dart';
+import 'package:red_neuro_app/src/plugins/utils/debouncer.dart';
+import 'package:red_neuro_app/src/plugins/utils/logger.dart';
+import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
+import 'package:red_neuro_app/src/ui/pages/plan_nutricional/stores/plan_nutricional_store.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 

@@ -1,8 +1,8 @@
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/constants/constants.dart';
-import 'package:alimenta_app/src/models/plan_nutricional.dart';
-import 'package:alimenta_app/src/ui/pages/plan_nutricional/services/plan_nutricional_service.dart';
-import 'package:alimenta_app/src/ui/pages/plan_nutricional/stores/plan_nutricional_store.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/constants/constants.dart';
+import 'package:red_neuro_app/src/models/plan_nutricional.dart';
+import 'package:red_neuro_app/src/ui/pages/plan_nutricional/services/plan_nutricional_service.dart';
+import 'package:red_neuro_app/src/ui/pages/plan_nutricional/stores/plan_nutricional_store.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';

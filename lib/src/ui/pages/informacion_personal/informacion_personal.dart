@@ -1,8 +1,8 @@
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/plugins/auth/auth.dart';
-import 'package:alimenta_app/src/plugins/utils/utils.dart';
-import 'package:alimenta_app/src/ui/global/template_page.dart';
-import 'package:alimenta_app/src/ui/pages/mi_cuenta/componentes/avatar_perfil.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/plugins/auth/auth.dart';
+import 'package:red_neuro_app/src/plugins/utils/utils.dart';
+import 'package:red_neuro_app/src/ui/global/template_page.dart';
+import 'package:red_neuro_app/src/ui/pages/mi_cuenta/componentes/avatar_perfil.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 

@@ -1,7 +1,7 @@
-import 'package:alimenta_app/src/features/comentarios/stores/comentarios_store.dart';
-import 'package:alimenta_app/src/features/comentarios/widgets/card_comentario.dart';
-import 'package:alimenta_app/src/features/comentarios/widgets/editor_comentario.dart';
-import 'package:alimenta_app/src/plugins/auth/auth.dart';
+import 'package:red_neuro_app/src/features/comentarios/stores/comentarios_store.dart';
+import 'package:red_neuro_app/src/features/comentarios/widgets/card_comentario.dart';
+import 'package:red_neuro_app/src/features/comentarios/widgets/editor_comentario.dart';
+import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 

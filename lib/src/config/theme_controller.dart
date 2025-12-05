@@ -1,5 +1,5 @@
-// import 'package:alimenta_app/src/constants/custom_theme.dart';
-import 'package:alimenta_app/src/plugins/utils/preferences.dart';
+// import 'package:red_neuro_app/src/constants/custom_theme.dart';
+import 'package:red_neuro_app/src/plugins/utils/preferences.dart';
 import 'package:flutter/material.dart';
 
 class ThemeController {

@@ -1,5 +1,5 @@
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/constants/constants.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/constants/constants.dart';
 import 'package:flutter/material.dart';
 
 class TemplatePage extends StatelessWidget {

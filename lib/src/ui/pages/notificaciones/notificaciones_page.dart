@@ -1,8 +1,8 @@
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/features/notificaciones/stores/notificaciones_store.dart';
-import 'package:alimenta_app/src/models/notificacion.dart';
-import 'package:alimenta_app/src/ui/common/badges/counter_badge.dart';
-import 'package:alimenta_app/src/ui/common/snackbar/snackbar.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/features/notificaciones/stores/notificaciones_store.dart';
+import 'package:red_neuro_app/src/models/notificacion.dart';
+import 'package:red_neuro_app/src/ui/common/badges/counter_badge.dart';
+import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';

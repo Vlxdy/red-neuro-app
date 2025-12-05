@@ -1,5 +1,5 @@
-import 'package:alimenta_app/src/ui/pages/carrito_compras/models/carrito_local.dart';
-import 'package:alimenta_app/src/ui/pages/carrito_compras/models/producto_carrito.dart';
+import 'package:red_neuro_app/src/ui/pages/carrito_compras/models/carrito_local.dart';
+import 'package:red_neuro_app/src/ui/pages/carrito_compras/models/producto_carrito.dart';
 import 'package:flutter/material.dart';
 
 enum CarritoVista { generador, resultados, carrito }

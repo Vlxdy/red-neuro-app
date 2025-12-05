@@ -1,11 +1,11 @@
 // ignore: depend_on_referenced_packages
-import 'package:alimenta_app/src/config/routes.dart';
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/plugins/auth/auth.dart';
-import 'package:alimenta_app/src/plugins/seguridad/seguridad.dart';
-import 'package:alimenta_app/src/plugins/utils/logger.dart';
-import 'package:alimenta_app/src/sockets/sockets_provider.dart';
-import 'package:alimenta_app/src/ui/pages/citas_medicas/services/citas_medicas_service.dart';
+import 'package:red_neuro_app/src/config/routes.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/plugins/auth/auth.dart';
+import 'package:red_neuro_app/src/plugins/seguridad/seguridad.dart';
+import 'package:red_neuro_app/src/plugins/utils/logger.dart';
+import 'package:red_neuro_app/src/sockets/sockets_provider.dart';
+import 'package:red_neuro_app/src/ui/pages/citas_medicas/services/citas_medicas_service.dart';
 import 'package:go_router/go_router.dart';
 
 class InitAppController {

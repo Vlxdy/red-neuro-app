@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/ui/global/template_page.dart';
-import 'package:alimenta_app/src/ui/pages/login/componentes/account_login.dart';
-import 'package:alimenta_app/src/ui/pages/login/componentes/header.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/ui/global/template_page.dart';
+import 'package:red_neuro_app/src/ui/pages/login/componentes/account_login.dart';
+import 'package:red_neuro_app/src/ui/pages/login/componentes/header.dart';
 
 GlobalKey<ScaffoldMessengerState> loginMessenger =
     GlobalKey<ScaffoldMessengerState>();

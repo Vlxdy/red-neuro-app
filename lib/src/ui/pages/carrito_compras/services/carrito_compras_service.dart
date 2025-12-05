@@ -1,16 +1,16 @@
-import 'package:alimenta_app/src/config/service_config.dart';
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/constants/network.dart';
-import 'package:alimenta_app/src/models/user.dart';
-import 'package:alimenta_app/src/plugins/utils/logger.dart';
-import 'package:alimenta_app/src/ui/common/snackbar/snackbar.dart';
-import 'package:alimenta_app/src/ui/pages/carrito_compras/models/producto_carrito.dart';
-import 'package:alimenta_app/src/ui/pages/carrito_compras/services/carrito_local_service.dart';
-import 'package:alimenta_app/src/ui/pages/carrito_compras/stores/carrito_compras_store.dart';
-import 'package:alimenta_app/src/ui/pages/carrito_compras/widgets/carrito_scaffold_messenger.dart';
+import 'package:red_neuro_app/src/config/service_config.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/constants/network.dart';
+import 'package:red_neuro_app/src/models/user.dart';
+import 'package:red_neuro_app/src/plugins/utils/logger.dart';
+import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
+import 'package:red_neuro_app/src/ui/pages/carrito_compras/models/producto_carrito.dart';
+import 'package:red_neuro_app/src/ui/pages/carrito_compras/services/carrito_local_service.dart';
+import 'package:red_neuro_app/src/ui/pages/carrito_compras/stores/carrito_compras_store.dart';
+import 'package:red_neuro_app/src/ui/pages/carrito_compras/widgets/carrito_scaffold_messenger.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:alimenta_app/src/plugins/auth/auth.dart';
+import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 
 class CarritoComprasService extends ServiceConfig {
   CarritoComprasService(BuildContext context)

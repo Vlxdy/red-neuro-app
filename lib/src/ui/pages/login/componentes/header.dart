@@ -1,4 +1,4 @@
-import 'package:alimenta_app/src/constants/resources.dart';
+import 'package:red_neuro_app/src/constants/resources.dart';
 import 'package:flutter/material.dart';
 
 class HeaderLogin extends StatelessWidget {

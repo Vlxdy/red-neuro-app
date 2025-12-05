@@ -2,11 +2,11 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:alimenta_app/src/config/service_config.dart';
-import 'package:alimenta_app/src/constants/constants.dart';
-import 'package:alimenta_app/src/constants/network.dart';
-import 'package:alimenta_app/src/features/comentarios/models/comentario_chat_models.dart';
-import 'package:alimenta_app/src/plugins/auth/auth.dart';
+import 'package:red_neuro_app/src/config/service_config.dart';
+import 'package:red_neuro_app/src/constants/constants.dart';
+import 'package:red_neuro_app/src/constants/network.dart';
+import 'package:red_neuro_app/src/features/comentarios/models/comentario_chat_models.dart';
+import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';

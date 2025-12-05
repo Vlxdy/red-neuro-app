@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:alimenta_app/src/constants/constants.dart';
-import 'package:alimenta_app/src/features/comentarios/models/comentario_chat_models.dart';
+import 'package:red_neuro_app/src/constants/constants.dart';
+import 'package:red_neuro_app/src/features/comentarios/models/comentario_chat_models.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:html/parser.dart' as html_parser;

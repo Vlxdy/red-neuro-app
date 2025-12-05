@@ -1,4 +1,4 @@
-import 'package:alimenta_app/src/ui/pages/carrito_compras/models/producto_carrito.dart';
+import 'package:red_neuro_app/src/ui/pages/carrito_compras/models/producto_carrito.dart';
 
 class CarritoLocal {
   const CarritoLocal({

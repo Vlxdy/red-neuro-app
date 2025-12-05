@@ -1,6 +1,6 @@
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/constants/constants.dart';
-import 'package:alimenta_app/src/features/comentarios/models/comentario_chat_models.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/constants/constants.dart';
+import 'package:red_neuro_app/src/features/comentarios/models/comentario_chat_models.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_html/flutter_html.dart';

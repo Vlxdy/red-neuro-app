@@ -2,11 +2,11 @@ import 'dart:collection';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:alimenta_app/src/constants/constants.dart';
-import 'package:alimenta_app/src/features/comentarios/models/comentario_chat_models.dart';
-import 'package:alimenta_app/src/features/comentarios/services/comentarios_service.dart';
-import 'package:alimenta_app/src/features/comentarios/services/comentarios_socket_service.dart';
-import 'package:alimenta_app/src/plugins/auth/auth.dart';
+import 'package:red_neuro_app/src/constants/constants.dart';
+import 'package:red_neuro_app/src/features/comentarios/models/comentario_chat_models.dart';
+import 'package:red_neuro_app/src/features/comentarios/services/comentarios_service.dart';
+import 'package:red_neuro_app/src/features/comentarios/services/comentarios_socket_service.dart';
+import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';

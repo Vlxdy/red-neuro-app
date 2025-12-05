@@ -1,5 +1,5 @@
-import 'package:alimenta_app/src/models/submodulo.dart';
-import 'package:alimenta_app/src/models/propiedades_modulo.dart';
+import 'package:red_neuro_app/src/models/submodulo.dart';
+import 'package:red_neuro_app/src/models/propiedades_modulo.dart';
 
 class Modulo {
   String id;

@@ -1,4 +1,4 @@
-import 'package:alimenta_app/src/models/modulo.dart';
+import 'package:red_neuro_app/src/models/modulo.dart';
 
 class Rol {
   String idRol;

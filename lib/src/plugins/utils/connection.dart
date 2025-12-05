@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:alimenta_app/src/plugins/utils/logger.dart';
+import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:http/http.dart' as http;
 
 class Connection {

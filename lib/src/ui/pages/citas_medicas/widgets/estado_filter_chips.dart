@@ -1,5 +1,5 @@
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/constants/citas_estado.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/constants/citas_estado.dart';
 import 'package:flutter/material.dart';
 
 class EstadoFilterChips extends StatefulWidget {

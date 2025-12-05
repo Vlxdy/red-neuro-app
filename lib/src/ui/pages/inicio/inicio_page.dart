@@ -1,6 +1,6 @@
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/ui/pages/inicio/inicio_service.dart';
-import 'package:alimenta_app/src/ui/pages/inicio/inicio_store.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/ui/pages/inicio/inicio_service.dart';
+import 'package:red_neuro_app/src/ui/pages/inicio/inicio_store.dart';
 import 'package:flutter/material.dart';
 
 final GlobalKey<ScaffoldMessengerState> inicioMessenger =

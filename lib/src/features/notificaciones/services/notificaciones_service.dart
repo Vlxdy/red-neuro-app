@@ -1,6 +1,6 @@
-import 'package:alimenta_app/src/config/service_config.dart';
-import 'package:alimenta_app/src/constants/network.dart';
-import 'package:alimenta_app/src/models/notificacion.dart';
+import 'package:red_neuro_app/src/config/service_config.dart';
+import 'package:red_neuro_app/src/constants/network.dart';
+import 'package:red_neuro_app/src/models/notificacion.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 

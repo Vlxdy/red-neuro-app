@@ -1,9 +1,9 @@
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/plugins/auth/auth.dart';
-import 'package:alimenta_app/src/ui/pages/perfil/componentes/perfil_info_card.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/plugins/auth/auth.dart';
+import 'package:red_neuro_app/src/ui/pages/perfil/componentes/perfil_info_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:alimenta_app/src/constants/constants.dart';
+import 'package:red_neuro_app/src/constants/constants.dart';
 GlobalKey<ScaffoldMessengerState> perfilMessenger =
     GlobalKey<ScaffoldMessengerState>();
 

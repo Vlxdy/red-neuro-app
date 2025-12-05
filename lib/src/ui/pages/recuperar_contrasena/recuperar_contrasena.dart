@@ -1,9 +1,9 @@
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/ui/common/buttons/simple_button.dart';
-import 'package:alimenta_app/src/ui/common/text_inputs/text_input.dart';
-import 'package:alimenta_app/src/ui/global/template_page.dart';
-import 'package:alimenta_app/src/ui/pages/login/componentes/header.dart';
-import 'package:alimenta_app/src/ui/pages/login/login_service.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
+import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
+import 'package:red_neuro_app/src/ui/global/template_page.dart';
+import 'package:red_neuro_app/src/ui/pages/login/componentes/header.dart';
+import 'package:red_neuro_app/src/ui/pages/login/login_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' as services;
 

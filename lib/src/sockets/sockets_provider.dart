@@ -1,8 +1,8 @@
 // lib/src/providers/socket_provider.dart
-import 'package:alimenta_app/main.dart';
-import 'package:alimenta_app/src/config/socket_service.dart';
-import 'package:alimenta_app/src/plugins/utils/logger.dart';
-import 'package:alimenta_app/src/ui/common/snackbar/snackbar.dart';
+import 'package:red_neuro_app/main.dart';
+import 'package:red_neuro_app/src/config/socket_service.dart';
+import 'package:red_neuro_app/src/plugins/utils/logger.dart';
+import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:flutter/material.dart';
 
 class SocketProvider extends ChangeNotifier {

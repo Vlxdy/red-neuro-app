@@ -1,22 +1,22 @@
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/plugins/estaciones/bitacora_store.dart';
-import 'package:alimenta_app/src/features/notificaciones/stores/notificaciones_store.dart';
-import 'package:alimenta_app/src/plugins/utils/logger.dart';
-import 'package:alimenta_app/src/ui/common/badges/counter_badge.dart';
-import 'package:alimenta_app/src/ui/common/keep_alive_page.dart';
-import 'package:alimenta_app/src/ui/global/template_page.dart';
-import 'package:alimenta_app/src/ui/pages/citas_medicas/screens/citas_medicas_page.dart';
-import 'package:alimenta_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
-import 'package:alimenta_app/src/ui/pages/notificaciones/notificaciones_page.dart';
-import 'package:alimenta_app/src/ui/pages/plan_nutricional/screens/plan_nutricional_page.dart';
-import 'package:alimenta_app/src/ui/pages/mi_cuenta/mi_cuenta.dart';
-import 'package:alimenta_app/src/ui/pages/perfil/perfil.dart';
-import 'package:alimenta_app/src/ui/pages/carrito_compras/screens/carrito_compras_page.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/plugins/estaciones/bitacora_store.dart';
+import 'package:red_neuro_app/src/features/notificaciones/stores/notificaciones_store.dart';
+import 'package:red_neuro_app/src/plugins/utils/logger.dart';
+import 'package:red_neuro_app/src/ui/common/badges/counter_badge.dart';
+import 'package:red_neuro_app/src/ui/common/keep_alive_page.dart';
+import 'package:red_neuro_app/src/ui/global/template_page.dart';
+import 'package:red_neuro_app/src/ui/pages/citas_medicas/screens/citas_medicas_page.dart';
+import 'package:red_neuro_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
+import 'package:red_neuro_app/src/ui/pages/notificaciones/notificaciones_page.dart';
+import 'package:red_neuro_app/src/ui/pages/plan_nutricional/screens/plan_nutricional_page.dart';
+import 'package:red_neuro_app/src/ui/pages/mi_cuenta/mi_cuenta.dart';
+import 'package:red_neuro_app/src/ui/pages/perfil/perfil.dart';
+import 'package:red_neuro_app/src/ui/pages/carrito_compras/screens/carrito_compras_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:solar_icons/solar_icons.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-import 'package:alimenta_app/src/features/comentarios/comunicacion.dart';
+import 'package:red_neuro_app/src/features/comentarios/comunicacion.dart';
 import 'package:provider/provider.dart';
 
 final GlobalKey<ScaffoldMessengerState> homeMessenger =

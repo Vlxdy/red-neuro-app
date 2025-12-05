@@ -1,13 +1,13 @@
-import 'package:alimenta_app/src/config/service_config.dart';
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/constants/citas_estado.dart';
-import 'package:alimenta_app/src/constants/network.dart';
-import 'package:alimenta_app/src/models/cita.dart';
-import 'package:alimenta_app/src/plugins/auth/auth.dart';
-import 'package:alimenta_app/src/plugins/utils/logger.dart';
-import 'package:alimenta_app/src/ui/common/snackbar/snackbar.dart';
-import 'package:alimenta_app/src/ui/pages/citas_medicas/citas_medicas_keys.dart';
-import 'package:alimenta_app/src/ui/pages/citas_medicas/stores/citas_medicas_store.dart';
+import 'package:red_neuro_app/src/config/service_config.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/constants/citas_estado.dart';
+import 'package:red_neuro_app/src/constants/network.dart';
+import 'package:red_neuro_app/src/models/cita.dart';
+import 'package:red_neuro_app/src/plugins/auth/auth.dart';
+import 'package:red_neuro_app/src/plugins/utils/logger.dart';
+import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
+import 'package:red_neuro_app/src/ui/pages/citas_medicas/citas_medicas_keys.dart';
+import 'package:red_neuro_app/src/ui/pages/citas_medicas/stores/citas_medicas_store.dart';
 import 'package:flutter/material.dart';
 
 class CitasMedicasService extends ServiceConfig {

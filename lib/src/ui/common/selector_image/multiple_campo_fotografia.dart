@@ -1,11 +1,11 @@
 import 'dart:io';
 
-import 'package:alimenta_app/src/config/routes.dart';
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/plugins/geolocation/geolocation.dart';
-import 'package:alimenta_app/src/plugins/utils/logger.dart';
-import 'package:alimenta_app/src/ui/common/alerts/confirmation_alert_dialog.dart';
-import 'package:alimenta_app/src/ui/common/components/image_preview.dart';
+import 'package:red_neuro_app/src/config/routes.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+// import 'package:red_neuro_app/src/plugins/geolocation/geolocation.dart';
+import 'package:red_neuro_app/src/plugins/utils/logger.dart';
+import 'package:red_neuro_app/src/ui/common/alerts/confirmation_alert_dialog.dart';
+import 'package:red_neuro_app/src/ui/common/components/image_preview.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -115,7 +115,7 @@ class MultipleCampoFotografia extends StatelessWidget {
                     : InkWell(
                         onTap: () async {
                           FocusScope.of(context).requestFocus(FocusNode());
-                          Geolocation.instance.getCurrentLocation();
+                          // Geolocation.instance.getCurrentLocation();
                           final result = await context
                               .pushNamed<String>(RouteNames.vistaCamara);
                           if (result != null) {
@@ -225,7 +225,7 @@ class MultipleCampoFotografia extends StatelessWidget {
                   ? InkWell(
                       onTap: () async {
                         FocusScope.of(context).requestFocus(FocusNode());
-                        Geolocation.instance.getCurrentLocation();
+                        // Geolocation.instance.getCurrentLocation();
                         final result = await context
                             .pushNamed<String>(RouteNames.vistaCamara);
                         if (result != null) {
