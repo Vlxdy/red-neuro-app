@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:device_info_plus/src/model/android_device_info.dart';
 import 'package:red_neuro_app/src/constants/keys.dart';
 import 'dart:convert';
 import 'package:red_neuro_app/src/constants/constants.dart';
@@ -23,12 +24,12 @@ final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
 
 Future<void> initHiveStorage() async {
   await Hive.initFlutter();
-  const secureStorage = FlutterSecureStorage();
-  var existsKey = await secureStorage.containsKey(
+  const FlutterSecureStorage secureStorage = FlutterSecureStorage();
+  bool existsKey = await secureStorage.containsKey(
     key: Constantes.secureHiveKey,
   );
   if (!existsKey) {
-    var key = Hive.generateSecureKey();
+    List<int> key = Hive.generateSecureKey();
     await secureStorage.write(
       key: Constantes.secureHiveKey,
       value: base64UrlEncode(key),
@@ -39,12 +40,14 @@ Future<void> initHiveStorage() async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
-  SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  SystemChrome.setPreferredOrientations(<DeviceOrientation>[
+    DeviceOrientation.portraitUp,
+  ]);
   await initHiveStorage();
 
   await initializeDateFormatting('es', null);
 
-  final deviceInfo = await Utils.getDeviceInfo();
+  final AndroidDeviceInfo? deviceInfo = await Utils.getDeviceInfo();
 
   /// Para teléfonos Android con versión menor a Android 7.1
   if (deviceInfo != null && deviceInfo.version.sdkInt < 25) {
@@ -76,8 +79,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     inicializar();
   }
 
-  inicializar() async {
-    final preferences = PreferencesService.instance;
+  Future<void> inicializar() async {
+    final PreferencesService preferences = PreferencesService.instance;
     await preferences.setBool(Keys.mostrarDialogo, true);
     WidgetsBinding.instance.addObserver(this);
   }
@@ -89,11 +92,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       providers: proveedores(context),
       child: FutureBuilder(
         future: InitAppController.instance.initTheme(),
-        builder: (context, snapshot) {
-          final appState = AuthStore.instance;
-          final router = GoRouter(
+        builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
+          final AuthStore appState = AuthStore.instance;
+          final GoRouter router = GoRouter(
             navigatorKey: navigatorKey,
-            observers: [MyRouteObserver.instance],
+            observers: <NavigatorObserver>[MyRouteObserver.instance],
             initialLocation: '/${RouteNames.splashScreen}',
             routes: routes,
             redirect: redirectRoutes,
@@ -105,12 +108,12 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             locale: const Locale('es'),
 
             // ✅ soporta solo español (puedes agregar más si deseas)
-            supportedLocales: const [
+            supportedLocales: const <Locale>[
               Locale('es', ''), // Español
             ],
 
             // ✅ agrega las delegaciones necesarias
-            localizationsDelegates: const [
+            localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,

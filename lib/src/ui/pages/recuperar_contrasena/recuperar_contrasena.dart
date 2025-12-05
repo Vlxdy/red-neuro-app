@@ -33,7 +33,7 @@ class _OlvideContrasenaState extends State<OlvideContrasena> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeController.instance;
+    final ThemeController theme = ThemeController.instance;
     return TemplatePage(
       page: ScaffoldMessenger(
         key: olvideContrasenaMessenger,
@@ -57,7 +57,7 @@ class _OlvideContrasenaState extends State<OlvideContrasena> {
                 key: _formState,
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
+                  children: <Widget>[
                     const HeaderLogin(mensaje: '¿Olvidaste tu contraseña?'),
                     const SizedBox(height: 48),
                     Text(
@@ -70,7 +70,7 @@ class _OlvideContrasenaState extends State<OlvideContrasena> {
                       controller: _controller,
                       requiredData: true,
                       title: 'Correo electrónico',
-                      validate: (value, alias) =>
+                      validate: (String? value, String alias) =>
                           service.validateData(context, value, alias),
                     ),
                     const SizedBox(height: 8),

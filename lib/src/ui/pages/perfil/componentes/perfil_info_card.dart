@@ -18,7 +18,7 @@ class PerfilInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeController.instance;
+    final ThemeController theme = ThemeController.instance;
     return Container(
       decoration: BoxDecoration(
         color: bgColor,
@@ -44,7 +44,7 @@ class PerfilInfoCard extends StatelessWidget {
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
+              children: <Widget>[
                 Icon(headerIcon, color: theme.grey),
                 const SizedBox(width: 5),
                 Text(headerTitle, style: TextStyle(color: theme.grey)),
@@ -62,7 +62,7 @@ class PerfilInfoCard extends StatelessWidget {
                     margin: const EdgeInsets.only(bottom: 10),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                      children: <Widget>[
                         Text(
                           items[i]['clave'],
                           style: TextStyle(color: theme.grey),

@@ -38,8 +38,9 @@ class Auth {
   String _token = '';
   String _refreshToken = '';
 
-  final ValueNotifier<Usuario> _profileNotifier =
-      ValueNotifier<Usuario>(Usuario.empty());
+  final ValueNotifier<Usuario> _profileNotifier = ValueNotifier<Usuario>(
+    Usuario.empty(),
+  );
 
   Auth._();
   static final instance = Auth._();

@@ -1,11 +1,12 @@
+import 'package:red_neuro_app/src/config/service_config.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/constants.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
+import 'package:red_neuro_app/src/models/modulo.dart';
 import 'package:red_neuro_app/src/models/rol.dart';
 import 'package:red_neuro_app/src/models/user.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth_service.dart';
-import 'package:red_neuro_app/src/ui/common/alerts/confirmation_alert_dialog.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
 import 'package:red_neuro_app/src/ui/pages/perfil/componentes/perfil_info_card.dart';
@@ -24,7 +25,7 @@ class Perfil extends StatefulWidget {
 
 class _PerfilState extends State<Perfil> {
   Usuario? _profile;
-  List<Rol> _roles = [];
+  List<Rol> _roles = <Rol>[];
   String? _activeRoleId;
   bool _changingRole = false;
   bool _loading = true;
@@ -37,7 +38,7 @@ class _PerfilState extends State<Perfil> {
   }
 
   Future<void> _loadProfile() async {
-    final profile = await Auth.instance.profileAsync();
+    final Usuario profile = await Auth.instance.profileAsync();
     setState(() {
       _profile = profile;
       _roles = profile.roles;
@@ -53,11 +54,11 @@ class _PerfilState extends State<Perfil> {
       _changingRole = true;
     });
 
-    final theme = ThemeController.instance;
-    final service = AuthService(context);
+    final ThemeController theme = ThemeController.instance;
+    final AuthService service = AuthService(context);
 
     try {
-      final response = await service.cambiarRol(idRol);
+      final ResponseApi response = await service.cambiarRol(idRol);
 
       if (!mounted) return;
 
@@ -65,15 +66,17 @@ class _PerfilState extends State<Perfil> {
         await Auth.instance.login(response.data);
         await _loadProfile();
 
-        final selectedRole =
-            _roles.firstWhere((r) => r.idRol == idRol, orElse: () => Rol(
-                  idRol: idRol,
-                  idUsuarioRol: '',
-                  rol: '',
-                  nombre: '',
-                  descripcion: '',
-                  modulos: const [],
-                ));
+        final Rol selectedRole = _roles.firstWhere(
+          (Rol r) => r.idRol == idRol,
+          orElse: () => Rol(
+            idRol: idRol,
+            idUsuarioRol: '',
+            rol: '',
+            nombre: '',
+            descripcion: '',
+            modulos: const <Modulo>[],
+          ),
+        );
 
         showSnackBar(
           perfilMessenger,
@@ -111,48 +114,56 @@ class _PerfilState extends State<Perfil> {
 
     setState(() => _loggingOut = true);
 
-    final theme = ThemeController.instance;
+    final ThemeController theme = ThemeController.instance;
 
-    showDialog(
+    final bool? confirm = await showDialog<bool>(
       context: context,
-      builder: (context) {
-        return Dialog(
-          child: ConfirmationDialog(
-            title: 'Cerrar sesión',
-            onConfirm: () async {
-              final error = await Auth.instance.logout();
-              if (error != null && mounted) {
-                showSnackBar(
-                  perfilMessenger,
-                  error,
-                  state: StatusSnackBar.error,
-                  colorText: theme.white,
-                );
-              }
-            },
-          ),
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Cerrar sesión'),
+          content: const Text('¿Estás seguro de que deseas cerrar sesión?'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Confirmar'),
+            ),
+          ],
         );
       },
-    ).whenComplete(() {
-      if (mounted) setState(() => _loggingOut = false);
-    });
+    );
+
+    if (confirm == true) {
+      final String? error = await Auth.instance.logout();
+      if (error != null && mounted) {
+        showSnackBar(
+          perfilMessenger,
+          error,
+          state: StatusSnackBar.error,
+          colorText: theme.white,
+        );
+      }
+    }
+
+    if (mounted) setState(() => _loggingOut = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeController.instance;
-    final profile = _profile ?? Auth.instance.profile;
+    final ThemeController theme = ThemeController.instance;
+    final Usuario profile = _profile ?? Auth.instance.profile;
 
     if (_loading && _profile == null) {
       return Scaffold(
         backgroundColor: theme.background,
-        body: Center(
-          child: CircularProgressIndicator(color: theme.primary),
-        ),
+        body: Center(child: CircularProgressIndicator(color: theme.primary)),
       );
     }
 
-    final hasMultipleRoles = _roles.length > 1;
+    final bool hasMultipleRoles = _roles.length > 1;
 
     return ScaffoldMessenger(
       key: perfilMessenger,
@@ -171,7 +182,7 @@ class _PerfilState extends State<Perfil> {
           centerTitle: true,
           title: const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: <Widget>[
               Text('Perfil', style: TextStyle(fontWeight: FontWeight.bold)),
             ],
           ),
@@ -180,7 +191,7 @@ class _PerfilState extends State<Perfil> {
           padding: const EdgeInsets.symmetric(horizontal: 20.0),
           child: SingleChildScrollView(
             child: Column(
-              children: [
+              children: <Widget>[
                 const SizedBox(height: 20),
                 Center(
                   child: Container(
@@ -188,7 +199,7 @@ class _PerfilState extends State<Perfil> {
                     height: 120,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      boxShadow: [
+                      boxShadow: <BoxShadow>[
                         BoxShadow(
                           color: theme.isLight
                               ? Colors.black.withValues(alpha: 0.1)
@@ -203,7 +214,8 @@ class _PerfilState extends State<Perfil> {
                       ),
                     ),
                     child: ClipOval(
-                      child: profile.urlFoto != null &&
+                      child:
+                          profile.urlFoto != null &&
                               profile.urlFoto!.isNotEmpty &&
                               Uri.tryParse(profile.urlFoto!) != null
                           ? Image.network(
@@ -211,8 +223,12 @@ class _PerfilState extends State<Perfil> {
                                   ? profile.urlFoto!
                                   : '${Constantes.apiUrl}${profile.urlFoto!}',
                               fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  _buildAvatarFallback(theme, profile),
+                              errorBuilder:
+                                  (
+                                    BuildContext context,
+                                    Object error,
+                                    StackTrace? stackTrace,
+                                  ) => _buildAvatarFallback(theme, profile),
                             )
                           : _buildAvatarFallback(theme, profile),
                     ),
@@ -232,13 +248,13 @@ class _PerfilState extends State<Perfil> {
                   borderColor: theme.grey.withValues(alpha: .4),
                   headerIcon: Icons.person_outline_rounded,
                   headerTitle: 'Datitos personales',
-                  items: [
-                    {
+                  items: <Map<String, dynamic>>[
+                    <String, dynamic>{
                       "clave": "Nombres",
                       "valor":
                           "${profile.nombres} ${profile.primerApellido} ${profile.segundoApellido}",
                     },
-                    {
+                    <String, dynamic>{
                       "clave": "Fecha de nacimiento",
                       "valor": profile.fechaNacimiento,
                     },
@@ -250,9 +266,12 @@ class _PerfilState extends State<Perfil> {
                   borderColor: theme.grey.withValues(alpha: .4),
                   headerIcon: Icons.contact_page_outlined,
                   headerTitle: 'Datos de contacto',
-                  items: [
-                    {"clave": "Celular", "valor": profile.telefono},
-                    {
+                  items: <Map<String, dynamic>>[
+                    <String, dynamic>{
+                      "clave": "Celular",
+                      "valor": profile.telefono,
+                    },
+                    <String, dynamic>{
                       "clave": "Correo electrónico",
                       "valor": profile.correoElectronico,
                     },
@@ -270,7 +289,8 @@ class _PerfilState extends State<Perfil> {
                 _SessionActions(
                   onChangePassword: () => Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (context) => const CambiarContrasena(),
+                      builder: (BuildContext context) =>
+                          const CambiarContrasena(),
                     ),
                   ),
                   onLogout: _logout,
@@ -299,7 +319,7 @@ class _SessionActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeController.instance;
+    final ThemeController theme = ThemeController.instance;
 
     return Container(
       width: double.infinity,
@@ -308,7 +328,7 @@ class _SessionActions extends StatelessWidget {
         color: theme.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: theme.grey.withValues(alpha: 0.3)),
-        boxShadow: [
+        boxShadow: <BoxShadow>[
           BoxShadow(
             color: theme.isLight
                 ? Colors.black.withValues(alpha: 0.05)
@@ -320,7 +340,7 @@ class _SessionActions extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           Text(
             'Seguridad de la cuenta',
             style: TextStyle(
@@ -377,8 +397,8 @@ class _RoleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final activeRole = roles.firstWhere(
-      (r) => r.idRol == activeRoleId,
+    final Rol activeRole = roles.firstWhere(
+      (Rol r) => r.idRol == activeRoleId,
       orElse: () => roles.isNotEmpty
           ? roles.first
           : Rol(
@@ -387,7 +407,7 @@ class _RoleCard extends StatelessWidget {
               rol: '',
               nombre: '',
               descripcion: '',
-              modulos: const [],
+              modulos: const <Modulo>[],
             ),
     );
 
@@ -398,7 +418,7 @@ class _RoleCard extends StatelessWidget {
         color: theme.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: theme.grey.withValues(alpha: 0.3)),
-        boxShadow: [
+        boxShadow: <BoxShadow>[
           BoxShadow(
             color: theme.isLight
                 ? Colors.black.withValues(alpha: 0.05)
@@ -410,10 +430,10 @@ class _RoleCard extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
+            children: <Widget>[
               Text(
                 'Rol activo',
                 style: TextStyle(
@@ -422,8 +442,10 @@ class _RoleCard extends StatelessWidget {
                 ),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: theme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
@@ -443,20 +465,20 @@ class _RoleCard extends StatelessWidget {
             'Elige otro rol para actualizar los módulos visibles.',
             style: TextStyle(color: theme.secondary, fontSize: 13),
           ),
-          if (onRoleSelected == null) ...[
+          if (onRoleSelected == null) ...<Widget>[
             const SizedBox(height: 8),
             Text(
               'Este usuario solo tiene un rol asignado.',
               style: TextStyle(color: theme.secondary),
             ),
-          ] else ...[
+          ] else ...<Widget>[
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: roles
                   .map(
-                    (rol) => ChoiceChip(
+                    (Rol rol) => ChoiceChip(
                       label: Text(rol.rol.isEmpty ? 'Rol' : rol.rol),
                       selected: rol.idRol == activeRoleId,
                       selectedColor: theme.primary.withOpacity(0.15),
@@ -466,7 +488,7 @@ class _RoleCard extends StatelessWidget {
                             : theme.secondary,
                         fontWeight: FontWeight.w600,
                       ),
-                      onSelected: (selected) {
+                      onSelected: (bool selected) {
                         if (selected && !changing) {
                           onRoleSelected?.call(rol.idRol);
                         }
@@ -475,10 +497,10 @@ class _RoleCard extends StatelessWidget {
                   )
                   .toList(),
             ),
-            if (changing) ...[
+            if (changing) ...<Widget>[
               const SizedBox(height: 10),
               Row(
-                children: [
+                children: <Widget>[
                   SizedBox(
                     width: 18,
                     height: 18,

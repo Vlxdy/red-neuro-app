@@ -40,8 +40,17 @@ class Usuario extends Persona {
     this.roles = const [],
   });
 
-  static Usuario empty() =>
-      Usuario('', '', '', '', '', '', '', correoElectronico: '', roles: const []);
+  static Usuario empty() => Usuario(
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    correoElectronico: '',
+    roles: const [],
+  );
 
   /// Soporta tanto json plano como con `datos`
   factory Usuario.fromJson(Map<String, dynamic> jsonRaw) {

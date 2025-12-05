@@ -37,10 +37,10 @@ class _ConfiguracionPinSeguridadState extends State<ConfiguracionPinSeguridad>
   }
 
   void logout() {
-    final theme = ThemeController.instance;
+    final ThemeController theme = ThemeController.instance;
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (BuildContext context) {
         return Dialog(
           child: ConfirmationDialog(
             title: 'Alerta',
@@ -49,7 +49,7 @@ class _ConfiguracionPinSeguridadState extends State<ConfiguracionPinSeguridad>
             textConfirm: 'Aceptar',
             text: '¿Estás segura(o) de cancelar el inicio de sesión?',
             onConfirm: () async {
-              var error = await Auth.instance.logout();
+              String? error = await Auth.instance.logout();
               if (error != null) {
                 showSnackBar(
                   configuracionPinMessenger,
@@ -67,8 +67,8 @@ class _ConfiguracionPinSeguridadState extends State<ConfiguracionPinSeguridad>
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeController.instance;
-    final security = Seguridad.instance;
+    final ThemeController theme = ThemeController.instance;
+    final Seguridad security = Seguridad.instance;
     return ScaffoldMessenger(
       key: configuracionPinMessenger,
       child: Scaffold(
@@ -140,12 +140,12 @@ class _ConfiguracionPinSeguridadState extends State<ConfiguracionPinSeguridad>
                       maxLength: 6,
                       controller: _pinSeguridad,
                       title: 'Pin de seguridad',
-                      onChange: (value) {
+                      onChange: (String value) {
                         Logger.info('valor pin $value');
                         security.store.pin = value;
                         // service.store.form.username = value,
                       },
-                      validate: (value, alias) => validateData(
+                      validate: (String? value, String alias) => validateData(
                         context,
                         value,
                         alias,

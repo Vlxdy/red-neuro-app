@@ -1,4 +1,5 @@
 import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/models/user.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/plugins/utils/utils.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
@@ -11,8 +12,8 @@ class InformacionPersonal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeController.instance;
-    final profile = Auth.instance.profile;
+    final ThemeController theme = ThemeController.instance;
+    final Usuario profile = Auth.instance.profile;
     return TemplatePage(
       page: Scaffold(
         backgroundColor: theme.transparent,
@@ -28,7 +29,7 @@ class InformacionPersonal extends StatelessWidget {
           backgroundColor: theme.transparent,
         ),
         body: ListView(
-          children: [
+          children: <Widget>[
             AvatarPerfil(),
             ListTile(
               title: Text(

@@ -1,6 +1,5 @@
 import 'package:flutter/widgets.dart';
 import 'package:red_neuro_app/src/config/service_config.dart';
-import 'package:red_neuro_app/src/constants/network.dart';
 
 class AuthService extends ServiceConfig {
   AuthService(BuildContext context) : super('', context);

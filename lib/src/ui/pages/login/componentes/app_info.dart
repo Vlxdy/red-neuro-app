@@ -1,3 +1,4 @@
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:flutter/material.dart';
@@ -7,13 +8,13 @@ class AppInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeController.instance;
-    final info = Auth.instance.appInfo;
+    final ThemeController theme = ThemeController.instance;
+    final PackageInfo info = Auth.instance.appInfo;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
+      children: <Widget>[
         const SizedBox(height: 20),
         Container(
           padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 70),

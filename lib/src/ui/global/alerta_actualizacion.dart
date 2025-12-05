@@ -22,7 +22,7 @@ class DialogService {
                 'Por favor comuniquese con el personal de soporte para obtener una nueva versión',
             textConfirm: 'Aceptar',
             onConfirm: () async {
-              final preference = PreferencesService.instance;
+              final PreferencesService preference = PreferencesService.instance;
               await preference.setBool(Keys.mostrarDialogo, false);
               // await Utils.abrirURL(link);
             },

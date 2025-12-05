@@ -23,15 +23,15 @@ class _MicuentaState extends State<Micuenta> {
   bool? fingerprintEnabled;
   bool? hasFingerprint;
   void logout() {
-    final theme = ThemeController.instance;
+    final ThemeController theme = ThemeController.instance;
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (BuildContext context) {
         return Dialog(
           child: ConfirmationDialog(
             title: 'Cerrar sesión',
             onConfirm: () async {
-              var error = await Auth.instance.logout();
+              String? error = await Auth.instance.logout();
               if (error != null) {
                 showSnackBar(
                   miCuentaMessenger,
@@ -61,7 +61,7 @@ class _MicuentaState extends State<Micuenta> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeController.instance;
+    final ThemeController theme = ThemeController.instance;
 
     return ScaffoldMessenger(
       key: miCuentaMessenger,
@@ -88,7 +88,7 @@ class _MicuentaState extends State<Micuenta> {
         // ),
         body: SafeArea(
           child: Column(
-            children: [
+            children: <Widget>[
               const SizedBox(height: 15),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -119,7 +119,7 @@ class _MicuentaState extends State<Micuenta> {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     child: Column(
-                      children: [
+                      children: <Widget>[
                         const SizedBox(height: 15),
                         AvatarPerfil(),
                         const SizedBox(height: 30),
@@ -171,7 +171,7 @@ class _MicuentaState extends State<Micuenta> {
                                       value: fingerprintEnabled!,
                                       onChanged: !hasFingerprint!
                                           ? null
-                                          : (value) {
+                                          : (bool value) {
                                               Logger.info(
                                                 'usar el sensor de huella ? > $value',
                                               );

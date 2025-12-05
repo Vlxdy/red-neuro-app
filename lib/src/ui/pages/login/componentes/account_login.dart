@@ -8,9 +8,9 @@ class AccountLogin extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeController.instance;
+    final ThemeController theme = ThemeController.instance;
     return Column(
-      children: [
+      children: <Widget>[
         RichText(
           text: TextSpan(
             text: '¿Tienes una cuenta institucional?',

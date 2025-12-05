@@ -13,7 +13,7 @@ class SplashScreen extends StatefulWidget {
 class _SplashScreenState extends State<SplashScreen> {
   Widget _logo() {
     return Column(
-      children: [
+      children: <Widget>[
         Container(
           height: 100,
           width: 200,
@@ -42,7 +42,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeController.instance;
+    final ThemeController theme = ThemeController.instance;
     return Scaffold(
       backgroundColor: theme.background,
       body: Container(
@@ -51,7 +51,7 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
+          children: <Widget>[
             _logo(),
             const SizedBox(height: 48),
             CircularProgressIndicator(color: theme.primary),

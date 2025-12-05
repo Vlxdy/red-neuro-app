@@ -17,7 +17,7 @@ class Login extends StatefulWidget {
 class _LoginState extends State<Login> {
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeController.instance;
+    final ThemeController theme = ThemeController.instance;
     return TemplatePage(
       page: ScaffoldMessenger(
         key: loginMessenger,
@@ -28,7 +28,7 @@ class _LoginState extends State<Login> {
               padding: EdgeInsets.all(16),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
+                children: <Widget>[
                   HeaderLogin(mensaje: 'Inicia sesión con tus credenciales'),
                   SizedBox(height: 16),
                   AccountLogin(),

@@ -23,8 +23,8 @@ class ProcesarSesion extends StatefulWidget {
 }
 
 class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
-  final auth = Auth.instance;
-  final seguridad = Seguridad.instance;
+  final Auth auth = Auth.instance;
+  final Seguridad seguridad = Seguridad.instance;
   late SocketProvider socketProvider;
 
   @override
@@ -36,19 +36,19 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
 
   void inicializar() async {
     Logger.info('Verificar sesión (solo huella)');
-    final context = navigatorKey.currentContext!;
+    final BuildContext context = navigatorKey.currentContext!;
 
     // tengo huella y esa habilitado
     // tengo huella y no habilitado
     // no tengo huella
 
     try {
-      final hasFingerprint = await seguridad.hasFingeprintEnabled;
+      final bool hasFingerprint = await seguridad.hasFingeprintEnabled;
       if (await seguridad.hasBiometrics) {
         if (hasFingerprint && context.mounted) {
-          final autenticado = await verificarHuella(context);
+          final bool autenticado = await verificarHuella(context);
           if (autenticado && context.mounted) {
-            final idUsuario = await Auth.instance.idUsuario;
+            final String? idUsuario = await Auth.instance.idUsuario;
             if (idUsuario != null) {
               await socketProvider.init(idUsuario, context);
             }
@@ -69,7 +69,7 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
   }
 
   Future<bool> verificarHuella(BuildContext context) async {
-    final autenticado = await LocalSecure.autenticar(
+    final bool autenticado = await LocalSecure.autenticar(
       titulo: 'Control de ubicaciones',
       message: 'Escanea tu huella dactilar para continuar',
     );
@@ -79,7 +79,7 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeController.instance;
+    final ThemeController theme = ThemeController.instance;
     return ScaffoldMessenger(
       key: procesarSesionMessenger,
       child: Scaffold(
@@ -92,7 +92,7 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
+            children: <Widget>[
               Container(
                 height: 250,
                 width: 250,

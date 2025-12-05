@@ -26,10 +26,10 @@ class _CambiarContrasenaState extends State<CambiarContrasena> {
   final GlobalKey<FormState> _formularioKey = GlobalKey<FormState>();
   late CambiarContrasenaService _service;
 
-  final zxcvbn = Zxcvbnm();
+  final Zxcvbnm zxcvbn = Zxcvbnm();
 
   Color color(int score) {
-    final theme = ThemeController.instance;
+    final ThemeController theme = ThemeController.instance;
     switch (score) {
       case 0:
         return theme.error;
@@ -57,8 +57,9 @@ class _CambiarContrasenaState extends State<CambiarContrasena> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeController.instance;
-    final store = context.watch<CambiarContrasenaStore>();
+    final ThemeController theme = ThemeController.instance;
+    final CambiarContrasenaStore store = context
+        .watch<CambiarContrasenaStore>();
     return ScaffoldMessenger(
       key: cambiarContrasenaMessenger,
       child: Scaffold(
@@ -83,7 +84,7 @@ class _CambiarContrasenaState extends State<CambiarContrasena> {
               physics: const BouncingScrollPhysics(),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                children: <Widget>[
                   Text(
                     '* Las contraseñas deben tener 8 caracteres o más',
                     style: Theme.of(
@@ -103,7 +104,7 @@ class _CambiarContrasenaState extends State<CambiarContrasena> {
                     controller: _contrasenaActualController,
                     title: 'Contraseña actual',
                     onChange: (String? value) => store.contrasena = value ?? '',
-                    validate: (value, alias) =>
+                    validate: (String? value, String alias) =>
                         _service.validateData(context, value, alias),
                   ),
                   const SizedBox(height: 8),
@@ -115,12 +116,12 @@ class _CambiarContrasenaState extends State<CambiarContrasena> {
                     onChange: (String? value) {
                       store.nuevaContrasena = value ?? '';
                       if (value != null && value.isNotEmpty) {
-                        final result = zxcvbn(value);
+                        final Result result = zxcvbn(value);
                         // store.calificacion = result.score ?? 0.0;
                         store.calificacion = result.score.toDouble();
                       }
                     },
-                    validate: (value, alias) =>
+                    validate: (String? value, String alias) =>
                         _service.validateData(context, value, alias),
                   ),
                   _nuevaContrasenaController.text.length > 1
@@ -128,7 +129,7 @@ class _CambiarContrasenaState extends State<CambiarContrasena> {
                           padding: const EdgeInsets.only(top: 8.0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
+                            children: <Widget>[
                               Text(
                                 'Nivel de seguridad',
                                 style: Theme.of(context).textTheme.bodySmall
@@ -151,7 +152,7 @@ class _CambiarContrasenaState extends State<CambiarContrasena> {
                     title: 'Repite la nueva contraseña',
                     onChange: (String? value) =>
                         store.repiteContrasena = value ?? '',
-                    validate: (value, alias) =>
+                    validate: (String? value, String alias) =>
                         _service.validateData(context, value, alias),
                   ),
                   const SizedBox(height: 16),

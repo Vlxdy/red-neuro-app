@@ -14,14 +14,14 @@ import 'package:go_router/go_router.dart';
 class LoginService extends ServiceConfig {
   LoginService(super.urlBase, super.context);
 
-  final store = LoginStore.instance;
-  final theme = ThemeController.instance;
+  final LoginStore store = LoginStore.instance;
+  final ThemeController theme = ThemeController.instance;
 
   void login() async {
     try {
       LoadingAnimation.instance.showLoading();
       Logger.info("////////////////////////////////////_Iniciar sesion");
-      final response = await fetch(
+      final ResponseApi response = await fetch(
         '/auth',
         type: HttpProtocol.post,
         body: store.form.toJson(),
@@ -62,12 +62,12 @@ class LoginService extends ServiceConfig {
   }
 
   Future<void> recuperarCuenta(String email, String mensajeCorrecto) async {
-    final theme = ThemeController.instance;
+    final ThemeController theme = ThemeController.instance;
     try {
-      final response = await fetch(
+      final ResponseApi response = await fetch(
         '/usuarios/recuperar',
         type: HttpProtocol.post,
-        body: {'correoElectronico': email},
+        body: <String, String>{'correoElectronico': email},
       );
 
       if (response.status != StatusNetwork.connected) {

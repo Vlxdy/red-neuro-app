@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class CambiarContrasenaStore with ChangeNotifier {
   CambiarContrasenaStore._();
 
-  static final instance = CambiarContrasenaStore._();
+  static final CambiarContrasenaStore instance = CambiarContrasenaStore._();
 
   double _calificacion = 0;
   double get calificacion => _calificacion;

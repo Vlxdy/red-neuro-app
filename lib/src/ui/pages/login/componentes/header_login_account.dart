@@ -8,12 +8,12 @@ class HeaderLoginAccount extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeController.instance;
+    final ThemeController theme = ThemeController.instance;
     return Column(
-      children: [
+      children: <Widget>[
         Row(
           mainAxisSize: MainAxisSize.min,
-          children: [
+          children: <Widget>[
             Container(
               height: 200,
               width: 200,
@@ -29,7 +29,7 @@ class HeaderLoginAccount extends StatelessWidget {
         offline
             ? Row(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
+                children: <Widget>[
                   Icon(
                     Icons.signal_wifi_connected_no_internet_4_rounded,
                     color: theme.grey,

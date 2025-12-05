@@ -18,15 +18,15 @@ class PinOlvidado extends StatefulWidget {
 
 class _PinOlvidadoState extends State<PinOlvidado> {
   void logout() {
-    final theme = ThemeController.instance;
+    final ThemeController theme = ThemeController.instance;
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (BuildContext context) {
         return Dialog(
           child: ConfirmationDialog(
             title: 'Cerrar sesión',
             onConfirm: () async {
-              var error = await Auth.instance.logout();
+              String? error = await Auth.instance.logout();
               if (error != null) {
                 showSnackBar(
                   pinOlvidadoMessenger,
@@ -44,7 +44,7 @@ class _PinOlvidadoState extends State<PinOlvidado> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeController.instance;
+    final ThemeController theme = ThemeController.instance;
     return ScaffoldMessenger(
       key: pinOlvidadoMessenger,
       child: Scaffold(
@@ -54,10 +54,10 @@ class _PinOlvidadoState extends State<PinOlvidado> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Column(
-              children: [
+              children: <Widget>[
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
+                  children: <Widget>[
                     IconButton(
                       onPressed: () {
                         Navigator.pop(context);

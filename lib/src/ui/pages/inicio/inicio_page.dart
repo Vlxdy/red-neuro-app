@@ -16,7 +16,7 @@ class InicioPage extends StatefulWidget {
 
 class _InicioPageState extends State<InicioPage> with WidgetsBindingObserver {
   late InicioService service;
-  final pinStore = CodigoPinStore.instance;
+  final CodigoPinStore pinStore = CodigoPinStore.instance;
 
   @override
   void initState() {
@@ -27,7 +27,7 @@ class _InicioPageState extends State<InicioPage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeController.instance;
+    final ThemeController theme = ThemeController.instance;
 
     return ScaffoldMessenger(
       key: inicioMessenger,
@@ -36,13 +36,13 @@ class _InicioPageState extends State<InicioPage> with WidgetsBindingObserver {
         body: SafeArea(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
-            children: [
+            children: <Widget>[
               const SizedBox(height: 15),
               const SizedBox(height: 10),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: Row(
-                  children: [
+                  children: <Widget>[
                     Icon(
                       Icons.stacked_bar_chart,
                       color: theme.primary,
@@ -71,7 +71,7 @@ class _InicioPageState extends State<InicioPage> with WidgetsBindingObserver {
                   ),
                   child: SingleChildScrollView(
                     child: Column(
-                      children: [
+                      children: <Widget>[
                         const SizedBox(height: 25),
                         Text(
                           'Ventas',
@@ -163,7 +163,7 @@ class _InicioPageState extends State<InicioPage> with WidgetsBindingObserver {
         ),
         title: Row(
           mainAxisAlignment: MainAxisAlignment.start,
-          children: [
+          children: <Widget>[
             _buildChip(theme, label: combustible, color: theme.secondary),
             const SizedBox(width: 8),
             Text(

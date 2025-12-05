@@ -3,7 +3,7 @@ import 'package:red_neuro_app/src/models/login.dart';
 
 class LoginStore with ChangeNotifier {
   LoginStore._();
-  static final instance = LoginStore._();
+  static final LoginStore instance = LoginStore._();
 
   Login form = Login.empty();
 
