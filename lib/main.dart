@@ -112,7 +112,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
               ],
 
               debugShowCheckedModeBanner: false,
-              title: 'Alimenta',
+              title: 'Red Neuro',
               scaffoldMessengerKey: rootScaffoldMessengerKey,
               theme: ThemeData(
                   useMaterial3: true,

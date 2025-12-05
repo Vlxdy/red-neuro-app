@@ -1,23 +1,16 @@
 import 'package:red_neuro_app/src/config/theme_controller.dart';
-import 'package:red_neuro_app/src/plugins/estaciones/bitacora_store.dart';
-import 'package:red_neuro_app/src/features/notificaciones/stores/notificaciones_store.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:red_neuro_app/src/ui/common/badges/counter_badge.dart';
 import 'package:red_neuro_app/src/ui/common/keep_alive_page.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
-import 'package:red_neuro_app/src/ui/pages/citas_medicas/screens/citas_medicas_page.dart';
 import 'package:red_neuro_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
-import 'package:red_neuro_app/src/ui/pages/notificaciones/notificaciones_page.dart';
-import 'package:red_neuro_app/src/ui/pages/plan_nutricional/screens/plan_nutricional_page.dart';
 import 'package:red_neuro_app/src/ui/pages/mi_cuenta/mi_cuenta.dart';
 import 'package:red_neuro_app/src/ui/pages/perfil/perfil.dart';
-import 'package:red_neuro_app/src/ui/pages/carrito_compras/screens/carrito_compras_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:solar_icons/solar_icons.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
-import 'package:red_neuro_app/src/features/comentarios/comunicacion.dart';
-import 'package:provider/provider.dart';
+import 'package:red_neuro_app/src/ui/pages/placeholder/placeholder.dart';
 
 final GlobalKey<ScaffoldMessengerState> homeMessenger =
     GlobalKey<ScaffoldMessengerState>();
@@ -36,7 +29,6 @@ class _HomePageState extends State<HomePage> {
   final PageController controllerPrincipal = PageController(initialPage: 0);
   final PageController controllerSubmenu = PageController(initialPage: 0);
   late List<ChildrenItem> _itemsMenu;
-  final bitacoraStore = BitacoraStore.instance;
   final theme = ThemeController.instance;
 
   @override
@@ -44,7 +36,6 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      context.read<NotificacionesStore>().inicializar(context);
     });
   }
 
@@ -67,7 +58,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _showMenu(
-      List<ChildrenItem> itemsSubmenu, int indexPadre, String titulo) {
+    List<ChildrenItem> itemsSubmenu,
+    int indexPadre,
+    String titulo,
+  ) {
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -90,99 +84,102 @@ class _HomePageState extends State<HomePage> {
               ),
               const SizedBox(height: 12),
               GridView.builder(
-                  shrinkWrap: true,
-                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 250,
-                    mainAxisExtent: 100,
-                    mainAxisSpacing: 16,
-                    crossAxisSpacing: 16,
-                  ),
-                  itemCount: itemsSubmenu.length,
-                  itemBuilder: (context, subIndex) {
-                    final subitem = itemsSubmenu[subIndex];
-                    final badgeCount = subitem.badgeCount;
-                    final icono = Icon(
-                      subitem.iconoImagenSeleccionada,
-                      color: subitem.color,
-                      size: 28,
-                    );
-                    final iconWithBadge = badgeCount > 0
-                        ? CounterBadge(
-                            count: badgeCount,
-                            backgroundColor:
-                                subitem.color ?? theme.primary,
-                            borderColor: theme.white,
-                            child: icono,
-                            offset: const Offset(-10, -6),
-                          )
-                        : icono;
-                    return SizedBox(
-                      child: InkWell(
-                        onTap: () => {
-                          _onItemTappedSubmenu(
-                              subitem.titulo, indexPadre, subIndex),
-                          Navigator.pop(context)
-                        },
-                        borderRadius: BorderRadius.circular(16),
-                        child: Card(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          elevation: 2,
-                          child: Stack(
-                            children: [
-                              Positioned.fill(
-                                child: Align(
-                                  alignment: Alignment.center,
-                                  child: Opacity(
-                                    opacity: 0.1,
-                                    child: Icon(
-                                      subitem.iconoImagenSeleccionada,
-                                      size: 50,
-                                      color: subitem.color,
-                                    ),
+                shrinkWrap: true,
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 250,
+                  mainAxisExtent: 100,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                ),
+                itemCount: itemsSubmenu.length,
+                itemBuilder: (context, subIndex) {
+                  final subitem = itemsSubmenu[subIndex];
+                  final badgeCount = subitem.badgeCount;
+                  final icono = Icon(
+                    subitem.iconoImagenSeleccionada,
+                    color: subitem.color,
+                    size: 28,
+                  );
+                  final iconWithBadge = badgeCount > 0
+                      ? CounterBadge(
+                          count: badgeCount,
+                          backgroundColor: subitem.color ?? theme.primary,
+                          borderColor: theme.white,
+                          child: icono,
+                          offset: const Offset(-10, -6),
+                        )
+                      : icono;
+                  return SizedBox(
+                    child: InkWell(
+                      onTap: () => {
+                        _onItemTappedSubmenu(
+                          subitem.titulo,
+                          indexPadre,
+                          subIndex,
+                        ),
+                        Navigator.pop(context),
+                      },
+                      borderRadius: BorderRadius.circular(16),
+                      child: Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 2,
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: Align(
+                                alignment: Alignment.center,
+                                child: Opacity(
+                                  opacity: 0.1,
+                                  child: Icon(
+                                    subitem.iconoImagenSeleccionada,
+                                    size: 50,
+                                    color: subitem.color,
                                   ),
                                 ),
                               ),
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: subitem.color?.withAlpha(35),
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Column(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceEvenly,
-                                  children: [
-                                    Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.center,
-                                      children: [
-                                        iconWithBadge,
-                                        const SizedBox(width: 10),
-                                        Expanded(
-                                          child: Text(
-                                            subitem.titulo,
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.bold,
-                                              color: subitem.color,
-                                            ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: subitem.color?.withAlpha(35),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Column(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      iconWithBadge,
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(
+                                          subitem.titulo,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: subitem.color,
                                           ),
                                         ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
-                    );
-                  }),
+                    ),
+                  );
+                },
+              ),
               const SizedBox(height: 10),
             ],
           ),
@@ -196,13 +193,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget buildNavItem(
-      BuildContext context,
-      IconData icon,
-      String label,
-      int index,
-      List<ChildrenItem>? itemsSubmenu,
-      Color? color,
-      {int badgeCount = 0}) {
+    BuildContext context,
+    IconData icon,
+    String label,
+    int index,
+    List<ChildrenItem>? itemsSubmenu,
+    Color? color, {
+    int badgeCount = 0,
+  }) {
     final bool isSelected = _selectedIndex == index;
 
     Widget iconWidget = Icon(
@@ -223,11 +221,11 @@ class _HomePageState extends State<HomePage> {
     return GestureDetector(
       onTap: itemsSubmenu != null
           ? () => {
-                setState(() {
-                  showSubmenu = true;
-                }),
-                _showMenu(itemsSubmenu, index, label),
-              }
+              setState(() {
+                showSubmenu = true;
+              }),
+              _showMenu(itemsSubmenu, index, label),
+            }
           : () => _onItemTapped(label, index),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -241,11 +239,12 @@ class _HomePageState extends State<HomePage> {
                   ? Transform.rotate(
                       angle: 3.14 / 2,
                       child: Icon(
-                          isSelected
-                              ? SolarIconsBold.roundDoubleAltArrowLeft
-                              : SolarIconsOutline.menuDots,
-                          size: 15,
-                          color: color ?? (isSelected ? theme.primary : null)),
+                        isSelected
+                            ? SolarIconsBold.roundDoubleAltArrowLeft
+                            : SolarIconsOutline.menuDots,
+                        size: 15,
+                        color: color ?? (isSelected ? theme.primary : null),
+                      ),
                     )
                   : const SizedBox(),
             ],
@@ -270,31 +269,17 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final ThemeController theme = ThemeController.instance;
-    final notificacionesStore = context.watch<NotificacionesStore>();
     _itemsMenu = [
-      ChildrenItem(
-        iconoImagen: PhosphorIconsRegular.forkKnife,
-        iconoImagenSeleccionada: PhosphorIconsFill.forkKnife,
-        titulo: 'Mi plan',
-        children: const KeepAlivePage(child: PlanNutricionalPage()),
-      ),
-      ChildrenItem(
-        iconoImagen: PhosphorIconsRegular.shoppingCart,
-        iconoImagenSeleccionada: PhosphorIconsFill.shoppingCart,
-        titulo: 'Carrito',
-        children: const CarritoComprasKeepAlivePage(),
-      ),
-      ChildrenItem(
-        iconoImagen: SolarIconsOutline.calendar,
-        iconoImagenSeleccionada: SolarIconsBold.calendar,
-        titulo: 'Citas',
-        children: const KeepAlivePage(child: CitasMedicasPage()),
-      ),
       ChildrenItem(
         iconoImagen: PhosphorIconsRegular.chatTeardropText,
         iconoImagenSeleccionada: PhosphorIconsFill.chatTeardropText,
-        titulo: 'Consultas',
-        children: const KeepAlivePage(child: ComunicacionPage()),
+        titulo: 'Pagina ejemplo',
+        children: const KeepAlivePage(
+          child: PlaceholderPage(
+            title: "Módulo en construcción",
+            icon: Icons.build,
+          ),
+        ),
       ),
 
       // 🔹 Nuevo submenú "Cuenta"
@@ -302,7 +287,6 @@ class _HomePageState extends State<HomePage> {
         iconoImagen: SolarIconsOutline.user,
         iconoImagenSeleccionada: SolarIconsBold.user,
         titulo: 'Cuenta',
-        badgeCount: notificacionesStore.totalNoVistas,
         itemsSubmenu: [
           ChildrenItem(
             color: theme.primary,
@@ -310,14 +294,6 @@ class _HomePageState extends State<HomePage> {
             iconoImagenSeleccionada: SolarIconsBold.user,
             titulo: 'Perfil',
             children: const KeepAlivePage(child: Perfil()),
-          ),
-          ChildrenItem(
-            color: theme.primary,
-            iconoImagen: Icons.notifications_none_rounded,
-            iconoImagenSeleccionada: Icons.notifications_rounded,
-            titulo: 'Notificaciones',
-            badgeCount: notificacionesStore.totalNoVistas,
-            children: const KeepAlivePage(child: NotificacionesPage()),
           ),
           ChildrenItem(
             color: theme.primary,
@@ -338,79 +314,83 @@ class _HomePageState extends State<HomePage> {
     ];
     return TemplatePage(
       page: ScaffoldMessenger(
-          child: Scaffold(
-        backgroundColor: theme.background,
-        appBar: AppBar(
-          toolbarHeight: 0,
-          scrolledUnderElevation: 0,
-          elevation: 0,
-          systemOverlayStyle: SystemUiOverlayStyle(
-              statusBarBrightness:
-                  theme.isDark ? Brightness.dark : Brightness.light,
-              statusBarColor: theme.transparent),
-          backgroundColor: Colors.transparent,
-          centerTitle: false,
-        ),
-        body: Column(
-          children: [
-            const SizedBox(
-              height: 10,
+        child: Scaffold(
+          backgroundColor: theme.background,
+          appBar: AppBar(
+            toolbarHeight: 0,
+            scrolledUnderElevation: 0,
+            elevation: 0,
+            systemOverlayStyle: SystemUiOverlayStyle(
+              statusBarBrightness: theme.isDark
+                  ? Brightness.dark
+                  : Brightness.light,
+              statusBarColor: theme.transparent,
             ),
-            Expanded(
-              child: PageView(
-                physics: const NeverScrollableScrollPhysics(),
-                controller:
-                    showSubmenu ? controllerSubmenu : controllerPrincipal,
-                onPageChanged: (int pageIndex) {
-                  setState(() {
-                    if (showSubmenu) {
-                      _selectedSubItem = pageIndex;
-                    } else {
-                      _selectedIndex = pageIndex;
-                      _selectedSubItem = null;
-                    }
-                  });
-                },
-                children: _selectedSubItem != null
-                    ? (_itemsMenu[_selectedIndex]
-                            .itemsSubmenu
-                            ?.map((ChildrenItem item) =>
-                                item.children ?? Container())
-                            .toList() ??
-                        [])
-                    : _itemsMenu
-                        .map(
-                            (ChildrenItem item) => item.children ?? Container())
-                        .toList(),
+            backgroundColor: Colors.transparent,
+            centerTitle: false,
+          ),
+          body: Column(
+            children: [
+              const SizedBox(height: 10),
+              Expanded(
+                child: PageView(
+                  physics: const NeverScrollableScrollPhysics(),
+                  controller: showSubmenu
+                      ? controllerSubmenu
+                      : controllerPrincipal,
+                  onPageChanged: (int pageIndex) {
+                    setState(() {
+                      if (showSubmenu) {
+                        _selectedSubItem = pageIndex;
+                      } else {
+                        _selectedIndex = pageIndex;
+                        _selectedSubItem = null;
+                      }
+                    });
+                  },
+                  children: _selectedSubItem != null
+                      ? (_itemsMenu[_selectedIndex].itemsSubmenu
+                                ?.map(
+                                  (ChildrenItem item) =>
+                                      item.children ?? Container(),
+                                )
+                                .toList() ??
+                            [])
+                      : _itemsMenu
+                            .map(
+                              (ChildrenItem item) =>
+                                  item.children ?? Container(),
+                            )
+                            .toList(),
+                ),
               ),
-            )
-          ],
-        ),
-        bottomNavigationBar: BottomAppBar(
-          color: theme.background,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: _itemsMenu
-                .asMap()
-                .entries
-                .map((MapEntry<int, ChildrenItem> entry) {
-              int index = entry.key;
-              ChildrenItem item = entry.value;
-              return buildNavItem(
-                context,
-                index == _selectedIndex
-                    ? item.iconoImagenSeleccionada
-                    : item.iconoImagen,
-                item.titulo,
-                index,
-                item.itemsSubmenu,
-                item.color,
-                badgeCount: item.badgeCount,
-              );
-            }).toList(),
+            ],
+          ),
+          bottomNavigationBar: BottomAppBar(
+            color: theme.background,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: _itemsMenu.asMap().entries.map((
+                MapEntry<int, ChildrenItem> entry,
+              ) {
+                int index = entry.key;
+                ChildrenItem item = entry.value;
+                return buildNavItem(
+                  context,
+                  index == _selectedIndex
+                      ? item.iconoImagenSeleccionada
+                      : item.iconoImagen,
+                  item.titulo,
+                  index,
+                  item.itemsSubmenu,
+                  item.color,
+                  badgeCount: item.badgeCount,
+                );
+              }).toList(),
+            ),
           ),
         ),
-      )),
+      ),
     );
   }
 }
@@ -425,13 +405,14 @@ class ChildrenItem {
   List<ChildrenItem>? itemsSubmenu;
   int badgeCount;
 
-  ChildrenItem(
-      {required this.iconoImagen,
-      required this.iconoImagenSeleccionada,
-      required this.titulo,
-      this.children,
-      this.onTap,
-      this.color,
-      this.itemsSubmenu,
-      this.badgeCount = 0});
+  ChildrenItem({
+    required this.iconoImagen,
+    required this.iconoImagenSeleccionada,
+    required this.titulo,
+    this.children,
+    this.onTap,
+    this.color,
+    this.itemsSubmenu,
+    this.badgeCount = 0,
+  });
 }
