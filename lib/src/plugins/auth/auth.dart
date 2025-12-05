@@ -59,8 +59,10 @@ class Auth {
 
   Future<void> login(Map<String, dynamic> json) async {
     final user = Usuario.fromJson(json);
-    final String token = json[Keys.accessToken] ?? '';
-    final String refreshToken = json[Keys.refreshToken] ?? '';
+    final String token =
+        json[Keys.accessToken] ?? json['accessToken'] ?? json['token'] ?? '';
+    final String refreshToken =
+        json[Keys.refreshToken] ?? json['refreshToken'] ?? '';
 
     if (token.isNotEmpty) {
       await _preferencesService.setStringSecure(
