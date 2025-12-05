@@ -1,0 +1,4161 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/estado": {
+      "get": {
+        "operationId": "AppController_verificarEstado",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/EstadoDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "API para obtener el estado de la aplicación",
+        "tags": [
+          "Estado"
+        ]
+      }
+    },
+    "/autorizacion/politicas": {
+      "post": {
+        "operationId": "AuthorizationController_crearPolitica",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Esta API permite crear una nueva política de autorización utilizando los datos proporcionados en el cuerpo de la solicitud.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PoliticaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "API para crear una nueva política",
+        "tags": [
+          "Autorización"
+        ]
+      },
+      "patch": {
+        "operationId": "AuthorizationController_actualizarPolitica",
+        "parameters": [
+          {
+            "name": "sujeto",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "ADMINISTRADOR",
+              "type": "string"
+            }
+          },
+          {
+            "name": "objeto",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "/admin/parametros",
+              "type": "string"
+            }
+          },
+          {
+            "name": "accion",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "create|update|delete|read",
+              "type": "string"
+            }
+          },
+          {
+            "name": "app",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "frontend",
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "query",
+            "schema": {}
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Esta API permite actualizar una política de autorización existente utilizando los datos proporcionados en el cuerpo de la solicitud.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PoliticaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "API para actualizar una nueva política",
+        "tags": [
+          "Autorización"
+        ]
+      },
+      "get": {
+        "operationId": "AuthorizationController_listarPoliticas",
+        "parameters": [
+          {
+            "name": "limite",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 10,
+              "maximum": 50,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pagina",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "filtro",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ordenRaw",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "query",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/FiltrosPoliticasDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "API para obtener el listado de politicas",
+        "tags": [
+          "Autorización"
+        ]
+      },
+      "delete": {
+        "operationId": "AuthorizationController_eliminarPolitica",
+        "parameters": [
+          {
+            "name": "sujeto",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "ADMINISTRADOR",
+              "type": "string"
+            }
+          },
+          {
+            "name": "objeto",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "/admin/parametros",
+              "type": "string"
+            }
+          },
+          {
+            "name": "accion",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "create|update|delete|read",
+              "type": "string"
+            }
+          },
+          {
+            "name": "app",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "frontend",
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "query",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "API para eliminar una política",
+        "tags": [
+          "Autorización"
+        ]
+      }
+    },
+    "/autorizacion/permisos": {
+      "get": {
+        "operationId": "AuthorizationController_obtenerRoles",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "API para obtener las politicas definidas en formato CASBIN",
+        "tags": [
+          "Autorización"
+        ]
+      }
+    },
+    "/autorizacion/roles": {
+      "get": {
+        "operationId": "RolController_listar",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "API para obtener el listado de Roles",
+        "tags": [
+          "Roles"
+        ]
+      },
+      "post": {
+        "operationId": "RolController_crear",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Esta API permite crear un nuevo rol utilizando los datos proporcionados en el cuerpo de la solicitud.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearRolDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "API para crear un rol",
+        "tags": [
+          "Roles"
+        ]
+      }
+    },
+    "/autorizacion/roles/todos": {
+      "get": {
+        "operationId": "RolController_listarTodos",
+        "parameters": [
+          {
+            "name": "limite",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 10,
+              "maximum": 50,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pagina",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "filtro",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ordenRaw",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "API para obtener el listado de todos los Roles",
+        "tags": [
+          "Roles"
+        ]
+      }
+    },
+    "/autorizacion/roles/{id}": {
+      "patch": {
+        "operationId": "RolController_actualizar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Esta API permite actualizar un rol existente utilizando los datos proporcionados en el cuerpo de la solicitud.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActualizarRolDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "API para actualizar un rol",
+        "tags": [
+          "Roles"
+        ]
+      }
+    },
+    "/autorizacion/roles/{id}/activacion": {
+      "patch": {
+        "operationId": "RolController_activar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "API para activar un rol",
+        "tags": [
+          "Roles"
+        ]
+      }
+    },
+    "/autorizacion/roles/{id}/inactivacion": {
+      "patch": {
+        "operationId": "RolController_inactivar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "API para inactivar un rol",
+        "tags": [
+          "Roles"
+        ]
+      }
+    },
+    "/autorizacion/modulos": {
+      "get": {
+        "operationId": "ModuloController_listar",
+        "parameters": [
+          {
+            "name": "limite",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 10,
+              "maximum": 50,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pagina",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "filtro",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ordenRaw",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "API para obtener el listado de Módulos",
+        "tags": [
+          "Módulos"
+        ]
+      },
+      "post": {
+        "operationId": "ModuloController_crear",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Esta API permite crear un nuevo módulo utilizando los datos proporcionados en el cuerpo de la solicitud.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearModuloDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "API para crear un Módulo",
+        "tags": [
+          "Módulos"
+        ]
+      },
+      "delete": {
+        "operationId": "ModuloController_eliminar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "API para eliminar un Módulo",
+        "tags": [
+          "Módulos"
+        ]
+      }
+    },
+    "/autorizacion/modulos/{id}": {
+      "patch": {
+        "operationId": "ModuloController_actualizar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Esta API permite actualizar un módulo existente utilizando los datos proporcionados en el cuerpo de la solicitud.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActualizarModuloDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "API para actualizar un Módulo",
+        "tags": [
+          "Módulos"
+        ]
+      }
+    },
+    "/autorizacion/modulos/{id}/activacion": {
+      "patch": {
+        "operationId": "ModuloController_activar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "API para activar un Módulo",
+        "tags": [
+          "Módulos"
+        ]
+      }
+    },
+    "/autorizacion/modulos/{id}/inactivacion": {
+      "patch": {
+        "operationId": "ModuloController_inactivar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "API para inactivar un Módulo",
+        "tags": [
+          "Módulos"
+        ]
+      }
+    },
+    "/auth": {
+      "post": {
+        "operationId": "AuthenticationController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Autenticación de usuarios",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/AuthResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "API para autenticación con usuario y contraseña",
+        "tags": [
+          "Autenticación"
+        ]
+      }
+    },
+    "/cambiarRol": {
+      "patch": {
+        "operationId": "AuthenticationController_changeRol",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CambioRolDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "Autenticación"
+        ]
+      }
+    },
+    "/ciudadania-auth": {
+      "get": {
+        "operationId": "AuthenticationController_loginCiudadania",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/EmptyDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "API para autenticación con ciudadania digital",
+        "tags": [
+          "Autenticación"
+        ]
+      }
+    },
+    "/ciudadania-autorizar": {
+      "get": {
+        "operationId": "AuthenticationController_loginCiudadaniaCallback",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/AccessTokenDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "API para autorización con Ciudadanía Digital",
+        "tags": [
+          "Autenticación"
+        ]
+      }
+    },
+    "/logout": {
+      "get": {
+        "operationId": "AuthenticationController_salirCiudadania",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/EmptyDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "API para logout digital",
+        "tags": [
+          "Autenticación"
+        ]
+      }
+    },
+    "/token": {
+      "post": {
+        "operationId": "RefreshTokensController_getAccessToken",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/AuthResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "API que actualiza el token de acceso usando un refresh token",
+        "tags": [
+          "Refresh Token"
+        ]
+      }
+    },
+    "/{id}": {
+      "delete": {
+        "operationId": "RefreshTokensController_eliminarRefreshToken",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/DeleteResultDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "API que elimina el refresh token",
+        "tags": [
+          "Refresh Token"
+        ]
+      }
+    },
+    "/usuarios": {
+      "get": {
+        "operationId": "UsuarioController_listar",
+        "parameters": [
+          {
+            "name": "limite",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 10,
+              "maximum": 50,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pagina",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "filtro",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ordenRaw",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "API para obtener el listado de usuarios",
+        "tags": [
+          "Usuarios"
+        ]
+      },
+      "post": {
+        "operationId": "UsuarioController_crear",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Esta API permite crear un nuevo usuario utilizando los datos proporcionados en el cuerpo de la solicitud.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearUsuarioDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "API para crear un nuevo usuario",
+        "tags": [
+          "Usuarios"
+        ]
+      }
+    },
+    "/usuarios/cuenta/perfil": {
+      "get": {
+        "operationId": "UsuarioController_obtenerPerfil",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Obtiene la información del perfil del usuario",
+        "tags": [
+          "Usuarios"
+        ]
+      },
+      "patch": {
+        "operationId": "UsuarioController_actualizarPerfil",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActualizarPerfilDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Actualiza el perfil del usuario",
+        "tags": [
+          "Usuarios"
+        ]
+      }
+    },
+    "/usuarios/{id}": {
+      "get": {
+        "operationId": "UsuarioController_getUsuarioPorId",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Obtiene la información de un usuario por su ID",
+        "tags": [
+          "Usuarios"
+        ]
+      },
+      "patch": {
+        "operationId": "UsuarioController_actualizarDatos",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "description": "Esta API permite actualizar los datos de un usuario utilizando los atributos proporcionados en el cuerpo de la solicitud.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActualizarUsuarioRolDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Actualiza datos de un usuario",
+        "tags": [
+          "Usuarios"
+        ]
+      }
+    },
+    "/usuarios/crear-cuenta": {
+      "post": {
+        "operationId": "UsuarioController_crearUsuario",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearUsuarioCuentaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "API para crear una nueva Cuenta",
+        "tags": [
+          "Usuarios"
+        ]
+      }
+    },
+    "/usuarios/cuenta/foto": {
+      "patch": {
+        "operationId": "UsuarioController_actualizarFotoPerfil",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "foto": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Actualiza la foto de perfil del usuario",
+        "tags": [
+          "Usuarios"
+        ]
+      },
+      "delete": {
+        "operationId": "UsuarioController_eliminarFotoPerfil",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Usuarios"
+        ]
+      }
+    },
+    "/usuarios/recuperar": {
+      "post": {
+        "operationId": "UsuarioController_recuperarCuenta",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Esta API permite recuperar una cuenta de usuario utilizando los datos proporcionados en el cuerpo de la solicitud.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecuperarCuentaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "API para recuperar una Cuenta",
+        "tags": [
+          "Usuarios"
+        ]
+      }
+    },
+    "/usuarios/validar-recuperar": {
+      "post": {
+        "operationId": "UsuarioController_validarRecuperarCuenta",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Esta API permite validar la recuperación de una cuenta de usuario utilizando los datos proporcionados en el cuerpo de la solicitud.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidarRecuperarCuentaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "API para validar recuperación una Cuenta",
+        "tags": [
+          "Usuarios"
+        ]
+      }
+    },
+    "/usuarios/cuenta/activacion": {
+      "patch": {
+        "operationId": "UsuarioController_activarCuenta",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Esta API permite activar una cuenta de usuario utilizando el código de activación proporcionado en el cuerpo de la solicitud.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActivarCuentaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "API para activar una Cuenta",
+        "tags": [
+          "Usuarios"
+        ]
+      }
+    },
+    "/usuarios/cuenta/nueva-contrasena": {
+      "patch": {
+        "operationId": "UsuarioController_nuevaContrasena",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Esta API permite establecer una nueva contraseña para una cuenta de usuario utilizando los datos proporcionados en el cuerpo de la solicitud.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NuevaContrasenaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "API para nueva Contraseña",
+        "tags": [
+          "Usuarios"
+        ]
+      }
+    },
+    "/usuarios/cuenta/ciudadania": {
+      "post": {
+        "operationId": "UsuarioController_crearConCiudadania",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearUsuarioCiudadaniaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "API para crear un nuevo usuario relacionado con Ciudadanía Digital",
+        "tags": [
+          "Usuarios"
+        ]
+      }
+    },
+    "/usuarios/{id}/activacion": {
+      "patch": {
+        "operationId": "UsuarioController_activar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Activa un usuario",
+        "tags": [
+          "Usuarios"
+        ]
+      }
+    },
+    "/usuarios/{id}/inactivacion": {
+      "patch": {
+        "operationId": "UsuarioController_inactivar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Inactiva un usuario",
+        "tags": [
+          "Usuarios"
+        ]
+      }
+    },
+    "/usuarios/cuenta/contrasena": {
+      "patch": {
+        "operationId": "UsuarioController_actualizarContrasena",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "description": "Esta API permite actualizar la contraseña de un usuario autenticado utilizando los datos proporcionados en el cuerpo de la solicitud.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActualizarContrasenaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Actualiza la contrasena de un usuario authenticado",
+        "tags": [
+          "Usuarios"
+        ]
+      }
+    },
+    "/usuarios/{id}/restauracion": {
+      "patch": {
+        "operationId": "UsuarioController_restaurarContrasena",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "API para restaurar la contraseña de un usuario",
+        "tags": [
+          "Usuarios"
+        ]
+      }
+    },
+    "/usuarios/{id}/reenviar": {
+      "patch": {
+        "operationId": "UsuarioController_reenviarCorreoActivacion",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "API para reenviar Correo Activación",
+        "tags": [
+          "Usuarios"
+        ]
+      }
+    },
+    "/usuarios/cuenta/desbloqueo": {
+      "get": {
+        "operationId": "UsuarioController_desbloquearCuenta",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/ParamUuidDto"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Desbloquea una cuenta bloqueada por muchos intentos fallidos",
+        "tags": [
+          "Usuarios"
+        ]
+      }
+    },
+    "/usuarios/test/codigo/{id}": {
+      "get": {
+        "operationId": "UsuarioController_obtenerCodigo",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "Usuarios"
+        ]
+      }
+    },
+    "/uploads/profile-photos/{filename}": {
+      "get": {
+        "operationId": "FileController_serveProfilePhoto",
+        "parameters": [
+          {
+            "name": "filename",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "File"
+        ]
+      }
+    },
+    "/uploads/food/{filename}": {
+      "get": {
+        "operationId": "FileController_serveAlimentos",
+        "parameters": [
+          {
+            "name": "filename",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "tags": [
+          "File"
+        ]
+      }
+    },
+    "/citas": {
+      "get": {
+        "operationId": "CitasController_listar",
+        "parameters": [
+          {
+            "name": "fechaInicio",
+            "required": false,
+            "in": "query",
+            "description": "Fecha de inicio (ISO)",
+            "schema": {
+              "example": "2024-06-01T08:00:00Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "fechaFin",
+            "required": false,
+            "in": "query",
+            "description": "Fecha de fin (ISO)",
+            "schema": {
+              "example": "2024-06-30T23:59:59Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "medicoId",
+            "required": false,
+            "in": "query",
+            "description": "Identificador del médico",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          },
+          {
+            "name": "estado",
+            "required": false,
+            "in": "query",
+            "description": "Filtrar por estado",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "INACTIVO",
+                "BORRADOR",
+                "SOLICITADA",
+                "CONFIRMADA",
+                "EN_CURSO",
+                "COMPLETADA",
+                "NO_ASISTIO",
+                "CANCELADA",
+                "RECHAZADA"
+              ]
+            }
+          },
+          {
+            "name": "etiquetaId",
+            "required": false,
+            "in": "query",
+            "description": "Filtrar por etiqueta",
+            "schema": {
+              "example": "tag-1",
+              "type": "string"
+            }
+          },
+          {
+            "name": "agrupadorId",
+            "required": false,
+            "in": "query",
+            "description": "Filtrar por agrupador",
+            "schema": {
+              "example": "grp-1",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/CitaResponseDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lista todas las citas con filtros opcionales",
+        "tags": [
+          "Gestión de Citas"
+        ]
+      },
+      "post": {
+        "operationId": "CitasController_crear",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearCitaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/CitaResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Crea una nueva cita",
+        "tags": [
+          "Gestión de Citas"
+        ]
+      }
+    },
+    "/citas/mis-citas": {
+      "get": {
+        "operationId": "CitasController_listarMisCitas",
+        "parameters": [
+          {
+            "name": "fechaInicio",
+            "required": false,
+            "in": "query",
+            "description": "Fecha de inicio (ISO)",
+            "schema": {
+              "example": "2024-06-01T08:00:00Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "fechaFin",
+            "required": false,
+            "in": "query",
+            "description": "Fecha de fin (ISO)",
+            "schema": {
+              "example": "2024-06-30T23:59:59Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "medicoId",
+            "required": false,
+            "in": "query",
+            "description": "Identificador del médico",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          },
+          {
+            "name": "estado",
+            "required": false,
+            "in": "query",
+            "description": "Filtrar por estado",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "INACTIVO",
+                "BORRADOR",
+                "SOLICITADA",
+                "CONFIRMADA",
+                "EN_CURSO",
+                "COMPLETADA",
+                "NO_ASISTIO",
+                "CANCELADA",
+                "RECHAZADA"
+              ]
+            }
+          },
+          {
+            "name": "etiquetaId",
+            "required": false,
+            "in": "query",
+            "description": "Filtrar por etiqueta",
+            "schema": {
+              "example": "tag-1",
+              "type": "string"
+            }
+          },
+          {
+            "name": "agrupadorId",
+            "required": false,
+            "in": "query",
+            "description": "Filtrar por agrupador",
+            "schema": {
+              "example": "grp-1",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/CitaResponseDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lista solamente las citas del médico autenticado",
+        "tags": [
+          "Gestión de Citas"
+        ]
+      }
+    },
+    "/citas/{id}": {
+      "get": {
+        "operationId": "CitasController_obtener",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/CitaResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Obtiene el detalle de una cita",
+        "tags": [
+          "Gestión de Citas"
+        ]
+      },
+      "patch": {
+        "operationId": "CitasController_actualizar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActualizarCitaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/CitaResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Actualiza datos generales de la cita",
+        "tags": [
+          "Gestión de Citas"
+        ]
+      }
+    },
+    "/citas/{id}/estado": {
+      "patch": {
+        "operationId": "CitasController_actualizarEstado",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActualizarEstadoCitaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/CitaResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Actualiza únicamente el estado de la cita",
+        "tags": [
+          "Gestión de Citas"
+        ]
+      }
+    },
+    "/citas/{id}/reprogramar": {
+      "patch": {
+        "operationId": "CitasController_reprogramar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReprogramarCitaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/CitaResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reprograma la fecha y hora de la cita",
+        "tags": [
+          "Gestión de Citas"
+        ]
+      }
+    },
+    "/citas/{id}/cancelar": {
+      "patch": {
+        "operationId": "CitasController_cancelar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelarCitaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/CitaResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancela una cita",
+        "tags": [
+          "Gestión de Citas"
+        ]
+      }
+    },
+    "/citas/{id}/etiquetas": {
+      "patch": {
+        "operationId": "CitasController_actualizarEtiquetas",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActualizarEtiquetasCitaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/CitaResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Define las etiquetas de una cita",
+        "tags": [
+          "Gestión de Citas"
+        ]
+      }
+    },
+    "/citas/{id}/agrupador": {
+      "patch": {
+        "operationId": "CitasController_actualizarAgrupador",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActualizarAgrupadorCitaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/CitaResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Asigna un agrupador a la cita",
+        "tags": [
+          "Gestión de Citas"
+        ]
+      }
+    },
+    "/etiquetas": {
+      "get": {
+        "operationId": "EtiquetasController_listar",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/EtiquetaResponseDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lista todas las etiquetas disponibles",
+        "tags": [
+          "Etiquetas de Citas"
+        ]
+      },
+      "post": {
+        "operationId": "EtiquetasController_crear",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearEtiquetaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/EtiquetaResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Crea una nueva etiqueta",
+        "tags": [
+          "Etiquetas de Citas"
+        ]
+      }
+    },
+    "/etiquetas/{id}": {
+      "get": {
+        "operationId": "EtiquetasController_obtener",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/EtiquetaResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Obtiene una etiqueta por su identificador",
+        "tags": [
+          "Etiquetas de Citas"
+        ]
+      },
+      "patch": {
+        "operationId": "EtiquetasController_actualizar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActualizarEtiquetaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/EtiquetaResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Actualiza una etiqueta existente",
+        "tags": [
+          "Etiquetas de Citas"
+        ]
+      },
+      "delete": {
+        "operationId": "EtiquetasController_eliminar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/EtiquetaDeleteResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Elimina una etiqueta y la retira de las citas asociadas",
+        "tags": [
+          "Etiquetas de Citas"
+        ]
+      }
+    },
+    "/agrupadores": {
+      "get": {
+        "operationId": "AgrupadoresController_listar",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/AgrupadorResponseDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lista los ambientes o agrupadores configurados",
+        "tags": [
+          "Ambientes / Agrupadores de Citas"
+        ]
+      },
+      "post": {
+        "operationId": "AgrupadoresController_crear",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearAgrupadorDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/AgrupadorResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Crea un nuevo ambiente o agrupador",
+        "tags": [
+          "Ambientes / Agrupadores de Citas"
+        ]
+      }
+    },
+    "/agrupadores/{id}": {
+      "get": {
+        "operationId": "AgrupadoresController_obtener",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/AgrupadorResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Obtiene un ambiente/agrupador específico",
+        "tags": [
+          "Ambientes / Agrupadores de Citas"
+        ]
+      },
+      "patch": {
+        "operationId": "AgrupadoresController_actualizar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActualizarAgrupadorDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/AgrupadorResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Actualiza la información de un ambiente/agrupador",
+        "tags": [
+          "Ambientes / Agrupadores de Citas"
+        ]
+      },
+      "delete": {
+        "operationId": "AgrupadoresController_eliminar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/AgrupadorDeleteResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Elimina un ambiente/agrupador",
+        "tags": [
+          "Ambientes / Agrupadores de Citas"
+        ]
+      }
+    },
+    "/docs/errors/estructura": {
+      "get": {
+        "description": "Todos los errores de la API siguen esta estructura JSON.",
+        "operationId": "SwaggerErrorsDocumentationController_docErrorStructure",
+        "parameters": [],
+        "responses": {
+          "400": {
+            "description": "Solicitud inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No autorizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Acceso prohibido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Recurso no encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "412": {
+            "description": "Precondición fallida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error interno del servidor",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Estructura general del error",
+        "tags": [
+          "Catálogo de errores"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Backend Base",
+    "description": "Documentación del Proyecto base BACKEND",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [
+    {
+      "url": "http://localhost:4500/api/"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {
+      "BaseResponseDto": {
+        "type": "object",
+        "properties": {
+          "finalizado": {
+            "type": "boolean",
+            "example": true
+          },
+          "mensaje": {
+            "type": "string",
+            "example": "¡Tarea completada con éxito!"
+          },
+          "datos": {
+            "type": "object",
+            "description": "Contenido de la respuesta"
+          }
+        },
+        "required": [
+          "finalizado",
+          "mensaje",
+          "datos"
+        ]
+      },
+      "EstadoDto": {
+        "type": "object",
+        "properties": {
+          "servicio": {
+            "type": "string",
+            "example": "redneuro-backend"
+          },
+          "version": {
+            "type": "string",
+            "example": "1.12.0"
+          },
+          "entorno": {
+            "type": "string",
+            "example": "development"
+          },
+          "estado": {
+            "type": "string",
+            "example": "Activo"
+          },
+          "commit_sha": {
+            "type": "string",
+            "nullable": true,
+            "example": null
+          },
+          "mensaje": {
+            "type": "string",
+            "nullable": true,
+            "example": null
+          },
+          "branch": {
+            "type": "string",
+            "nullable": true,
+            "example": null
+          },
+          "fecha": {
+            "type": "string",
+            "example": "2025-11-28 12:04:12.954"
+          },
+          "hora": {
+            "type": "number",
+            "example": 1711826427027
+          }
+        },
+        "required": [
+          "servicio",
+          "version",
+          "entorno",
+          "estado",
+          "commit_sha",
+          "mensaje",
+          "branch",
+          "fecha",
+          "hora"
+        ]
+      },
+      "PoliticaDto": {
+        "type": "object",
+        "properties": {
+          "sujeto": {
+            "type": "string",
+            "example": "ADMINISTRADOR"
+          },
+          "objeto": {
+            "type": "string",
+            "example": "/admin/parametros"
+          },
+          "accion": {
+            "type": "string",
+            "example": "create|update|delete|read"
+          },
+          "app": {
+            "type": "string",
+            "example": "frontend"
+          }
+        },
+        "required": [
+          "sujeto",
+          "objeto",
+          "accion",
+          "app"
+        ]
+      },
+      "FiltrosPoliticasDto": {
+        "type": "object",
+        "properties": {
+          "limite": {
+            "type": "number",
+            "minimum": 10,
+            "maximum": 50,
+            "default": 10
+          },
+          "pagina": {
+            "type": "number",
+            "minimum": 1,
+            "default": 1
+          },
+          "filtro": {
+            "type": "string"
+          },
+          "ordenRaw": {
+            "type": "string"
+          }
+        }
+      },
+      "CrearRolDto": {
+        "type": "object",
+        "properties": {
+          "rol": {
+            "type": "string",
+            "example": "CONSULTA"
+          },
+          "nombre": {
+            "type": "string",
+            "example": "Consulta"
+          },
+          "descripcion": {
+            "type": "string",
+            "example": "Descripción"
+          },
+          "estado": {
+            "type": "string",
+            "example": "ACTIVO"
+          }
+        },
+        "required": [
+          "rol",
+          "nombre",
+          "descripcion",
+          "estado"
+        ]
+      },
+      "ActualizarRolDto": {
+        "type": "object",
+        "properties": {
+          "rol": {
+            "type": "string",
+            "example": "ADMINISTRADOR"
+          },
+          "nombre": {
+            "type": "string",
+            "example": "Administrador"
+          },
+          "descripcion": {
+            "type": "string",
+            "example": "Descripción"
+          },
+          "estado": {
+            "type": "string",
+            "example": "ACTIVO"
+          }
+        },
+        "required": [
+          "rol",
+          "nombre",
+          "descripcion",
+          "estado"
+        ]
+      },
+      "PropiedadesDto": {
+        "type": "object",
+        "properties": {
+          "icono": {
+            "type": "string",
+            "example": "dashboard"
+          },
+          "descripcion": {
+            "type": "string",
+            "example": "Módulo de estadísticas"
+          },
+          "orden": {
+            "type": "number",
+            "example": 7
+          }
+        },
+        "required": [
+          "icono",
+          "descripcion",
+          "orden"
+        ]
+      },
+      "CrearModuloDto": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "example": "Estadísticas"
+          },
+          "url": {
+            "type": "string",
+            "example": "/admin/estadisticas"
+          },
+          "nombre": {
+            "type": "string",
+            "example": "Estadísticas"
+          },
+          "propiedades": {
+            "$ref": "#/components/schemas/PropiedadesDto"
+          },
+          "estado": {
+            "type": "string",
+            "example": "ACTIVO"
+          }
+        },
+        "required": [
+          "label",
+          "url",
+          "nombre",
+          "propiedades",
+          "estado"
+        ]
+      },
+      "ActualizarModuloDto": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "example": "Trámites"
+          },
+          "url": {
+            "type": "string",
+            "example": "/admin/tramites"
+          },
+          "nombre": {
+            "type": "string",
+            "example": "Módulo de trámites"
+          },
+          "propiedades": {
+            "$ref": "#/components/schemas/PropiedadesDto"
+          },
+          "estado": {
+            "type": "string",
+            "example": "ACTIVO"
+          }
+        },
+        "required": [
+          "label",
+          "url",
+          "nombre",
+          "propiedades",
+          "estado"
+        ]
+      },
+      "PersonaDto": {
+        "type": "object",
+        "properties": {
+          "nroDocumento": {
+            "type": "string",
+            "example": "4192299"
+          },
+          "nombres": {
+            "type": "string",
+            "example": "MARIELA"
+          },
+          "primerApellido": {
+            "type": "object",
+            "example": "ALCAZAR"
+          },
+          "segundoApellido": {
+            "type": "object",
+            "example": "ALMARAZ"
+          },
+          "fechaNacimiento": {
+            "type": "object",
+            "example": "2002-05-04"
+          },
+          "telefono": {
+            "type": "object",
+            "example": "71234567"
+          },
+          "genero": {
+            "type": "object",
+            "example": "F"
+          }
+        },
+        "required": [
+          "nroDocumento",
+          "nombres",
+          "primerApellido",
+          "segundoApellido",
+          "fechaNacimiento",
+          "telefono",
+          "genero"
+        ]
+      },
+      "ModuloPropiedadesDto": {
+        "type": "object",
+        "properties": {
+          "icono": {
+            "type": "object",
+            "example": "dashboard",
+            "nullable": true
+          },
+          "descripcion": {
+            "type": "object",
+            "example": "Módulo de estadísticas",
+            "nullable": true
+          },
+          "orden": {
+            "type": "number",
+            "example": 1
+          }
+        },
+        "required": [
+          "icono",
+          "descripcion",
+          "orden"
+        ]
+      },
+      "ModuloSubModuloDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "1"
+          },
+          "label": {
+            "type": "string",
+            "example": "Dashboard"
+          },
+          "url": {
+            "type": "string",
+            "example": "/admin/dashboard"
+          },
+          "nombre": {
+            "type": "string",
+            "example": "Dashboard"
+          },
+          "propiedades": {
+            "$ref": "#/components/schemas/ModuloPropiedadesDto"
+          },
+          "estado": {
+            "type": "string",
+            "example": "ACTIVE"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "url",
+          "nombre",
+          "propiedades",
+          "estado"
+        ]
+      },
+      "ModuloPermisoDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "1"
+          },
+          "label": {
+            "type": "string",
+            "example": "Dashboard"
+          },
+          "url": {
+            "type": "string",
+            "example": "/admin/dashboard"
+          },
+          "nombre": {
+            "type": "string",
+            "example": "Dashboard"
+          },
+          "propiedades": {
+            "$ref": "#/components/schemas/ModuloPropiedadesDto"
+          },
+          "estado": {
+            "type": "string",
+            "example": "ACTIVE"
+          },
+          "subModulo": {
+            "description": "Listado de submódulos habilitados para el rol",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModuloSubModuloDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "url",
+          "nombre",
+          "propiedades",
+          "estado",
+          "subModulo"
+        ]
+      },
+      "RolAutenticadoDto": {
+        "type": "object",
+        "properties": {
+          "idUsuarioRol": {
+            "type": "string",
+            "example": "2"
+          },
+          "idRol": {
+            "type": "string",
+            "example": "1"
+          },
+          "rol": {
+            "type": "string",
+            "example": "ADMINISTRADOR"
+          },
+          "nombre": {
+            "type": "object",
+            "example": "Administrador del sistema",
+            "nullable": true
+          },
+          "descripcion": {
+            "type": "object",
+            "example": "Rol con acceso completo a los módulos del sistema",
+            "nullable": true
+          },
+          "modulos": {
+            "description": "Listado de módulos y permisos habilitados para el rol",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ModuloPermisoDto"
+            }
+          }
+        },
+        "required": [
+          "idUsuarioRol",
+          "idRol",
+          "rol",
+          "nombre",
+          "descripcion",
+          "modulos"
+        ]
+      },
+      "AuthResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "1"
+          },
+          "usuario": {
+            "type": "string",
+            "example": "usuario.demo"
+          },
+          "correoElectronico": {
+            "type": "object",
+            "example": "demo@correo.bo",
+            "nullable": true
+          },
+          "urlFoto": {
+            "type": "object",
+            "example": "https://mi-servidor.com/usuario.png",
+            "nullable": true
+          },
+          "estado": {
+            "type": "string",
+            "example": "ACTIVE"
+          },
+          "persona": {
+            "$ref": "#/components/schemas/PersonaDto"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RolAutenticadoDto"
+            }
+          },
+          "access_token": {
+            "type": "string",
+            "description": "Token de acceso generado para el usuario"
+          },
+          "idUsuarioRol": {
+            "type": "string",
+            "example": "2",
+            "nullable": true
+          },
+          "idRol": {
+            "type": "string",
+            "example": "1"
+          },
+          "rol": {
+            "type": "string",
+            "example": "ADMINISTRADOR"
+          }
+        },
+        "required": [
+          "id",
+          "usuario",
+          "correoElectronico",
+          "urlFoto",
+          "estado",
+          "persona",
+          "roles",
+          "access_token",
+          "idUsuarioRol",
+          "idRol",
+          "rol"
+        ]
+      },
+      "AuthDto": {
+        "type": "object",
+        "properties": {
+          "usuario": {
+            "type": "string",
+            "example": "ADMINISTRADOR",
+            "description": "Usuario"
+          },
+          "contrasena": {
+            "type": "string",
+            "example": "MTIz",
+            "description": "Contraseña"
+          }
+        },
+        "required": [
+          "usuario",
+          "contrasena"
+        ]
+      },
+      "CambioRolDto": {
+        "type": "object",
+        "properties": {
+          "idRol": {
+            "type": "string",
+            "example": "1"
+          }
+        },
+        "required": [
+          "idRol"
+        ]
+      },
+      "EmptyDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "AccessTokenDto": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          }
+        },
+        "required": [
+          "access_token"
+        ]
+      },
+      "TokenDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "example": ""
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "DeleteResultDto": {
+        "type": "object",
+        "properties": {
+          "affected": {
+            "type": "number",
+            "example": 1
+          },
+          "raw": {
+            "type": "object"
+          }
+        }
+      },
+      "CrearUsuarioDto": {
+        "type": "object",
+        "properties": {
+          "contrasena": {
+            "type": "string",
+            "example": "AGEPIC.admin135"
+          },
+          "repetirContrasena": {
+            "type": "string",
+            "example": "AGEPIC.admin135"
+          },
+          "correoElectronico": {
+            "type": "string",
+            "example": "123456@gmail.com"
+          },
+          "persona": {
+            "$ref": "#/components/schemas/PersonaDto"
+          },
+          "roles": {
+            "example": [
+              "1"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "contrasena",
+          "repetirContrasena",
+          "correoElectronico",
+          "persona",
+          "roles"
+        ]
+      },
+      "CustomPersonaDto": {
+        "type": "object",
+        "properties": {
+          "nroDocumento": {
+            "type": "string",
+            "example": "4192299"
+          },
+          "nombres": {
+            "type": "string",
+            "example": "MARIELA"
+          },
+          "primerApellido": {
+            "type": "object",
+            "example": "ALCAZAR"
+          },
+          "segundoApellido": {
+            "type": "object",
+            "example": "ALMARAZ"
+          },
+          "fechaNacimiento": {
+            "type": "object",
+            "example": "2002-05-04"
+          },
+          "telefono": {
+            "type": "object",
+            "example": "71234567"
+          },
+          "genero": {
+            "type": "object",
+            "example": "F"
+          }
+        },
+        "required": [
+          "nroDocumento",
+          "nombres",
+          "primerApellido",
+          "segundoApellido",
+          "fechaNacimiento",
+          "telefono",
+          "genero"
+        ]
+      },
+      "CrearUsuarioCuentaDto": {
+        "type": "object",
+        "properties": {
+          "persona": {
+            "$ref": "#/components/schemas/CustomPersonaDto"
+          },
+          "correoElectronico": {
+            "type": "string",
+            "example": "123456@gmail.com"
+          },
+          "contrasenaNueva": {
+            "type": "string",
+            "example": "AGEPIC.admin135"
+          }
+        },
+        "required": [
+          "persona",
+          "correoElectronico",
+          "contrasenaNueva"
+        ]
+      },
+      "ActualizarPerfilDto": {
+        "type": "object",
+        "properties": {}
+      },
+      "RecuperarCuentaDto": {
+        "type": "object",
+        "properties": {
+          "correoElectronico": {
+            "type": "string",
+            "example": "123456@gmail.com"
+          }
+        },
+        "required": [
+          "correoElectronico"
+        ]
+      },
+      "ValidarRecuperarCuentaDto": {
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "codigo"
+        ]
+      },
+      "ActivarCuentaDto": {
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "codigo"
+        ]
+      },
+      "NuevaContrasenaDto": {
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "type": "string"
+          },
+          "contrasenaNueva": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "codigo",
+          "contrasenaNueva"
+        ]
+      },
+      "CrearUsuarioCiudadaniaDto": {
+        "type": "object",
+        "properties": {
+          "usuario": {
+            "type": "string",
+            "example": "123456"
+          },
+          "estado": {
+            "type": "string",
+            "example": "ACTIVO"
+          },
+          "roles": {
+            "example": [
+              "d5de12df-3cc3-5a58-a742-be24030482d8"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "usuario",
+          "estado",
+          "roles"
+        ]
+      },
+      "ActualizarContrasenaDto": {
+        "type": "object",
+        "properties": {
+          "contrasenaActual": {
+            "type": "string",
+            "example": "contrasena"
+          },
+          "contrasenaNueva": {
+            "type": "string",
+            "example": "contrasena-nueva"
+          }
+        },
+        "required": [
+          "contrasenaActual",
+          "contrasenaNueva"
+        ]
+      },
+      "ActualizarUsuarioRolDto": {
+        "type": "object",
+        "properties": {
+          "persona": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PersonaDto"
+              }
+            ]
+          },
+          "correoElectronico": {
+            "type": "object",
+            "example": "asdfg123@gmail.com"
+          },
+          "roles": {
+            "example": [
+              "3"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "persona",
+          "correoElectronico",
+          "roles"
+        ]
+      },
+      "ParamUuidDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "a9d1a5cc-4590-5c67-a0b2-a4b37b862802"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "EtiquetaResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identificador único de la etiqueta",
+            "example": "10"
+          },
+          "nombre": {
+            "type": "string",
+            "description": "Nombre visible de la etiqueta",
+            "example": "Urgente"
+          },
+          "colorHex": {
+            "type": "string",
+            "description": "Color en formato hexadecimal",
+            "example": "#ff3366"
+          },
+          "estado": {
+            "type": "string",
+            "description": "Estado del registro",
+            "example": "ACTIVO"
+          }
+        },
+        "required": [
+          "id",
+          "nombre",
+          "colorHex",
+          "estado"
+        ]
+      },
+      "CitaResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identificador de la cita",
+            "example": "cita-001"
+          },
+          "detalle": {
+            "type": "string",
+            "description": "Detalle o motivo de la cita",
+            "example": "Control nutricional mensual"
+          },
+          "fechaInicio": {
+            "type": "string",
+            "description": "Fecha de inicio en ISO 8601",
+            "example": "2024-06-15T10:00:00Z"
+          },
+          "fechaFin": {
+            "type": "string",
+            "description": "Fecha de fin en ISO 8601",
+            "example": "2024-06-15T11:00:00Z"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "INACTIVO",
+              "BORRADOR",
+              "SOLICITADA",
+              "CONFIRMADA",
+              "EN_CURSO",
+              "COMPLETADA",
+              "NO_ASISTIO",
+              "CANCELADA",
+              "RECHAZADA"
+            ],
+            "description": "Estado actual de la cita"
+          },
+          "medicoId": {
+            "type": "string",
+            "description": "Identificador del médico asignado",
+            "example": "42"
+          },
+          "agrupadorId": {
+            "type": "string",
+            "description": "Identificador del agrupador asociado",
+            "example": "grp-campana"
+          },
+          "etiquetas": {
+            "description": "Etiquetas asociadas a la cita",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EtiquetaResponseDto"
+            }
+          },
+          "comentario": {
+            "type": "string",
+            "description": "Comentario opcional del cambio de estado"
+          }
+        },
+        "required": [
+          "id",
+          "detalle",
+          "fechaInicio",
+          "fechaFin",
+          "estado",
+          "medicoId",
+          "etiquetas"
+        ]
+      },
+      "EtiquetaAsociacionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identificador de una etiqueta existente. Use este campo o envíe nombre y colorHex",
+            "example": "tag-urgente"
+          },
+          "nombre": {
+            "type": "string",
+            "description": "Nombre de la etiqueta a crear o reutilizar si ya existe",
+            "example": "Prioritaria"
+          },
+          "colorHex": {
+            "type": "string",
+            "description": "Color en hexadecimal, requerido cuando se crea una nueva etiqueta",
+            "example": "#ff3366"
+          }
+        }
+      },
+      "CrearCitaDto": {
+        "type": "object",
+        "properties": {
+          "detalle": {
+            "type": "string",
+            "description": "Detalle o motivo de la cita",
+            "example": "Control nutricional mensual"
+          },
+          "fechaInicio": {
+            "type": "string",
+            "description": "Fecha de inicio (ISO)",
+            "example": "2024-06-15T10:00:00Z"
+          },
+          "fechaFin": {
+            "type": "string",
+            "description": "Fecha de fin (ISO)",
+            "example": "2024-06-15T11:00:00Z"
+          },
+          "medicoId": {
+            "type": "string",
+            "description": "Identificador del médico responsable",
+            "example": "42"
+          },
+          "agrupadorId": {
+            "type": "string",
+            "description": "Agrupador asociado (ambiente)",
+            "example": "grp-1"
+          },
+          "etiquetas": {
+            "description": "Etiquetas a asociar, permite enviar ids existentes o nombre/colorHex para crear la etiqueta si no existe",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EtiquetaAsociacionDto"
+            }
+          }
+        },
+        "required": [
+          "detalle",
+          "fechaInicio",
+          "fechaFin",
+          "medicoId"
+        ]
+      },
+      "ActualizarCitaDto": {
+        "type": "object",
+        "properties": {
+          "detalle": {
+            "type": "string",
+            "description": "Detalle o motivo de la cita",
+            "example": "Control nutricional mensual"
+          },
+          "fechaInicio": {
+            "type": "string",
+            "description": "Fecha de inicio (ISO)",
+            "example": "2024-06-15T10:00:00Z"
+          },
+          "fechaFin": {
+            "type": "string",
+            "description": "Fecha de fin (ISO)",
+            "example": "2024-06-15T11:00:00Z"
+          },
+          "medicoId": {
+            "type": "string",
+            "description": "Identificador del médico responsable",
+            "example": "42"
+          },
+          "agrupadorId": {
+            "type": "string",
+            "description": "Agrupador asociado (ambiente)",
+            "example": "grp-1"
+          },
+          "etiquetas": {
+            "description": "Etiquetas a asociar, permite enviar ids existentes o nombre/colorHex para crear la etiqueta si no existe",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EtiquetaAsociacionDto"
+            }
+          }
+        }
+      },
+      "ActualizarEstadoCitaDto": {
+        "type": "object",
+        "properties": {
+          "estado": {
+            "type": "string",
+            "enum": [
+              "INACTIVO",
+              "BORRADOR",
+              "SOLICITADA",
+              "CONFIRMADA",
+              "EN_CURSO",
+              "COMPLETADA",
+              "NO_ASISTIO",
+              "CANCELADA",
+              "RECHAZADA"
+            ],
+            "description": "Nuevo estado de la cita"
+          },
+          "comentario": {
+            "type": "string",
+            "description": "Comentario opcional para el cambio de estado"
+          }
+        },
+        "required": [
+          "estado"
+        ]
+      },
+      "ReprogramarCitaDto": {
+        "type": "object",
+        "properties": {
+          "fechaInicio": {
+            "type": "string",
+            "description": "Nueva fecha de inicio",
+            "example": "2024-06-20T12:00:00Z"
+          },
+          "fechaFin": {
+            "type": "string",
+            "description": "Nueva fecha de fin",
+            "example": "2024-06-20T13:00:00Z"
+          },
+          "comentario": {
+            "type": "string",
+            "description": "Comentario o motivo de la reprogramación"
+          }
+        },
+        "required": [
+          "fechaInicio",
+          "fechaFin"
+        ]
+      },
+      "CancelarCitaDto": {
+        "type": "object",
+        "properties": {
+          "comentario": {
+            "type": "string",
+            "description": "Motivo de cancelación"
+          }
+        }
+      },
+      "ActualizarEtiquetasCitaDto": {
+        "type": "object",
+        "properties": {
+          "etiquetas": {
+            "description": "Etiquetas a asociar. Si una etiqueta no existe se crea usando nombre y colorHex",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EtiquetaAsociacionDto"
+            }
+          }
+        },
+        "required": [
+          "etiquetas"
+        ]
+      },
+      "ActualizarAgrupadorCitaDto": {
+        "type": "object",
+        "properties": {
+          "agrupadorId": {
+            "type": "string",
+            "description": "Identificador del agrupador",
+            "example": "grp-1"
+          }
+        },
+        "required": [
+          "agrupadorId"
+        ]
+      },
+      "CrearEtiquetaDto": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "description": "Nombre visible de la etiqueta",
+            "example": "Urgente"
+          },
+          "colorHex": {
+            "type": "string",
+            "description": "Color en formato hexadecimal",
+            "example": "#ff3366"
+          }
+        },
+        "required": [
+          "nombre",
+          "colorHex"
+        ]
+      },
+      "ActualizarEtiquetaDto": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "description": "Nombre visible de la etiqueta",
+            "example": "Urgente"
+          },
+          "colorHex": {
+            "type": "string",
+            "description": "Color en formato hexadecimal",
+            "example": "#ff3366"
+          },
+          "estado": {
+            "type": "string",
+            "description": "Permite reactivar o desactivar la etiqueta",
+            "example": true
+          }
+        }
+      },
+      "EtiquetaDeleteResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identificador único de la etiqueta",
+            "example": "10"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "AgrupadorResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identificador único del ambiente/agrupador",
+            "example": "5"
+          },
+          "nombre": {
+            "type": "string",
+            "description": "Nombre visible del ambiente/agrupador",
+            "example": "Consultorio 1 - Pediatría"
+          },
+          "descripcion": {
+            "type": "string",
+            "description": "Descripción opcional del ambiente o agrupador",
+            "example": "Consultorio principal del área pediátrica"
+          },
+          "estado": {
+            "type": "string",
+            "description": "Estado del registro",
+            "example": "ACTIVO"
+          },
+          "colorHex": {
+            "type": "string",
+            "description": "Color identificador del ambiente en formato hexadecimal",
+            "example": "#0ea5e9"
+          }
+        },
+        "required": [
+          "id",
+          "nombre",
+          "estado",
+          "colorHex"
+        ]
+      },
+      "CrearAgrupadorDto": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "description": "Nombre visible del ambiente/agrupador",
+            "example": "Consultorio 1 - Pediatría"
+          },
+          "descripcion": {
+            "type": "string",
+            "description": "Descripción opcional del ambiente o agrupador",
+            "example": "Consultorio principal del área pediátrica"
+          },
+          "colorHex": {
+            "type": "string",
+            "description": "Color identificador del ambiente en formato hexadecimal",
+            "example": "#0ea5e9"
+          }
+        },
+        "required": [
+          "nombre",
+          "colorHex"
+        ]
+      },
+      "ActualizarAgrupadorDto": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "description": "Nombre visible del ambiente/agrupador",
+            "example": "Consultorio 1 - Pediatría"
+          },
+          "descripcion": {
+            "type": "string",
+            "description": "Descripción opcional del ambiente o agrupador",
+            "example": "Consultorio principal del área pediátrica"
+          },
+          "colorHex": {
+            "type": "string",
+            "description": "Color identificador del ambiente en formato hexadecimal",
+            "example": "#0ea5e9"
+          }
+        }
+      },
+      "AgrupadorDeleteResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identificador único del ambiente/agrupador",
+            "example": "5"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "ErrorResponseDto": {
+        "type": "object",
+        "properties": {
+          "finalizado": {
+            "type": "boolean",
+            "example": false,
+            "description": "Indica si la operación fue exitosa o no. Para errores siempre es false."
+          },
+          "codigo": {
+            "type": "number",
+            "example": 412,
+            "description": "Código HTTP correspondiente al error generado."
+          },
+          "timestamp": {
+            "type": "number",
+            "example": 1764346118,
+            "description": "Marca de tiempo Unix (segundos) cuando ocurrió el error."
+          },
+          "mensaje": {
+            "type": "string",
+            "example": "Precondición fallida: falta el campo X",
+            "description": "Mensaje orientado al cliente que describe el motivo del error."
+          },
+          "datos": {
+            "type": "object",
+            "example": null,
+            "description": "Información adicional útil para el cliente. Puede incluir detalles específicos del error."
+          }
+        },
+        "required": [
+          "finalizado",
+          "codigo",
+          "timestamp",
+          "mensaje"
+        ]
+      }
+    }
+  }
+}
