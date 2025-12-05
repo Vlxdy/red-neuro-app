@@ -2,6 +2,7 @@ import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/models/modulo.dart';
 import 'package:red_neuro_app/src/models/rol.dart';
+import 'package:red_neuro_app/src/models/submodulo.dart';
 import 'package:red_neuro_app/src/models/user.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
@@ -517,15 +518,22 @@ List<ChildrenItem> _modulesFromRole({
 }
 
 ChildrenItem _moduleToItem(Modulo module, ThemeController theme) {
-  final actions = module.subModulos.isNotEmpty
-      ? module.subModulos
-          .map((sub) => '${sub.label} (${sub.url})')
-          .toList()
-      : ['Explora las opciones disponibles dentro del módulo ${module.nombre}.'];
-
   final title = module.nombre.isNotEmpty ? module.nombre : module.label;
   final description = module.propiedades?.descripcion ??
       'Módulo ${module.label} sin descripción detallada. Bandeja vacía por ahora.';
+
+  final trayChild = module.subModulos.isNotEmpty
+      ? _SubmoduleTrayGrid(
+          moduleLabel: title,
+          subModules: module.subModulos,
+          theme: theme,
+        )
+      : RoleTrayPlaceholder(
+          title: title,
+          description: description,
+          actions: ['Explora las opciones disponibles dentro del módulo $title.'],
+          leadingIcon: _moduleIconData(module.propiedades?.icono),
+        );
 
   return ChildrenItem(
     iconoImagen: _moduleIconData(module.propiedades?.icono),
@@ -535,13 +543,7 @@ ChildrenItem _moduleToItem(Modulo module, ThemeController theme) {
     ),
     titulo: module.label.isNotEmpty ? module.label : module.nombre,
     color: theme.primary,
-    children: KeepAlivePage(
-      child: RoleTrayPlaceholder(
-        title: title,
-        description: description,
-        actions: actions,
-      ),
-    ),
+    children: KeepAlivePage(child: trayChild),
   );
 }
 
@@ -558,6 +560,15 @@ IconData _moduleIconData(String? iconName, {bool filled = false}) {
     case 'tag':
     case 'etiquetas':
       return filled ? PhosphorIconsFill.tag : PhosphorIconsRegular.tag;
+    case 'home':
+      return filled ? PhosphorIconsFill.house : PhosphorIconsRegular.house;
+    case 'person':
+      return filled ? PhosphorIconsFill.user : PhosphorIconsRegular.user;
+    case 'manage_accounts':
+    case 'manage-accounts':
+      return filled
+          ? PhosphorIconsFill.userSwitch
+          : PhosphorIconsRegular.userSwitch;
     case 'agrupadores':
     case 'server':
       return filled ? SolarIconsBold.server : SolarIconsOutline.server;
@@ -839,4 +850,171 @@ class UserOverview extends StatelessWidget {
       ),
     );
   }
+}
+
+class _SubmoduleTrayGrid extends StatelessWidget {
+  const _SubmoduleTrayGrid({
+    required this.moduleLabel,
+    required this.subModules,
+    required this.theme,
+  });
+
+  final String moduleLabel;
+  final List<SubModulo> subModules;
+  final ThemeController theme;
+
+  @override
+  Widget build(BuildContext context) {
+    final sortedSubmodules = [...subModules]
+      ..sort((a, b) => (a.propiedades?.orden ?? 0)
+          .compareTo(b.propiedades?.orden ?? 0));
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            moduleLabel,
+            style: TextStyle(
+              color: theme.secondary,
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: sortedSubmodules
+                .map((subModule) => _buildTray(context, subModule))
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTray(BuildContext context, SubModulo subModule) {
+    final blueprint = _resolveTrayBlueprint(subModule);
+
+    return SizedBox(
+      width: 360,
+      child: Card(
+        elevation: 2,
+        color: Theme.of(context).cardColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: SizedBox(
+          height: 320,
+          child: RoleTrayPlaceholder(
+            title: blueprint.title,
+            description: blueprint.description,
+            actions: blueprint.actions,
+            leadingIcon: blueprint.icon,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TrayBlueprint {
+  final String title;
+  final String description;
+  final List<String> actions;
+  final IconData icon;
+
+  const _TrayBlueprint({
+    required this.title,
+    required this.description,
+    required this.actions,
+    required this.icon,
+  });
+}
+
+_TrayBlueprint _resolveTrayBlueprint(SubModulo subModule) {
+  final knownTrays = <String, _TrayBlueprint>{
+    '/admin/home': _TrayBlueprint(
+      title: 'Inicio',
+      description:
+          'Pantalla de bienvenida para navegación rápida según tu rol activo.',
+      actions: const [
+        'Consultar accesos rápidos visibles para el rol',
+        'Revisar notificaciones o recordatorios de la sesión',
+      ],
+      icon: _moduleIconData('home'),
+    ),
+    'inicio': _TrayBlueprint(
+      title: 'Inicio',
+      description:
+          'Pantalla de bienvenida para navegación rápida según tu rol activo.',
+      actions: const [
+        'Consultar accesos rápidos visibles para el rol',
+        'Revisar notificaciones o recordatorios de la sesión',
+      ],
+      icon: _moduleIconData('home'),
+    ),
+    '/admin/perfil': _TrayBlueprint(
+      title: 'Perfil',
+      description: 'Gestiona tu información personal y credenciales.',
+      actions: const [
+        'Ver datos de cuenta y foto de perfil',
+        'Actualizar información básica',
+        'Revisar rol activo y accesos',
+      ],
+      icon: _moduleIconData('person'),
+    ),
+    'perfil': _TrayBlueprint(
+      title: 'Perfil',
+      description: 'Gestiona tu información personal y credenciales.',
+      actions: const [
+        'Ver datos de cuenta y foto de perfil',
+        'Actualizar información básica',
+        'Revisar rol activo y accesos',
+      ],
+      icon: _moduleIconData('person'),
+    ),
+    '/admin/usuarios': _TrayBlueprint(
+      title: 'Usuarios',
+      description:
+          'Administra cuentas del sistema, altas, bajas y configuraciones.',
+      actions: const [
+        'Listar usuarios y filtrar por estado o rol',
+        'Crear y editar información de usuario',
+        'Asignar o revocar roles disponibles',
+      ],
+      icon: _moduleIconData('manage_accounts'),
+    ),
+    'usuarios': _TrayBlueprint(
+      title: 'Usuarios',
+      description:
+          'Administra cuentas del sistema, altas, bajas y configuraciones.',
+      actions: const [
+        'Listar usuarios y filtrar por estado o rol',
+        'Crear y editar información de usuario',
+        'Asignar o revocar roles disponibles',
+      ],
+      icon: _moduleIconData('manage_accounts'),
+    ),
+  };
+
+  final normalizedUrl = (subModule.url).toLowerCase();
+  final normalizedName = (subModule.nombre).toLowerCase();
+
+  final match = knownTrays[normalizedUrl] ?? knownTrays[normalizedName];
+  if (match != null) return match;
+
+  final title = subModule.label.isNotEmpty ? subModule.label : subModule.nombre;
+  final description = subModule.propiedades?.descripcion ??
+      'Bandeja vacía para $title. A la espera de integraciones.';
+
+  return _TrayBlueprint(
+    title: title,
+    description: description,
+    actions: const [
+      'Definir acciones de navegación para este submódulo',
+      'Sin datos aún: pendiente de integración con API',
+    ],
+    icon: _moduleIconData(subModule.propiedades?.icono),
+  );
 }

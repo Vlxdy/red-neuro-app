@@ -5,12 +5,14 @@ class RoleTrayPlaceholder extends StatelessWidget {
   final String title;
   final String description;
   final List<String> actions;
+  final IconData? leadingIcon;
 
   const RoleTrayPlaceholder({
     super.key,
     required this.title,
     required this.description,
     required this.actions,
+    this.leadingIcon,
   });
 
   @override
@@ -23,7 +25,11 @@ class RoleTrayPlaceholder extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.inbox_outlined, color: theme.primary, size: 32),
+              Icon(
+                leadingIcon ?? Icons.inbox_outlined,
+                color: theme.primary,
+                size: 32,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
