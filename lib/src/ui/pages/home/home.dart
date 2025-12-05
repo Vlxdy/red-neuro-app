@@ -1,4 +1,5 @@
 import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:red_neuro_app/src/ui/common/badges/counter_badge.dart';
 import 'package:red_neuro_app/src/ui/common/keep_alive_page.dart';
@@ -11,6 +12,7 @@ import 'package:flutter/services.dart';
 import 'package:solar_icons/solar_icons.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:red_neuro_app/src/ui/pages/placeholder/placeholder.dart';
+import 'package:red_neuro_app/src/ui/pages/placeholder/role_tray_placeholder.dart';
 
 final GlobalKey<ScaffoldMessengerState> homeMessenger =
     GlobalKey<ScaffoldMessengerState>();
@@ -28,14 +30,28 @@ class _HomePageState extends State<HomePage> {
   bool showSubmenu = false;
   final PageController controllerPrincipal = PageController(initialPage: 0);
   final PageController controllerSubmenu = PageController(initialPage: 0);
-  late List<ChildrenItem> _itemsMenu;
+  List<ChildrenItem> _itemsMenu = [];
   final theme = ThemeController.instance;
+  String _currentRole = '';
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      _configureMenu();
+    });
+  }
+
+  Future<void> _configureMenu() async {
+    final user = await Auth.instance.profileAsync();
+    final role = user.rol?.toUpperCase() ?? '';
+
+    setState(() {
+      _currentRole = role;
+      _itemsMenu = _itemsByRole(role);
+      _selectedIndex = 0;
+      _selectedSubItem = null;
     });
   }
 
@@ -269,49 +285,28 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final ThemeController theme = ThemeController.instance;
-    _itemsMenu = [
-      ChildrenItem(
-        iconoImagen: PhosphorIconsRegular.chatTeardropText,
-        iconoImagenSeleccionada: PhosphorIconsFill.chatTeardropText,
-        titulo: 'Pagina ejemplo',
-        children: const KeepAlivePage(
-          child: PlaceholderPage(
-            title: "Módulo en construcción",
-            icon: Icons.build,
+    if (_itemsMenu.isEmpty) {
+      return TemplatePage(
+        page: Scaffold(
+          backgroundColor: theme.background,
+          body: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const CircularProgressIndicator(),
+                const SizedBox(height: 12),
+                Text(
+                  _currentRole.isEmpty
+                      ? 'Cargando menús por rol...'
+                      : 'No hay módulos disponibles para $_currentRole',
+                  style: TextStyle(color: theme.secondary),
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-
-      // 🔹 Nuevo submenú "Cuenta"
-      ChildrenItem(
-        iconoImagen: SolarIconsOutline.user,
-        iconoImagenSeleccionada: SolarIconsBold.user,
-        titulo: 'Cuenta',
-        itemsSubmenu: [
-          ChildrenItem(
-            color: theme.primary,
-            iconoImagen: SolarIconsOutline.user,
-            iconoImagenSeleccionada: SolarIconsBold.user,
-            titulo: 'Perfil',
-            children: const KeepAlivePage(child: Perfil()),
-          ),
-          ChildrenItem(
-            color: theme.primary,
-            iconoImagen: SolarIconsOutline.password,
-            iconoImagenSeleccionada: SolarIconsBold.password,
-            titulo: 'Contraseña',
-            children: const CambiarContrasena(),
-          ),
-          ChildrenItem(
-            color: theme.primary,
-            iconoImagen: SolarIconsOutline.logout,
-            iconoImagenSeleccionada: SolarIconsBold.logout,
-            titulo: 'Cerrar sesión',
-            children: const Micuenta(),
-          ),
-        ],
-      ),
-    ];
+      );
+    }
     return TemplatePage(
       page: ScaffoldMessenger(
         child: Scaffold(
@@ -392,6 +387,175 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+}
+
+List<ChildrenItem> _itemsByRole(String role) {
+  final theme = ThemeController.instance;
+
+  List<ChildrenItem> baseCuenta = [
+    ChildrenItem(
+      iconoImagen: SolarIconsOutline.user,
+      iconoImagenSeleccionada: SolarIconsBold.user,
+      titulo: 'Cuenta',
+      itemsSubmenu: [
+        ChildrenItem(
+          color: theme.primary,
+          iconoImagen: SolarIconsOutline.user,
+          iconoImagenSeleccionada: SolarIconsBold.user,
+          titulo: 'Perfil',
+          children: const KeepAlivePage(child: Perfil()),
+        ),
+        ChildrenItem(
+          color: theme.primary,
+          iconoImagen: SolarIconsOutline.password,
+          iconoImagenSeleccionada: SolarIconsBold.password,
+          titulo: 'Contraseña',
+          children: const CambiarContrasena(),
+        ),
+        ChildrenItem(
+          color: theme.primary,
+          iconoImagen: SolarIconsOutline.logout,
+          iconoImagenSeleccionada: SolarIconsBold.logout,
+          titulo: 'Cerrar sesión',
+          children: const Micuenta(),
+        ),
+      ],
+    ),
+  ];
+
+  final adminMenu = [
+    ChildrenItem(
+      iconoImagen: PhosphorIconsRegular.users,
+      iconoImagenSeleccionada: PhosphorIconsFill.users,
+      titulo: 'Usuarios',
+      children: KeepAlivePage(
+        child: RoleTrayPlaceholder(
+          title: 'Usuarios',
+          description:
+              'Gestiona altas, bajas y roles de usuarios. Bandeja inicial sin datos.',
+          actions: const [
+            'Crear/editar usuarios (POST/PATCH /usuarios)',
+            'Activar o desactivar usuarios',
+            'Filtrar por rol permitido: ADMIN, SUPERVISOR, MEDICO',
+          ],
+        ),
+      ),
+    ),
+    ChildrenItem(
+      iconoImagen: PhosphorIconsRegular.tag,
+      iconoImagenSeleccionada: PhosphorIconsFill.tag,
+      titulo: 'Etiquetas',
+      children: KeepAlivePage(
+        child: RoleTrayPlaceholder(
+          title: 'Etiquetas',
+          description: 'Crea y organiza etiquetas para clasificar citas.',
+          actions: const [
+            'Nueva etiqueta (POST /etiquetas)',
+            'Editar etiqueta (PATCH /etiquetas/:id)',
+            'Eliminar etiqueta (DELETE /etiquetas/:id)',
+          ],
+        ),
+      ),
+    ),
+    ChildrenItem(
+      iconoImagen: SolarIconsOutline.server,
+      iconoImagenSeleccionada: SolarIconsBold.server,
+      titulo: 'Agrupadores',
+      children: KeepAlivePage(
+        child: RoleTrayPlaceholder(
+          title: 'Agrupadores',
+          description: 'Organiza campañas o bloques para citas.',
+          actions: const [
+            'Crear agrupador (POST /agrupadores)',
+            'Editar agrupador (PATCH /agrupadores/:id)',
+            'Eliminar agrupador (DELETE /agrupadores/:id)',
+          ],
+        ),
+      ),
+    ),
+    ChildrenItem(
+      iconoImagen: PhosphorIconsRegular.calendarCheck,
+      iconoImagenSeleccionada: PhosphorIconsFill.calendarCheck,
+      titulo: 'Citas',
+      children: KeepAlivePage(
+        child: RoleTrayPlaceholder(
+          title: 'Citas (Administrador)',
+          description: 'Bandeja vacía para monitorear y gestionar todas las citas.',
+          actions: const [
+            'Listar todas las citas (GET /citas)',
+            'Crear cita para cualquier médico (POST /citas)',
+            'Editar, cancelar o reprogramar (PATCH /citas/:id/...)',
+          ],
+        ),
+      ),
+    ),
+  ];
+
+  final supervisorMenu = [
+    ChildrenItem(
+      iconoImagen: PhosphorIconsRegular.calendarPlus,
+      iconoImagenSeleccionada: PhosphorIconsFill.calendarPlus,
+      titulo: 'Citas',
+      children: KeepAlivePage(
+        child: RoleTrayPlaceholder(
+          title: 'Citas (Supervisor)',
+          description:
+              'Crear, ver y administrar citas. Bandeja inicial sin registros.',
+          actions: const [
+            'Crear citas para médicos (POST /citas)',
+            'Ver todas las citas (GET /citas)',
+            'Reprogramar o cancelar (PATCH /citas/:id/reprogramar | /cancelar)',
+            'Asignar etiquetas a citas (PATCH /citas/:id/etiquetas)',
+          ],
+        ),
+      ),
+    ),
+  ];
+
+  final medicoMenu = [
+    ChildrenItem(
+      iconoImagen: SolarIconsOutline.calendarSearch,
+      iconoImagenSeleccionada: SolarIconsBold.calendarSearch,
+      titulo: 'Mis citas',
+      children: KeepAlivePage(
+        child: RoleTrayPlaceholder(
+          title: 'Mis citas (Médico)',
+          description:
+              'Revisa y administra únicamente tus citas. Bandeja vacía por ahora.',
+          actions: const [
+            'Listar mis citas (GET /citas/mis-citas)',
+            'Cambiar estado (PATCH /citas/:id/estado)',
+            'Reprogramar (PATCH /citas/:id/reprogramar)',
+            'Agregar etiquetas (PATCH /citas/:id/etiquetas)',
+          ],
+        ),
+      ),
+    ),
+  ];
+
+  switch (role) {
+    case 'ADMIN':
+      return [...adminMenu, ...baseCuenta];
+    case 'SUPERVISOR':
+      return [...supervisorMenu, ...baseCuenta];
+    case 'MEDICO':
+      return [...medicoMenu, ...baseCuenta];
+    default:
+      return [
+        ChildrenItem(
+          iconoImagen: PhosphorIconsRegular.chatTeardropText,
+          iconoImagenSeleccionada: PhosphorIconsFill.chatTeardropText,
+          titulo: 'Módulos',
+          children: const KeepAlivePage(
+            child: PlaceholderPage(
+              title: "Rol sin módulos asignados aún.",
+              icon: Icons.info_outline,
+            ),
+          ),
+        ),
+        ...baseCuenta,
+      ];
   }
 }
 
