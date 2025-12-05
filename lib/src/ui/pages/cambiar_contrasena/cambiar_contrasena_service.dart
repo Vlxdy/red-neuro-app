@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:alimenta_app/src/config/service_config.dart';
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/constants/network.dart';
-import 'package:alimenta_app/src/plugins/utils/encode.dart';
-import 'package:alimenta_app/src/plugins/utils/logger.dart';
-import 'package:alimenta_app/src/ui/common/snackbar/snackbar.dart';
-import 'package:alimenta_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
-import 'package:alimenta_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena_store.dart';
+import 'package:red_neuro_app/src/config/service_config.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/constants/network.dart';
+import 'package:red_neuro_app/src/plugins/utils/encode.dart';
+import 'package:red_neuro_app/src/plugins/utils/logger.dart';
+import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
+import 'package:red_neuro_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
+import 'package:red_neuro_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena_store.dart';
 
 class CambiarContrasenaService extends ServiceConfig {
   CambiarContrasenaService(super.urlBase, super.context);
@@ -16,8 +16,12 @@ class CambiarContrasenaService extends ServiceConfig {
   bool validarForm(GlobalKey<FormState> formKey, String mensajeFallido) {
     final theme = ThemeController.instance;
     if (_store.nuevaContrasena != _store.repiteContrasena) {
-      showSnackBar(cambiarContrasenaMessenger, mensajeFallido,
-          state: StatusSnackBar.error, colorText: theme.white);
+      showSnackBar(
+        cambiarContrasenaMessenger,
+        mensajeFallido,
+        state: StatusSnackBar.error,
+        colorText: theme.white,
+      );
       return false;
     }
     return validateForm(formKey);
@@ -31,14 +35,25 @@ class CambiarContrasenaService extends ServiceConfig {
     };
     _store.cargando = true;
     try {
-      final response = await fetch('/usuarios/cuenta/contrasena',
-          type: HttpProtocol.patch, body: body);
+      final response = await fetch(
+        '/usuarios/cuenta/contrasena',
+        type: HttpProtocol.patch,
+        body: body,
+      );
       if (response.status == StatusNetwork.connected) {
-        showSnackBar(cambiarContrasenaMessenger, response.message,
-            state: StatusSnackBar.success, colorText: theme.white);
+        showSnackBar(
+          cambiarContrasenaMessenger,
+          response.message,
+          state: StatusSnackBar.success,
+          colorText: theme.white,
+        );
       } else {
-        showSnackBar(cambiarContrasenaMessenger, response.message,
-            state: StatusSnackBar.error, colorText: theme.white);
+        showSnackBar(
+          cambiarContrasenaMessenger,
+          response.message,
+          state: StatusSnackBar.error,
+          colorText: theme.white,
+        );
       }
     } catch (e, stacktrace) {
       Logger.error('Exception al cambiar contrasena $e');

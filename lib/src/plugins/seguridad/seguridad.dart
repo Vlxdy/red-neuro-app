@@ -1,6 +1,6 @@
-import 'package:alimenta_app/src/constants/keys.dart';
-import 'package:alimenta_app/src/plugins/utils/local_secure.dart';
-import 'package:alimenta_app/src/plugins/utils/preferences.dart';
+import 'package:red_neuro_app/src/constants/keys.dart';
+import 'package:red_neuro_app/src/plugins/utils/local_secure.dart';
+import 'package:red_neuro_app/src/plugins/utils/preferences.dart';
 import 'package:flutter/material.dart';
 
 class SeguridadStore with ChangeNotifier {
@@ -51,8 +51,9 @@ class Seguridad {
   Future<String> get apiPinSeguridad async {
     try {
       if (_pinSeguridad.isEmpty) {
-        _pinSeguridad =
-            await _preferencesService.getStringSecure(Keys.pinSeguridad);
+        _pinSeguridad = await _preferencesService.getStringSecure(
+          Keys.pinSeguridad,
+        );
       }
       return _pinSeguridad;
     } catch (e) {
@@ -63,8 +64,9 @@ class Seguridad {
   Future<bool> get apiFingerprint async {
     try {
       if (!_fingerprintActive) {
-        _fingerprintActive =
-            await _preferencesService.getBool(Keys.fingerprintActivo);
+        _fingerprintActive = await _preferencesService.getBool(
+          Keys.fingerprintActivo,
+        );
       }
       return _fingerprintActive;
     } catch (e) {

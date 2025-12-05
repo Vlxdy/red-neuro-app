@@ -20,10 +20,7 @@ class ImagePreviewDialog extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8.0),
                 color: Colors.black,
               ),
-              child: Image.file(
-                File(imagePath),
-                fit: BoxFit.contain,
-              ),
+              child: Image.file(File(imagePath), fit: BoxFit.contain),
             ),
           ),
           Positioned(

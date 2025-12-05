@@ -30,12 +30,12 @@ class Persona {
   }
 
   Map<String, dynamic> toJson() => {
-        'fechaNacimiento': fechaNacimiento,
-        'nombres': nombres,
-        'nroDocumento': nroDocumento,
-        'primerApellido': primerApellido,
-        'segundoApellido': segundoApellido,
-        'tipoDocumento': tipoDocumento,
-        'telefono': telefono,
-      };
+    'fechaNacimiento': fechaNacimiento,
+    'nombres': nombres,
+    'nroDocumento': nroDocumento,
+    'primerApellido': primerApellido,
+    'segundoApellido': segundoApellido,
+    'tipoDocumento': tipoDocumento,
+    'telefono': telefono,
+  };
 }

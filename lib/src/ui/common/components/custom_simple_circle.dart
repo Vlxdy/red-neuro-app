@@ -15,10 +15,12 @@ class CustomSimpleCircle extends StatelessWidget {
       width: customRadius,
       height: customRadius,
       decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(customRadius),
-          // color: Color.fromRGBO(255, 255, 255, 0.05)),
-          color: customColor?.withValues(alpha: 0.1) ??
-              const Color.fromRGBO(255, 255, 255, 0.05)),
+        borderRadius: BorderRadius.circular(customRadius),
+        // color: Color.fromRGBO(255, 255, 255, 0.05)),
+        color:
+            customColor?.withValues(alpha: 0.1) ??
+            const Color.fromRGBO(255, 255, 255, 0.05),
+      ),
     );
   }
 }

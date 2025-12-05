@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:alimenta_app/src/plugins/utils/logger.dart';
+import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:http/http.dart' as http;
 
 class Connection {
@@ -12,8 +12,9 @@ class Connection {
 
   static Future<bool> _hasInternetPing() async {
     try {
-      final result = await InternetAddress.lookup('google.com')
-          .timeout(const Duration(seconds: 5));
+      final result = await InternetAddress.lookup(
+        'google.com',
+      ).timeout(const Duration(seconds: 5));
       if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
         Logger.info("Conectado correctamente");
         return true;
@@ -46,7 +47,8 @@ class Connection {
         final dataSizeInBits = data.length * 8; // Convert bytes to bits
         final uploadSpeedMbps = (dataSizeInBits / elapsedSeconds) / 1e6;
         Logger.info(
-            'Elapsed time: ${elapsedSeconds.toStringAsFixed(2)} seconds');
+          'Elapsed time: ${elapsedSeconds.toStringAsFixed(2)} seconds',
+        );
         return uploadSpeedMbps;
       } else {
         Logger.warning('Upload failed with status: ${response.statusCode}');

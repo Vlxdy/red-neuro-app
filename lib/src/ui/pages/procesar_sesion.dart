@@ -1,14 +1,14 @@
-import 'package:alimenta_app/src/config/form_controller.dart';
-import 'package:alimenta_app/src/config/routes.dart';
-import 'package:alimenta_app/src/plugins/auth/auth.dart';
-import 'package:alimenta_app/src/plugins/seguridad/seguridad.dart';
-import 'package:alimenta_app/src/plugins/utils/local_secure.dart';
-import 'package:alimenta_app/src/plugins/utils/logger.dart';
-import 'package:alimenta_app/src/sockets/sockets_provider.dart';
-import 'package:alimenta_app/src/ui/common/buttons/simple_button.dart';
+import 'package:red_neuro_app/src/config/form_controller.dart';
+import 'package:red_neuro_app/src/config/routes.dart';
+import 'package:red_neuro_app/src/plugins/auth/auth.dart';
+import 'package:red_neuro_app/src/plugins/seguridad/seguridad.dart';
+import 'package:red_neuro_app/src/plugins/utils/local_secure.dart';
+import 'package:red_neuro_app/src/plugins/utils/logger.dart';
+import 'package:red_neuro_app/src/sockets/sockets_provider.dart';
+import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
 import 'package:flutter/material.dart';
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/constants/resources.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/constants/resources.dart';
 import 'package:go_router/go_router.dart';
 import 'package:solar_icons/solar_icons.dart';
 
@@ -84,9 +84,7 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
       key: procesarSesionMessenger,
       child: Scaffold(
         backgroundColor: theme.background,
-        appBar: AppBar(
-          toolbarHeight: 0,
-        ),
+        appBar: AppBar(toolbarHeight: 0),
         body: Container(
           decoration: const BoxDecoration(),
           width: MediaQuery.of(context).size.width,
@@ -106,11 +104,7 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
                 ),
               ),
               const SizedBox(height: 30),
-              Icon(
-                SolarIconsBold.lockKeyhole,
-                color: theme.warning,
-                size: 80,
-              ),
+              Icon(SolarIconsBold.lockKeyhole, color: theme.warning, size: 80),
               const SizedBox(height: 15),
               SimpleButton(
                 fullWidth: false,

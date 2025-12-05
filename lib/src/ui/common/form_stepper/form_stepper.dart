@@ -48,10 +48,7 @@ class _FormStepperState extends State<FormStepper> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         if (widget.longitud <= 5) ...[
-          ...List.generate(
-            widget.longitud,
-            (index) => _buildStepper(index),
-          ),
+          ...List.generate(widget.longitud, (index) => _buildStepper(index)),
         ] else ...[
           _buildStepper(0),
           if (widget.currentStep > 1) ...[
@@ -64,7 +61,7 @@ class _FormStepperState extends State<FormStepper> {
             if (widget.currentStep < widget.longitud - 2) ...[
               const Text('...', style: TextStyle(fontSize: 20)),
               _buildStepper(widget.longitud - 1),
-            ]
+            ],
           ],
         ],
       ],

@@ -4,10 +4,7 @@ class AvatarType {
   final String text;
   final Color? background;
 
-  const AvatarType({
-    required this.text,
-    this.background,
-  });
+  const AvatarType({required this.text, this.background});
 }
 
 class AvatarData extends StatelessWidget {
@@ -28,7 +25,8 @@ class AvatarData extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       height: size,
-      width: (avatars.length + (remainingCount != null ? 1 : 0)) *
+      width:
+          (avatars.length + (remainingCount != null ? 1 : 0)) *
               (size + spacing) +
           size,
       child: Stack(
@@ -41,10 +39,7 @@ class AvatarData extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.white,
-                    width: 2,
-                  ),
+                  border: Border.all(color: Colors.white, width: 2),
                 ),
                 child: CircleAvatar(
                   radius: size / 2,
@@ -69,10 +64,7 @@ class AvatarData extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.white,
-                    width: 2,
-                  ),
+                  border: Border.all(color: Colors.white, width: 2),
                   color: Colors.grey[300],
                 ),
                 child: CircleAvatar(

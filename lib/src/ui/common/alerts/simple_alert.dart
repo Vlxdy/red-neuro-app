@@ -1,5 +1,5 @@
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/ui/common/snackbar/snackbar.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:flutter/material.dart';
 
 class SimpleAlert extends StatefulWidget {
@@ -8,12 +8,14 @@ class SimpleAlert extends StatefulWidget {
   final Color? colorText;
   final bool showAlert;
   final bool animate;
-  const SimpleAlert(this.content,
-      {this.state = StatusSnackBar.info,
-      this.showAlert = false,
-      this.animate = true,
-      this.colorText,
-      super.key});
+  const SimpleAlert(
+    this.content, {
+    this.state = StatusSnackBar.info,
+    this.showAlert = false,
+    this.animate = true,
+    this.colorText,
+    super.key,
+  });
 
   @override
   State<SimpleAlert> createState() => _SimpleAlertState();
@@ -45,7 +47,9 @@ class _SimpleAlertState extends State<SimpleAlert>
   void initState() {
     super.initState();
     _controller = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 250));
+      vsync: this,
+      duration: const Duration(milliseconds: 250),
+    );
     _animation = Tween<double>(begin: 5, end: 0).animate(_controller);
     _animation.addListener(() {
       setState(() {});
@@ -60,8 +64,8 @@ class _SimpleAlertState extends State<SimpleAlert>
         !widget.showAlert
             ? 0
             : widget.animate
-                ? _animation.value * 100
-                : 0,
+            ? _animation.value * 100
+            : 0,
         -8,
       ),
       child: Padding(
@@ -71,20 +75,24 @@ class _SimpleAlertState extends State<SimpleAlert>
           child: Container(
             padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
             decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(6),
-                border: Border(
-                    left: BorderSide(color: _getColor(widget.state), width: 6)),
-                color: widget.state != null
-                    ? _getColor(widget.state).withValues(alpha: .2)
-                    : _theme.primary),
+              borderRadius: BorderRadius.circular(6),
+              border: Border(
+                left: BorderSide(color: _getColor(widget.state), width: 6),
+              ),
+              color: widget.state != null
+                  ? _getColor(widget.state).withValues(alpha: .2)
+                  : _theme.primary,
+            ),
             child: Center(
               child: Text(
                 widget.content,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                    color: widget.colorText ??
-                        _getColor(widget.state).withValues(alpha: .8),
-                    fontWeight: FontWeight.w600),
+                  color:
+                      widget.colorText ??
+                      _getColor(widget.state).withValues(alpha: .8),
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),

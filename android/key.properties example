@@ -1,4 +1,0 @@
-storeFile=mi-release-key.jks
-storePassword=123456
-keyAlias=release
-keyPassword=123456

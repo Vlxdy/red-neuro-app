@@ -1,5 +1,5 @@
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/extensions/colores_extension.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/extensions/colores_extension.dart';
 import 'package:flutter/material.dart';
 
 class CustomTimePicker extends StatefulWidget {
@@ -54,7 +54,8 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
   void _selectTime(BuildContext context) async {
     final TimeOfDay initialTime = widget.controller?.text.isNotEmpty == true
         ? TimeOfDay.fromDateTime(
-            DateTime.parse("2000-01-01 ${widget.controller!.text}:00"))
+            DateTime.parse("2000-01-01 ${widget.controller!.text}:00"),
+          )
         : TimeOfDay.now();
     final TimeOfDay? picked = await showTimePicker(
       context: context,
@@ -83,9 +84,7 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
         height: 60 + ((widget.linesLabel! - 1) * 10) + (_error ? 20 : 0),
         width: double.infinity,
         decoration: BoxDecoration(
-          border: Border.all(
-            color: theme.grey.withValues(alpha: .9),
-          ),
+          border: Border.all(color: theme.grey.withValues(alpha: .9)),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Padding(
@@ -101,10 +100,10 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
                     color: _error
                         ? theme.error
                         : widget.disable
-                            ? theme.grey
-                            : widget.labelColor != null
-                                ? HexColor.fromHex(widget.labelColor)
-                                : theme.fontColor,
+                        ? theme.grey
+                        : widget.labelColor != null
+                        ? HexColor.fromHex(widget.labelColor)
+                        : theme.fontColor,
                     fontSize: 12,
                   ),
                   children: [
@@ -114,11 +113,11 @@ class _CustomTimePickerState extends State<CustomTimePicker> {
                         color: widget.disable
                             ? theme.grey
                             : widget.labelColor != null
-                                ? HexColor.fromHex(widget.labelColor)
-                                : theme.error,
+                            ? HexColor.fromHex(widget.labelColor)
+                            : theme.error,
                         fontSize: 12,
                       ),
-                    )
+                    ),
                   ],
                 ),
               ),

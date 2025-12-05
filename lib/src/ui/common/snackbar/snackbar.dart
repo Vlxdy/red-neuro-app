@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:alimenta_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
 
 final _theme = ThemeController.instance;
 
@@ -18,34 +18,39 @@ Color _getColor(StatusSnackBar state) {
   }
 }
 
-void showSnackBar(GlobalKey<ScaffoldMessengerState> key, String content,
-    {StatusSnackBar? state, Color? colorText}) {
-  key.currentState?.showSnackBar(SnackBar(
-    backgroundColor: Colors.transparent,
-    elevation: 0,
-    content: ConstrainedBox(
-      constraints: const BoxConstraints(maxHeight: 50, minHeight: 40),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-        decoration: BoxDecoration(
+void showSnackBar(
+  GlobalKey<ScaffoldMessengerState> key,
+  String content, {
+  StatusSnackBar? state,
+  Color? colorText,
+}) {
+  key.currentState?.showSnackBar(
+    SnackBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      content: ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 50, minHeight: 40),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+          decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            color: state != null ? _getColor(state) : _theme.primary),
-        child: Center(
-          child: Text(
-            content,
-            textAlign: TextAlign.center,
-            style: TextStyle(color: colorText ?? _theme.fontColor),
+            color: state != null ? _getColor(state) : _theme.primary,
+          ),
+          child: Center(
+            child: Text(
+              content,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: colorText ?? _theme.fontColor),
+            ),
           ),
         ),
       ),
     ),
-  ));
+  );
 }
 
 void showSimpleSnackBar(GlobalKey<ScaffoldMessengerState> key, String content) {
-  key.currentState?.showSnackBar(
-    SnackBar(content: Text(content)),
-  );
+  key.currentState?.showSnackBar(SnackBar(content: Text(content)));
 }
 
 enum StatusSnackBar { error, info, success, main, warning }

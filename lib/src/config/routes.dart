@@ -1,24 +1,24 @@
 import 'dart:async';
 
-import 'package:alimenta_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
-import 'package:alimenta_app/src/ui/pages/seguridad/configuracion_desbloqueo.dart';
-import 'package:alimenta_app/src/ui/pages/seguridad/configuracion_pin_seguridad.dart';
-import 'package:alimenta_app/src/ui/pages/home/home.dart';
-import 'package:alimenta_app/src/ui/pages/informacion_personal/informacion_personal.dart';
-import 'package:alimenta_app/src/ui/pages/mi_cuenta/mi_cuenta.dart';
-import 'package:alimenta_app/src/ui/pages/perfil/perfil.dart';
-import 'package:alimenta_app/src/ui/pages/procesar_sesion.dart';
-import 'package:alimenta_app/src/ui/pages/recuperar_contrasena/recuperar_contrasena.dart';
-import 'package:alimenta_app/src/ui/pages/seguridad/modificar_pin_seguridad.dart';
+import 'package:red_neuro_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
+import 'package:red_neuro_app/src/ui/pages/seguridad/configuracion_desbloqueo.dart';
+import 'package:red_neuro_app/src/ui/pages/seguridad/configuracion_pin_seguridad.dart';
+import 'package:red_neuro_app/src/ui/pages/home/home.dart';
+import 'package:red_neuro_app/src/ui/pages/informacion_personal/informacion_personal.dart';
+import 'package:red_neuro_app/src/ui/pages/mi_cuenta/mi_cuenta.dart';
+import 'package:red_neuro_app/src/ui/pages/perfil/perfil.dart';
+import 'package:red_neuro_app/src/ui/pages/procesar_sesion.dart';
+import 'package:red_neuro_app/src/ui/pages/recuperar_contrasena/recuperar_contrasena.dart';
+import 'package:red_neuro_app/src/ui/pages/seguridad/modificar_pin_seguridad.dart';
 import 'package:flutter/material.dart';
-import 'package:alimenta_app/src/plugins/auth/auth.dart';
-import 'package:alimenta_app/src/plugins/utils/logger.dart';
-import 'package:alimenta_app/src/ui/pages/login/login.dart';
-import 'package:alimenta_app/src/ui/pages/login/componentes/login_account_page.dart';
-import 'package:alimenta_app/src/ui/pages/splash_screen.dart';
+import 'package:red_neuro_app/src/plugins/auth/auth.dart';
+import 'package:red_neuro_app/src/plugins/utils/logger.dart';
+import 'package:red_neuro_app/src/ui/pages/login/login.dart';
+import 'package:red_neuro_app/src/ui/pages/login/componentes/login_account_page.dart';
+import 'package:red_neuro_app/src/ui/pages/splash_screen.dart';
 import 'package:go_router/go_router.dart';
 
-import '../plugins/camera/camera_screen.dart';
+// import '../plugins/camera/camera_screen.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -62,39 +62,47 @@ List<RouteBase> routes = [
     builder: (context, state) => const SplashScreen(),
   ),
   GoRoute(
-      name: RouteNames.login,
-      path: '/${RouteNames.login}',
-      builder: (context, state) => const Login()),
+    name: RouteNames.login,
+    path: '/${RouteNames.login}',
+    builder: (context, state) => const Login(),
+  ),
   GoRoute(
-      name: RouteNames.loginAccount,
-      path: '/${RouteNames.loginAccount}',
-      builder: (context, state) => const LoginAccount()),
+    name: RouteNames.loginAccount,
+    path: '/${RouteNames.loginAccount}',
+    builder: (context, state) => const LoginAccount(),
+  ),
   GoRoute(
-      name: RouteNames.olvideContrasena,
-      path: '/${RouteNames.olvideContrasena}',
-      builder: (context, state) => const OlvideContrasena()),
+    name: RouteNames.olvideContrasena,
+    path: '/${RouteNames.olvideContrasena}',
+    builder: (context, state) => const OlvideContrasena(),
+  ),
   GoRoute(
-      name: RouteNames.informacionPersonal,
-      path: '/${RouteNames.informacionPersonal}',
-      builder: (context, state) => const InformacionPersonal()),
+    name: RouteNames.informacionPersonal,
+    path: '/${RouteNames.informacionPersonal}',
+    builder: (context, state) => const InformacionPersonal(),
+  ),
   GoRoute(
-      name: RouteNames.cambiarContrasena,
-      path: '/${RouteNames.cambiarContrasena}',
-      builder: (context, state) => const CambiarContrasena()),
+    name: RouteNames.cambiarContrasena,
+    path: '/${RouteNames.cambiarContrasena}',
+    builder: (context, state) => const CambiarContrasena(),
+  ),
   GoRoute(
-      name: RouteNames.configuraciones,
-      path: '/${RouteNames.configuraciones}',
-      builder: (context, state) => const Micuenta()),
+    name: RouteNames.configuraciones,
+    path: '/${RouteNames.configuraciones}',
+    builder: (context, state) => const Micuenta(),
+  ),
 
   /// New routes
   GoRoute(
-      name: RouteNames.perfil,
-      path: '/${RouteNames.perfil}',
-      builder: (context, state) => const Perfil()),
+    name: RouteNames.perfil,
+    path: '/${RouteNames.perfil}',
+    builder: (context, state) => const Perfil(),
+  ),
   GoRoute(
-      name: RouteNames.home,
-      path: '/${RouteNames.home}',
-      builder: (context, state) => const HomePage()),
+    name: RouteNames.home,
+    path: '/${RouteNames.home}',
+    builder: (context, state) => const HomePage(),
+  ),
   GoRoute(
     name: RouteNames.procesarSesion,
     path: '/${RouteNames.procesarSesion}',
@@ -115,10 +123,6 @@ List<RouteBase> routes = [
     path: '/${RouteNames.modificarPin}',
     builder: (context, state) => const ModificarPinSeguridad(),
   ),
-  GoRoute(
-      name: RouteNames.vistaCamara,
-      path: '/${RouteNames.vistaCamara}',
-      builder: (context, state) => const CameraScreen()),
 ];
 
 // --------------------------------------------------------------
@@ -146,7 +150,9 @@ class MyRouteObserver extends RouteObserver<PageRoute<dynamic>> {
 }
 
 FutureOr<String?> redirectRoutes(
-    BuildContext context, GoRouterState state) async {
+  BuildContext context,
+  GoRouterState state,
+) async {
   Logger.info('Ubicación -> ${state.matchedLocation}');
   final auth = AuthStore.instance;
 

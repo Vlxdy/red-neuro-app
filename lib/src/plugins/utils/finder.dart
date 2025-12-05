@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:alimenta_app/src/plugins/utils/logger.dart';
+import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:path_provider/path_provider.dart';
 
 enum FileExtensions { png, jpg, pdf }
@@ -52,8 +52,11 @@ class Finder {
     }
   }
 
-  Future<String?> saveFileFromb64(String name, String b64,
-      {FileExtensions extension = FileExtensions.pdf}) async {
+  Future<String?> saveFileFromb64(
+    String name,
+    String b64, {
+    FileExtensions extension = FileExtensions.pdf,
+  }) async {
     String? path;
     String cleanName = name.trim().replaceAll(' ', '_');
     try {

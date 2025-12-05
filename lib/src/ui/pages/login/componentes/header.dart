@@ -1,4 +1,4 @@
-import 'package:alimenta_app/src/constants/resources.dart';
+import 'package:red_neuro_app/src/constants/resources.dart';
 import 'package:flutter/material.dart';
 
 class HeaderLogin extends StatelessWidget {
@@ -14,22 +14,20 @@ class HeaderLogin extends StatelessWidget {
           height: 100,
           width: 250,
           decoration: const BoxDecoration(
-              image: DecorationImage(
-                  image: AssetImage(Recursos.logoPrincipal),
-                  fit: BoxFit.contain)),
+            image: DecorationImage(
+              image: AssetImage(Recursos.logoPrincipal),
+              fit: BoxFit.contain,
+            ),
+          ),
         ),
         Text(
           'Bienvenido a Alimenta',
-          style: Theme.of(context)
-              .textTheme
-              .headlineSmall!
-              .copyWith(fontWeight: FontWeight.w600),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineSmall!.copyWith(fontWeight: FontWeight.w600),
         ),
         Align(
-          child: Text(
-            mensaje,
-            style: Theme.of(context).textTheme.labelLarge,
-          ),
+          child: Text(mensaje, style: Theme.of(context).textTheme.labelLarge),
         ),
       ],
     );

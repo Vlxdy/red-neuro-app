@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:alimenta_app/src/constants/network.dart';
-import 'package:alimenta_app/src/plugins/auth/auth.dart';
-import 'package:alimenta_app/src/plugins/utils/logger.dart';
+import 'package:red_neuro_app/src/constants/network.dart';
+import 'package:red_neuro_app/src/plugins/auth/auth.dart';
+import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 
 mixin Middleware {
   validateResponse(StatusNetwork status) {
@@ -20,8 +20,10 @@ mixin Middleware {
   }
 
   Map<String, dynamic> parseResponse(
-      Map<String, dynamic> json, BuildContext context,
-      {StatusNetwork status = StatusNetwork.noContent}) {
+    Map<String, dynamic> json,
+    BuildContext context, {
+    StatusNetwork status = StatusNetwork.noContent,
+  }) {
     try {
       final Map<String, dynamic> data = {};
       data['status'] = json.containsKey('finalizado') && json['finalizado']
@@ -31,14 +33,16 @@ mixin Middleware {
         data['status'] = StatusNetwork.unprocessableEntity;
       }
 
-      data['message'] = json['mensaje'] ??
+      data['message'] =
+          json['mensaje'] ??
           json['message'] ??
           'Se realizó la tarea correctamente';
 
       if (json.containsKey('datos') ||
           json.containsKey('resultado') ||
           json.containsKey('result')) {
-        dynamic value = json['resultado'] ??
+        dynamic value =
+            json['resultado'] ??
             json['datos'] ??
             json['result'] ??
             {'data': null};
@@ -59,7 +63,7 @@ mixin Middleware {
       return {
         'status': StatusNetwork.exception,
         'mensaje': 'Ocurrió un error inesperado',
-        'data': e.toString()
+        'data': e.toString(),
       };
     }
   }

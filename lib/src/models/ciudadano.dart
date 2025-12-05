@@ -5,12 +5,13 @@ class Ciudadano {
   String email;
   String celular;
 
-  Ciudadano(
-      {required this.sub,
-      required this.profile,
-      required this.fechaNacimiento,
-      required this.celular,
-      required this.email});
+  Ciudadano({
+    required this.sub,
+    required this.profile,
+    required this.fechaNacimiento,
+    required this.celular,
+    required this.email,
+  });
 
   factory Ciudadano.fromJson(Map<String, dynamic> json) {
     return Ciudadano(
@@ -56,15 +57,13 @@ class Profile {
   DocumentoIdentidad documentoIdentidad;
   Nombre nombre;
 
-  Profile({
-    required this.documentoIdentidad,
-    required this.nombre,
-  });
+  Profile({required this.documentoIdentidad, required this.nombre});
 
   factory Profile.fromJson(Map<String, dynamic> json) {
     return Profile(
-      documentoIdentidad:
-          DocumentoIdentidad.fromJson(json['documento_identidad']),
+      documentoIdentidad: DocumentoIdentidad.fromJson(
+        json['documento_identidad'],
+      ),
       nombre: Nombre.fromJson(json['nombre']),
     );
   }

@@ -25,27 +25,27 @@ class LoadingAnimation with ChangeNotifier {
           height: double.infinity,
           width: double.infinity,
           decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              color: Colors.white.withValues(alpha: .6)),
+            borderRadius: BorderRadius.circular(16),
+            color: Colors.white.withValues(alpha: .6),
+          ),
           child: Center(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const CircularProgressIndicator(
-                  color: Colors.amber,
-                ),
+                const CircularProgressIndicator(color: Colors.amber),
                 if (mensaje != null)
                   Container(
                     margin: const EdgeInsets.only(top: 15),
                     child: Text(
                       mensaje,
                       style: const TextStyle(
-                          color: Colors.black,
-                          fontSize: 15,
-                          decoration: TextDecoration.none),
+                        color: Colors.black,
+                        fontSize: 15,
+                        decoration: TextDecoration.none,
+                      ),
                     ),
-                  )
+                  ),
               ],
             ),
           ),

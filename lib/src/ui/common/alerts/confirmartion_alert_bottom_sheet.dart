@@ -1,5 +1,5 @@
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/ui/common/buttons/simple_button.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
 import 'package:flutter/material.dart';
 
 class ConfirmationAlertBottomSheet extends StatelessWidget {
@@ -8,13 +8,14 @@ class ConfirmationAlertBottomSheet extends StatelessWidget {
   final Widget? icon;
   final String? confirmTitle;
   final Function()? onConfirm;
-  const ConfirmationAlertBottomSheet(
-      {required this.title,
-      this.subtitle,
-      super.key,
-      this.confirmTitle,
-      this.onConfirm,
-      this.icon});
+  const ConfirmationAlertBottomSheet({
+    required this.title,
+    this.subtitle,
+    super.key,
+    this.confirmTitle,
+    this.onConfirm,
+    this.icon,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -25,24 +26,30 @@ class ConfirmationAlertBottomSheet extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text((title),
-              style: TextStyle(
-                  color: theme.fontColor,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold)),
+          Text(
+            (title),
+            style: TextStyle(
+              color: theme.fontColor,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
                 icon ??
-                    Icon(Icons.check_circle_rounded,
-                        size: 56, color: theme.success),
+                    Icon(
+                      Icons.check_circle_rounded,
+                      size: 56,
+                      color: theme.success,
+                    ),
                 const SizedBox(height: 16),
                 Text(
                   subtitle ?? '¿Está seguro de realizar esta acción?',
                   style: TextStyle(color: theme.grey, fontSize: 16),
                   textAlign: TextAlign.center,
-                )
+                ),
               ],
             ),
           ),
@@ -67,7 +74,7 @@ class ConfirmationAlertBottomSheet extends StatelessWidget {
                 ),
               ),
             ],
-          )
+          ),
         ],
       ),
     );

@@ -8,8 +8,15 @@ mixin FormController {
     return false;
   }
 
-  String validateData(BuildContext context, String? value, String alias,
-      {String? regExp, int? min, int? max, bool required = false}) {
+  String validateData(
+    BuildContext context,
+    String? value,
+    String alias, {
+    String? regExp,
+    int? min,
+    int? max,
+    bool required = false,
+  }) {
     final existeValor = value != null || (value != null && value.isNotEmpty);
     if (required && !existeValor) {
       return '$alias es requerido';

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:alimenta_app/src/config/init_app.dart';
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/constants/resources.dart';
+import 'package:red_neuro_app/src/config/init_app.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/constants/resources.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -12,16 +12,20 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   Widget _logo() {
-    return Column(children: [
-      Container(
-        height: 100,
-        width: 200,
-        decoration: const BoxDecoration(
+    return Column(
+      children: [
+        Container(
+          height: 100,
+          width: 200,
+          decoration: const BoxDecoration(
             image: DecorationImage(
-                fit: BoxFit.contain,
-                image: AssetImage(Recursos.logoPrincipal))),
-      ),
-    ]);
+              fit: BoxFit.contain,
+              image: AssetImage(Recursos.logoPrincipal),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   @override

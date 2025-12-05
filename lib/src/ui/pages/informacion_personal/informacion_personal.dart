@@ -1,8 +1,8 @@
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/plugins/auth/auth.dart';
-import 'package:alimenta_app/src/plugins/utils/utils.dart';
-import 'package:alimenta_app/src/ui/global/template_page.dart';
-import 'package:alimenta_app/src/ui/pages/mi_cuenta/componentes/avatar_perfil.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/plugins/auth/auth.dart';
+import 'package:red_neuro_app/src/plugins/utils/utils.dart';
+import 'package:red_neuro_app/src/ui/global/template_page.dart';
+import 'package:red_neuro_app/src/ui/pages/mi_cuenta/componentes/avatar_perfil.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -20,9 +20,11 @@ class InformacionPersonal extends StatelessWidget {
           scrolledUnderElevation: 0,
           elevation: 0,
           systemOverlayStyle: SystemUiOverlayStyle(
-              statusBarBrightness:
-                  theme.isDark ? Brightness.dark : Brightness.light,
-              statusBarColor: theme.transparent),
+            statusBarBrightness: theme.isDark
+                ? Brightness.dark
+                : Brightness.light,
+            statusBarColor: theme.transparent,
+          ),
           backgroundColor: theme.transparent,
         ),
         body: ListView(
@@ -35,10 +37,9 @@ class InformacionPersonal extends StatelessWidget {
               ),
               subtitle: Text(
                 profile.correoElectronico,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium!
-                    .copyWith(color: theme.grey),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium!.copyWith(color: theme.grey),
               ),
             ),
             ListTile(
@@ -48,11 +49,11 @@ class InformacionPersonal extends StatelessWidget {
                 style: TextStyle(color: theme.fontColor),
               ),
               subtitle: Text(
-                  '${profile.tipoDocumento}: ${profile.nroDocumento}',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(color: theme.grey)),
+                '${profile.tipoDocumento}: ${profile.nroDocumento}',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium!.copyWith(color: theme.grey),
+              ),
             ),
             ListTile(
               title: Text(
@@ -60,13 +61,13 @@ class InformacionPersonal extends StatelessWidget {
                 style: TextStyle(color: theme.fontColor),
               ),
               subtitle: Text(
-                  profile.fechaNacimiento.isEmpty
-                      ? 'Sin datos'
-                      : Utils.formatearFecha(profile.fechaNacimiento),
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium!
-                      .copyWith(color: theme.grey)),
+                profile.fechaNacimiento.isEmpty
+                    ? 'Sin datos'
+                    : Utils.formatearFecha(profile.fechaNacimiento),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium!.copyWith(color: theme.grey),
+              ),
             ),
           ],
         ),

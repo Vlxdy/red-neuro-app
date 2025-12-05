@@ -1,13 +1,13 @@
 import 'dart:convert';
-import 'package:alimenta_app/src/constants/constants.dart';
-import 'package:alimenta_app/src/plugins/seguridad/seguridad.dart';
-import 'package:alimenta_app/src/plugins/utils/connection.dart';
+import 'package:red_neuro_app/src/constants/constants.dart';
+import 'package:red_neuro_app/src/plugins/seguridad/seguridad.dart';
+import 'package:red_neuro_app/src/plugins/utils/connection.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:alimenta_app/src/constants/keys.dart';
-import 'package:alimenta_app/src/models/user.dart';
-import 'package:alimenta_app/src/plugins/utils/logger.dart';
-import 'package:alimenta_app/src/plugins/utils/preferences.dart';
+import 'package:red_neuro_app/src/constants/keys.dart';
+import 'package:red_neuro_app/src/models/user.dart';
+import 'package:red_neuro_app/src/plugins/utils/logger.dart';
+import 'package:red_neuro_app/src/plugins/utils/preferences.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
@@ -43,12 +43,13 @@ class Auth {
   final _store = AuthStore.instance;
   final seguridad = Seguridad.instance;
   PackageInfo _info = PackageInfo(
-      appName: '',
-      buildNumber: '',
-      packageName: '',
-      version: '',
-      buildSignature: '',
-      installerStore: '');
+    appName: '',
+    buildNumber: '',
+    packageName: '',
+    version: '',
+    buildSignature: '',
+    installerStore: '',
+  );
 
   bool _firstTime = false;
   bool _localAuth = false;
@@ -63,19 +64,25 @@ class Auth {
 
     if (token.isNotEmpty) {
       await _preferencesService.setStringSecure(
-          Keys.accessToken, jsonEncode(token.replaceAll('"', '')));
+        Keys.accessToken,
+        jsonEncode(token.replaceAll('"', '')),
+      );
       _token = token;
     }
 
     await _preferencesService.setString(
-        Keys.profile, jsonEncode(user.toJson()));
+      Keys.profile,
+      jsonEncode(user.toJson()),
+    );
     _user = user;
 
     Logger.sesion(_user.toJson().toString());
 
     if (refreshToken.isNotEmpty) {
       await _preferencesService.setStringSecure(
-          Keys.refreshToken, jsonEncode(refreshToken.replaceAll('"', '')));
+        Keys.refreshToken,
+        jsonEncode(refreshToken.replaceAll('"', '')),
+      );
       _refreshToken = refreshToken;
     }
 
@@ -87,7 +94,9 @@ class Auth {
 
   Future<void> updateUser(Usuario user) async {
     await _preferencesService.setString(
-        Keys.profile, jsonEncode(user.toJson()));
+      Keys.profile,
+      jsonEncode(user.toJson()),
+    );
     _user = user;
   }
 
@@ -107,13 +116,14 @@ class Auth {
     final refreshT = await refreshToken;
     final Map<String, dynamic> body = {
       'jid': refreshT.replaceAll('"', ''),
-      'token': _token.replaceAll('"', '')
+      'token': _token.replaceAll('"', ''),
     };
     Logger.info('Ejecutando>>>> ${Constantes.apiUrl}/token-app, body: $body');
     final response = await http.post(
-        Uri.parse('${Constantes.apiUrl}/token-app'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(body));
+      Uri.parse('${Constantes.apiUrl}/token-app'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(body),
+    );
     if (response.statusCode == 200) {
       Logger.sesion('Rotacion de token exitosa');
       final decode = jsonDecode(response.body);
@@ -231,7 +241,7 @@ class Auth {
           Uri.parse(url),
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ${await apiToken}'
+            'Authorization': 'Bearer ${await apiToken}',
           },
           body: jsonEncode({'token': tokenFCM, 'idUsuario': userId}),
         );

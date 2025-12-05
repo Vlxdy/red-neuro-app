@@ -1,6 +1,6 @@
-import 'package:alimenta_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:alimenta_app/src/constants/resources.dart';
+import 'package:red_neuro_app/src/constants/resources.dart';
 
 class HeaderLoginAccount extends StatelessWidget {
   const HeaderLoginAccount(this.offline, {super.key});
@@ -18,9 +18,11 @@ class HeaderLoginAccount extends StatelessWidget {
               height: 200,
               width: 200,
               decoration: const BoxDecoration(
-                  image: DecorationImage(
-                      image: AssetImage(Recursos.logoPrincipal),
-                      fit: BoxFit.contain)),
+                image: DecorationImage(
+                  image: AssetImage(Recursos.logoPrincipal),
+                  fit: BoxFit.contain,
+                ),
+              ),
             ),
           ],
         ),
@@ -28,13 +30,15 @@ class HeaderLoginAccount extends StatelessWidget {
             ? Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.signal_wifi_connected_no_internet_4_rounded,
-                      color: theme.grey),
+                  Icon(
+                    Icons.signal_wifi_connected_no_internet_4_rounded,
+                    color: theme.grey,
+                  ),
                   const SizedBox(width: 4),
                   const Text(
                     'Estas sin conexión a internet',
                     style: TextStyle(fontWeight: FontWeight.w300),
-                  )
+                  ),
                 ],
               )
             : const SizedBox(),
@@ -44,7 +48,7 @@ class HeaderLoginAccount extends StatelessWidget {
                 style: Theme.of(context).textTheme.labelLarge,
                 textAlign: TextAlign.center,
               )
-            : const SizedBox()
+            : const SizedBox(),
       ],
     );
   }

@@ -1,4 +1,4 @@
-import 'package:alimenta_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:flutter/material.dart';
 
 class CounterBadge extends StatelessWidget {
@@ -45,17 +45,11 @@ class CounterBadge extends StatelessWidget {
           top: offset.dy,
           child: Container(
             padding: padding,
-            constraints: BoxConstraints(
-              minHeight: minSize,
-              minWidth: minSize,
-            ),
+            constraints: BoxConstraints(minHeight: minSize, minWidth: minSize),
             decoration: BoxDecoration(
               color: backgroundColor ?? theme.error,
               borderRadius: BorderRadius.circular(minSize),
-              border: Border.all(
-                color: borderColor ?? theme.white,
-                width: 1.5,
-              ),
+              border: Border.all(color: borderColor ?? theme.white, width: 1.5),
             ),
             child: Center(
               child: Text(

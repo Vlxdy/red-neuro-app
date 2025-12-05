@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:alimenta_app/src/config/dispositivo_service.dart';
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/plugins/utils/encode.dart';
-import 'package:alimenta_app/src/ui/common/buttons/simple_button.dart';
-import 'package:alimenta_app/src/ui/common/text_inputs/text_input.dart';
-import 'package:alimenta_app/src/ui/global/loading_animation.dart';
-import 'package:alimenta_app/src/ui/pages/login/login_service.dart';
+import 'package:red_neuro_app/src/config/dispositivo_service.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/plugins/utils/encode.dart';
+import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
+import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
+import 'package:red_neuro_app/src/ui/global/loading_animation.dart';
+import 'package:red_neuro_app/src/ui/pages/login/login_service.dart';
 
 class Credenciales extends StatefulWidget {
   const Credenciales({super.key});

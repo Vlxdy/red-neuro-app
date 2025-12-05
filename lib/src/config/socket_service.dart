@@ -1,5 +1,5 @@
 // lib/src/services/socket_service.dart
-import 'package:alimenta_app/src/constants/constants.dart';
+import 'package:red_neuro_app/src/constants/constants.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:flutter/foundation.dart';
 

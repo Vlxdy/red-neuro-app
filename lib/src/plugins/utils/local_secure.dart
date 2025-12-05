@@ -1,5 +1,5 @@
 // import 'package:ciudadania_digital/common/utils.dart';
-import 'package:alimenta_app/src/plugins/utils/logger.dart';
+import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:local_auth_android/local_auth_android.dart';
@@ -40,8 +40,8 @@ class LocalSecure {
   static Future<bool> isFaceRecognitionAvailable() async {
     try {
       // Obtiene la lista de biometrías disponibles en el dispositivo
-      List<BiometricType> availableBiometrics =
-          await auth.getAvailableBiometrics();
+      List<BiometricType> availableBiometrics = await auth
+          .getAvailableBiometrics();
       // Verifica si el tipo de biometría "face" está presente
       if (availableBiometrics.contains(BiometricType.face)) {
         Logger.info('Reconocimiento facial disponible');
@@ -56,8 +56,11 @@ class LocalSecure {
     }
   }
 
-  static Future<bool> autenticar(
-      {String? titulo, String? message, bool biometricOnly = true}) async {
+  static Future<bool> autenticar({
+    String? titulo,
+    String? message,
+    bool biometricOnly = true,
+  }) async {
     if (_authInProgress) {
       Logger.error("Ya hay una autenticación en progreso");
       return false;
@@ -66,23 +69,18 @@ class LocalSecure {
       // Establece que la autenticación está en progreso
       _authInProgress = true;
       return await auth.authenticate(
-          // localizedReason: 'Escanea tu huella dactilar para desbloquear',
-          localizedReason:
-              message ?? 'Escanea tu huella dactilar para continuar',
-          options: AuthenticationOptions(
-            biometricOnly: biometricOnly,
-            stickyAuth: true,
-            useErrorDialogs: true,
+        localizedReason: message ?? 'Escanea tu huella dactilar para continuar',
+        biometricOnly: biometricOnly, // reemplaza options.biometricOnly
+        persistAcrossBackgrounding: true, // reemplaza stickyAuth
+        sensitiveTransaction: true, // reemplaza useErrorDialogs
+        authMessages: <AuthMessages>[
+          AndroidAuthMessages(
+            signInTitle: titulo ?? 'Autenticación requerida',
+            cancelButton: 'Cancelar',
           ),
-          authMessages: <AuthMessages>[
-            AndroidAuthMessages(
-              signInTitle: titulo,
-              cancelButton: 'Cancelar',
-            ),
-            const IOSAuthMessages(
-              cancelButton: 'Cancelar',
-            ),
-          ]);
+          const IOSAuthMessages(cancelButton: 'Cancelar'),
+        ],
+      );
     } on PlatformException catch (e) {
       // Maneja el error de autenticación
       Logger.error('Error de autenticación: $e');
@@ -110,19 +108,15 @@ class LocalSecure {
       return await auth.authenticate(
         localizedReason:
             message ?? 'Usa el reconocimiento facial para continuar',
-        options: const AuthenticationOptions(
-          biometricOnly: true,
-          stickyAuth: true,
-          useErrorDialogs: true,
-        ),
+        biometricOnly: true,
+        persistAcrossBackgrounding: true,
+        sensitiveTransaction: true,
         authMessages: const <AuthMessages>[
           AndroidAuthMessages(
             signInTitle: 'Autenticación facial requerida',
             cancelButton: 'Cancelar',
           ),
-          IOSAuthMessages(
-            cancelButton: 'Cancelar',
-          ),
+          IOSAuthMessages(cancelButton: 'Cancelar'),
         ],
       );
     } on PlatformException catch (e) {

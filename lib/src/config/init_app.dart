@@ -1,11 +1,9 @@
 // ignore: depend_on_referenced_packages
-import 'package:alimenta_app/src/config/routes.dart';
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/plugins/auth/auth.dart';
-import 'package:alimenta_app/src/plugins/seguridad/seguridad.dart';
-import 'package:alimenta_app/src/plugins/utils/logger.dart';
-import 'package:alimenta_app/src/sockets/sockets_provider.dart';
-import 'package:alimenta_app/src/ui/pages/citas_medicas/services/citas_medicas_service.dart';
+import 'package:red_neuro_app/src/config/routes.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/plugins/auth/auth.dart';
+import 'package:red_neuro_app/src/plugins/seguridad/seguridad.dart';
+import 'package:red_neuro_app/src/sockets/sockets_provider.dart';
 import 'package:go_router/go_router.dart';
 
 class InitAppController {
@@ -14,7 +12,6 @@ class InitAppController {
   static InitAppController instance = InitAppController._();
   final auth = Auth.instance;
   final security = Seguridad.instance;
-  late CitasMedicasService citasService;
   late SocketProvider socketProvider;
 
   // final socketService = SocketService();
@@ -28,7 +25,7 @@ class InitAppController {
     final token = await auth.apiToken;
 
     if (!context.mounted) return;
-    citasService = CitasMedicasService('', context);
+
     socketProvider = SocketProvider();
 
     await auth.updateAppInfo();
@@ -43,9 +40,6 @@ class InitAppController {
       return;
     }
     await auth.loginSuccess();
-    await citasService.cargarDatosIniciales().whenComplete(() {
-      Logger.info('Citas médicas cargadas');
-    });
 
     if (!context.mounted) return;
     GoRouter.of(context).goNamed(RouteNames.procesarSesion);

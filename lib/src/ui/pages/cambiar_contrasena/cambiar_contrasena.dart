@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/ui/common/buttons/simple_button.dart';
-import 'package:alimenta_app/src/ui/common/text_inputs/text_input.dart';
-import 'package:alimenta_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena_service.dart';
-import 'package:alimenta_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena_store.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
+import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
+import 'package:red_neuro_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena_service.dart';
+import 'package:red_neuro_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena_store.dart';
 import 'package:provider/provider.dart';
-import 'package:zxcvbn/zxcvbn.dart';
+import 'package:zxcvbnm/zxcvbnm.dart';
 
 GlobalKey<ScaffoldMessengerState> cambiarContrasenaMessenger =
     GlobalKey<ScaffoldMessengerState>();
@@ -26,7 +26,7 @@ class _CambiarContrasenaState extends State<CambiarContrasena> {
   final GlobalKey<FormState> _formularioKey = GlobalKey<FormState>();
   late CambiarContrasenaService _service;
 
-  final zxcvbn = Zxcvbn();
+  final zxcvbn = Zxcvbnm();
 
   Color color(int score) {
     final theme = ThemeController.instance;
@@ -68,9 +68,11 @@ class _CambiarContrasenaState extends State<CambiarContrasena> {
           elevation: 0,
           title: const Text('Cambiar contraseña'),
           systemOverlayStyle: SystemUiOverlayStyle(
-              statusBarBrightness:
-                  theme.isDark ? Brightness.dark : Brightness.light,
-              statusBarColor: theme.transparent),
+            statusBarBrightness: theme.isDark
+                ? Brightness.dark
+                : Brightness.light,
+            statusBarColor: theme.transparent,
+          ),
           backgroundColor: theme.transparent,
         ),
         body: Padding(
@@ -82,17 +84,18 @@ class _CambiarContrasenaState extends State<CambiarContrasena> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('* Las contraseñas deben tener 8 caracteres o más',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(color: theme.grey)),
                   Text(
-                      '* Las buenas contraseñas son dificiles de adivinar y usan palabras, números, símbolos y letras mayúsculas poco comunes.',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(color: theme.grey)),
+                    '* Las contraseñas deben tener 8 caracteres o más',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: theme.grey),
+                  ),
+                  Text(
+                    '* Las buenas contraseñas son dificiles de adivinar y usan palabras, números, símbolos y letras mayúsculas poco comunes.',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: theme.grey),
+                  ),
                   const SizedBox(height: 16),
                   CustomTextInput(
                     requiredData: true,
@@ -112,8 +115,9 @@ class _CambiarContrasenaState extends State<CambiarContrasena> {
                     onChange: (String? value) {
                       store.nuevaContrasena = value ?? '';
                       if (value != null && value.isNotEmpty) {
-                        final result = zxcvbn.evaluate(value);
-                        store.calificacion = result.score ?? 0.0;
+                        final result = zxcvbn(value);
+                        // store.calificacion = result.score ?? 0.0;
+                        store.calificacion = result.score.toDouble();
                       }
                     },
                     validate: (value, alias) =>
@@ -125,11 +129,11 @@ class _CambiarContrasenaState extends State<CambiarContrasena> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Nivel de seguridad',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
-                                      ?.copyWith(color: theme.fontColor)),
+                              Text(
+                                'Nivel de seguridad',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(color: theme.fontColor),
+                              ),
                               const SizedBox(height: 8),
                               LinearProgressIndicator(
                                 value: store.calificacion * 0.25,
@@ -152,13 +156,16 @@ class _CambiarContrasenaState extends State<CambiarContrasena> {
                   ),
                   const SizedBox(height: 16),
                   SimpleButton(
-                      title: 'Modificar',
-                      onTap: () {
-                        if (_service.validarForm(
-                            _formularioKey, 'Las contraseñas no coinciden')) {
-                          _service.cambiarContrasena();
-                        }
-                      })
+                    title: 'Modificar',
+                    onTap: () {
+                      if (_service.validarForm(
+                        _formularioKey,
+                        'Las contraseñas no coinciden',
+                      )) {
+                        _service.cambiarContrasena();
+                      }
+                    },
+                  ),
                 ],
               ),
             ),

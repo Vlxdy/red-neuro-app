@@ -1,8 +1,8 @@
 // lib/src/providers/socket_provider.dart
-import 'package:alimenta_app/main.dart';
-import 'package:alimenta_app/src/config/socket_service.dart';
-import 'package:alimenta_app/src/plugins/utils/logger.dart';
-import 'package:alimenta_app/src/ui/common/snackbar/snackbar.dart';
+import 'package:red_neuro_app/main.dart';
+import 'package:red_neuro_app/src/config/socket_service.dart';
+import 'package:red_neuro_app/src/plugins/utils/logger.dart';
+import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:flutter/material.dart';
 
 class SocketProvider extends ChangeNotifier {
@@ -24,25 +24,24 @@ class SocketProvider extends ChangeNotifier {
     });
 
     // Cuando llegue nueva ubicación
-    SocketService.instance.on<Map<String, dynamic>>(
-      'ubicacion-actualizada',
-      (data) async {
-        final advertencia = data['advertencia'] as String?;
-        Logger.info('Nueva ubicación recibida');
+    SocketService.instance.on<Map<String, dynamic>>('ubicacion-actualizada', (
+      data,
+    ) async {
+      final advertencia = data['advertencia'] as String?;
+      Logger.info('Nueva ubicación recibida');
 
-        showSnackBar(
-          rootScaffoldMessengerKey,
-          advertencia ?? 'Ubicación actualizada correctamente',
-          state: advertencia != null
-              ? StatusSnackBar.error
-              : StatusSnackBar.success,
-          colorText: Colors.white,
-        );
+      showSnackBar(
+        rootScaffoldMessengerKey,
+        advertencia ?? 'Ubicación actualizada correctamente',
+        state: advertencia != null
+            ? StatusSnackBar.error
+            : StatusSnackBar.success,
+        colorText: Colors.white,
+      );
 
-        // Se elimina la actualización automática de dependientes ya que el
-        // módulo de plan nutricional no utiliza esta información.
-      },
-    );
+      // Se elimina la actualización automática de dependientes ya que el
+      // módulo de plan nutricional no utiliza esta información.
+    });
   }
 
   @override

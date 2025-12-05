@@ -1,7 +1,7 @@
-import 'package:alimenta_app/src/config/routes.dart';
-import 'package:alimenta_app/src/constants/keys.dart';
-import 'package:alimenta_app/src/plugins/utils/preferences.dart';
-import 'package:alimenta_app/src/ui/common/alerts/confirmation_alert_dialog.dart';
+import 'package:red_neuro_app/src/config/routes.dart';
+import 'package:red_neuro_app/src/constants/keys.dart';
+import 'package:red_neuro_app/src/plugins/utils/preferences.dart';
+import 'package:red_neuro_app/src/ui/common/alerts/confirmation_alert_dialog.dart';
 import 'package:flutter/material.dart';
 
 class DialogService {

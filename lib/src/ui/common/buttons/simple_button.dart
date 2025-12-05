@@ -1,6 +1,6 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
-import 'package:alimenta_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
 
 class SimpleButton extends StatelessWidget {
   final Color? background;
@@ -17,21 +17,22 @@ class SimpleButton extends StatelessWidget {
   final bool? disabled;
   final double? height;
 
-  SimpleButton(
-      {super.key,
-      this.background,
-      this.textColor,
-      this.onTap,
-      this.fullWidth = true,
-      this.elevated = true,
-      this.title = "",
-      this.suffixicon,
-      this.preffixicon,
-      this.customPreffixicon,
-      this.width,
-      this.outlined = false,
-      this.disabled = false,
-      this.height});
+  SimpleButton({
+    super.key,
+    this.background,
+    this.textColor,
+    this.onTap,
+    this.fullWidth = true,
+    this.elevated = true,
+    this.title = "",
+    this.suffixicon,
+    this.preffixicon,
+    this.customPreffixicon,
+    this.width,
+    this.outlined = false,
+    this.disabled = false,
+    this.height,
+  });
 
   final theme = ThemeController.instance;
 
@@ -40,22 +41,23 @@ class SimpleButton extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(
-            color: disabled!
-                ? theme.grey.withValues(alpha: .3)
-                : background ?? theme.primary),
+          color: disabled!
+              ? theme.grey.withValues(alpha: .3)
+              : background ?? theme.primary,
+        ),
         boxShadow: [
           BoxShadow(
             color: _boxShadowColor,
             offset: const Offset(0, 0),
             spreadRadius: 2,
             blurRadius: 5,
-          )
+          ),
         ],
         color: disabled!
             ? theme.grey.withValues(alpha: .3)
             : outlined
-                ? theme.transparent
-                : background ?? theme.primary,
+            ? theme.transparent
+            : background ?? theme.primary,
         borderRadius: BorderRadius.circular(50),
       ),
       child: Material(
@@ -84,8 +86,8 @@ class SimpleButton extends StatelessWidget {
                       color: disabled!
                           ? theme.grey
                           : outlined
-                              ? background
-                              : textColor ?? Colors.white,
+                          ? background
+                          : textColor ?? Colors.white,
                     ),
                   ),
                 ),
@@ -101,23 +103,27 @@ class SimpleButton extends StatelessWidget {
 
   Widget get _preffixicon {
     return preffixicon != null
-        ? Icon(preffixicon,
+        ? Icon(
+            preffixicon,
             color: disabled!
                 ? theme.grey
                 : outlined
-                    ? background
-                    : textColor ?? Colors.white)
+                ? background
+                : textColor ?? Colors.white,
+          )
         : const SizedBox();
   }
 
   Widget get _suffixicon {
     return suffixicon != null
-        ? Icon(suffixicon,
+        ? Icon(
+            suffixicon,
             color: disabled!
                 ? theme.grey
                 : outlined
-                    ? background
-                    : textColor ?? Colors.white)
+                ? background
+                : textColor ?? Colors.white,
+          )
         : const SizedBox();
   }
 

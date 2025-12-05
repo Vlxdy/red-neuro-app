@@ -1,10 +1,10 @@
-import 'package:alimenta_app/src/config/theme_controller.dart';
-import 'package:alimenta_app/src/plugins/auth/auth.dart';
-import 'package:alimenta_app/src/plugins/seguridad/seguridad.dart';
-import 'package:alimenta_app/src/plugins/utils/logger.dart';
-import 'package:alimenta_app/src/ui/common/alerts/confirmation_alert_dialog.dart';
-import 'package:alimenta_app/src/ui/common/snackbar/snackbar.dart';
-import 'package:alimenta_app/src/ui/pages/mi_cuenta/componentes/avatar_perfil.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/plugins/auth/auth.dart';
+import 'package:red_neuro_app/src/plugins/seguridad/seguridad.dart';
+import 'package:red_neuro_app/src/plugins/utils/logger.dart';
+import 'package:red_neuro_app/src/ui/common/alerts/confirmation_alert_dialog.dart';
+import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
+import 'package:red_neuro_app/src/ui/pages/mi_cuenta/componentes/avatar_perfil.dart';
 import 'package:flutter/material.dart';
 import 'package:solar_icons/solar_icons.dart';
 
@@ -25,21 +25,26 @@ class _MicuentaState extends State<Micuenta> {
   void logout() {
     final theme = ThemeController.instance;
     showDialog(
-        context: context,
-        builder: (context) {
-          return Dialog(
-            child: ConfirmationDialog(
-              title: 'Cerrar sesión',
-              onConfirm: () async {
-                var error = await Auth.instance.logout();
-                if (error != null) {
-                  showSnackBar(miCuentaMessenger, error,
-                      state: StatusSnackBar.error, colorText: theme.white);
-                }
-              },
-            ),
-          );
-        });
+      context: context,
+      builder: (context) {
+        return Dialog(
+          child: ConfirmationDialog(
+            title: 'Cerrar sesión',
+            onConfirm: () async {
+              var error = await Auth.instance.logout();
+              if (error != null) {
+                showSnackBar(
+                  miCuentaMessenger,
+                  error,
+                  state: StatusSnackBar.error,
+                  colorText: theme.white,
+                );
+              }
+            },
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -93,10 +98,11 @@ class _MicuentaState extends State<Micuenta> {
                     Text(
                       'Sesión',
                       style: TextStyle(
-                          color: theme.fontColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 20),
-                    )
+                        color: theme.fontColor,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -104,21 +110,19 @@ class _MicuentaState extends State<Micuenta> {
               Expanded(
                 child: Container(
                   decoration: BoxDecoration(
-                      color: theme.background,
-                      borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(25),
-                          topRight: Radius.circular(25))),
+                    color: theme.background,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(25),
+                      topRight: Radius.circular(25),
+                    ),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     child: Column(
                       children: [
-                        const SizedBox(
-                          height: 15,
-                        ),
+                        const SizedBox(height: 15),
                         AvatarPerfil(),
-                        const SizedBox(
-                          height: 30,
-                        ),
+                        const SizedBox(height: 30),
                         Container(
                           margin: const EdgeInsets.symmetric(vertical: 5),
                           decoration: BoxDecoration(
@@ -129,51 +133,54 @@ class _MicuentaState extends State<Micuenta> {
                           child: ListTile(
                             onTap: () async {
                               if (!await seguridad.hasBiometrics) {
-                                showSnackBar(miCuentaMessenger,
-                                    'No tienes un sensor de huella disponible',
-                                    state: StatusSnackBar.error,
-                                    colorText: theme.white);
+                                showSnackBar(
+                                  miCuentaMessenger,
+                                  'No tienes un sensor de huella disponible',
+                                  state: StatusSnackBar.error,
+                                  colorText: theme.white,
+                                );
                                 return;
                               }
                               Logger.info('modificar fingerprint');
                               if (fingerprintEnabled != null &&
                                   hasFingerprint != null &&
                                   hasFingerprint!) {
-                                seguridad
-                                    .updateFingeprint(!fingerprintEnabled!);
+                                seguridad.updateFingeprint(
+                                  !fingerprintEnabled!,
+                                );
                                 setState(() {
                                   fingerprintEnabled = !fingerprintEnabled!;
                                 });
                               }
                             },
-                            leading: const Icon(
-                              Icons.fingerprint_rounded,
-                            ),
-                            title: const Text(
-                              'Usar el sensor de huella',
-                            ),
+                            leading: const Icon(Icons.fingerprint_rounded),
+                            title: const Text('Usar el sensor de huella'),
                             trailing: Transform.scale(
                               scale: fingerprintEnabled != null ? 0.7 : 0.5,
-                              child: fingerprintEnabled != null &&
+                              child:
+                                  fingerprintEnabled != null &&
                                       hasFingerprint != null
                                   ? Switch.adaptive(
                                       activeColor: theme.primary,
-                                      activeTrackColor:
-                                          theme.primary.withValues(alpha: 0.3),
+                                      activeTrackColor: theme.primary
+                                          .withValues(alpha: 0.3),
                                       inactiveThumbColor: theme.grey,
-                                      inactiveTrackColor:
-                                          theme.grey.withValues(alpha: 0.3),
+                                      inactiveTrackColor: theme.grey.withValues(
+                                        alpha: 0.3,
+                                      ),
                                       value: fingerprintEnabled!,
                                       onChanged: !hasFingerprint!
                                           ? null
                                           : (value) {
                                               Logger.info(
-                                                  'usar el sensor de huella ? > $value');
+                                                'usar el sensor de huella ? > $value',
+                                              );
                                               seguridad.updateFingeprint(value);
                                               setState(() {
                                                 fingerprintEnabled = value;
                                               });
-                                            })
+                                            },
+                                    )
                                   : CircularProgressIndicator(
                                       color: theme.secondary,
                                     ),
@@ -190,8 +197,10 @@ class _MicuentaState extends State<Micuenta> {
                           child: ListTile(
                             onTap: logout,
                             tileColor: Colors.red,
-                            leading: Icon(SolarIconsOutline.logout_3,
-                                color: theme.error),
+                            leading: Icon(
+                              SolarIconsOutline.logout_3,
+                              color: theme.error,
+                            ),
                             title: Text(
                               'Cerrar sesión',
                               style: TextStyle(color: theme.error),
