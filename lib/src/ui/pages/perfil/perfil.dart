@@ -339,7 +339,7 @@ class _SessionActions extends StatelessWidget {
           Divider(color: theme.grey.withValues(alpha: 0.2)),
           ListTile(
             contentPadding: EdgeInsets.zero,
-            leading: Icon(Icons.logout, color: theme.danger),
+            leading: Icon(Icons.logout, color: theme.error),
             title: const Text('Cerrar sesión'),
             subtitle: const Text('Finaliza la sesión actual de manera segura.'),
             trailing: loggingOut
@@ -348,7 +348,7 @@ class _SessionActions extends StatelessWidget {
                     height: 18,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: theme.danger,
+                      color: theme.error,
                     ),
                   )
                 : null,

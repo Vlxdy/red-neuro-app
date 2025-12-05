@@ -3,6 +3,7 @@ import 'package:red_neuro_app/src/constants/constants.dart';
 import 'package:red_neuro_app/src/plugins/seguridad/seguridad.dart';
 import 'package:red_neuro_app/src/plugins/utils/connection.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:red_neuro_app/src/constants/keys.dart';
 import 'package:red_neuro_app/src/models/user.dart';
