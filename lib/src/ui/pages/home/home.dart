@@ -129,6 +129,7 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _selectedIndex = index;
       _selectedSubItem = null;
+      showSubmenu = false;
     });
     Logger.info('Vista $titulo');
     controllerPrincipal.jumpToPage(index);
@@ -138,6 +139,7 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _selectedIndex = index;
       _selectedSubItem = subIndex;
+      showSubmenu = true;
     });
     Logger.info('Vista $titulo');
     controllerSubmenu.jumpToPage(subIndex);
@@ -273,7 +275,7 @@ class _HomePageState extends State<HomePage> {
       },
     ).whenComplete(
       () => setState(() {
-        showSubmenu = false;
+        showSubmenu = _selectedSubItem != null;
       }),
     );
   }
@@ -401,16 +403,18 @@ class _HomePageState extends State<HomePage> {
               Expanded(
                 child: PageView(
                   physics: const NeverScrollableScrollPhysics(),
-                  controller: showSubmenu
+                  controller: _selectedSubItem != null
                       ? controllerSubmenu
                       : controllerPrincipal,
                   onPageChanged: (int pageIndex) {
                     setState(() {
-                      if (showSubmenu) {
+                      if (_selectedSubItem != null) {
                         _selectedSubItem = pageIndex;
+                        showSubmenu = true;
                       } else {
                         _selectedIndex = pageIndex;
                         _selectedSubItem = null;
+                        showSubmenu = false;
                       }
                     });
                   },
@@ -469,8 +473,6 @@ List<ChildrenItem> _itemsByRole({
   final theme = ThemeController.instance;
   final resolvedRole = (selectedRole?.rol ?? user.rol ?? '').toUpperCase();
 
-  final baseCuenta = _accountMenu(theme);
-
   final homeSummary = ChildrenItem(
     iconoImagen: SolarIconsOutline.home,
     iconoImagenSeleccionada: SolarIconsBold.home,
@@ -479,30 +481,91 @@ List<ChildrenItem> _itemsByRole({
     children: KeepAlivePage(child: overview),
   );
 
-  final moduleItems = _modulesFromRole(
+  final perfilNav = ChildrenItem(
+    iconoImagen: SolarIconsOutline.user,
+    iconoImagenSeleccionada: SolarIconsBold.user,
+    titulo: 'Perfil',
+    color: theme.primary,
+    children: const KeepAlivePage(child: Perfil()),
+  );
+
+  final subModuleItems = _submodulesFromRole(
     selectedRole: selectedRole,
     resolvedRole: resolvedRole,
     theme: theme,
   );
 
-  return [homeSummary, ...moduleItems, ...baseCuenta];
+  const maxDirectTabs = 4;
+  final visibleSubmodules =
+      subModuleItems.take(maxDirectTabs).toList(growable: false);
+  final overflowSubmodules =
+      subModuleItems.skip(maxDirectTabs).toList(growable: false);
+
+  final List<ChildrenItem> navigation = [homeSummary, ...visibleSubmodules];
+
+  if (overflowSubmodules.isNotEmpty) {
+    navigation.add(
+      ChildrenItem(
+        iconoImagen: SolarIconsOutline.menuDots,
+        iconoImagenSeleccionada: SolarIconsBold.menuDots,
+        titulo: 'Más',
+        color: theme.primary,
+        itemsSubmenu: overflowSubmodules,
+        children: KeepAlivePage(
+          child: RoleTrayPlaceholder(
+            title: 'Elige una bandeja',
+            description:
+                'Este rol tiene varias bandejas. Selecciona una desde el menú flotante.',
+            actions: const [
+              'Abre el menú "Más" para listar todas las bandejas disponibles',
+              'Selecciona la bandeja que quieras explorar',
+            ],
+            leadingIcon: PhosphorIconsRegular.dotsThreeCircle,
+          ),
+        ),
+      ),
+    );
+  }
+
+  navigation.add(perfilNav);
+
+  return navigation;
 }
 
-List<ChildrenItem> _modulesFromRole({
+List<ChildrenItem> _submodulesFromRole({
   required Rol? selectedRole,
   required String resolvedRole,
   required ThemeController theme,
 }) {
   if (selectedRole != null && selectedRole.modulos.isNotEmpty) {
-    final sortedModules = [...selectedRole.modulos]
-      ..sort(
-        (a, b) => (a.propiedades?.orden ?? 0)
-            .compareTo(b.propiedades?.orden ?? 0),
-      );
+    final filteredModules = selectedRole.modulos.where((module) {
+      final name = module.nombre.toLowerCase();
+      final label = module.label.toLowerCase();
+      final url = module.url.toLowerCase();
+      return name != 'principal' && label != 'principal' && url != '/principal';
+    }).toList();
 
-    return sortedModules
-        .map((module) => _moduleToItem(module, theme))
-        .toList();
+    final orderedModules = filteredModules
+      ..sort((a, b) => (a.propiedades?.orden ?? 0)
+          .compareTo(b.propiedades?.orden ?? 0));
+
+    final submodules = <ChildrenItem>[];
+    for (final module in orderedModules) {
+      final orderedSubmodules = [...module.subModulos]
+        ..sort((a, b) => (a.propiedades?.orden ?? 0)
+            .compareTo(b.propiedades?.orden ?? 0));
+
+      for (final subModule in orderedSubmodules) {
+        submodules.add(
+          _submoduleToItem(
+            subModule,
+            theme: theme,
+          ),
+        );
+      }
+    }
+
+    if (submodules.isNotEmpty) return submodules;
   }
 
   switch (resolvedRole) {
@@ -517,33 +580,26 @@ List<ChildrenItem> _modulesFromRole({
   }
 }
 
-ChildrenItem _moduleToItem(Modulo module, ThemeController theme) {
-  final title = module.nombre.isNotEmpty ? module.nombre : module.label;
-  final description = module.propiedades?.descripcion ??
-      'Módulo ${module.label} sin descripción detallada. Bandeja vacía por ahora.';
-
-  final trayChild = module.subModulos.isNotEmpty
-      ? _SubmoduleTrayGrid(
-          moduleLabel: title,
-          subModules: module.subModulos,
-          theme: theme,
-        )
-      : RoleTrayPlaceholder(
-          title: title,
-          description: description,
-          actions: ['Explora las opciones disponibles dentro del módulo $title.'],
-          leadingIcon: _moduleIconData(module.propiedades?.icono),
-        );
+ChildrenItem _submoduleToItem(
+  SubModulo subModule, {
+  required ThemeController theme,
+}) {
+  final blueprint = _resolveTrayBlueprint(subModule);
 
   return ChildrenItem(
-    iconoImagen: _moduleIconData(module.propiedades?.icono),
-    iconoImagenSeleccionada: _moduleIconData(
-      module.propiedades?.icono,
-      filled: true,
-    ),
-    titulo: module.label.isNotEmpty ? module.label : module.nombre,
+    iconoImagen: _moduleIconData(subModule.propiedades?.icono),
+    iconoImagenSeleccionada:
+        _moduleIconData(subModule.propiedades?.icono, filled: true),
+    titulo: subModule.label.isNotEmpty ? subModule.label : subModule.nombre,
     color: theme.primary,
-    children: KeepAlivePage(child: trayChild),
+    children: KeepAlivePage(
+      child: RoleTrayPlaceholder(
+        title: blueprint.title,
+        description: blueprint.description,
+        actions: blueprint.actions,
+        leadingIcon: blueprint.icon,
+      ),
+    ),
   );
 }
 
@@ -847,72 +903,6 @@ class UserOverview extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _SubmoduleTrayGrid extends StatelessWidget {
-  const _SubmoduleTrayGrid({
-    required this.moduleLabel,
-    required this.subModules,
-    required this.theme,
-  });
-
-  final String moduleLabel;
-  final List<SubModulo> subModules;
-  final ThemeController theme;
-
-  @override
-  Widget build(BuildContext context) {
-    final sortedSubmodules = [...subModules]
-      ..sort((a, b) => (a.propiedades?.orden ?? 0)
-          .compareTo(b.propiedades?.orden ?? 0));
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            moduleLabel,
-            style: TextStyle(
-              color: theme.secondary,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: sortedSubmodules
-                .map((subModule) => _buildTray(context, subModule))
-                .toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTray(BuildContext context, SubModulo subModule) {
-    final blueprint = _resolveTrayBlueprint(subModule);
-
-    return SizedBox(
-      width: 360,
-      child: Card(
-        elevation: 2,
-        color: Theme.of(context).cardColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: SizedBox(
-          height: 320,
-          child: RoleTrayPlaceholder(
-            title: blueprint.title,
-            description: blueprint.description,
-            actions: blueprint.actions,
-            leadingIcon: blueprint.icon,
-          ),
-        ),
       ),
     );
   }
