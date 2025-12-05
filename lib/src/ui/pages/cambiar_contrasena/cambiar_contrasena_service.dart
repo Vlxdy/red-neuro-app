@@ -11,10 +11,10 @@ import 'package:red_neuro_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena
 class CambiarContrasenaService extends ServiceConfig {
   CambiarContrasenaService(super.urlBase, super.context);
 
-  final _store = CambiarContrasenaStore.instance;
+  final CambiarContrasenaStore _store = CambiarContrasenaStore.instance;
 
   bool validarForm(GlobalKey<FormState> formKey, String mensajeFallido) {
-    final theme = ThemeController.instance;
+    final ThemeController theme = ThemeController.instance;
     if (_store.nuevaContrasena != _store.repiteContrasena) {
       showSnackBar(
         cambiarContrasenaMessenger,
@@ -28,14 +28,14 @@ class CambiarContrasenaService extends ServiceConfig {
   }
 
   Future<void> cambiarContrasena() async {
-    final theme = ThemeController.instance;
-    final body = {
+    final ThemeController theme = ThemeController.instance;
+    final Map<String, dynamic> body = <String, dynamic>{
       'contrasenaActual': Encode.toBase64(_store.contrasena),
       'contrasenaNueva': Encode.toBase64(_store.nuevaContrasena),
     };
     _store.cargando = true;
     try {
-      final response = await fetch(
+      final ResponseApi response = await fetch(
         '/usuarios/cuenta/contrasena',
         type: HttpProtocol.patch,
         body: body,

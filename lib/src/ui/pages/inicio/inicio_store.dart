@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class CodigoPinStore with ChangeNotifier {
   CodigoPinStore._();
-  static final instance = CodigoPinStore._();
+  static final CodigoPinStore instance = CodigoPinStore._();
 
   bool _cargando = false;
   bool get cargando => _cargando;
@@ -11,7 +11,7 @@ class CodigoPinStore with ChangeNotifier {
     notifyListeners();
   }
 
-  List<int> _pin = [0, 0, 0, 0];
+  List<int> _pin = <int>[0, 0, 0, 0];
   List<int> get pin => _pin;
   set pin(List<int> value) {
     _pin = value;

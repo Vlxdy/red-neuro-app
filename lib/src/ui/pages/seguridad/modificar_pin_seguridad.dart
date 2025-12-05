@@ -38,10 +38,10 @@ class _ModificarPinSeguridadState extends State<ModificarPinSeguridad>
   }
 
   void logout() {
-    final theme = ThemeController.instance;
+    final ThemeController theme = ThemeController.instance;
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (BuildContext context) {
         return Dialog(
           child: ConfirmationDialog(
             title: 'Alerta',
@@ -50,7 +50,7 @@ class _ModificarPinSeguridadState extends State<ModificarPinSeguridad>
             textConfirm: 'Aceptar',
             text: '¿Estás segura(o) de cancelar el inicio de sesión?',
             onConfirm: () async {
-              var error = await Auth.instance.logout();
+              String? error = await Auth.instance.logout();
               if (error != null) {
                 showSnackBar(
                   modificarPinSeguridadMessenger,
@@ -68,7 +68,7 @@ class _ModificarPinSeguridadState extends State<ModificarPinSeguridad>
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeController.instance;
+    final ThemeController theme = ThemeController.instance;
     // final seguridad = Seguridad.instance;
     return ScaffoldMessenger(
       key: modificarPinSeguridadMessenger,
@@ -149,12 +149,12 @@ class _ModificarPinSeguridadState extends State<ModificarPinSeguridad>
                       maxLength: 6,
                       controller: _currentPinSeguridad,
                       title: 'Pin de seguridad actual',
-                      onChange: (value) {
+                      onChange: (String value) {
                         Logger.info('valor pin actual > $value');
                         // security.store.pin = value;
                         _currentPinSeguridad.text = value;
                       },
-                      validate: (value, alias) => validateData(
+                      validate: (String? value, String alias) => validateData(
                         context,
                         value,
                         alias,
@@ -175,12 +175,12 @@ class _ModificarPinSeguridadState extends State<ModificarPinSeguridad>
                       maxLength: 6,
                       controller: _pinSeguridad,
                       title: 'Nuevo pin de seguridad',
-                      onChange: (value) {
+                      onChange: (String value) {
                         Logger.info('valor pin $value');
                         // security.store.pin = value;
                         _pinSeguridad.text = value;
                       },
-                      validate: (value, alias) => validateData(
+                      validate: (String? value, String alias) => validateData(
                         context,
                         value,
                         alias,
@@ -205,7 +205,7 @@ class _ModificarPinSeguridadState extends State<ModificarPinSeguridad>
                         Logger.info(
                           'valor de pin NUEVO > ${_pinSeguridad.text}',
                         );
-                        final pinActual =
+                        final String pinActual =
                             await Seguridad.instance.apiPinSeguridad;
                         Logger.info('pin actual almacenado > $pinActual');
                         if (pinActual != _currentPinSeguridad.text) {

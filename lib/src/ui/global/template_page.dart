@@ -37,14 +37,14 @@ class TemplatePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeController.instance;
-    final environment = Constantes.entorno;
+    final ThemeController theme = ThemeController.instance;
+    final String environment = Constantes.entorno;
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         backgroundColor: theme.background,
         body: Stack(
-          children: [
+          children: <Widget>[
             background ?? const SizedBox(),
             appBar(typeAppBar),
             page ?? const SizedBox(),

@@ -8,7 +8,7 @@ class HeaderLogin extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: [
+      children: <Widget>[
         Container(
           margin: const EdgeInsets.symmetric(vertical: 16),
           height: 100,

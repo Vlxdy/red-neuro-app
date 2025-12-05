@@ -39,11 +39,11 @@ class _CredencialesState extends State<Credenciales> {
 
   @override
   Widget build(BuildContext context) {
-    final listener = context.watch<LoadingAnimation>();
-    final theme = ThemeController.instance;
+    final LoadingAnimation listener = context.watch<LoadingAnimation>();
+    final ThemeController theme = ThemeController.instance;
 
     return Stack(
-      children: [
+      children: <Widget>[
         Center(
           child: Card(
             elevation: 6,
@@ -57,14 +57,15 @@ class _CredencialesState extends State<Credenciales> {
                 key: _scaffoldingFormKey,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
-                  children: [
+                  children: <Widget>[
                     CustomTextInput(
                       disable: listener.isLoading,
                       requiredData: true,
                       controller: _email,
                       title: 'Usuario',
-                      onChange: (value) => service.store.form.username = value,
-                      validate: (value, alias) =>
+                      onChange: (String value) =>
+                          service.store.form.username = value,
+                      validate: (String? value, String alias) =>
                           service.validateData(context, value, alias),
                     ),
                     const SizedBox(height: 16),
@@ -74,9 +75,9 @@ class _CredencialesState extends State<Credenciales> {
                       obscure: true,
                       controller: _password,
                       title: 'Contraseña',
-                      onChange: (value) =>
+                      onChange: (String value) =>
                           service.store.form.password = Encode.toBase64(value),
-                      validate: (value, alias) =>
+                      validate: (String? value, String alias) =>
                           service.validateData(context, value, alias),
                     ),
                     const SizedBox(height: 12),

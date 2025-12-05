@@ -3,6 +3,7 @@ import 'package:red_neuro_app/src/constants/constants.dart';
 import 'package:red_neuro_app/src/plugins/seguridad/seguridad.dart';
 import 'package:red_neuro_app/src/plugins/utils/connection.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:red_neuro_app/src/constants/keys.dart';
 import 'package:red_neuro_app/src/models/user.dart';
@@ -37,6 +38,10 @@ class Auth {
   String _token = '';
   String _refreshToken = '';
 
+  final ValueNotifier<Usuario> _profileNotifier = ValueNotifier<Usuario>(
+    Usuario.empty(),
+  );
+
   Auth._();
   static final instance = Auth._();
 
@@ -59,8 +64,10 @@ class Auth {
 
   Future<void> login(Map<String, dynamic> json) async {
     final user = Usuario.fromJson(json);
-    final String token = json[Keys.accessToken] ?? '';
-    final String refreshToken = json[Keys.refreshToken] ?? '';
+    final String token =
+        json[Keys.accessToken] ?? json['accessToken'] ?? json['token'] ?? '';
+    final String refreshToken =
+        json[Keys.refreshToken] ?? json['refreshToken'] ?? '';
 
     if (token.isNotEmpty) {
       await _preferencesService.setStringSecure(
@@ -75,6 +82,7 @@ class Auth {
       jsonEncode(user.toJson()),
     );
     _user = user;
+    _profileNotifier.value = user;
 
     Logger.sesion(_user.toJson().toString());
 
@@ -98,6 +106,7 @@ class Auth {
       jsonEncode(user.toJson()),
     );
     _user = user;
+    _profileNotifier.value = user;
   }
 
   Future<String?> logout() async {
@@ -144,6 +153,8 @@ class Auth {
     await _preferencesService.setStringSecure(Keys.refreshToken, '');
     await _preferencesService.setString(Keys.profile, '');
     _token = '';
+    _user = Usuario.empty();
+    _profileNotifier.value = _user;
   }
 
   Future<String> get apiToken async {
@@ -184,8 +195,11 @@ class Auth {
       Logger.error('exception user -> ${e.toString()}');
       Logger.error('stacktrace $stacktrace');
     }
+    _user = user;
     return user;
   }
+
+  ValueListenable<Usuario> get profileListenable => _profileNotifier;
 
   // ------------------ sesion -------------
   Future<bool> get hasSesion async {

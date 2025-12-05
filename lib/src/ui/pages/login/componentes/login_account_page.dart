@@ -22,7 +22,7 @@ class _LoginState extends State<LoginAccount> {
         child: Scaffold(
           backgroundColor: Colors.transparent,
           body: Stack(
-            children: [
+            children: <Widget>[
               Positioned.fill(
                 child: Opacity(
                   opacity: 0.3, // Adjust the opacity value as needed
@@ -41,7 +41,7 @@ class _LoginState extends State<LoginAccount> {
                       mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
+                      children: <Widget>[
                         const SizedBox(height: 70),
                         Image.asset(Recursos.icono, height: 250, width: 350),
                         const SizedBox(height: 5),

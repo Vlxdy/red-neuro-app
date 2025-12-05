@@ -1,20 +1,21 @@
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/extensions/strings_extensions.dart';
+import 'package:red_neuro_app/src/models/user.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:flutter/material.dart';
 
 class AvatarPerfil extends StatelessWidget {
   AvatarPerfil({super.key});
 
-  final perfil = Auth.instance.profile;
+  final Usuario perfil = Auth.instance.profile;
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeController.instance;
+    final ThemeController theme = ThemeController.instance;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisAlignment: MainAxisAlignment.center,
-      children: [
+      children: <Widget>[
         const SizedBox(height: 10),
         CircleAvatar(
           radius: 32,

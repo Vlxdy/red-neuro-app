@@ -1,4 +1,5 @@
 import 'package:red_neuro_app/src/models/person.dart';
+import 'package:red_neuro_app/src/models/rol.dart';
 
 class Usuario extends Persona {
   // Ya existentes
@@ -15,6 +16,7 @@ class Usuario extends Persona {
   String? idRol;
   String? rol;
   String? idHistoriaClinica;
+  List<Rol> roles;
 
   Usuario(
     super.fechaNacimiento,
@@ -35,10 +37,20 @@ class Usuario extends Persona {
     this.idRol,
     this.rol,
     this.idHistoriaClinica,
+    this.roles = const [],
   });
 
-  static Usuario empty() =>
-      Usuario('', '', '', '', '', '', '', correoElectronico: '');
+  static Usuario empty() => Usuario(
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    '',
+    correoElectronico: '',
+    roles: const [],
+  );
 
   /// Soporta tanto json plano como con `datos`
   factory Usuario.fromJson(Map<String, dynamic> jsonRaw) {
@@ -74,6 +86,15 @@ class Usuario extends Persona {
     usuario.idRol = json['idRol']?.toString();
     usuario.rol = json['rol']?.toString();
 
+    // Roles asignados con módulos y submódulos
+    final rolesList = json['roles'];
+    if (rolesList is List) {
+      usuario.roles = rolesList
+          .whereType<Map<String, dynamic>>()
+          .map(Rol.fromJson)
+          .toList();
+    }
+
     // Historia clínica (puede venir en varios lugares; prioriza en `datos`)
     usuario.idHistoriaClinica = json['idHistoriaClinica']?.toString();
 
@@ -98,6 +119,7 @@ class Usuario extends Persona {
     data['idRol'] = idRol;
     data['rol'] = rol;
     data['idHistoriaClinica'] = idHistoriaClinica;
+    data['roles'] = roles.map((r) => r.toJson()).toList();
 
     return data;
   }

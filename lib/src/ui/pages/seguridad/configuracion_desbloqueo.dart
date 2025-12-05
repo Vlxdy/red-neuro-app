@@ -30,10 +30,10 @@ class _ConfiguracionDesbloqueoState extends State<ConfiguracionDesbloqueo> {
   }
 
   void logout() {
-    final theme = ThemeController.instance;
+    final ThemeController theme = ThemeController.instance;
     showDialog(
       context: context,
-      builder: (context) {
+      builder: (BuildContext context) {
         return Dialog(
           child: ConfirmationDialog(
             title: 'Alerta',
@@ -42,7 +42,7 @@ class _ConfiguracionDesbloqueoState extends State<ConfiguracionDesbloqueo> {
             textConfirm: 'Aceptar',
             text: '¿Estás segura(o) de cancelar el inicio de sesión?',
             onConfirm: () async {
-              var error = await Auth.instance.logout();
+              String? error = await Auth.instance.logout();
               if (error != null) {
                 showSnackBar(
                   configuracionDesbloqueoMessenger,
@@ -61,7 +61,7 @@ class _ConfiguracionDesbloqueoState extends State<ConfiguracionDesbloqueo> {
   @override
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeController.instance;
+    final ThemeController theme = ThemeController.instance;
     return ScaffoldMessenger(
       key: configuracionDesbloqueoMessenger,
       child: Scaffold(
@@ -90,7 +90,7 @@ class _ConfiguracionDesbloqueoState extends State<ConfiguracionDesbloqueo> {
                     padding: const EdgeInsets.symmetric(horizontal: 60),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
+                      children: <Widget>[
                         const Text('Usar el sensor de huella'),
                         Transform.scale(
                           scale: 0.7,
@@ -104,7 +104,7 @@ class _ConfiguracionDesbloqueoState extends State<ConfiguracionDesbloqueo> {
                               alpha: 0.3,
                             ),
                             value: usarSensor,
-                            onChanged: (value) {
+                            onChanged: (bool value) {
                               Logger.info(
                                 'usar el sensor de huella ? > $value',
                               );
@@ -143,7 +143,7 @@ class _ConfiguracionDesbloqueoState extends State<ConfiguracionDesbloqueo> {
                     padding: const EdgeInsets.symmetric(horizontal: 40),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
+                      children: <Widget>[
                         SimpleButton(
                           title: 'Empezar',
                           fullWidth: false,

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class LoadingAnimation with ChangeNotifier {
   LoadingAnimation._();
-  static final instance = LoadingAnimation._();
+  static final LoadingAnimation instance = LoadingAnimation._();
 
   late OverlayState _overlayState;
   OverlayEntry? _overlayEntry;
@@ -19,7 +19,7 @@ class LoadingAnimation with ChangeNotifier {
 
   void showLoading({String? mensaje}) {
     _overlayEntry = OverlayEntry(
-      builder: (context) => Container(
+      builder: (BuildContext context) => Container(
         alignment: Alignment.center,
         child: Container(
           height: double.infinity,
@@ -32,7 +32,7 @@ class LoadingAnimation with ChangeNotifier {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.center,
-              children: [
+              children: <Widget>[
                 const CircularProgressIndicator(color: Colors.amber),
                 if (mensaje != null)
                   Container(
