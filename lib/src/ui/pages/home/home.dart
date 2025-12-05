@@ -4,11 +4,9 @@ import 'package:red_neuro_app/src/models/modulo.dart';
 import 'package:red_neuro_app/src/models/rol.dart';
 import 'package:red_neuro_app/src/models/user.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
-import 'package:red_neuro_app/src/plugins/auth/auth_service.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:red_neuro_app/src/ui/common/badges/counter_badge.dart';
 import 'package:red_neuro_app/src/ui/common/keep_alive_page.dart';
-import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
 import 'package:red_neuro_app/src/ui/pages/mi_cuenta/mi_cuenta.dart';
@@ -42,7 +40,8 @@ class _HomePageState extends State<HomePage> {
   String? _currentRoleId;
   List<Rol> _availableRoles = [];
   Usuario? _userProfile;
-  bool _changingRole = false;
+  bool _isSyncingRole = false;
+  bool _initialized = false;
 
   @override
   void initState() {
@@ -53,26 +52,54 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  Future<void> _configureMenu() async {
-    final user = await Auth.instance.profileAsync();
-    final List<Rol> roles = user.roles;
-    final roleId = user.idRol ?? (roles.isNotEmpty ? roles.first.idRol : '');
-    final selectedRole = _findRole(roles, roleId, user.rol);
-    final resolvedRoleName = (selectedRole?.rol ?? user.rol ?? '').toUpperCase();
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _syncRoleFromStorage();
+    });
+  }
+
+  Future<void> _configureMenu({Usuario? user}) async {
+    final profile = user ?? await Auth.instance.profileAsync();
+    final List<Rol> roles = profile.roles;
+    final roleId =
+        profile.idRol ?? (roles.isNotEmpty ? roles.first.idRol : '');
+    final selectedRole = _findRole(roles, roleId, profile.rol);
+    final resolvedRoleName =
+        (selectedRole?.rol ?? profile.rol ?? '').toUpperCase();
 
     setState(() {
-      _userProfile = user;
+      _initialized = true;
+      _userProfile = profile;
       _availableRoles = roles;
       _currentRoleId = roleId;
       _currentRole = resolvedRoleName;
       _itemsMenu = _itemsByRole(
-        user: user,
+        user: profile,
         selectedRole: selectedRole,
-        overview: _buildUserOverview(user, roles, roleId),
+        overview: _buildUserOverview(profile),
       );
       _selectedIndex = 0;
       _selectedSubItem = null;
     });
+  }
+
+  Future<void> _syncRoleFromStorage() async {
+    if (_isSyncingRole || !mounted) return;
+    _isSyncingRole = true;
+
+    final storedUser = await Auth.instance.profileAsync();
+    final storedRoleId =
+        storedUser.idRol ?? (storedUser.roles.isNotEmpty ? storedUser.roles.first.idRol : '');
+
+    if (storedRoleId != null && storedRoleId != _currentRoleId) {
+      await _configureMenu(user: storedUser);
+    }
+
+    _isSyncingRole = false;
   }
 
   Rol? _findRole(List<Rol> roles, String? roleId, String? roleName) {
@@ -90,51 +117,11 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Widget _buildUserOverview(Usuario user, List<Rol> roles, String? activeRoleId) {
+  Widget _buildUserOverview(Usuario user) {
     return UserOverview(
       user: user,
-      roles: roles,
-      activeRoleId: activeRoleId,
-      isSwitchingRole: _changingRole,
-      onRoleSelected: (idRol) => _handleRoleChange(idRol),
+      currentRole: _currentRole,
     );
-  }
-
-  Future<void> _handleRoleChange(String idRol) async {
-    if (_changingRole || idRol == _currentRoleId || !mounted) return;
-    setState(() {
-      _changingRole = true;
-    });
-
-    final service = AuthService(context);
-    final response = await service.cambiarRol(idRol);
-
-    if (!mounted) return;
-
-    if (response.status == StatusNetwork.connected) {
-      await Auth.instance.login(response.data);
-      await _configureMenu();
-
-      final selected = _findRole(_availableRoles, idRol, null);
-      showSnackBar(
-        homeMessenger,
-        'Rol activo: ${selected?.rol ?? idRol}',
-        state: StatusSnackBar.success,
-        colorText: theme.white,
-      );
-    } else {
-      showSnackBar(
-        homeMessenger,
-        response.message,
-        state: StatusSnackBar.error,
-        colorText: theme.white,
-      );
-    }
-
-    if (!mounted) return;
-    setState(() {
-      _changingRole = false;
-    });
   }
 
   void _onItemTapped(String titulo, int index) {
@@ -761,17 +748,11 @@ class UserOverview extends StatelessWidget {
   const UserOverview({
     super.key,
     required this.user,
-    required this.roles,
-    required this.activeRoleId,
-    required this.onRoleSelected,
-    required this.isSwitchingRole,
+    required this.currentRole,
   });
 
   final Usuario user;
-  final List<Rol> roles;
-  final String? activeRoleId;
-  final ValueChanged<String> onRoleSelected;
-  final bool isSwitchingRole;
+  final String currentRole;
 
   @override
   Widget build(BuildContext context) {
@@ -781,17 +762,9 @@ class UserOverview extends StatelessWidget {
       user.primerApellido,
       user.segundoApellido,
     ].where((value) => value.trim().isNotEmpty).join(' ');
-    final currentRole = roles.firstWhere(
-      (r) => r.idRol == activeRoleId,
-      orElse: () => roles.isNotEmpty ? roles.first : Rol(
-        idRol: user.idRol ?? '',
-        idUsuarioRol: user.idUsuarioRol ?? '',
-        rol: user.rol ?? '',
-        nombre: user.rol ?? '',
-        descripcion: '',
-        modulos: const [],
-      ),
-    );
+    final activeRoleLabel = currentRole.isNotEmpty
+        ? currentRole
+        : (user.rol ?? '').toUpperCase();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -827,71 +800,13 @@ class UserOverview extends StatelessWidget {
                   _infoRow('Usuario', user.usuario ?? '-'),
                   _infoRow('Correo', user.correoElectronico),
                   _infoRow('Documento', user.nroDocumento),
-                  _infoRow('Rol activo', currentRole.rol.isNotEmpty ? currentRole.rol : (user.rol ?? '-')),
+                  _infoRow('Rol activo',
+                      activeRoleLabel.isNotEmpty ? activeRoleLabel : '-'),
                 ],
               ),
             ),
           ),
           const SizedBox(height: 16),
-          if (roles.isNotEmpty) ...[
-            Text(
-              'Roles disponibles',
-              style: TextStyle(
-                color: theme.secondary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: roles
-                  .map(
-                    (rol) => ChoiceChip(
-                      label: Text(rol.rol.isEmpty ? 'Rol' : rol.rol),
-                      selected: rol.idRol == activeRoleId,
-                      selectedColor: theme.primary.withOpacity(0.2),
-                      labelStyle: TextStyle(
-                        color: rol.idRol == activeRoleId
-                            ? theme.primary
-                            : theme.secondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      onSelected: (selected) {
-                        if (selected && rol.idRol.isNotEmpty && !isSwitchingRole) {
-                          onRoleSelected(rol.idRol);
-                        }
-                      },
-                    ),
-                  )
-                  .toList(),
-            ),
-            if (isSwitchingRole) ...[
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: theme.primary,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Actualizando rol...',
-                    style: TextStyle(color: theme.secondary),
-                  ),
-                ],
-              ),
-            ],
-          ],
-          if (roles.isEmpty)
-            Text(
-              'No se encontraron roles adicionales para este usuario.',
-              style: TextStyle(color: theme.secondary),
-            ),
         ],
       ),
     );
