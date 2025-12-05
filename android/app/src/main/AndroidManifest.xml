@@ -1,6 +1,8 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.redneuro.app">
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <uses-permission android:name="android.permission.USE_FINGERPRINT" />
+    <uses-permission android:name="android.permission.BIOMETRIC" />
     <application
         android:label="red_neuro_app"
         android:name="${applicationName}"
@@ -29,8 +31,8 @@
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
-                <data android:scheme="https"
-                      android:host="com.lennyflores.alimenta"/>
+                <data android:host="com.redneuro.app" android:scheme="https" />
+
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

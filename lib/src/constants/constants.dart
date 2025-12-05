@@ -5,12 +5,12 @@ class Constantes {
   static final entorno = dotenv.get('ENVIRONMENT');
   static const secureHiveKey = 'llave_encriptacion_hive';
   static const timeout = 30;
-  static final imageCompressionQuality =
-      dotenv.get('IMAGE_COMPRESSION_QUALITY');
+  // static final imageCompressionQuality =
+  // dotenv.get('IMAGE_COMPRESSION_QUALITY');
   static const gpsTimeout = 20;
   static const appId = 'bo.gob.agetic.lince2';
-  static final mapsApiUrl = dotenv.get('MAPS_API_URL');
-  static final mapsApiKey = dotenv.get('MAPS_API_KEY');
+  // static final mapsApiUrl = dotenv.get('MAPS_API_URL');
+  // static final mapsApiKey = dotenv.get('MAPS_API_KEY');
   static final sockets = dotenv.get('SOCKETS');
   static int get chatMaxFiles {
     final raw = dotenv.maybeGet('CHAT_MAX_FILES');
