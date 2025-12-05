@@ -5,7 +5,9 @@ import 'package:red_neuro_app/src/models/rol.dart';
 import 'package:red_neuro_app/src/models/user.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth_service.dart';
+import 'package:red_neuro_app/src/ui/common/alerts/confirmation_alert_dialog.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
+import 'package:red_neuro_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
 import 'package:red_neuro_app/src/ui/pages/perfil/componentes/perfil_info_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -26,6 +28,7 @@ class _PerfilState extends State<Perfil> {
   String? _activeRoleId;
   bool _changingRole = false;
   bool _loading = true;
+  bool _loggingOut = false;
 
   @override
   void initState() {
@@ -101,6 +104,38 @@ class _PerfilState extends State<Perfil> {
         });
       }
     }
+  }
+
+  Future<void> _logout() async {
+    if (_loggingOut) return;
+
+    setState(() => _loggingOut = true);
+
+    final theme = ThemeController.instance;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          child: ConfirmationDialog(
+            title: 'Cerrar sesión',
+            onConfirm: () async {
+              final error = await Auth.instance.logout();
+              if (error != null && mounted) {
+                showSnackBar(
+                  perfilMessenger,
+                  error,
+                  state: StatusSnackBar.error,
+                  colorText: theme.white,
+                );
+              }
+            },
+          ),
+        );
+      },
+    ).whenComplete(() {
+      if (mounted) setState(() => _loggingOut = false);
+    });
   }
 
   @override
@@ -232,10 +267,94 @@ class _PerfilState extends State<Perfil> {
                   onRoleSelected: hasMultipleRoles ? _changeRole : null,
                 ),
                 const SizedBox(height: 20),
+                _SessionActions(
+                  onChangePassword: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const CambiarContrasena(),
+                    ),
+                  ),
+                  onLogout: _logout,
+                  loggingOut: _loggingOut,
+                ),
+                const SizedBox(height: 20),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SessionActions extends StatelessWidget {
+  const _SessionActions({
+    required this.onChangePassword,
+    required this.onLogout,
+    required this.loggingOut,
+  });
+
+  final VoidCallback onChangePassword;
+  final VoidCallback onLogout;
+  final bool loggingOut;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ThemeController.instance;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: theme.grey.withValues(alpha: 0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: theme.isLight
+                ? Colors.black.withValues(alpha: 0.05)
+                : Colors.black.withValues(alpha: 0.1),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Seguridad de la cuenta',
+            style: TextStyle(
+              color: theme.secondary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(Icons.lock_outline, color: theme.primary),
+            title: const Text('Cambiar contraseña'),
+            subtitle: const Text('Actualiza tus credenciales de acceso.'),
+            onTap: onChangePassword,
+          ),
+          Divider(color: theme.grey.withValues(alpha: 0.2)),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(Icons.logout, color: theme.danger),
+            title: const Text('Cerrar sesión'),
+            subtitle: const Text('Finaliza la sesión actual de manera segura.'),
+            trailing: loggingOut
+                ? SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: theme.danger,
+                    ),
+                  )
+                : null,
+            onTap: loggingOut ? null : onLogout,
+          ),
+        ],
       ),
     );
   }

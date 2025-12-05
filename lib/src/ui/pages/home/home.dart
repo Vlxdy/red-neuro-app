@@ -41,26 +41,25 @@ class _HomePageState extends State<HomePage> {
   String? _currentRoleId;
   List<Rol> _availableRoles = [];
   Usuario? _userProfile;
-  bool _isSyncingRole = false;
-  bool _initialized = false;
+  late final VoidCallback _profileListener;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      _configureMenu();
-    });
+    _profileListener = () {
+      final profile = Auth.instance.profileListenable.value;
+      _configureMenu(user: profile);
+    };
+
+    Auth.instance.profileListenable.addListener(_profileListener);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => _configureMenu());
   }
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_initialized) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      _syncRoleFromStorage();
-    });
+  void dispose() {
+    Auth.instance.profileListenable.removeListener(_profileListener);
+    super.dispose();
   }
 
   Future<void> _configureMenu({Usuario? user}) async {
@@ -72,8 +71,9 @@ class _HomePageState extends State<HomePage> {
     final resolvedRoleName =
         (selectedRole?.rol ?? profile.rol ?? '').toUpperCase();
 
+    if (!mounted) return;
+
     setState(() {
-      _initialized = true;
       _userProfile = profile;
       _availableRoles = roles;
       _currentRoleId = roleId;
@@ -86,21 +86,6 @@ class _HomePageState extends State<HomePage> {
       _selectedIndex = 0;
       _selectedSubItem = null;
     });
-  }
-
-  Future<void> _syncRoleFromStorage() async {
-    if (_isSyncingRole || !mounted) return;
-    _isSyncingRole = true;
-
-    final storedUser = await Auth.instance.profileAsync();
-    final storedRoleId =
-        storedUser.idRol ?? (storedUser.roles.isNotEmpty ? storedUser.roles.first.idRol : '');
-
-    if (storedRoleId != null && storedRoleId != _currentRoleId) {
-      await _configureMenu(user: storedUser);
-    }
-
-    _isSyncingRole = false;
   }
 
   Rol? _findRole(List<Rol> roles, String? roleId, String? roleName) {
