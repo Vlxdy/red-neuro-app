@@ -8,6 +8,7 @@ import 'package:red_neuro_app/src/ui/common/badges/counter_badge.dart';
 import 'package:red_neuro_app/src/ui/common/keep_alive_page.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/pages/perfil/perfil.dart';
+import 'package:red_neuro_app/src/ui/pages/usuarios/usuarios_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:solar_icons/solar_icons.dart';
@@ -557,6 +558,11 @@ ChildrenItem _submoduleToItem(
   required ThemeController theme,
 }) {
   final blueprint = _resolveTrayBlueprint(subModule);
+  final normalizedUrl = subModule.url.toLowerCase();
+  final normalizedName = subModule.nombre.toLowerCase();
+
+  final isUsuariosModule =
+      normalizedUrl.contains('usuarios') || normalizedName == 'usuarios';
 
   return ChildrenItem(
     iconoImagen: _moduleIconData(subModule.propiedades?.icono),
@@ -567,12 +573,14 @@ ChildrenItem _submoduleToItem(
     titulo: subModule.label.isNotEmpty ? subModule.label : subModule.nombre,
     color: theme.primary,
     children: KeepAlivePage(
-      child: RoleTrayPlaceholder(
-        title: blueprint.title,
-        description: blueprint.description,
-        actions: blueprint.actions,
-        leadingIcon: blueprint.icon,
-      ),
+      child: isUsuariosModule
+          ? const UsuariosPage()
+          : RoleTrayPlaceholder(
+              title: blueprint.title,
+              description: blueprint.description,
+              actions: blueprint.actions,
+              leadingIcon: blueprint.icon,
+            ),
     ),
   );
 }
@@ -615,16 +623,7 @@ List<ChildrenItem> _adminMenu(ThemeController theme) => [
     iconoImagenSeleccionada: PhosphorIconsFill.users,
     titulo: 'Usuarios',
     children: KeepAlivePage(
-      child: RoleTrayPlaceholder(
-        title: 'Usuarios',
-        description:
-            'Gestiona altas, bajas y roles de usuarios. Bandeja inicial sin datos.',
-        actions: const [
-          'Crear/editar usuarios (POST/PATCH /usuarios)',
-          'Activar o desactivar usuarios',
-          'Filtrar por rol permitido: ADMIN, SUPERVISOR, MEDICO',
-        ],
-      ),
+      child: const UsuariosPage(),
     ),
   ),
   ChildrenItem(
@@ -679,6 +678,14 @@ List<ChildrenItem> _adminMenu(ThemeController theme) => [
 ];
 
 List<ChildrenItem> _supervisorMenu(ThemeController theme) => [
+  ChildrenItem(
+    iconoImagen: PhosphorIconsRegular.users,
+    iconoImagenSeleccionada: PhosphorIconsFill.users,
+    titulo: 'Usuarios',
+    children: KeepAlivePage(
+      child: const UsuariosPage(),
+    ),
+  ),
   ChildrenItem(
     iconoImagen: PhosphorIconsRegular.calendarPlus,
     iconoImagenSeleccionada: PhosphorIconsFill.calendarPlus,
