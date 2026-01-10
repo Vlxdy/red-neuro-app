@@ -6,7 +6,6 @@ import 'package:red_neuro_app/src/constants/constants.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
-import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
@@ -63,7 +62,14 @@ class _CitasPageState extends State<CitasPage>
   String? _etiquetaFiltro;
   DateTime? _fechaInicioFiltro;
   DateTime? _fechaFinFiltro;
-  bool _filtersExpanded = true;
+  bool get _hasActiveFilters =>
+      _buscarTexto.trim().isNotEmpty ||
+      (_estadoFiltro?.isNotEmpty ?? false) ||
+      (_medicoFiltro?.isNotEmpty ?? false) ||
+      (_agrupadorFiltro?.isNotEmpty ?? false) ||
+      (_etiquetaFiltro?.isNotEmpty ?? false) ||
+      _fechaInicioFiltro != null ||
+      _fechaFinFiltro != null;
 
   int _listPage = 1;
   int _listLimit = 10;
@@ -84,7 +90,6 @@ class _CitasPageState extends State<CitasPage>
     _service = CitasService(context);
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(_handleTabChange);
-    _filtersExpanded = false;
     _listScrollController.addListener(_handleListScroll);
     _socketClient = _CitasSocketClient(
       onCreated: _onSocketCreated,
@@ -370,7 +375,85 @@ class _CitasPageState extends State<CitasPage>
   }
 
   void _toggleFilters() {
-    setState(() => _filtersExpanded = !_filtersExpanded);
+    _abrirFiltrosModal();
+  }
+
+  Future<void> _abrirFiltrosModal() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: StatefulBuilder(
+              builder: (context, setStateModal) {
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Text(
+                            'Filtros',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const Spacer(),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Cerrar'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: 320,
+                        child: Scrollbar(
+                          controller: _filtersScrollController,
+                          child: SingleChildScrollView(
+                            controller: _filtersScrollController,
+                            child: _buildFiltersFields(isCompact: true),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () {
+                              _limpiarFiltros();
+                              setStateModal(() {});
+                            },
+                            child: const Text('Limpiar'),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              _aplicarFiltros();
+                              Navigator.pop(context);
+                            },
+                            icon: const Icon(Icons.sync),
+                            label: const Text('Aplicar'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
   }
 
   _DateRange _resolveCalendarRange() {
@@ -856,38 +939,51 @@ class _CitasPageState extends State<CitasPage>
           child: LayoutBuilder(
             builder: (context, constraints) {
               final isCompact = constraints.maxWidth < 980;
-              return Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildHeader(isCompact: isCompact),
-                    const SizedBox(height: 16),
-                    _buildFiltersPanel(isCompact: isCompact),
-                    const SizedBox(height: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildTabsRow(),
-                          const SizedBox(height: 12),
-                          Expanded(
-                            child: TabBarView(
-                              controller: _tabController,
-                              children: [
-                                _buildCalendario(
-                                  citasSeleccionadas,
-                                  isCompact: isCompact,
+              return Stack(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildHeader(isCompact: isCompact),
+                        const SizedBox(height: 12),
+                        _buildActiveFiltersRibbon(),
+                        const SizedBox(height: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildTabsRow(),
+                              const SizedBox(height: 12),
+                              Expanded(
+                                child: TabBarView(
+                                  controller: _tabController,
+                                  children: [
+                                    _buildCalendario(
+                                      citasSeleccionadas,
+                                      isCompact: isCompact,
+                                    ),
+                                    _buildListadoTab(citasListadoFiltradas),
+                                  ],
                                 ),
-                                _buildListadoTab(citasListadoFiltradas),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                  Positioned(
+                    bottom: 24,
+                    right: 24,
+                    child: FloatingActionButton(
+                      onPressed: _abrirFormulario,
+                      backgroundColor: _theme.primary,
+                      child: const Icon(Icons.add, color: Colors.white),
+                    ),
+                  ),
+                ],
               );
             },
           ),
@@ -946,24 +1042,17 @@ class _CitasPageState extends State<CitasPage>
             );
           },
         ),
-        SizedBox(
-          width: isCompact ? double.infinity : 160,
-          child: SimpleButton(
-            title: 'Nueva cita',
-            preffixicon: PhosphorIconsRegular.plus,
-            onTap: _abrirFormulario,
+        if (isCompact == false)
+          Text(
+            'Agenda médica',
+            style: Theme.of(context).textTheme.bodySmall,
           ),
-        ),
       ],
     );
   }
 
-  Widget _buildFiltersPanel({required bool isCompact}) {
-    if (_filtersExpanded == false) {
-      return const SizedBox.shrink();
-    }
-
-    final filterFields = Wrap(
+  Widget _buildFiltersFields({required bool isCompact}) {
+    return Wrap(
       spacing: 16,
       runSpacing: 12,
       children: [
@@ -1071,56 +1160,6 @@ class _CitasPageState extends State<CitasPage>
         ),
       ],
     );
-
-    final actions = Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      alignment: WrapAlignment.end,
-      children: [
-        TextButton(
-          onPressed: _limpiarFiltros,
-          child: const Text('Limpiar filtros'),
-        ),
-        ElevatedButton.icon(
-          onPressed: _aplicarFiltros,
-          icon: const Icon(Icons.sync),
-          label: const Text('Aplicar'),
-        ),
-      ],
-    );
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            height: isCompact ? 260 : null,
-            child: Scrollbar(
-              controller: _filtersScrollController,
-              thumbVisibility: isCompact,
-              child: SingleChildScrollView(
-                controller: _filtersScrollController,
-                child: filterFields,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          actions,
-        ],
-      ),
-    );
   }
 
   Widget _buildTabsRow() {
@@ -1141,14 +1180,67 @@ class _CitasPageState extends State<CitasPage>
         const SizedBox(width: 8),
         TextButton.icon(
           onPressed: _toggleFilters,
-          icon: Icon(
-            _filtersExpanded
-                ? PhosphorIconsRegular.caretUp
-                : PhosphorIconsRegular.caretDown,
-          ),
-          label: Text(_filtersExpanded ? 'Ocultar filtros' : 'Mostrar filtros'),
+          icon: const Icon(PhosphorIconsRegular.funnel),
+          label: const Text('Filtros'),
         ),
       ],
+    );
+  }
+
+  Widget _buildActiveFiltersRibbon() {
+    if (!_hasActiveFilters) return const SizedBox.shrink();
+
+    final chips = <Widget>[];
+    if (_buscarTexto.trim().isNotEmpty) {
+      chips.add(_FilterChip(label: 'Buscar: ${_buscarTexto.trim()}'));
+    }
+    if (_estadoFiltro?.isNotEmpty ?? false) {
+      chips.add(_FilterChip(label: 'Estado: $_estadoFiltro'));
+    }
+    if (_medicoFiltro?.isNotEmpty ?? false) {
+      chips.add(_FilterChip(label: 'Médico: $_medicoFiltro'));
+    }
+    if (_agrupadorFiltro?.isNotEmpty ?? false) {
+      chips.add(_FilterChip(label: 'Agrupador: $_agrupadorFiltro'));
+    }
+    if (_etiquetaFiltro?.isNotEmpty ?? false) {
+      chips.add(_FilterChip(label: 'Etiqueta: $_etiquetaFiltro'));
+    }
+    if (_fechaInicioFiltro != null || _fechaFinFiltro != null) {
+      final inicio =
+          _fechaInicioFiltro != null ? _dateFormat.format(_fechaInicioFiltro!) : '--';
+      final fin =
+          _fechaFinFiltro != null ? _dateFormat.format(_fechaFinFiltro!) : '--';
+      chips.add(_FilterChip(label: 'Rango: $inicio → $fin'));
+    }
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: _theme.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  PhosphorIconsRegular.funnel,
+                  size: 16,
+                  color: _theme.primary,
+                ),
+                const SizedBox(width: 8),
+                Wrap(
+                  spacing: 8,
+                  children: chips,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1611,4 +1703,27 @@ class _DateRange {
   final DateTime end;
 
   const _DateRange({required this.start, required this.end});
+}
+
+class _FilterChip extends StatelessWidget {
+  final String label;
+
+  const _FilterChip({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ThemeController.instance;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.primary.withValues(alpha: 0.2)),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.bodySmall,
+      ),
+    );
+  }
 }
