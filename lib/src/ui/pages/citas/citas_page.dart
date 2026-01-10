@@ -75,10 +75,9 @@ class _CitasPageState extends State<CitasPage>
   int _listLimit = 10;
   int _listTotal = 0;
   bool _listLoadingMore = false;
-  bool get _listHasNext =>
-      _listTotal > 0
-          ? (_listPage * _listLimit) < _listTotal
-          : _citasListado.length == _listLimit;
+  bool get _listHasNext => _listTotal > 0
+      ? (_listPage * _listLimit) < _listTotal
+      : _citasListado.length == _listLimit;
 
   late final _CitasSocketClient _socketClient;
 
@@ -162,8 +161,9 @@ class _CitasPageState extends State<CitasPage>
 
     setState(() {
       final shouldAppend = (page ?? _listPage) > 1;
-      _citasListado =
-          shouldAppend ? [..._citasListado, ...result.citas] : result.citas;
+      _citasListado = shouldAppend
+          ? [..._citasListado, ...result.citas]
+          : result.citas;
       _listPage = result.page;
       _listLimit = result.limit;
       _listTotal = result.total;
@@ -318,10 +318,7 @@ class _CitasPageState extends State<CitasPage>
     });
   }
 
-  List<CitaMedica> _upsertCitaEnLista(
-    List<CitaMedica> lista,
-    CitaMedica cita,
-  ) {
+  List<CitaMedica> _upsertCitaEnLista(List<CitaMedica> lista, CitaMedica cita) {
     final index = lista.indexWhere((item) => item.id == cita.id);
     if (index >= 0) {
       final updated = [...lista];
@@ -458,7 +455,9 @@ class _CitasPageState extends State<CitasPage>
 
   _DateRange _resolveCalendarRange() {
     if (_calendarFormat == CalendarFormat.week) {
-      final start = _focusedDay.subtract(Duration(days: _focusedDay.weekday - 1));
+      final start = _focusedDay.subtract(
+        Duration(days: _focusedDay.weekday - 1),
+      );
       final end = start.add(const Duration(days: 6, hours: 23, minutes: 59));
       return _DateRange(start: start, end: end);
     }
@@ -525,13 +524,7 @@ class _CitasPageState extends State<CitasPage>
     );
     if (hora == null) return null;
 
-    return DateTime(
-      fecha.year,
-      fecha.month,
-      fecha.day,
-      hora.hour,
-      hora.minute,
-    );
+    return DateTime(fecha.year, fecha.month, fecha.day, hora.hour, hora.minute);
   }
 
   void _limpiarFiltros() {
@@ -590,10 +583,8 @@ class _CitasPageState extends State<CitasPage>
     }
     String? estado = cita?.estado;
     String? agrupadorId = cita?.agrupadorId;
-    final selectedEtiquetas = cita?.etiquetas
-            .map((etiqueta) => etiqueta.id)
-            .toSet() ??
-        <String>{};
+    final selectedEtiquetas =
+        cita?.etiquetas.map((etiqueta) => etiqueta.id).toSet() ?? <String>{};
     final nuevaEtiquetaNombre = TextEditingController();
     final nuevaEtiquetaColor = TextEditingController(text: '#64748b');
 
@@ -663,7 +654,7 @@ class _CitasPageState extends State<CitasPage>
                         ),
                         const SizedBox(height: 12),
                         DropdownButtonFormField<String?>(
-                          value: agrupadorId,
+                          initialValue: agrupadorId,
                           decoration: const InputDecoration(
                             labelText: 'Agrupador',
                             border: OutlineInputBorder(),
@@ -687,7 +678,7 @@ class _CitasPageState extends State<CitasPage>
                         const SizedBox(height: 12),
                         if (cita != null)
                           DropdownButtonFormField<String?>(
-                            value: estado,
+                            initialValue: estado,
                             decoration: const InputDecoration(
                               labelText: 'Estado',
                               border: OutlineInputBorder(),
@@ -720,11 +711,13 @@ class _CitasPageState extends State<CitasPage>
                               .map(
                                 (etiqueta) => FilterChip(
                                   label: Text(etiqueta.nombre),
-                                  selected:
-                                      selectedEtiquetas.contains(etiqueta.id),
+                                  selected: selectedEtiquetas.contains(
+                                    etiqueta.id,
+                                  ),
                                   backgroundColor: Colors.grey.shade100,
-                                  selectedColor: _resolveColor(etiqueta.colorHex)
-                                      .withValues(alpha: 0.2),
+                                  selectedColor: _resolveColor(
+                                    etiqueta.colorHex,
+                                  ).withValues(alpha: 0.2),
                                   onSelected: (selected) {
                                     setStateDialog(() {
                                       if (selected) {
@@ -838,8 +831,10 @@ class _CitasPageState extends State<CitasPage>
     if (medicoId != cita.medicoId) updates['medicoId'] = medicoId;
 
     final agrupadorCambio = agrupadorId != cita.agrupadorId;
-    final etiquetasCambio =
-        !_listasIguales(selectedEtiquetas, cita.etiquetas.map((e) => e.id));
+    final etiquetasCambio = !_listasIguales(
+      selectedEtiquetas,
+      cita.etiquetas.map((e) => e.id),
+    );
 
     if (updates.isNotEmpty) {
       await _service.actualizarCita(cita.id, updates);
@@ -947,15 +942,12 @@ class _CitasPageState extends State<CitasPage>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildHeader(isCompact: isCompact),
-                        const SizedBox(height: 12),
                         _buildActiveFiltersRibbon(),
-                        const SizedBox(height: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               _buildTabsRow(),
-                              const SizedBox(height: 12),
                               Expanded(
                                 child: TabBarView(
                                   controller: _tabController,
@@ -1007,11 +999,10 @@ class _CitasPageState extends State<CitasPage>
               Text(
                 widget.titulo,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: _theme.primary,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: _theme.primary,
+                ),
               ),
-              const SizedBox(height: 4),
               Text(
                 widget.soloMisCitas
                     ? 'Agenda personal en tiempo real'
@@ -1021,32 +1012,8 @@ class _CitasPageState extends State<CitasPage>
             ],
           ),
         ),
-        ValueListenableBuilder<bool>(
-          valueListenable: _socketClient.connectionNotifier,
-          builder: (context, conectado, _) {
-            return Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  conectado
-                      ? PhosphorIconsFill.radio
-                      : PhosphorIconsRegular.wifiSlash,
-                  color: conectado ? Colors.green : Colors.orange,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  conectado ? 'Socket activo' : 'Reconectando...',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
-            );
-          },
-        ),
         if (isCompact == false)
-          Text(
-            'Agenda médica',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
+          Text('Agenda médica', style: Theme.of(context).textTheme.bodySmall),
       ],
     );
   }
@@ -1069,21 +1036,16 @@ class _CitasPageState extends State<CitasPage>
         SizedBox(
           width: isCompact ? double.infinity : 160,
           child: DropdownButtonFormField<String?>(
-            value: _estadoFiltro,
+            initialValue: _estadoFiltro,
             decoration: const InputDecoration(
               labelText: 'Estado',
               border: OutlineInputBorder(),
             ),
             items: [
-              const DropdownMenuItem(
-                value: null,
-                child: Text('Todos'),
-              ),
+              const DropdownMenuItem(value: null, child: Text('Todos')),
               ...CitaEstado.values.map(
-                (estado) => DropdownMenuItem(
-                  value: estado,
-                  child: Text(estado),
-                ),
+                (estado) =>
+                    DropdownMenuItem(value: estado, child: Text(estado)),
               ),
             ],
             onChanged: (value) => setState(() => _estadoFiltro = value),
@@ -1103,16 +1065,13 @@ class _CitasPageState extends State<CitasPage>
         SizedBox(
           width: isCompact ? double.infinity : 180,
           child: DropdownButtonFormField<String?>(
-            value: _agrupadorFiltro,
+            initialValue: _agrupadorFiltro,
             decoration: const InputDecoration(
               labelText: 'Agrupador',
               border: OutlineInputBorder(),
             ),
             items: [
-              const DropdownMenuItem(
-                value: null,
-                child: Text('Todos'),
-              ),
+              const DropdownMenuItem(value: null, child: Text('Todos')),
               ..._agrupadores.map(
                 (agrupador) => DropdownMenuItem(
                   value: agrupador.id,
@@ -1126,16 +1085,13 @@ class _CitasPageState extends State<CitasPage>
         SizedBox(
           width: isCompact ? double.infinity : 180,
           child: DropdownButtonFormField<String?>(
-            value: _etiquetaFiltro,
+            initialValue: _etiquetaFiltro,
             decoration: const InputDecoration(
               labelText: 'Etiqueta',
               border: OutlineInputBorder(),
             ),
             items: [
-              const DropdownMenuItem(
-                value: null,
-                child: Text('Todas'),
-              ),
+              const DropdownMenuItem(value: null, child: Text('Todas')),
               ..._etiquetas.map(
                 (etiqueta) => DropdownMenuItem(
                   value: etiqueta.id,
@@ -1178,10 +1134,16 @@ class _CitasPageState extends State<CitasPage>
           ),
         ),
         const SizedBox(width: 8),
-        TextButton.icon(
+        IconButton(
           onPressed: _toggleFilters,
           icon: const Icon(PhosphorIconsRegular.funnel),
-          label: const Text('Filtros'),
+          style: IconButton.styleFrom(
+            padding: const EdgeInsets.all(8),
+            minimumSize: const Size(40, 40),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
         ),
       ],
     );
@@ -1207,10 +1169,12 @@ class _CitasPageState extends State<CitasPage>
       chips.add(_FilterChip(label: 'Etiqueta: $_etiquetaFiltro'));
     }
     if (_fechaInicioFiltro != null || _fechaFinFiltro != null) {
-      final inicio =
-          _fechaInicioFiltro != null ? _dateFormat.format(_fechaInicioFiltro!) : '--';
-      final fin =
-          _fechaFinFiltro != null ? _dateFormat.format(_fechaFinFiltro!) : '--';
+      final inicio = _fechaInicioFiltro != null
+          ? _dateFormat.format(_fechaInicioFiltro!)
+          : '--';
+      final fin = _fechaFinFiltro != null
+          ? _dateFormat.format(_fechaFinFiltro!)
+          : '--';
       chips.add(_FilterChip(label: 'Rango: $inicio → $fin'));
     }
 
@@ -1232,10 +1196,7 @@ class _CitasPageState extends State<CitasPage>
                   color: _theme.primary,
                 ),
                 const SizedBox(width: 8),
-                Wrap(
-                  spacing: 8,
-                  children: chips,
-                ),
+                Wrap(spacing: 8, children: chips),
               ],
             ),
           ),
@@ -1340,9 +1301,7 @@ class _CitasPageState extends State<CitasPage>
         children: [
           calendario,
           const SizedBox(height: 16),
-          Expanded(
-            child: _buildListado(citasSeleccionadas, compact: true),
-          ),
+          Expanded(child: _buildListado(citasSeleccionadas, compact: true)),
         ],
       );
     }
@@ -1351,9 +1310,7 @@ class _CitasPageState extends State<CitasPage>
       children: [
         Expanded(child: calendario),
         const SizedBox(width: 16),
-        Expanded(
-          child: _buildListado(citasSeleccionadas, compact: true),
-        ),
+        Expanded(child: _buildListado(citasSeleccionadas, compact: true)),
       ],
     );
   }
@@ -1362,10 +1319,7 @@ class _CitasPageState extends State<CitasPage>
     return Column(
       children: [
         Expanded(
-          child: _buildListado(
-            citas,
-            controller: _listScrollController,
-          ),
+          child: _buildListado(citas, controller: _listScrollController),
         ),
         if (_listLoadingMore) const SizedBox(height: 12),
         if (_listLoadingMore)
@@ -1398,10 +1352,9 @@ class _CitasPageState extends State<CitasPage>
             const SizedBox(height: 8),
             Text(
               'No hay citas registradas',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: Colors.grey.shade600),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
             ),
           ],
         ),
@@ -1443,15 +1396,16 @@ class _CitasPageState extends State<CitasPage>
                   Expanded(
                     child: Text(
                       cita.detalle,
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(fontWeight: FontWeight.bold),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: estadoColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
@@ -1459,9 +1413,9 @@ class _CitasPageState extends State<CitasPage>
                     child: Text(
                       cita.estado,
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: estadoColor,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        color: estadoColor,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ],
@@ -1496,8 +1450,9 @@ class _CitasPageState extends State<CitasPage>
                       .map(
                         (etiqueta) => Chip(
                           label: Text(etiqueta.nombre),
-                          backgroundColor: _resolveColor(etiqueta.colorHex)
-                              .withValues(alpha: 0.15),
+                          backgroundColor: _resolveColor(
+                            etiqueta.colorHex,
+                          ).withValues(alpha: 0.15),
                         ),
                       )
                       .toList(),
@@ -1590,9 +1545,7 @@ class _FechaSelector extends StatelessWidget {
             const Icon(Icons.event, size: 18),
             const SizedBox(width: 8),
             Expanded(
-              child: Text(
-                value != null ? formatter.format(value!) : label,
-              ),
+              child: Text(value != null ? formatter.format(value!) : label),
             ),
           ],
         ),
@@ -1616,10 +1569,9 @@ class _InfoPill extends StatelessWidget {
         const SizedBox(width: 6),
         Text(
           label,
-          style: Theme.of(context)
-              .textTheme
-              .bodySmall
-              ?.copyWith(color: Colors.grey.shade700),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade700),
         ),
       ],
     );
@@ -1720,10 +1672,7 @@ class _FilterChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: theme.primary.withValues(alpha: 0.2)),
       ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.bodySmall,
-      ),
+      child: Text(label, style: Theme.of(context).textTheme.bodySmall),
     );
   }
 }

@@ -166,8 +166,8 @@ class _HomePageState extends State<HomePage> {
                           count: badgeCount,
                           backgroundColor: subitem.color ?? theme.primary,
                           borderColor: theme.white,
-                          child: icono,
                           offset: const Offset(-10, -6),
+                          child: icono,
                         )
                       : icono;
                   return SizedBox(
@@ -274,8 +274,8 @@ class _HomePageState extends State<HomePage> {
         count: badgeCount,
         backgroundColor: theme.primary,
         borderColor: theme.background,
-        child: iconWidget,
         offset: const Offset(-10, -6),
+        child: iconWidget,
       );
     }
 
@@ -486,12 +486,12 @@ List<ChildrenItem> _itemsByRole({
         titulo: 'Más',
         color: theme.primary,
         itemsSubmenu: overflowSubmodules,
-        children: KeepAlivePage(
+        children: const KeepAlivePage(
           child: RoleTrayPlaceholder(
             title: 'Elige una bandeja',
             description:
                 'Este rol tiene varias bandejas. Selecciona una desde el menú flotante.',
-            actions: const [
+            actions: [
               'Abre el menú "Más" para listar todas las bandejas disponibles',
               'Selecciona la bandeja que quieras explorar',
             ],
@@ -623,19 +623,17 @@ List<ChildrenItem> _adminMenu(ThemeController theme) => [
     iconoImagen: PhosphorIconsRegular.users,
     iconoImagenSeleccionada: PhosphorIconsFill.users,
     titulo: 'Usuarios',
-    children: KeepAlivePage(
-      child: const UsuariosPage(),
-    ),
+    children: const KeepAlivePage(child: UsuariosPage()),
   ),
   ChildrenItem(
     iconoImagen: PhosphorIconsRegular.tag,
     iconoImagenSeleccionada: PhosphorIconsFill.tag,
     titulo: 'Etiquetas',
-    children: KeepAlivePage(
+    children: const KeepAlivePage(
       child: RoleTrayPlaceholder(
         title: 'Etiquetas',
         description: 'Crea y organiza etiquetas para clasificar citas.',
-        actions: const [
+        actions: [
           'Nueva etiqueta (POST /etiquetas)',
           'Editar etiqueta (PATCH /etiquetas/:id)',
           'Eliminar etiqueta (DELETE /etiquetas/:id)',
@@ -647,11 +645,11 @@ List<ChildrenItem> _adminMenu(ThemeController theme) => [
     iconoImagen: SolarIconsOutline.server,
     iconoImagenSeleccionada: SolarIconsBold.server,
     titulo: 'Agrupadores',
-    children: KeepAlivePage(
+    children: const KeepAlivePage(
       child: RoleTrayPlaceholder(
         title: 'Agrupadores',
         description: 'Organiza campañas o bloques para citas.',
-        actions: const [
+        actions: [
           'Crear agrupador (POST /agrupadores)',
           'Editar agrupador (PATCH /agrupadores/:id)',
           'Eliminar agrupador (DELETE /agrupadores/:id)',
@@ -663,12 +661,12 @@ List<ChildrenItem> _adminMenu(ThemeController theme) => [
     iconoImagen: PhosphorIconsRegular.calendarCheck,
     iconoImagenSeleccionada: PhosphorIconsFill.calendarCheck,
     titulo: 'Citas',
-    children: KeepAlivePage(
+    children: const KeepAlivePage(
       child: RoleTrayPlaceholder(
         title: 'Citas (Administrador)',
         description:
             'Bandeja vacía para monitorear y gestionar todas las citas.',
-        actions: const [
+        actions: [
           'Listar todas las citas (GET /citas)',
           'Crear cita para cualquier médico (POST /citas)',
           'Editar, cancelar o reprogramar (PATCH /citas/:id/...)',
@@ -683,16 +681,14 @@ List<ChildrenItem> _supervisorMenu(ThemeController theme) => [
     iconoImagen: PhosphorIconsRegular.users,
     iconoImagenSeleccionada: PhosphorIconsFill.users,
     titulo: 'Usuarios',
-    children: KeepAlivePage(
-      child: const UsuariosPage(),
-    ),
+    children: const KeepAlivePage(child: UsuariosPage()),
   ),
   ChildrenItem(
     iconoImagen: PhosphorIconsRegular.calendarPlus,
     iconoImagenSeleccionada: PhosphorIconsFill.calendarPlus,
     titulo: 'Citas',
-    children: KeepAlivePage(
-      child: const CitasPage(
+    children: const KeepAlivePage(
+      child: CitasPage(
         soloMisCitas: false,
         titulo: 'Citas (Supervisor)',
         mostrarFiltroMedico: true,
@@ -706,11 +702,8 @@ List<ChildrenItem> _medicoMenu(ThemeController theme) => [
     iconoImagen: SolarIconsOutline.calendarSearch,
     iconoImagenSeleccionada: SolarIconsBold.calendarSearch,
     titulo: 'Mis citas',
-    children: KeepAlivePage(
-      child: const CitasPage(
-        soloMisCitas: true,
-        titulo: 'Mis citas',
-      ),
+    children: const KeepAlivePage(
+      child: CitasPage(soloMisCitas: true, titulo: 'Mis citas'),
     ),
   ),
 ];
