@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:device_info_plus/src/model/android_device_info.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:red_neuro_app/src/constants/keys.dart';
 import 'dart:convert';
 import 'package:red_neuro_app/src/constants/constants.dart';

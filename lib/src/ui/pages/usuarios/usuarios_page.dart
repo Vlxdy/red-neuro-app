@@ -171,15 +171,19 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
   void _abrirFormulario({Usuario? usuario}) {
     final formKey = GlobalKey<FormState>();
     final nombres = TextEditingController(text: usuario?.nombres ?? '');
-    final primerApellido =
-        TextEditingController(text: usuario?.primerApellido ?? '');
-    final segundoApellido =
-        TextEditingController(text: usuario?.segundoApellido ?? '');
-    final nroDocumento =
-        TextEditingController(text: usuario?.nroDocumento ?? '');
+    final primerApellido = TextEditingController(
+      text: usuario?.primerApellido ?? '',
+    );
+    final segundoApellido = TextEditingController(
+      text: usuario?.segundoApellido ?? '',
+    );
+    final nroDocumento = TextEditingController(
+      text: usuario?.nroDocumento ?? '',
+    );
     final telefono = TextEditingController(text: usuario?.telefono ?? '');
-    final correo =
-        TextEditingController(text: usuario?.correoElectronico ?? '');
+    final correo = TextEditingController(
+      text: usuario?.correoElectronico ?? '',
+    );
     final fechaNacimiento = TextEditingController(
       text: _formatearFechaInicial(usuario?.fechaNacimiento),
     );
@@ -252,8 +256,8 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
                                 requiredData: true,
                                 validate: (value, alias) =>
                                     (value?.isEmpty ?? true)
-                                        ? 'Campo requerido'
-                                        : '',
+                                    ? 'Campo requerido'
+                                    : '',
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -264,8 +268,8 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
                                 requiredData: true,
                                 validate: (value, alias) =>
                                     (value?.isEmpty ?? true)
-                                        ? 'Campo requerido'
-                                        : '',
+                                    ? 'Campo requerido'
+                                    : '',
                               ),
                             ),
                           ],
@@ -279,8 +283,8 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
                               requiredData: true,
                               validate: (value, alias) =>
                                   (value?.isEmpty ?? true)
-                                      ? 'Campo requerido'
-                                      : '',
+                                  ? 'Campo requerido'
+                                  : '',
                             ),
                             const SizedBox(height: 12),
                             CustomTextInput(
@@ -289,8 +293,8 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
                               requiredData: true,
                               validate: (value, alias) =>
                                   (value?.isEmpty ?? true)
-                                      ? 'Campo requerido'
-                                      : '',
+                                  ? 'Campo requerido'
+                                  : '',
                             ),
                           ],
                         ),
@@ -305,8 +309,8 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
                                 requiredData: true,
                                 validate: (value, alias) =>
                                     (value?.isEmpty ?? true)
-                                        ? 'Campo requerido'
-                                        : '',
+                                    ? 'Campo requerido'
+                                    : '',
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -318,8 +322,8 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
                                 onlyNumbers: true,
                                 validate: (value, alias) =>
                                     (value?.isEmpty ?? true)
-                                        ? 'Campo requerido'
-                                        : '',
+                                    ? 'Campo requerido'
+                                    : '',
                               ),
                             ),
                           ],
@@ -333,8 +337,8 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
                               requiredData: true,
                               validate: (value, alias) =>
                                   (value?.isEmpty ?? true)
-                                      ? 'Campo requerido'
-                                      : '',
+                                  ? 'Campo requerido'
+                                  : '',
                             ),
                             const SizedBox(height: 12),
                             CustomTextInput(
@@ -344,8 +348,8 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
                               onlyNumbers: true,
                               validate: (value, alias) =>
                                   (value?.isEmpty ?? true)
-                                      ? 'Campo requerido'
-                                      : '',
+                                  ? 'Campo requerido'
+                                  : '',
                             ),
                           ],
                         ),
@@ -361,8 +365,8 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
                                 requiredData: true,
                                 validate: (value, alias) =>
                                     (value?.isEmpty ?? true)
-                                        ? 'Campo requerido'
-                                        : '',
+                                    ? 'Campo requerido'
+                                    : '',
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -386,8 +390,8 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
                               requiredData: true,
                               validate: (value, alias) =>
                                   (value?.isEmpty ?? true)
-                                      ? 'Campo requerido'
-                                      : '',
+                                  ? 'Campo requerido'
+                                  : '',
                             ),
                             const SizedBox(height: 12),
                             CustomTextInput(
@@ -508,7 +512,7 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
                             labelText: 'Selecciona un rol',
                             isDense: true,
                           ),
-                          value: rolSeleccionado,
+                          initialValue: rolSeleccionado,
                           items: _rolesVisibles
                               .map(
                                 (rol) => DropdownMenuItem<String>(
@@ -520,8 +524,7 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
                           onChanged: (value) {
                             setState(() {
                               rolSeleccionado = value;
-                              selectedRoles
-                                ..clear();
+                              selectedRoles.clear();
                               if (value != null) {
                                 selectedRoles.add(value);
                               }
@@ -819,7 +822,7 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
                       ),
                     ],
                   ),
-                  columnas: const [
+                  columnas: [
                     CriterioOrdenType(nombre: 'Usuario'),
                     CriterioOrdenType(nombre: 'Correo'),
                     CriterioOrdenType(nombre: 'Roles'),
@@ -834,13 +837,13 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
                           Text(_rolesTexto(usuario)),
                           Chip(
                             label: Text((usuario.estado ?? '-').toUpperCase()),
-                            backgroundColor: (usuario.estado ?? '')
-                                        .toUpperCase() ==
-                                    'ACTIVO'
+                            backgroundColor:
+                                (usuario.estado ?? '').toUpperCase() == 'ACTIVO'
                                 ? _theme.success.withValues(alpha: .15)
                                 : _theme.error.withValues(alpha: .15),
                             labelStyle: TextStyle(
-                              color: (usuario.estado ?? '').toUpperCase() ==
+                              color:
+                                  (usuario.estado ?? '').toUpperCase() ==
                                       'ACTIVO'
                                   ? _theme.success
                                   : _theme.error,
@@ -852,15 +855,18 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
                               IconButton(
                                 tooltip: 'Editar',
                                 icon: const Icon(Icons.edit_outlined),
-                                onPressed: () => _abrirFormulario(usuario: usuario),
+                                onPressed: () =>
+                                    _abrirFormulario(usuario: usuario),
                               ),
                               IconButton(
-                                tooltip: (usuario.estado ?? '').toUpperCase() ==
+                                tooltip:
+                                    (usuario.estado ?? '').toUpperCase() ==
                                         'ACTIVO'
                                     ? 'Desactivar'
                                     : 'Activar',
                                 icon: Icon(
-                                  (usuario.estado ?? '').toUpperCase() == 'ACTIVO'
+                                  (usuario.estado ?? '').toUpperCase() ==
+                                          'ACTIVO'
                                       ? Icons.toggle_off
                                       : Icons.toggle_on,
                                   color: _theme.primary,
