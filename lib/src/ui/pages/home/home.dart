@@ -9,6 +9,7 @@ import 'package:red_neuro_app/src/ui/common/keep_alive_page.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/pages/perfil/perfil.dart';
 import 'package:red_neuro_app/src/ui/pages/usuarios/usuarios_page.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/citas_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:solar_icons/solar_icons.dart';
@@ -691,16 +692,10 @@ List<ChildrenItem> _supervisorMenu(ThemeController theme) => [
     iconoImagenSeleccionada: PhosphorIconsFill.calendarPlus,
     titulo: 'Citas',
     children: KeepAlivePage(
-      child: RoleTrayPlaceholder(
-        title: 'Citas (Supervisor)',
-        description:
-            'Crear, ver y administrar citas. Bandeja inicial sin registros.',
-        actions: const [
-          'Crear citas para médicos (POST /citas)',
-          'Ver todas las citas (GET /citas)',
-          'Reprogramar o cancelar (PATCH /citas/:id/reprogramar | /cancelar)',
-          'Asignar etiquetas a citas (PATCH /citas/:id/etiquetas)',
-        ],
+      child: const CitasPage(
+        soloMisCitas: false,
+        titulo: 'Citas (Supervisor)',
+        mostrarFiltroMedico: true,
       ),
     ),
   ),
@@ -712,16 +707,9 @@ List<ChildrenItem> _medicoMenu(ThemeController theme) => [
     iconoImagenSeleccionada: SolarIconsBold.calendarSearch,
     titulo: 'Mis citas',
     children: KeepAlivePage(
-      child: RoleTrayPlaceholder(
-        title: 'Mis citas (Médico)',
-        description:
-            'Revisa y administra únicamente tus citas. Bandeja vacía por ahora.',
-        actions: const [
-          'Listar mis citas (GET /citas/mis-citas)',
-          'Cambiar estado (PATCH /citas/:id/estado)',
-          'Reprogramar (PATCH /citas/:id/reprogramar)',
-          'Agregar etiquetas (PATCH /citas/:id/etiquetas)',
-        ],
+      child: const CitasPage(
+        soloMisCitas: true,
+        titulo: 'Mis citas',
       ),
     ),
   ),
