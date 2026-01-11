@@ -9,6 +9,7 @@ class TemplatePage extends StatelessWidget {
   final BackgroundType typeAppBar;
   final Color? colorBackground;
   final bool cargando;
+  final bool showEnvironmentBanner;
   const TemplatePage({
     super.key,
     this.page,
@@ -17,6 +18,7 @@ class TemplatePage extends StatelessWidget {
     this.cargando = false,
     this.colorBackground,
     this.typeAppBar = BackgroundType.transparent,
+    this.showEnvironmentBanner = true,
   });
 
   Widget appBar(BackgroundType type) {
@@ -62,7 +64,7 @@ class TemplatePage extends StatelessWidget {
                           ),
                         )
                 : const SizedBox(),
-            environment != 'PRODUCTION'
+            showEnvironmentBanner && environment != 'PRODUCTION'
                 ? Banner(
                     location: BannerLocation.topStart,
                     message: environment,

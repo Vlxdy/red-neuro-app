@@ -23,6 +23,11 @@ class Constantes {
   }
 
   static int get chatMaxFileBytes => (chatMaxFileMb * 1024 * 1024).round();
+
+  static int get citasDuracionDefectoMinutos {
+    final raw = dotenv.maybeGet('CITAS_DURACION_DEFECTO_MINUTOS');
+    return int.tryParse(raw ?? '') ?? 60;
+  }
 }
 
 class PatternRegexp {
