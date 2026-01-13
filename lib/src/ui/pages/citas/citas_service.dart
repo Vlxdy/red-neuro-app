@@ -54,7 +54,7 @@ class CitasService extends ServiceConfig {
       };
 
       final response = await fetch(
-        soloMisCitas ? '/citas/mis-citas' : '/citas',
+        '/citas/paginado',
         params: params,
       );
 
