@@ -1785,6 +1785,163 @@
         ]
       }
     },
+    "/citas/paginado": {
+      "get": {
+        "operationId": "CitasController_listarPaginado",
+        "parameters": [
+          {
+            "name": "limite",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 10,
+              "maximum": 50,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pagina",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "filtro",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ordenRaw",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fechaInicio",
+            "required": false,
+            "in": "query",
+            "description": "Fecha de inicio (ISO)",
+            "schema": {
+              "example": "2024-06-01T08:00:00Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "fechaFin",
+            "required": false,
+            "in": "query",
+            "description": "Fecha de fin (ISO)",
+            "schema": {
+              "example": "2024-06-30T23:59:59Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "medicoId",
+            "required": false,
+            "in": "query",
+            "description": "Identificador del médico",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          },
+          {
+            "name": "estado",
+            "required": false,
+            "in": "query",
+            "description": "Filtrar por estado",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "INACTIVO",
+                "BORRADOR",
+                "SOLICITADA",
+                "CONFIRMADA",
+                "EN_CURSO",
+                "COMPLETADA",
+                "NO_ASISTIO",
+                "CANCELADA",
+                "RECHAZADA"
+              ]
+            }
+          },
+          {
+            "name": "etiquetaId",
+            "required": false,
+            "in": "query",
+            "description": "Filtrar por etiqueta",
+            "schema": {
+              "example": "tag-1",
+              "type": "string"
+            }
+          },
+          {
+            "name": "agrupadorId",
+            "required": false,
+            "in": "query",
+            "description": "Filtrar por agrupador",
+            "schema": {
+              "example": "grp-1",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "number"
+                            },
+                            "filas": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/CitaResponseDto"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lista todas las citas paginadas con filtros opcionales",
+        "tags": [
+          "Gestión de Citas"
+        ]
+      }
+    },
     "/citas/mis-citas": {
       "get": {
         "operationId": "CitasController_listarMisCitas",
