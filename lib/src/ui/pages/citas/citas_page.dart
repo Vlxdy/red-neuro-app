@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:red_neuro_app/src/config/service_config.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/constants.dart';
+import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
@@ -45,10 +47,13 @@ class _CitasPageState extends State<CitasPage>
 
   List<CitaMedica> _citasCalendario = [];
   List<CitaMedica> _citasListado = [];
+  List<CitaMedica> _citasSeleccionadas = [];
   List<EtiquetaCita> _etiquetas = [];
   List<AgrupadorCita> _agrupadores = [];
 
   bool _loading = false;
+  bool _dayLoading = false;
+  int _dayRequestId = 0;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   CalendarFormat _calendarFormat = CalendarFormat.week;
@@ -151,6 +156,7 @@ class _CitasPageState extends State<CitasPage>
       _citasCalendario = citas;
       _loading = false;
     });
+    await _cargarCitasDelDia();
   }
 
   Future<void> _cargarCitasListado({int? page}) async {
@@ -189,12 +195,29 @@ class _CitasPageState extends State<CitasPage>
 
   Map<String, String> _buildListFiltersQuery() {
     final filtros = _buildBaseFiltersQuery();
+    if (widget.soloMisCitas) {
+      final medicoId = Auth.instance.profile.id ?? '';
+      if (medicoId.isNotEmpty && (_medicoFiltro?.isNotEmpty ?? false) == false) {
+        filtros['medicoId'] = medicoId;
+      }
+    }
     if (_fechaInicioFiltro != null) {
       filtros['fechaInicio'] = _fechaInicioFiltro!.toUtc().toIso8601String();
     }
     if (_fechaFinFiltro != null) {
       filtros['fechaFin'] = _fechaFinFiltro!.toUtc().toIso8601String();
     }
+    return filtros;
+  }
+
+  Map<String, String> _buildDayFiltersQuery(DateTime day) {
+    final filtros = _buildBaseFiltersQuery();
+    final start = DateTime(day.year, day.month, day.day);
+    final end = start
+        .add(const Duration(days: 1))
+        .subtract(const Duration(milliseconds: 1));
+    filtros['fechaInicio'] = start.toUtc().toIso8601String();
+    filtros['fechaFin'] = end.toUtc().toIso8601String();
     return filtros;
   }
 
@@ -234,6 +257,17 @@ class _CitasPageState extends State<CitasPage>
       return 'Campo requerido';
     }
     return '';
+  }
+
+  Future<bool> _handleResponseError(
+    ResponseApi response,
+    String fallbackMessage,
+  ) async {
+    if (response.status == StatusNetwork.connected) return true;
+    final message =
+        response.message.isNotEmpty ? response.message : fallbackMessage;
+    await showErrorDialog(context, message);
+    return false;
   }
 
   void _onSocketCreated(dynamic data) {
@@ -357,14 +391,6 @@ class _CitasPageState extends State<CitasPage>
     } catch (_) {
       return null;
     }
-  }
-
-  List<CitaMedica> _citasDelDia(DateTime day) {
-    return _citasCalendario.where((cita) {
-      if (cita.fechaInicio == null) return false;
-      final fecha = cita.fechaInicio!;
-      return isSameDay(fecha, day);
-    }).toList();
   }
 
   Map<DateTime, List<CitaMedica>> get _citasPorDia {
@@ -579,6 +605,29 @@ class _CitasPageState extends State<CitasPage>
       }
       _cargarCitasListado(page: 1);
     }
+  }
+
+  Future<void> _cargarCitasDelDia({DateTime? day}) async {
+    final fecha = day ?? _selectedDay;
+    if (fecha == null) {
+      setState(() {
+        _citasSeleccionadas = [];
+        _dayLoading = false;
+      });
+      return;
+    }
+    final requestId = ++_dayRequestId;
+    setState(() => _dayLoading = true);
+    final filtros = _buildDayFiltersQuery(fecha);
+    final citas = await _service.obtenerCitas(
+      soloMisCitas: widget.soloMisCitas,
+      filtros: filtros.isNotEmpty ? filtros : null,
+    );
+    if (!mounted || requestId != _dayRequestId) return;
+    setState(() {
+      _citasSeleccionadas = citas;
+      _dayLoading = false;
+    });
   }
 
   Future<void> _abrirFormulario({CitaMedica? cita, DateTime? fechaBase}) async {
@@ -911,15 +960,33 @@ class _CitasPageState extends State<CitasPage>
     );
 
     if (updates.isNotEmpty) {
-      await _service.actualizarCita(cita.id, updates);
+      final response = await _service.actualizarCita(cita.id, updates);
+      final ok = await _handleResponseError(
+        response,
+        'No se pudo actualizar la cita.',
+      );
+      if (!ok) return;
     }
 
     if (agrupadorCambio) {
-      await _service.actualizarAgrupador(cita.id, agrupadorId);
+      final response = await _service.actualizarAgrupador(cita.id, agrupadorId);
+      final ok = await _handleResponseError(
+        response,
+        'No se pudo actualizar el agrupador.',
+      );
+      if (!ok) return;
     }
 
     if (etiquetasCambio) {
-      await _service.actualizarEtiquetas(cita.id, payloadEtiquetas);
+      final response = await _service.actualizarEtiquetas(
+        cita.id,
+        payloadEtiquetas,
+      );
+      final ok = await _handleResponseError(
+        response,
+        'No se pudieron actualizar las etiquetas.',
+      );
+      if (!ok) return;
     }
 
     if (fechaInicio != cita.fechaInicio || fechaFin != cita.fechaFin) {
@@ -997,7 +1064,7 @@ class _CitasPageState extends State<CitasPage>
     final citasCalendarioFiltradas = _filtrarCitasLocal(_citasCalendario);
     final citasListadoFiltradas = _filtrarCitasLocal(_citasListado);
     final citasSeleccionadas = _selectedDay != null
-        ? _citasDelDia(_selectedDay!)
+        ? _citasSeleccionadas
         : citasCalendarioFiltradas;
 
     return TemplatePage(
@@ -1285,6 +1352,20 @@ class _CitasPageState extends State<CitasPage>
     List<CitaMedica> citasSeleccionadas, {
     required bool isCompact,
   }) {
+    final listado = _dayLoading
+        ? Center(
+            child: SizedBox(
+              height: 28,
+              width: 28,
+              child: CircularProgressIndicator(color: _theme.primary),
+            ),
+          )
+        : _buildListado(
+            citasSeleccionadas,
+            compact: true,
+            onRefresh: isCompact ? null : _refreshCalendario,
+            embedInScroll: isCompact,
+          );
     final calendario = Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1349,6 +1430,7 @@ class _CitasPageState extends State<CitasPage>
                 _selectedDay = selectedDay;
                 _focusedDay = focusedDay;
               });
+              _cargarCitasDelDia(day: selectedDay);
             },
             onPageChanged: (focusedDay) {
               _focusedDay = focusedDay;
@@ -1377,21 +1459,18 @@ class _CitasPageState extends State<CitasPage>
     );
 
     if (isCompact) {
-      return Column(
-        children: [
-          Flexible(
-            fit: FlexFit.loose,
-            child: SingleChildScrollView(child: calendario),
+      return RefreshIndicator(
+        onRefresh: _refreshCalendario,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            children: [
+              calendario,
+              const SizedBox(height: 16),
+              listado,
+            ],
           ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: _buildListado(
-              citasSeleccionadas,
-              compact: true,
-              onRefresh: _refreshCalendario,
-            ),
-          ),
-        ],
+        ),
       );
     }
 
@@ -1399,13 +1478,7 @@ class _CitasPageState extends State<CitasPage>
       children: [
         Expanded(child: calendario),
         const SizedBox(width: 16),
-        Expanded(
-          child: _buildListado(
-            citasSeleccionadas,
-            compact: true,
-            onRefresh: _refreshCalendario,
-          ),
-        ),
+        Expanded(child: listado),
       ],
     );
   }
@@ -1438,6 +1511,7 @@ class _CitasPageState extends State<CitasPage>
     bool compact = false,
     ScrollController? controller,
     Future<void> Function()? onRefresh,
+    bool embedInScroll = false,
   }) {
     if (citas.isEmpty) {
       final emptyState = Column(
@@ -1458,6 +1532,13 @@ class _CitasPageState extends State<CitasPage>
         ],
       );
 
+      if (embedInScroll) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 32),
+          child: Center(child: emptyState),
+        );
+      }
+
       final emptyList = ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
@@ -1473,10 +1554,13 @@ class _CitasPageState extends State<CitasPage>
 
     final listView = ListView.separated(
       controller: controller,
-      physics: onRefresh != null
-          ? const AlwaysScrollableScrollPhysics()
-          : null,
+      physics: embedInScroll
+          ? const NeverScrollableScrollPhysics()
+          : onRefresh != null
+              ? const AlwaysScrollableScrollPhysics()
+              : null,
       padding: const EdgeInsets.only(top: 8),
+      shrinkWrap: embedInScroll,
       itemCount: citas.length,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
