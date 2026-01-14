@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "521643962457",
+    "project_id": "red-neuro",
+    "storage_bucket": "red-neuro.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:521643962457:android:8d293d38e80631e10b8148",
+        "android_client_info": {
+          "package_name": "com.redneuro.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDErn_n8kYLk-Bsry7cUEbRG-UEctXNSh8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

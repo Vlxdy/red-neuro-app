@@ -235,36 +235,36 @@ class Auth {
 
   Future<void> registrarTokenFCM() async {
     try {
-      Logger.info("🔐 Verificando inicialización de Firebase...");
-      await Firebase.initializeApp(); // 🔹 Asegura la inicialización
-
-      Logger.info("🔐 Solicitando permisos FCM...");
-      await FirebaseMessaging.instance.requestPermission();
-
-      final tokenFCM = await FirebaseMessaging.instance.getToken();
-      Logger.info("📱 Token FCM obtenido: $tokenFCM");
-
-      if (tokenFCM != null && tokenFCM.isNotEmpty) {
-        final userId = await idUsuario;
-        Logger.info("🧾 ID Usuario: $userId");
-
-        final url = '${Constantes.apiUrl}/notificaciones/registrar-token';
-        Logger.info("📡 Enviando token a $url");
-
-        final response = await http.post(
-          Uri.parse(url),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ${await apiToken}',
-          },
-          body: jsonEncode({'token': tokenFCM, 'idUsuario': userId}),
-        );
-
-        Logger.info("✅ Token enviado. Status: ${response.statusCode}");
-        Logger.info("🧾 Respuesta: ${response.body}");
-      } else {
-        Logger.error("❌ Token FCM vacío o null.");
-      }
+      // Logger.info("🔐 Verificando inicialización de Firebase...");
+      // await Firebase.initializeApp(); // 🔹 Asegura la inicialización
+      //
+      // Logger.info("🔐 Solicitando permisos FCM...");
+      // await FirebaseMessaging.instance.requestPermission();
+      //
+      // final tokenFCM = await FirebaseMessaging.instance.getToken();
+      // Logger.info("📱 Token FCM obtenido: $tokenFCM");
+      //
+      // if (tokenFCM != null && tokenFCM.isNotEmpty) {
+      // final userId = await idUsuario;
+      // Logger.info("🧾 ID Usuario: $userId");
+      // TODO: implementación de notifiaciones push pendiente
+      // final url = '${Constantes.apiUrl}/notificaciones/registrar-token';
+      // Logger.info("📡 Enviando token a $url");
+      //
+      // final response = await http.post(
+      // Uri.parse(url),
+      // headers: {
+      // 'Content-Type': 'application/json',
+      // 'Authorization': 'Bearer ${await apiToken}',
+      // },
+      // body: jsonEncode({'token': tokenFCM, 'idUsuario': userId}),
+      // );
+      //
+      // Logger.info("✅ Token enviado. Status: ${response.statusCode}");
+      // Logger.info("🧾 Respuesta: ${response.body}");
+      // } else {
+      // Logger.error("❌ Token FCM vacío o null.");
+      // }
     } catch (e, stacktrace) {
       Logger.error("❌ Error registrando token FCM: $e");
       Logger.error("📌 Stacktrace:\n$stacktrace");
