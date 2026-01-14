@@ -1388,34 +1388,6 @@ class _CitasPageState extends State<CitasPage>
       ),
       child: Column(
         children: [
-          Row(
-            children: [
-              Text(
-                _calendarFormat == CalendarFormat.week
-                    ? 'Vista semanal'
-                    : 'Vista mensual',
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-              const Spacer(),
-              IconButton(
-                tooltip: 'Cambiar vista',
-                onPressed: () {
-                  setState(() {
-                    _calendarFormat = _calendarFormat == CalendarFormat.week
-                        ? CalendarFormat.month
-                        : CalendarFormat.week;
-                  });
-                  _cargarCitasCalendario();
-                },
-                icon: Icon(
-                  _calendarFormat == CalendarFormat.week
-                      ? PhosphorIconsRegular.calendar
-                      : PhosphorIconsRegular.calendarCheck,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
           TableCalendar<CitaMedica>(
             locale: 'es_ES',
             firstDay: DateTime.utc(2020, 1, 1),
@@ -1427,6 +1399,28 @@ class _CitasPageState extends State<CitasPage>
             availableCalendarFormats: const {
               CalendarFormat.month: 'Mes',
               CalendarFormat.week: 'Semana',
+            },
+            headerStyle: HeaderStyle(
+              titleTextStyle: Theme.of(context).textTheme.titleSmall ??
+                  const TextStyle(fontWeight: FontWeight.w600),
+              titleCentered: false,
+              formatButtonVisible: true,
+              formatButtonDecoration: BoxDecoration(
+                color: _theme.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              formatButtonTextStyle: TextStyle(
+                color: _theme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            onFormatChanged: (format) {
+              if (_calendarFormat != format) {
+                setState(() {
+                  _calendarFormat = format;
+                });
+                _cargarCitasCalendario();
+              }
             },
             eventLoader: (day) {
               final key = DateTime(day.year, day.month, day.day);
@@ -1459,6 +1453,30 @@ class _CitasPageState extends State<CitasPage>
                 color: _theme.secondary,
                 shape: BoxShape.circle,
               ),
+            ),
+            daysOfWeekStyle: DaysOfWeekStyle(
+              dowTextFormatter: (date, locale) =>
+                  DateFormat.E(locale).format(date)[0].toUpperCase(),
+              weekdayStyle:
+                  TextStyle(color: _theme.primary, fontWeight: FontWeight.w600),
+              weekendStyle: const TextStyle(color: Colors.black54),
+            ),
+            calendarBuilders: CalendarBuilders(
+              dowBuilder: (context, day) {
+                final text = DateFormat.E('es_ES')
+                    .format(day)
+                    .substring(0, 1)
+                    .toUpperCase();
+                return Center(
+                  child: Text(
+                    text,
+                    style: TextStyle(
+                      color: _theme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ],
