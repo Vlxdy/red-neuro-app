@@ -946,6 +946,10 @@ class _CitasPageState extends State<CitasPage>
         state: StatusSnackBar.success,
         colorText: _theme.white,
       );
+      await _cargarCitasCalendario();
+      if (_currentTabIndex == 1) {
+        await _cargarCitasListado(page: 1);
+      }
       return;
     }
 
@@ -1073,54 +1077,57 @@ class _CitasPageState extends State<CitasPage>
       page: SafeArea(
         child: ScaffoldMessenger(
           key: citasMessenger,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final isCompact = constraints.maxWidth < 980;
-              return Stack(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildHeader(isCompact: isCompact),
-                        _buildActiveFiltersRibbon(),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildTabsRow(),
-                              Expanded(
-                                child: TabBarView(
-                                  controller: _tabController,
-                                  children: [
-                                    _buildCalendario(
-                                      citasSeleccionadas,
-                                      isCompact: isCompact,
-                                    ),
-                                    _buildListadoTab(citasListadoFiltradas),
-                                  ],
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            body: LayoutBuilder(
+              builder: (context, constraints) {
+                final isCompact = constraints.maxWidth < 980;
+                return Stack(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildHeader(isCompact: isCompact),
+                          _buildActiveFiltersRibbon(),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildTabsRow(),
+                                Expanded(
+                                  child: TabBarView(
+                                    controller: _tabController,
+                                    children: [
+                                      _buildCalendario(
+                                        citasSeleccionadas,
+                                        isCompact: isCompact,
+                                      ),
+                                      _buildListadoTab(citasListadoFiltradas),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                  Positioned(
-                    bottom: 24,
-                    right: 24,
-                    child: FloatingActionButton(
-                      onPressed: () =>
-                          _abrirFormulario(fechaBase: _selectedDay),
-                      backgroundColor: _theme.primary,
-                      child: const Icon(Icons.add, color: Colors.white),
+                    Positioned(
+                      bottom: 24,
+                      right: 24,
+                      child: FloatingActionButton(
+                        onPressed: () =>
+                            _abrirFormulario(fechaBase: _selectedDay),
+                        backgroundColor: _theme.primary,
+                        child: const Icon(Icons.add, color: Colors.white),
+                      ),
                     ),
-                  ),
-                ],
-              );
-            },
+                  ],
+                );
+              },
+            ),
           ),
         ),
       ),
