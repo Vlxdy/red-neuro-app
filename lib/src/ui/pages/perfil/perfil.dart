@@ -39,6 +39,7 @@ class _PerfilState extends State<Perfil> {
 
   Future<void> _loadProfile() async {
     final Usuario profile = await Auth.instance.profileAsync();
+    if (!mounted) return;
     setState(() {
       _profile = profile;
       _roles = profile.roles;
