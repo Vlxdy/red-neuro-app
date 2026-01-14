@@ -24,7 +24,11 @@ void showSnackBar(
   StatusSnackBar? state,
   Color? colorText,
 }) {
-  key.currentState?.showSnackBar(
+  final messenger = key.currentState;
+  if (messenger == null || !messenger.mounted) return;
+  final hasScaffold = Scaffold.maybeOf(messenger.context) != null;
+  if (!hasScaffold) return;
+  messenger.showSnackBar(
     SnackBar(
       backgroundColor: Colors.transparent,
       elevation: 0,
@@ -51,6 +55,23 @@ void showSnackBar(
 
 void showSimpleSnackBar(GlobalKey<ScaffoldMessengerState> key, String content) {
   key.currentState?.showSnackBar(SnackBar(content: Text(content)));
+}
+
+Future<void> showErrorDialog(BuildContext context, String message) async {
+  if (!context.mounted) return;
+  await showDialog<void>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Error'),
+      content: Text(message),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Aceptar'),
+        ),
+      ],
+    ),
+  );
 }
 
 enum StatusSnackBar { error, info, success, main, warning }

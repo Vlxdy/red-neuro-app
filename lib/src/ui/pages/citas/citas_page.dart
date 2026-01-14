@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:red_neuro_app/src/config/service_config.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/constants.dart';
+import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
@@ -255,6 +257,17 @@ class _CitasPageState extends State<CitasPage>
       return 'Campo requerido';
     }
     return '';
+  }
+
+  Future<bool> _handleResponseError(
+    ResponseApi response,
+    String fallbackMessage,
+  ) async {
+    if (response.status == StatusNetwork.connected) return true;
+    final message =
+        response.message.isNotEmpty ? response.message : fallbackMessage;
+    await showErrorDialog(context, message);
+    return false;
   }
 
   void _onSocketCreated(dynamic data) {
@@ -947,15 +960,33 @@ class _CitasPageState extends State<CitasPage>
     );
 
     if (updates.isNotEmpty) {
-      await _service.actualizarCita(cita.id, updates);
+      final response = await _service.actualizarCita(cita.id, updates);
+      final ok = await _handleResponseError(
+        response,
+        'No se pudo actualizar la cita.',
+      );
+      if (!ok) return;
     }
 
     if (agrupadorCambio) {
-      await _service.actualizarAgrupador(cita.id, agrupadorId);
+      final response = await _service.actualizarAgrupador(cita.id, agrupadorId);
+      final ok = await _handleResponseError(
+        response,
+        'No se pudo actualizar el agrupador.',
+      );
+      if (!ok) return;
     }
 
     if (etiquetasCambio) {
-      await _service.actualizarEtiquetas(cita.id, payloadEtiquetas);
+      final response = await _service.actualizarEtiquetas(
+        cita.id,
+        payloadEtiquetas,
+      );
+      final ok = await _handleResponseError(
+        response,
+        'No se pudieron actualizar las etiquetas.',
+      );
+      if (!ok) return;
     }
 
     if (fechaInicio != cita.fechaInicio || fechaFin != cita.fechaFin) {

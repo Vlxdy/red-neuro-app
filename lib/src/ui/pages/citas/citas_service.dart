@@ -3,6 +3,7 @@ import 'package:red_neuro_app/src/config/service_config.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
+import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 
 class CitasService extends ServiceConfig {
   CitasService(BuildContext context) : super('', context);
@@ -18,6 +19,12 @@ class CitasService extends ServiceConfig {
       );
 
       if (response.status != StatusNetwork.connected) {
+        if (response.status != StatusNetwork.noContent) {
+          final message = response.message.isNotEmpty
+              ? response.message
+              : 'No se pudieron cargar las citas.';
+          await showErrorDialog(context, message);
+        }
         return [];
       }
 
@@ -36,6 +43,7 @@ class CitasService extends ServiceConfig {
     } catch (e, stacktrace) {
       Logger.error('Error al obtener citas $e');
       Logger.error('stacktrace $stacktrace');
+      await showErrorDialog(context, 'No se pudieron cargar las citas.');
     }
     return [];
   }
@@ -57,6 +65,16 @@ class CitasService extends ServiceConfig {
         '/citas/paginado',
         params: params,
       );
+
+      if (response.status != StatusNetwork.connected) {
+        final message = response.message.isNotEmpty
+            ? response.message
+            : 'No se pudieron cargar las citas paginadas.';
+        if (response.status != StatusNetwork.noContent) {
+          await showErrorDialog(context, message);
+        }
+        return CitasPageResult.empty(message);
+      }
 
       final status = response.status;
       final message = response.message;
@@ -100,6 +118,10 @@ class CitasService extends ServiceConfig {
     } catch (e, stacktrace) {
       Logger.error('Error al obtener citas paginadas $e');
       Logger.error('stacktrace $stacktrace');
+      await showErrorDialog(
+        context,
+        'No se pudieron cargar las citas paginadas.',
+      );
       return CitasPageResult.empty('No se pudieron cargar las citas');
     }
   }
