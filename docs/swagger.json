@@ -1652,7 +1652,7 @@
             }
           },
           {
-            "name": "medicoId",
+            "name": "idMedico",
             "required": false,
             "in": "query",
             "description": "Identificador del médico",
@@ -1679,26 +1679,6 @@
                 "CANCELADA",
                 "RECHAZADA"
               ]
-            }
-          },
-          {
-            "name": "etiquetaId",
-            "required": false,
-            "in": "query",
-            "description": "Filtrar por etiqueta",
-            "schema": {
-              "example": "tag-1",
-              "type": "string"
-            }
-          },
-          {
-            "name": "agrupadorId",
-            "required": false,
-            "in": "query",
-            "description": "Filtrar por agrupador",
-            "schema": {
-              "example": "grp-1",
-              "type": "string"
             }
           }
         ],
@@ -1847,7 +1827,7 @@
             }
           },
           {
-            "name": "medicoId",
+            "name": "idMedico",
             "required": false,
             "in": "query",
             "description": "Identificador del médico",
@@ -1874,26 +1854,6 @@
                 "CANCELADA",
                 "RECHAZADA"
               ]
-            }
-          },
-          {
-            "name": "etiquetaId",
-            "required": false,
-            "in": "query",
-            "description": "Filtrar por etiqueta",
-            "schema": {
-              "example": "tag-1",
-              "type": "string"
-            }
-          },
-          {
-            "name": "agrupadorId",
-            "required": false,
-            "in": "query",
-            "description": "Filtrar por agrupador",
-            "schema": {
-              "example": "grp-1",
-              "type": "string"
             }
           }
         ],
@@ -1967,7 +1927,7 @@
             }
           },
           {
-            "name": "medicoId",
+            "name": "idMedico",
             "required": false,
             "in": "query",
             "description": "Identificador del médico",
@@ -1994,26 +1954,6 @@
                 "CANCELADA",
                 "RECHAZADA"
               ]
-            }
-          },
-          {
-            "name": "etiquetaId",
-            "required": false,
-            "in": "query",
-            "description": "Filtrar por etiqueta",
-            "schema": {
-              "example": "tag-1",
-              "type": "string"
-            }
-          },
-          {
-            "name": "agrupadorId",
-            "required": false,
-            "in": "query",
-            "description": "Filtrar por agrupador",
-            "schema": {
-              "example": "grp-1",
-              "type": "string"
             }
           }
         ],
@@ -2332,219 +2272,44 @@
         ]
       }
     },
-    "/citas/{id}/etiquetas": {
-      "patch": {
-        "operationId": "CitasController_actualizarEtiquetas",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "example": "12",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ActualizarEtiquetasCitaDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/BaseResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "datos": {
-                          "$ref": "#/components/schemas/CitaResponseDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Define las etiquetas de una cita",
-        "tags": [
-          "Gestión de Citas"
-        ]
-      }
-    },
-    "/citas/{id}/agrupador": {
-      "patch": {
-        "operationId": "CitasController_actualizarAgrupador",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "example": "12",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ActualizarAgrupadorCitaDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/BaseResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "datos": {
-                          "$ref": "#/components/schemas/CitaResponseDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Asigna un agrupador a la cita",
-        "tags": [
-          "Gestión de Citas"
-        ]
-      }
-    },
-    "/etiquetas": {
+    "/consultorios": {
       "get": {
-        "operationId": "EtiquetasController_listar",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/BaseResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "datos": {
-                          "type": "array",
-                          "items": {
-                            "$ref": "#/components/schemas/EtiquetaResponseDto"
-                          }
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Lista todas las etiquetas disponibles",
-        "tags": [
-          "Etiquetas de Citas"
-        ]
-      },
-      "post": {
-        "operationId": "EtiquetasController_crear",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CrearEtiquetaDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/BaseResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "datos": {
-                          "$ref": "#/components/schemas/EtiquetaResponseDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Crea una nueva etiqueta",
-        "tags": [
-          "Etiquetas de Citas"
-        ]
-      }
-    },
-    "/etiquetas/{id}": {
-      "get": {
-        "operationId": "EtiquetasController_obtener",
+        "operationId": "ConsultorioController_listar",
         "parameters": [
           {
-            "name": "id",
-            "required": true,
-            "in": "path",
+            "name": "limite",
+            "required": false,
+            "in": "query",
             "schema": {
-              "example": "12",
+              "minimum": 10,
+              "maximum": 50,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pagina",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "filtro",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ordenRaw",
+            "required": false,
+            "in": "query",
+            "schema": {
               "type": "string"
             }
           }
@@ -2562,149 +2327,17 @@
                     {
                       "properties": {
                         "datos": {
-                          "$ref": "#/components/schemas/EtiquetaResponseDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Obtiene una etiqueta por su identificador",
-        "tags": [
-          "Etiquetas de Citas"
-        ]
-      },
-      "patch": {
-        "operationId": "EtiquetasController_actualizar",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "example": "12",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ActualizarEtiquetaDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/BaseResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "datos": {
-                          "$ref": "#/components/schemas/EtiquetaResponseDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Actualiza una etiqueta existente",
-        "tags": [
-          "Etiquetas de Citas"
-        ]
-      },
-      "delete": {
-        "operationId": "EtiquetasController_eliminar",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "example": "12",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/BaseResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "datos": {
-                          "$ref": "#/components/schemas/EtiquetaDeleteResponseDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Elimina una etiqueta y la retira de las citas asociadas",
-        "tags": [
-          "Etiquetas de Citas"
-        ]
-      }
-    },
-    "/agrupadores": {
-      "get": {
-        "operationId": "AgrupadoresController_listar",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/BaseResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "datos": {
-                          "type": "array",
-                          "items": {
-                            "$ref": "#/components/schemas/AgrupadorResponseDto"
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "number"
+                            },
+                            "filas": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/ConsultorioResponseDto"
+                              }
+                            }
                           }
                         }
                       }
@@ -2722,18 +2355,18 @@
         ],
         "summary": "Lista los ambientes o agrupadores configurados",
         "tags": [
-          "Ambientes / Agrupadores de Citas"
+          "Consultorios"
         ]
       },
       "post": {
-        "operationId": "AgrupadoresController_crear",
+        "operationId": "ConsultorioController_crear",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CrearAgrupadorDto"
+                "$ref": "#/components/schemas/CrearConsultorioDto"
               }
             }
           }
@@ -2751,7 +2384,7 @@
                     {
                       "properties": {
                         "datos": {
-                          "$ref": "#/components/schemas/AgrupadorResponseDto"
+                          "$ref": "#/components/schemas/ConsultorioResponseDto"
                         }
                       }
                     }
@@ -2768,59 +2401,13 @@
         ],
         "summary": "Crea un nuevo ambiente o agrupador",
         "tags": [
-          "Ambientes / Agrupadores de Citas"
+          "Consultorios"
         ]
       }
     },
-    "/agrupadores/{id}": {
-      "get": {
-        "operationId": "AgrupadoresController_obtener",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "example": "12",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/BaseResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "datos": {
-                          "$ref": "#/components/schemas/AgrupadorResponseDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Obtiene un ambiente/agrupador específico",
-        "tags": [
-          "Ambientes / Agrupadores de Citas"
-        ]
-      },
+    "/consultorios/{id}": {
       "patch": {
-        "operationId": "AgrupadoresController_actualizar",
+        "operationId": "ConsultorioController_actualizar",
         "parameters": [
           {
             "name": "id",
@@ -2837,7 +2424,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ActualizarAgrupadorDto"
+                "$ref": "#/components/schemas/ActualizarConsultorioDto"
               }
             }
           }
@@ -2855,7 +2442,7 @@
                     {
                       "properties": {
                         "datos": {
-                          "$ref": "#/components/schemas/AgrupadorResponseDto"
+                          "$ref": "#/components/schemas/ConsultorioResponseDto"
                         }
                       }
                     }
@@ -2872,11 +2459,13 @@
         ],
         "summary": "Actualiza la información de un ambiente/agrupador",
         "tags": [
-          "Ambientes / Agrupadores de Citas"
+          "Consultorios"
         ]
-      },
-      "delete": {
-        "operationId": "AgrupadoresController_eliminar",
+      }
+    },
+    "/consultorios/{id}/cambiar-estado": {
+      "patch": {
+        "operationId": "ConsultorioController_cambiarEstado",
         "parameters": [
           {
             "name": "id",
@@ -2901,7 +2490,7 @@
                     {
                       "properties": {
                         "datos": {
-                          "$ref": "#/components/schemas/AgrupadorDeleteResponseDto"
+                          "$ref": "#/components/schemas/ConsultorioResponseDto"
                         }
                       }
                     }
@@ -2916,9 +2505,729 @@
             "bearer": []
           }
         ],
-        "summary": "Elimina un ambiente/agrupador",
+        "summary": "Cambiar estado del consultorio",
         "tags": [
-          "Ambientes / Agrupadores de Citas"
+          "Consultorios"
+        ]
+      }
+    },
+    "/estudios": {
+      "get": {
+        "operationId": "EstudioController_listar",
+        "parameters": [
+          {
+            "name": "limite",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 10,
+              "maximum": 50,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pagina",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "filtro",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ordenRaw",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "number"
+                            },
+                            "filas": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/EstudioResponseDto"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lista los estudios médicos configurados",
+        "tags": [
+          "Estudios"
+        ]
+      },
+      "post": {
+        "operationId": "EstudioController_crear",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearEstudioDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/EstudioResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Crea un nuevo estudio médico",
+        "tags": [
+          "Estudios"
+        ]
+      }
+    },
+    "/estudios/{id}": {
+      "get": {
+        "operationId": "EstudioController_obtenerPorId",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/EstudioResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Obtiene el detalle de un estudio médico",
+        "tags": [
+          "Estudios"
+        ]
+      },
+      "patch": {
+        "operationId": "EstudioController_actualizar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActualizarEstudioDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/EstudioResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Actualiza la información de un estudio médico",
+        "tags": [
+          "Estudios"
+        ]
+      },
+      "delete": {
+        "operationId": "EstudioController_eliminar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/EstudioResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Elimina un estudio médico",
+        "tags": [
+          "Estudios"
+        ]
+      }
+    },
+    "/estudios/{id}/cambiar-estado": {
+      "patch": {
+        "operationId": "EstudioController_cambiarEstado",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/EstudioResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cambiar estado del estudio médico",
+        "tags": [
+          "Estudios"
+        ]
+      }
+    },
+    "/estudios/{id}/especialidades": {
+      "post": {
+        "operationId": "EstudioController_asignarEspecialidad",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AsignarEspecialidadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/EstudioResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Asocia una especialidad a un estudio médico",
+        "tags": [
+          "Estudios"
+        ]
+      }
+    },
+    "/especialidades": {
+      "get": {
+        "operationId": "EspecialidadController_listar",
+        "parameters": [
+          {
+            "name": "limite",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 10,
+              "maximum": 50,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pagina",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "filtro",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ordenRaw",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "number"
+                            },
+                            "filas": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/EspecialidadResponseDto"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lista las especialidades médicas configuradas",
+        "tags": [
+          "Especialidades"
+        ]
+      },
+      "post": {
+        "operationId": "EspecialidadController_crear",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearEspecialidadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/EspecialidadResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Crea una nueva especialidad médica",
+        "tags": [
+          "Especialidades"
+        ]
+      }
+    },
+    "/especialidades/{id}": {
+      "get": {
+        "operationId": "EspecialidadController_obtenerPorId",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/EspecialidadResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Obtiene el detalle de una especialidad médica",
+        "tags": [
+          "Especialidades"
+        ]
+      },
+      "patch": {
+        "operationId": "EspecialidadController_actualizar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActualizarEspecialidadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/EspecialidadResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Actualiza la información de una especialidad",
+        "tags": [
+          "Especialidades"
+        ]
+      },
+      "delete": {
+        "operationId": "EspecialidadController_eliminar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/EspecialidadResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Elimina una especialidad médica",
+        "tags": [
+          "Especialidades"
+        ]
+      }
+    },
+    "/especialidades/{id}/cambiar-estado": {
+      "patch": {
+        "operationId": "EspecialidadController_cambiarEstado",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/EspecialidadResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cambiar estado de la especialidad",
+        "tags": [
+          "Especialidades"
         ]
       }
     },
@@ -3844,35 +4153,74 @@
           "id"
         ]
       },
-      "EtiquetaResponseDto": {
+      "PersonalResponseDto": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Identificador único de la etiqueta",
-            "example": "10"
+            "description": "Identificador único del personal médico",
+            "example": "a8f4c1d2-32a1-4c2b-bff1-87fa92c1a223"
           },
-          "nombre": {
+          "nroDocumento": {
             "type": "string",
-            "description": "Nombre visible de la etiqueta",
-            "example": "Urgente"
+            "description": "Número de documento de identidad",
+            "example": "4192299"
           },
-          "colorHex": {
+          "nombres": {
             "type": "string",
-            "description": "Color en formato hexadecimal",
-            "example": "#ff3366"
+            "description": "Nombres del profesional de salud",
+            "example": "Mariela"
           },
-          "estado": {
-            "type": "string",
-            "description": "Estado del registro",
-            "example": "ACTIVO"
+          "primerApellido": {
+            "type": "object",
+            "description": "Primer apellido del profesional",
+            "example": "Alcázar"
+          },
+          "segundoApellido": {
+            "type": "object",
+            "description": "Segundo apellido del profesional",
+            "example": "Almaraz"
+          },
+          "fechaNacimiento": {
+            "type": "object",
+            "description": "Fecha de nacimiento",
+            "example": "2002-05-04"
+          },
+          "telefono": {
+            "type": "object",
+            "description": "Número de teléfono de contacto",
+            "example": "71234567"
+          },
+          "correoElectronico": {
+            "type": "object",
+            "description": "Correo electrónico institucional o personal",
+            "example": "mariela.alcazar@clinica.com"
+          },
+          "genero": {
+            "type": "object",
+            "description": "Género",
+            "example": "F"
+          },
+          "urlFoto": {
+            "type": "object",
+            "description": "URL de la fotografía del profesional",
+            "example": "/fotos/mariela.jpg"
+          },
+          "especialidades": {
+            "description": "Especialidades médicas del profesional",
+            "example": [
+              "Pediatría",
+              "Neonatología"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
           "id",
-          "nombre",
-          "colorHex",
-          "estado"
+          "nombres"
         ]
       },
       "CitaResponseDto": {
@@ -3918,21 +4266,17 @@
             "description": "Identificador del médico asignado",
             "example": "42"
           },
-          "agrupadorId": {
-            "type": "string",
-            "description": "Identificador del agrupador asociado",
-            "example": "grp-campana"
-          },
-          "etiquetas": {
-            "description": "Etiquetas asociadas a la cita",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/EtiquetaResponseDto"
-            }
-          },
           "comentario": {
             "type": "string",
             "description": "Comentario opcional del cambio de estado"
+          },
+          "medico": {
+            "description": "Datos del profesional de salud asignado a la cita",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PersonalResponseDto"
+              }
+            ]
           }
         },
         "required": [
@@ -3942,28 +4286,8 @@
           "fechaFin",
           "estado",
           "medicoId",
-          "etiquetas"
+          "medico"
         ]
-      },
-      "EtiquetaAsociacionDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Identificador de una etiqueta existente. Use este campo o envíe nombre y colorHex",
-            "example": "tag-urgente"
-          },
-          "nombre": {
-            "type": "string",
-            "description": "Nombre de la etiqueta a crear o reutilizar si ya existe",
-            "example": "Prioritaria"
-          },
-          "colorHex": {
-            "type": "string",
-            "description": "Color en hexadecimal, requerido cuando se crea una nueva etiqueta",
-            "example": "#ff3366"
-          }
-        }
       },
       "CrearCitaDto": {
         "type": "object",
@@ -3983,29 +4307,17 @@
             "description": "Fecha de fin (ISO)",
             "example": "2024-06-15T11:00:00Z"
           },
-          "medicoId": {
+          "idMedico": {
             "type": "string",
             "description": "Identificador del médico responsable",
             "example": "42"
-          },
-          "agrupadorId": {
-            "type": "string",
-            "description": "Agrupador asociado (ambiente)",
-            "example": "grp-1"
-          },
-          "etiquetas": {
-            "description": "Etiquetas a asociar, permite enviar ids existentes o nombre/colorHex para crear la etiqueta si no existe",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/EtiquetaAsociacionDto"
-            }
           }
         },
         "required": [
           "detalle",
           "fechaInicio",
           "fechaFin",
-          "medicoId"
+          "idMedico"
         ]
       },
       "ActualizarCitaDto": {
@@ -4026,22 +4338,10 @@
             "description": "Fecha de fin (ISO)",
             "example": "2024-06-15T11:00:00Z"
           },
-          "medicoId": {
+          "idMedico": {
             "type": "string",
             "description": "Identificador del médico responsable",
             "example": "42"
-          },
-          "agrupadorId": {
-            "type": "string",
-            "description": "Agrupador asociado (ambiente)",
-            "example": "grp-1"
-          },
-          "etiquetas": {
-            "description": "Etiquetas a asociar, permite enviar ids existentes o nombre/colorHex para crear la etiqueta si no existe",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/EtiquetaAsociacionDto"
-            }
           }
         }
       },
@@ -4104,103 +4404,23 @@
           }
         }
       },
-      "ActualizarEtiquetasCitaDto": {
-        "type": "object",
-        "properties": {
-          "etiquetas": {
-            "description": "Etiquetas a asociar. Si una etiqueta no existe se crea usando nombre y colorHex",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/EtiquetaAsociacionDto"
-            }
-          }
-        },
-        "required": [
-          "etiquetas"
-        ]
-      },
-      "ActualizarAgrupadorCitaDto": {
-        "type": "object",
-        "properties": {
-          "agrupadorId": {
-            "type": "string",
-            "description": "Identificador del agrupador",
-            "example": "grp-1"
-          }
-        },
-        "required": [
-          "agrupadorId"
-        ]
-      },
-      "CrearEtiquetaDto": {
-        "type": "object",
-        "properties": {
-          "nombre": {
-            "type": "string",
-            "description": "Nombre visible de la etiqueta",
-            "example": "Urgente"
-          },
-          "colorHex": {
-            "type": "string",
-            "description": "Color en formato hexadecimal",
-            "example": "#ff3366"
-          }
-        },
-        "required": [
-          "nombre",
-          "colorHex"
-        ]
-      },
-      "ActualizarEtiquetaDto": {
-        "type": "object",
-        "properties": {
-          "nombre": {
-            "type": "string",
-            "description": "Nombre visible de la etiqueta",
-            "example": "Urgente"
-          },
-          "colorHex": {
-            "type": "string",
-            "description": "Color en formato hexadecimal",
-            "example": "#ff3366"
-          },
-          "estado": {
-            "type": "string",
-            "description": "Permite reactivar o desactivar la etiqueta",
-            "example": true
-          }
-        }
-      },
-      "EtiquetaDeleteResponseDto": {
+      "ConsultorioResponseDto": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Identificador único de la etiqueta",
-            "example": "10"
-          }
-        },
-        "required": [
-          "id"
-        ]
-      },
-      "AgrupadorResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Identificador único del ambiente/agrupador",
+            "description": "Identificador único del consultorio o sala de atención",
             "example": "5"
           },
           "nombre": {
             "type": "string",
-            "description": "Nombre visible del ambiente/agrupador",
+            "description": "Nombre visible del consultorio o sala",
             "example": "Consultorio 1 - Pediatría"
           },
           "descripcion": {
             "type": "string",
-            "description": "Descripción opcional del ambiente o agrupador",
-            "example": "Consultorio principal del área pediátrica"
+            "description": "Descripción funcional del consultorio o sala de atención",
+            "example": "Consultorio destinado a la atención de pacientes pediátricos"
           },
           "estado": {
             "type": "string",
@@ -4209,7 +4429,7 @@
           },
           "colorHex": {
             "type": "string",
-            "description": "Color identificador del ambiente en formato hexadecimal",
+            "description": "Color identificador del consultorio en la agenda (formato hexadecimal)",
             "example": "#0ea5e9"
           }
         },
@@ -4220,22 +4440,22 @@
           "colorHex"
         ]
       },
-      "CrearAgrupadorDto": {
+      "CrearConsultorioDto": {
         "type": "object",
         "properties": {
           "nombre": {
             "type": "string",
-            "description": "Nombre visible del ambiente/agrupador",
-            "example": "Consultorio 1 - Pediatría"
+            "description": "Nombre visible del consultorio o sala de atención",
+            "example": "Consultorio 1 – Pediatría"
           },
           "descripcion": {
             "type": "string",
-            "description": "Descripción opcional del ambiente o agrupador",
-            "example": "Consultorio principal del área pediátrica"
+            "description": "Descripción funcional del consultorio o sala",
+            "example": "Sala destinada a la atención de pacientes pediátricos"
           },
           "colorHex": {
             "type": "string",
-            "description": "Color identificador del ambiente en formato hexadecimal",
+            "description": "Color identificador del consultorio en la agenda (formato hexadecimal)",
             "example": "#0ea5e9"
           }
         },
@@ -4244,38 +4464,281 @@
           "colorHex"
         ]
       },
-      "ActualizarAgrupadorDto": {
+      "ActualizarConsultorioDto": {
         "type": "object",
         "properties": {
           "nombre": {
             "type": "string",
-            "description": "Nombre visible del ambiente/agrupador",
-            "example": "Consultorio 1 - Pediatría"
+            "description": "Nombre visible del consultorio o sala de atención",
+            "example": "Consultorio 1 – Pediatría"
           },
           "descripcion": {
             "type": "string",
-            "description": "Descripción opcional del ambiente o agrupador",
-            "example": "Consultorio principal del área pediátrica"
+            "description": "Descripción funcional del consultorio o sala",
+            "example": "Sala destinada a la atención de pacientes pediátricos"
           },
           "colorHex": {
             "type": "string",
-            "description": "Color identificador del ambiente en formato hexadecimal",
+            "description": "Color identificador del consultorio en la agenda (formato hexadecimal)",
             "example": "#0ea5e9"
+          },
+          "estado": {
+            "type": "string",
+            "description": "Permite reactivar o desactivar el consultorio",
+            "example": "ACTIVO"
           }
         }
       },
-      "AgrupadorDeleteResponseDto": {
+      "EspecialidadResumenDto": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Identificador único del ambiente/agrupador",
-            "example": "5"
+            "description": "Identificador único de la especialidad",
+            "example": "12"
+          },
+          "nombre": {
+            "type": "string",
+            "description": "Nombre visible de la especialidad médica",
+            "example": "Cardiología"
+          },
+          "colorHex": {
+            "type": "string",
+            "description": "Color principal de la especialidad en formato hexadecimal",
+            "example": "#0ea5e9"
           }
         },
         "required": [
-          "id"
+          "id",
+          "nombre",
+          "colorHex"
         ]
+      },
+      "EstudioResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identificador único del estudio médico",
+            "example": "8"
+          },
+          "nombre": {
+            "type": "string",
+            "description": "Nombre identificador del estudio médico",
+            "example": "Ecografía abdominal"
+          },
+          "descripcion": {
+            "type": "string",
+            "description": "Descripción funcional del estudio",
+            "example": "Evaluación ecográfica de órganos abdominales"
+          },
+          "duracionMinutos": {
+            "type": "number",
+            "description": "Duración estimada del estudio en minutos",
+            "example": 30
+          },
+          "estado": {
+            "type": "string",
+            "description": "Estado del registro",
+            "example": "ACTIVO"
+          },
+          "especialidades": {
+            "description": "Especialidades asociadas al estudio",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EspecialidadResumenDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "nombre",
+          "descripcion",
+          "duracionMinutos",
+          "estado",
+          "especialidades"
+        ]
+      },
+      "CrearEstudioDto": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "description": "Nombre identificador del estudio médico",
+            "example": "Ecografía abdominal"
+          },
+          "descripcion": {
+            "type": "string",
+            "description": "Descripción funcional del estudio",
+            "example": "Evaluación ecográfica de órganos abdominales"
+          },
+          "duracionMinutos": {
+            "type": "number",
+            "description": "Duración estimada del estudio en minutos",
+            "example": 30
+          }
+        },
+        "required": [
+          "nombre",
+          "descripcion",
+          "duracionMinutos"
+        ]
+      },
+      "ActualizarEstudioDto": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "description": "Nombre identificador del estudio médico",
+            "example": "Ecografía abdominal"
+          },
+          "descripcion": {
+            "type": "string",
+            "description": "Descripción funcional del estudio",
+            "example": "Evaluación ecográfica de órganos abdominales"
+          },
+          "duracionMinutos": {
+            "type": "number",
+            "description": "Duración estimada del estudio en minutos",
+            "example": 30
+          },
+          "estado": {
+            "type": "string",
+            "description": "Permite reactivar o desactivar el estudio",
+            "example": "ACTIVO"
+          }
+        }
+      },
+      "AsignarEspecialidadDto": {
+        "type": "object",
+        "properties": {
+          "especialidadId": {
+            "type": "string",
+            "description": "Identificador de la especialidad a asociar al estudio",
+            "example": "2"
+          }
+        },
+        "required": [
+          "especialidadId"
+        ]
+      },
+      "EstudioResumenDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identificador único del estudio médico",
+            "example": "5"
+          },
+          "nombre": {
+            "type": "string",
+            "description": "Nombre identificador del estudio médico",
+            "example": "Radiografía de tórax"
+          },
+          "duracionMinutos": {
+            "type": "number",
+            "description": "Duración estimada del estudio en minutos",
+            "example": 20
+          }
+        },
+        "required": [
+          "id",
+          "nombre",
+          "duracionMinutos"
+        ]
+      },
+      "EspecialidadResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identificador único de la especialidad médica",
+            "example": "12"
+          },
+          "nombre": {
+            "type": "string",
+            "description": "Nombre visible de la especialidad médica",
+            "example": "Cardiología"
+          },
+          "descripcion": {
+            "type": "string",
+            "description": "Descripción opcional de la especialidad médica",
+            "example": "Especialidad dedicada al diagnóstico de enfermedades cardíacas"
+          },
+          "estado": {
+            "type": "string",
+            "description": "Estado del registro",
+            "example": "ACTIVO"
+          },
+          "colorHex": {
+            "type": "string",
+            "description": "Color principal de la especialidad en formato hexadecimal",
+            "example": "#0ea5e9"
+          },
+          "estudios": {
+            "description": "Estudios asociados a la especialidad",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EstudioResumenDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "nombre",
+          "estado",
+          "colorHex",
+          "estudios"
+        ]
+      },
+      "CrearEspecialidadDto": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "description": "Nombre visible de la especialidad médica",
+            "example": "Cardiología"
+          },
+          "descripcion": {
+            "type": "string",
+            "description": "Descripción opcional de la especialidad médica",
+            "example": "Especialidad dedicada al diagnóstico de enfermedades cardíacas"
+          },
+          "colorHex": {
+            "type": "string",
+            "description": "Color principal de la especialidad en formato hexadecimal",
+            "example": "#0ea5e9"
+          }
+        },
+        "required": [
+          "nombre",
+          "colorHex"
+        ]
+      },
+      "ActualizarEspecialidadDto": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string",
+            "description": "Nombre visible de la especialidad médica",
+            "example": "Cardiología"
+          },
+          "descripcion": {
+            "type": "string",
+            "description": "Descripción opcional de la especialidad médica",
+            "example": "Especialidad dedicada al diagnóstico de enfermedades cardíacas"
+          },
+          "colorHex": {
+            "type": "string",
+            "description": "Color principal de la especialidad en formato hexadecimal",
+            "example": "#0ea5e9"
+          },
+          "estado": {
+            "type": "string",
+            "description": "Permite reactivar o desactivar la especialidad",
+            "example": "ACTIVO"
+          }
+        }
       },
       "ErrorResponseDto": {
         "type": "object",
