@@ -10,6 +10,8 @@ import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/pages/perfil/perfil.dart';
 import 'package:red_neuro_app/src/ui/pages/usuarios/usuarios_page.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_page.dart';
+import 'package:red_neuro_app/src/ui/pages/especialidades/especialidades_page.dart';
+import 'package:red_neuro_app/src/ui/pages/estudios/estudios_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:solar_icons/solar_icons.dart';
@@ -539,6 +541,22 @@ List<ChildrenItem> _submodulesFromRole({
       }
     }
 
+    if (resolvedRole == 'ADMIN') {
+      final existingTitles = submodules
+          .map((item) => item.titulo.toLowerCase())
+          .toSet();
+      final adminExtras = _adminMenu(theme).where((item) {
+        final title = item.titulo.toLowerCase();
+        return title == 'especialidades' || title == 'estudios';
+      });
+
+      for (final extra in adminExtras) {
+        if (!existingTitles.contains(extra.titulo.toLowerCase())) {
+          submodules.add(extra);
+        }
+      }
+    }
+
     if (submodules.isNotEmpty) return submodules;
   }
 
@@ -564,6 +582,10 @@ ChildrenItem _submoduleToItem(
 
   final isUsuariosModule =
       normalizedUrl.contains('usuarios') || normalizedName == 'usuarios';
+  final isEspecialidadesModule = normalizedUrl.contains('especialidades') ||
+      normalizedName == 'especialidades';
+  final isEstudiosModule =
+      normalizedUrl.contains('estudios') || normalizedName == 'estudios';
 
   return ChildrenItem(
     iconoImagen: _moduleIconData(subModule.propiedades?.icono),
@@ -576,6 +598,10 @@ ChildrenItem _submoduleToItem(
     children: KeepAlivePage(
       child: isUsuariosModule
           ? const UsuariosPage()
+          : isEspecialidadesModule
+          ? const EspecialidadesPage()
+          : isEstudiosModule
+          ? const EstudiosPage()
           : RoleTrayPlaceholder(
               title: blueprint.title,
               description: blueprint.description,
@@ -624,6 +650,18 @@ List<ChildrenItem> _adminMenu(ThemeController theme) => [
     iconoImagenSeleccionada: PhosphorIconsFill.users,
     titulo: 'Usuarios',
     children: const KeepAlivePage(child: UsuariosPage()),
+  ),
+  ChildrenItem(
+    iconoImagen: Icons.medical_services_outlined,
+    iconoImagenSeleccionada: Icons.medical_services,
+    titulo: 'Especialidades',
+    children: const KeepAlivePage(child: EspecialidadesPage()),
+  ),
+  ChildrenItem(
+    iconoImagen: Icons.science_outlined,
+    iconoImagenSeleccionada: Icons.science,
+    titulo: 'Estudios',
+    children: const KeepAlivePage(child: EstudiosPage()),
   ),
   ChildrenItem(
     iconoImagen: PhosphorIconsRegular.tag,
