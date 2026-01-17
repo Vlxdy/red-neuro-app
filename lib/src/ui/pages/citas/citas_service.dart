@@ -150,7 +150,7 @@ class CitasService extends ServiceConfig {
         'limite': '$limit',
         if (filtro != null && filtro.trim().isNotEmpty) 'filtro': filtro.trim(),
       };
-      final response = await fetch('/api/especialidades', params: params);
+      final response = await fetch('/especialidades', params: params);
       if (response.status != StatusNetwork.connected) {
         return CatalogoPageResult.empty(
           response.message.isNotEmpty
@@ -159,12 +159,13 @@ class CitasService extends ServiceConfig {
         );
       }
       final data = response.data;
-      final datos = data['datos'] ?? data['data'] ?? {};
+      final datos = data['datos'] ?? data['data'] ?? data;
       final totalRaw = datos['total'] ?? data['total'] ?? 0;
       final filasRaw = datos['filas'] ??
           datos['items'] ??
-          data['datos'] ??
+          data['filas'] ??
           data['items'] ??
+          data['datos'] ??
           [];
       final especialidades = (filasRaw is List)
           ? filasRaw
@@ -205,7 +206,7 @@ class CitasService extends ServiceConfig {
         if (filtro != null && filtro.trim().isNotEmpty) 'filtro': filtro.trim(),
       };
       final response = await fetch(
-        '/api/estudios/especialidades/$especialidadId',
+        '/estudios/especialidades/$especialidadId',
         params: params,
       );
       if (response.status != StatusNetwork.connected) {
@@ -216,12 +217,13 @@ class CitasService extends ServiceConfig {
         );
       }
       final data = response.data;
-      final datos = data['datos'] ?? data['data'] ?? {};
+      final datos = data['datos'] ?? data['data'] ?? data;
       final totalRaw = datos['total'] ?? data['total'] ?? 0;
       final filasRaw = datos['filas'] ??
           datos['items'] ??
-          data['datos'] ??
+          data['filas'] ??
           data['items'] ??
+          data['datos'] ??
           [];
       final estudios = (filasRaw is List)
           ? filasRaw
