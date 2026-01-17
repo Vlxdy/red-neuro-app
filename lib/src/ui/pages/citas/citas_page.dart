@@ -395,13 +395,12 @@ class _CitasPageState extends State<CitasPage>
       }
     }
     if (ultimaHora != null) return ultimaHora;
-    final now = DateTime.now();
     return DateTime(
       baseDay.year,
       baseDay.month,
       baseDay.day,
-      now.hour,
-      now.minute,
+      8,
+      0,
     );
   }
 
