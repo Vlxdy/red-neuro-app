@@ -622,9 +622,6 @@ IconData _moduleIconData(String? iconName, {bool filled = false}) {
     case 'user':
     case 'usuarios':
       return filled ? PhosphorIconsFill.users : PhosphorIconsRegular.users;
-    case 'tag':
-    case 'etiquetas':
-      return filled ? PhosphorIconsFill.tag : PhosphorIconsRegular.tag;
     case 'home':
       return filled ? PhosphorIconsFill.house : PhosphorIconsRegular.house;
     case 'person':
@@ -634,7 +631,6 @@ IconData _moduleIconData(String? iconName, {bool filled = false}) {
       return filled
           ? PhosphorIconsFill.userSwitch
           : PhosphorIconsRegular.userSwitch;
-    case 'agrupadores':
     case 'server':
       return filled ? SolarIconsBold.server : SolarIconsOutline.server;
     default:
@@ -662,38 +658,6 @@ List<ChildrenItem> _adminMenu(ThemeController theme) => [
     iconoImagenSeleccionada: Icons.science,
     titulo: 'Estudios',
     children: const KeepAlivePage(child: EstudiosPage()),
-  ),
-  ChildrenItem(
-    iconoImagen: PhosphorIconsRegular.tag,
-    iconoImagenSeleccionada: PhosphorIconsFill.tag,
-    titulo: 'Etiquetas',
-    children: const KeepAlivePage(
-      child: RoleTrayPlaceholder(
-        title: 'Etiquetas',
-        description: 'Crea y organiza etiquetas para clasificar citas.',
-        actions: [
-          'Nueva etiqueta (POST /etiquetas)',
-          'Editar etiqueta (PATCH /etiquetas/:id)',
-          'Eliminar etiqueta (DELETE /etiquetas/:id)',
-        ],
-      ),
-    ),
-  ),
-  ChildrenItem(
-    iconoImagen: SolarIconsOutline.server,
-    iconoImagenSeleccionada: SolarIconsBold.server,
-    titulo: 'Agrupadores',
-    children: const KeepAlivePage(
-      child: RoleTrayPlaceholder(
-        title: 'Agrupadores',
-        description: 'Organiza campañas o bloques para citas.',
-        actions: [
-          'Crear agrupador (POST /agrupadores)',
-          'Editar agrupador (PATCH /agrupadores/:id)',
-          'Eliminar agrupador (DELETE /agrupadores/:id)',
-        ],
-      ),
-    ),
   ),
   ChildrenItem(
     iconoImagen: PhosphorIconsRegular.calendarCheck,
