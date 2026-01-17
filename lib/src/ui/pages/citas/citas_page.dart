@@ -666,6 +666,12 @@ class _CitasPageState extends State<CitasPage>
         especialidades: const [],
       );
     }
+    final especialidadController = TextEditingController(
+      text: especialidadSeleccionada?.nombre ?? '',
+    );
+    final estudioController = TextEditingController(
+      text: estudioSeleccionado?.nombre ?? '',
+    );
     final List<Especialidad> especialidadesDisponibles = [];
     final List<Estudio> estudiosDisponibles = [];
     bool especialidadesLoading = false;
@@ -676,7 +682,6 @@ class _CitasPageState extends State<CitasPage>
     int estudiosPage = 1;
     String especialidadesFiltro = '';
     String estudiosFiltro = '';
-    TextEditingController? estudioController;
     Timer? especialidadesDebounce;
     Timer? estudiosDebounce;
     bool inicializado = false;
@@ -686,7 +691,10 @@ class _CitasPageState extends State<CitasPage>
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
-            Future<void> cargarEspecialidades({bool reset = false}) async {
+            Future<void> cargarEspecialidades({
+              bool reset = false,
+              void Function()? onUpdated,
+            }) async {
               if (especialidadesLoading) return;
               setStateDialog(() => especialidadesLoading = true);
               if (reset) {
@@ -714,9 +722,13 @@ class _CitasPageState extends State<CitasPage>
                 especialidadesPage += 1;
                 especialidadesLoading = false;
               });
+              onUpdated?.call();
             }
 
-            Future<void> cargarEstudios({bool reset = false}) async {
+            Future<void> cargarEstudios({
+              bool reset = false,
+              void Function()? onUpdated,
+            }) async {
               if (estudiosLoading) return;
               final especialidadId = especialidadSeleccionada?.id ?? '';
               if (especialidadId.isEmpty) return;
@@ -746,6 +758,7 @@ class _CitasPageState extends State<CitasPage>
                 estudiosPage += 1;
                 estudiosLoading = false;
               });
+              onUpdated?.call();
             }
 
             if (!inicializado) {
@@ -764,6 +777,290 @@ class _CitasPageState extends State<CitasPage>
                   fechaInicio = picked;
                 });
               }
+            }
+
+            Future<void> abrirSelectorEspecialidad() async {
+              if (especialidadesDisponibles.isEmpty && !especialidadesLoading) {
+                await cargarEspecialidades(reset: true);
+              }
+              final seleccion = await showModalBottomSheet<Especialidad>(
+                context: context,
+                isScrollControlled: true,
+                builder: (context) {
+                  final searchController = TextEditingController(
+                    text: especialidadesFiltro,
+                  );
+                  return StatefulBuilder(
+                    builder: (context, setStateSheet) {
+                      Future<void> cargar({
+                        required bool reset,
+                      }) async {
+                        await cargarEspecialidades(
+                          reset: reset,
+                          onUpdated: () => setStateSheet(() {}),
+                        );
+                      }
+
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          bottom: MediaQuery.of(context).viewInsets.bottom,
+                        ),
+                        child: SafeArea(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  20,
+                                  16,
+                                  20,
+                                  8,
+                                ),
+                                child: Text(
+                                  'Selecciona una especialidad',
+                                  style: Theme.of(context).textTheme.titleMedium,
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 20),
+                                child: TextField(
+                                  controller: searchController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Buscar especialidad',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  onChanged: (value) {
+                                    especialidadesFiltro = value;
+                                    especialidadesDebounce?.cancel();
+                                    especialidadesDebounce = Timer(
+                                      const Duration(milliseconds: 300),
+                                      () => cargar(reset: true),
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Flexible(
+                                child: Builder(
+                                  builder: (context) {
+                                    if (especialidadesDisponibles.isEmpty &&
+                                        especialidadesLoading) {
+                                      return const Center(
+                                        child: CircularProgressIndicator(),
+                                      );
+                                    }
+                                    if (especialidadesDisponibles.isEmpty) {
+                                      return const Center(
+                                        child: Text('Sin resultados'),
+                                      );
+                                    }
+                                    return ListView.builder(
+                                      shrinkWrap: true,
+                                      itemCount:
+                                          especialidadesDisponibles.length +
+                                              (especialidadesHasMore ? 1 : 0),
+                                      itemBuilder: (context, index) {
+                                        if (index ==
+                                                especialidadesDisponibles
+                                                    .length &&
+                                            especialidadesHasMore) {
+                                          return Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 8,
+                                            ),
+                                            child: Center(
+                                              child: TextButton.icon(
+                                                onPressed: especialidadesLoading
+                                                    ? null
+                                                    : () => cargar(
+                                                          reset: false,
+                                                        ),
+                                                icon: const Icon(
+                                                  Icons.expand_more,
+                                                ),
+                                                label:
+                                                    const Text('Cargar más'),
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                        final option =
+                                            especialidadesDisponibles[index];
+                                        return ListTile(
+                                          title: Text(option.nombre),
+                                          subtitle: option.descripcion != null
+                                              ? Text(option.descripcion!)
+                                              : null,
+                                          onTap: () =>
+                                              Navigator.pop(context, option),
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              );
+              if (seleccion == null) return;
+              setStateDialog(() {
+                especialidadSeleccionada = seleccion;
+                especialidadController.text = seleccion.nombre;
+                tipoCita = tipoCita.isNotEmpty ? tipoCita : 'CONSULTA';
+                estudioSeleccionado = null;
+                estudioController.clear();
+                estudiosFiltro = '';
+                estudiosDisponibles.clear();
+                estudiosHasMore = true;
+                estudiosPage = 1;
+              });
+              if (tipoCita == 'ESTUDIO') {
+                unawaited(cargarEstudios(reset: true));
+              }
+            }
+
+            Future<void> abrirSelectorEstudio() async {
+              if (especialidadSeleccionada == null) return;
+              if (estudiosDisponibles.isEmpty && !estudiosLoading) {
+                await cargarEstudios(reset: true);
+              }
+              final seleccion = await showModalBottomSheet<Estudio>(
+                context: context,
+                isScrollControlled: true,
+                builder: (context) {
+                  final searchController = TextEditingController(
+                    text: estudiosFiltro,
+                  );
+                  return StatefulBuilder(
+                    builder: (context, setStateSheet) {
+                      Future<void> cargar({
+                        required bool reset,
+                      }) async {
+                        await cargarEstudios(
+                          reset: reset,
+                          onUpdated: () => setStateSheet(() {}),
+                        );
+                      }
+
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          bottom: MediaQuery.of(context).viewInsets.bottom,
+                        ),
+                        child: SafeArea(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  20,
+                                  16,
+                                  20,
+                                  8,
+                                ),
+                                child: Text(
+                                  'Selecciona un estudio',
+                                  style: Theme.of(context).textTheme.titleMedium,
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 20),
+                                child: TextField(
+                                  controller: searchController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Buscar estudio',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  onChanged: (value) {
+                                    estudiosFiltro = value;
+                                    estudiosDebounce?.cancel();
+                                    estudiosDebounce = Timer(
+                                      const Duration(milliseconds: 300),
+                                      () => cargar(reset: true),
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Flexible(
+                                child: Builder(
+                                  builder: (context) {
+                                    if (estudiosDisponibles.isEmpty &&
+                                        estudiosLoading) {
+                                      return const Center(
+                                        child: CircularProgressIndicator(),
+                                      );
+                                    }
+                                    if (estudiosDisponibles.isEmpty) {
+                                      return const Center(
+                                        child: Text('Sin resultados'),
+                                      );
+                                    }
+                                    return ListView.builder(
+                                      shrinkWrap: true,
+                                      itemCount: estudiosDisponibles.length +
+                                          (estudiosHasMore ? 1 : 0),
+                                      itemBuilder: (context, index) {
+                                        if (index ==
+                                                estudiosDisponibles.length &&
+                                            estudiosHasMore) {
+                                          return Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 8,
+                                            ),
+                                            child: Center(
+                                              child: TextButton.icon(
+                                                onPressed: estudiosLoading
+                                                    ? null
+                                                    : () => cargar(
+                                                          reset: false,
+                                                        ),
+                                                icon: const Icon(
+                                                  Icons.expand_more,
+                                                ),
+                                                label:
+                                                    const Text('Cargar más'),
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                        final option = estudiosDisponibles[index];
+                                        return ListTile(
+                                          title: Text(option.nombre),
+                                          subtitle: option.descripcion.isNotEmpty
+                                              ? Text(option.descripcion)
+                                              : null,
+                                          onTap: () =>
+                                              Navigator.pop(context, option),
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              );
+              if (seleccion == null) return;
+              setStateDialog(() {
+                estudioSeleccionado = seleccion;
+                estudioController.text = seleccion.nombre;
+              });
             }
 
             return Dialog.fullscreen(
@@ -807,164 +1104,19 @@ class _CitasPageState extends State<CitasPage>
                             return null;
                           },
                           builder: (state) {
-                            return Autocomplete<Especialidad>(
-                              initialValue: TextEditingValue(
-                                text: especialidadSeleccionada?.nombre ?? '',
+                            return TextFormField(
+                              controller: especialidadController,
+                              readOnly: true,
+                              decoration: InputDecoration(
+                                labelText: 'Especialidad',
+                                hintText: 'Selecciona una especialidad',
+                                border: const OutlineInputBorder(),
+                                errorText: state.errorText,
+                                suffixIcon: const Icon(Icons.expand_more),
                               ),
-                              displayStringForOption: (option) => option.nombre,
-                              optionsBuilder: (textEditingValue) {
-                                final query =
-                                    textEditingValue.text.toLowerCase();
-                                return especialidadesDisponibles.where(
-                                  (option) =>
-                                      option.nombre.toLowerCase().contains(
-                                            query,
-                                          ),
-                                );
-                              },
-                              onSelected: (option) {
-                                setStateDialog(() {
-                                  especialidadSeleccionada = option;
-                                  tipoCita = tipoCita.isNotEmpty
-                                      ? tipoCita
-                                      : 'CONSULTA';
-                                  estudioSeleccionado = null;
-                                  estudioController?.clear();
-                                  estudiosFiltro = '';
-                                  estudiosDisponibles.clear();
-                                  estudiosHasMore = true;
-                                  estudiosPage = 1;
-                                  state.didChange(option);
-                                });
-                                if (tipoCita == 'ESTUDIO') {
-                                  unawaited(cargarEstudios(reset: true));
-                                }
-                              },
-                              fieldViewBuilder: (
-                                context,
-                                textController,
-                                focusNode,
-                                onFieldSubmitted,
-                              ) {
-                                if (textController.text.isEmpty &&
-                                    (especialidadSeleccionada?.nombre
-                                                .isNotEmpty ??
-                                            false)) {
-                                  textController.text =
-                                      especialidadSeleccionada!.nombre;
-                                }
-                                return TextFormField(
-                                  controller: textController,
-                                  focusNode: focusNode,
-                                  decoration: InputDecoration(
-                                    labelText: 'Especialidad',
-                                    hintText: 'Busca una especialidad',
-                                    border: const OutlineInputBorder(),
-                                    errorText: state.errorText,
-                                    suffixIcon: especialidadesLoading
-                                        ? const SizedBox(
-                                            width: 18,
-                                            height: 18,
-                                            child: Padding(
-                                              padding: EdgeInsets.all(12),
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                              ),
-                                            ),
-                                          )
-                                        : null,
-                                  ),
-                                  onChanged: (value) {
-                                    especialidadesFiltro = value;
-                                    setStateDialog(() {
-                                      especialidadSeleccionada = null;
-                                      estudioSeleccionado = null;
-                                      estudiosDisponibles.clear();
-                                      estudiosHasMore = true;
-                                      estudiosPage = 1;
-                                      estudiosFiltro = '';
-                                      state.didChange(null);
-                                    });
-                                    especialidadesDebounce?.cancel();
-                                    especialidadesDebounce = Timer(
-                                      const Duration(milliseconds: 300),
-                                      () => cargarEspecialidades(reset: true),
-                                    );
-                                  },
-                                );
-                              },
-                              optionsViewBuilder: (
-                                context,
-                                onSelected,
-                                options,
-                              ) {
-                                final optionList = options.toList();
-                                return Align(
-                                  alignment: Alignment.topLeft,
-                                  child: Material(
-                                    elevation: 4,
-                                    child: ConstrainedBox(
-                                      constraints:
-                                          const BoxConstraints(maxHeight: 240),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          if (optionList.isEmpty &&
-                                              especialidadesLoading)
-                                            const Padding(
-                                              padding: EdgeInsets.all(16),
-                                              child: Center(
-                                                child:
-                                                    CircularProgressIndicator(),
-                                              ),
-                                            )
-                                          else if (optionList.isEmpty)
-                                            const Padding(
-                                              padding: EdgeInsets.all(12),
-                                              child: Text('Sin resultados'),
-                                            )
-                                          else
-                                            Flexible(
-                                              child: ListView.builder(
-                                                padding: EdgeInsets.zero,
-                                                itemCount: optionList.length,
-                                                shrinkWrap: true,
-                                                itemBuilder: (context, index) {
-                                                  final option =
-                                                      optionList[index];
-                                                  return ListTile(
-                                                    title: Text(option.nombre),
-                                                    subtitle: option
-                                                                .descripcion !=
-                                                            null
-                                                        ? Text(
-                                                            option
-                                                                .descripcion!,
-                                                          )
-                                                        : null,
-                                                    onTap: () =>
-                                                        onSelected(option),
-                                                  );
-                                                },
-                                              ),
-                                            ),
-                                          if (especialidadesHasMore)
-                                            TextButton.icon(
-                                              onPressed: especialidadesLoading
-                                                  ? null
-                                                  : () => cargarEspecialidades(
-                                                        reset: false,
-                                                      ),
-                                              icon: const Icon(
-                                                Icons.expand_more,
-                                              ),
-                                              label: const Text('Cargar más'),
-                                            ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                );
+                              onTap: () async {
+                                await abrirSelectorEspecialidad();
+                                state.didChange(especialidadSeleccionada);
                               },
                             );
                           },
@@ -1034,179 +1186,21 @@ class _CitasPageState extends State<CitasPage>
                                       return null;
                                     },
                                     builder: (state) {
-                                      return Autocomplete<Estudio>(
-                                        initialValue: TextEditingValue(
-                                          text:
-                                              estudioSeleccionado?.nombre ?? '',
+                                      return TextFormField(
+                                        controller: estudioController,
+                                        readOnly: true,
+                                        decoration: InputDecoration(
+                                          labelText: 'Estudio',
+                                          hintText:
+                                              'Selecciona un estudio',
+                                          border: const OutlineInputBorder(),
+                                          errorText: state.errorText,
+                                          suffixIcon:
+                                              const Icon(Icons.expand_more),
                                         ),
-                                        displayStringForOption: (option) =>
-                                            option.nombre,
-                                        optionsBuilder: (textEditingValue) {
-                                          final query = textEditingValue.text
-                                              .toLowerCase();
-                                          return estudiosDisponibles.where(
-                                            (option) => option.nombre
-                                                .toLowerCase()
-                                                .contains(query),
-                                          );
-                                        },
-                                        onSelected: (option) {
-                                          setStateDialog(() {
-                                            estudioSeleccionado = option;
-                                            state.didChange(option);
-                                          });
-                                        },
-                                        fieldViewBuilder: (
-                                          context,
-                                          textController,
-                                          focusNode,
-                                          onFieldSubmitted,
-                                        ) {
-                                          estudioController ??= textController;
-                                          if (textController.text.isEmpty &&
-                                              (estudioSeleccionado?.nombre
-                                                          .isNotEmpty ??
-                                                      false)) {
-                                            textController.text =
-                                                estudioSeleccionado!.nombre;
-                                          }
-                                          return TextFormField(
-                                            controller: textController,
-                                            focusNode: focusNode,
-                                            decoration: InputDecoration(
-                                              labelText: 'Estudio',
-                                              hintText:
-                                                  'Busca estudios de la especialidad',
-                                              border:
-                                                  const OutlineInputBorder(),
-                                              errorText: state.errorText,
-                                              suffixIcon: estudiosLoading
-                                                  ? const SizedBox(
-                                                      width: 18,
-                                                      height: 18,
-                                                      child: Padding(
-                                                        padding:
-                                                            EdgeInsets.all(12),
-                                                        child:
-                                                            CircularProgressIndicator(
-                                                          strokeWidth: 2,
-                                                        ),
-                                                      ),
-                                                    )
-                                                  : null,
-                                            ),
-                                            onChanged: (value) {
-                                              estudiosFiltro = value;
-                                              setStateDialog(
-                                                () {
-                                                  estudioSeleccionado = null;
-                                                  state.didChange(null);
-                                                },
-                                              );
-                                              estudiosDebounce?.cancel();
-                                              estudiosDebounce = Timer(
-                                                const Duration(
-                                                  milliseconds: 300,
-                                                ),
-                                                () => cargarEstudios(
-                                                  reset: true,
-                                                ),
-                                              );
-                                            },
-                                          );
-                                        },
-                                        optionsViewBuilder: (
-                                          context,
-                                          onSelected,
-                                          options,
-                                        ) {
-                                          final optionList = options.toList();
-                                          return Align(
-                                            alignment: Alignment.topLeft,
-                                            child: Material(
-                                              elevation: 4,
-                                              child: ConstrainedBox(
-                                                constraints:
-                                                    const BoxConstraints(
-                                                  maxHeight: 240,
-                                                ),
-                                                child: Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  children: [
-                                                    if (optionList.isEmpty &&
-                                                        estudiosLoading)
-                                                      const Padding(
-                                                        padding:
-                                                            EdgeInsets.all(16),
-                                                        child: Center(
-                                                          child:
-                                                              CircularProgressIndicator(),
-                                                        ),
-                                                      )
-                                                    else if (optionList.isEmpty)
-                                                      const Padding(
-                                                        padding:
-                                                            EdgeInsets.all(12),
-                                                        child: Text(
-                                                          'Sin resultados',
-                                                        ),
-                                                      )
-                                                    else
-                                                      Flexible(
-                                                        child:
-                                                            ListView.builder(
-                                                          padding:
-                                                              EdgeInsets.zero,
-                                                          itemCount:
-                                                              optionList.length,
-                                                          shrinkWrap: true,
-                                                          itemBuilder:
-                                                              (context, index) {
-                                                            final option =
-                                                                optionList[
-                                                                    index];
-                                                            return ListTile(
-                                                              title: Text(
-                                                                option.nombre,
-                                                              ),
-                                                              subtitle: option
-                                                                      .descripcion
-                                                                      .isNotEmpty
-                                                                  ? Text(
-                                                                      option
-                                                                          .descripcion,
-                                                                    )
-                                                                  : null,
-                                                              onTap: () =>
-                                                                  onSelected(
-                                                                option,
-                                                              ),
-                                                            );
-                                                          },
-                                                        ),
-                                                      ),
-                                                    if (estudiosHasMore)
-                                                      TextButton.icon(
-                                                        onPressed:
-                                                            estudiosLoading
-                                                                ? null
-                                                                : () =>
-                                                                    cargarEstudios(
-                                                                  reset: false,
-                                                                ),
-                                                        icon: const Icon(
-                                                          Icons.expand_more,
-                                                        ),
-                                                        label: const Text(
-                                                          'Cargar más',
-                                                        ),
-                                                      ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                          );
+                                        onTap: () async {
+                                          await abrirSelectorEstudio();
+                                          state.didChange(estudioSeleccionado);
                                         },
                                       );
                                     },
