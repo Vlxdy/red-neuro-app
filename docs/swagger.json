@@ -4153,6 +4153,42 @@
           "id"
         ]
       },
+      "EspecialidadPersonalDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identificador único de la especialidad médica",
+            "example": "12"
+          },
+          "nombre": {
+            "type": "string",
+            "description": "Nombre visible de la especialidad médica",
+            "example": "Cardiología"
+          },
+          "descripcion": {
+            "type": "string",
+            "description": "Descripción opcional de la especialidad médica",
+            "example": "Especialidad dedicada al diagnóstico de enfermedades cardíacas"
+          },
+          "estado": {
+            "type": "string",
+            "description": "Estado del registro",
+            "example": "ACTIVO"
+          },
+          "colorHex": {
+            "type": "string",
+            "description": "Color principal de la especialidad en formato hexadecimal",
+            "example": "#0ea5e9"
+          }
+        },
+        "required": [
+          "id",
+          "nombre",
+          "estado",
+          "colorHex"
+        ]
+      },
       "PersonalResponseDto": {
         "type": "object",
         "properties": {
@@ -4209,12 +4245,15 @@
           "especialidades": {
             "description": "Especialidades médicas del profesional",
             "example": [
-              "Pediatría",
-              "Neonatología"
+              {
+                "id": "1",
+                "nombre": "Pediatría",
+                "colorHex": "#0ea5e9"
+              }
             ],
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/EspecialidadPersonalDto"
             }
           }
         },
@@ -4223,186 +4262,78 @@
           "nombres"
         ]
       },
-      "CitaResponseDto": {
+      "EspecialidadCitaDto": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Identificador de la cita",
-            "example": "cita-001"
+            "description": "Identificador de la especialidad",
+            "example": "3"
           },
-          "detalle": {
+          "nombre": {
             "type": "string",
-            "description": "Detalle o motivo de la cita",
-            "example": "Control nutricional mensual"
+            "description": "Nombre de la especialidad",
+            "example": "Radiología"
           },
-          "fechaInicio": {
+          "descripcion": {
             "type": "string",
-            "description": "Fecha de inicio en ISO 8601",
-            "example": "2024-06-15T10:00:00Z"
+            "description": "Descripción de la especialidad",
+            "example": "Especialidad dedicada a estudios por imagen"
           },
-          "fechaFin": {
+          "colorHex": {
             "type": "string",
-            "description": "Fecha de fin en ISO 8601",
-            "example": "2024-06-15T11:00:00Z"
+            "description": "Color principal de la especialidad en formato hexadecimal",
+            "example": "#0ea5e9"
           },
           "estado": {
             "type": "string",
-            "enum": [
-              "INACTIVO",
-              "BORRADOR",
-              "SOLICITADA",
-              "CONFIRMADA",
-              "EN_CURSO",
-              "COMPLETADA",
-              "NO_ASISTIO",
-              "CANCELADA",
-              "RECHAZADA"
-            ],
-            "description": "Estado actual de la cita"
-          },
-          "medicoId": {
-            "type": "string",
-            "description": "Identificador del médico asignado",
-            "example": "42"
-          },
-          "comentario": {
-            "type": "string",
-            "description": "Comentario opcional del cambio de estado"
-          },
-          "medico": {
-            "description": "Datos del profesional de salud asignado a la cita",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/PersonalResponseDto"
-              }
-            ]
+            "description": "Estado actual de la especialidad",
+            "example": "ACTIVO"
           }
         },
         "required": [
           "id",
-          "detalle",
-          "fechaInicio",
-          "fechaFin",
-          "estado",
-          "medicoId",
-          "medico"
-        ]
-      },
-      "CrearCitaDto": {
-        "type": "object",
-        "properties": {
-          "detalle": {
-            "type": "string",
-            "description": "Detalle o motivo de la cita",
-            "example": "Control nutricional mensual"
-          },
-          "fechaInicio": {
-            "type": "string",
-            "description": "Fecha de inicio (ISO)",
-            "example": "2024-06-15T10:00:00Z"
-          },
-          "fechaFin": {
-            "type": "string",
-            "description": "Fecha de fin (ISO)",
-            "example": "2024-06-15T11:00:00Z"
-          },
-          "idMedico": {
-            "type": "string",
-            "description": "Identificador del médico responsable",
-            "example": "42"
-          }
-        },
-        "required": [
-          "detalle",
-          "fechaInicio",
-          "fechaFin",
-          "idMedico"
-        ]
-      },
-      "ActualizarCitaDto": {
-        "type": "object",
-        "properties": {
-          "detalle": {
-            "type": "string",
-            "description": "Detalle o motivo de la cita",
-            "example": "Control nutricional mensual"
-          },
-          "fechaInicio": {
-            "type": "string",
-            "description": "Fecha de inicio (ISO)",
-            "example": "2024-06-15T10:00:00Z"
-          },
-          "fechaFin": {
-            "type": "string",
-            "description": "Fecha de fin (ISO)",
-            "example": "2024-06-15T11:00:00Z"
-          },
-          "idMedico": {
-            "type": "string",
-            "description": "Identificador del médico responsable",
-            "example": "42"
-          }
-        }
-      },
-      "ActualizarEstadoCitaDto": {
-        "type": "object",
-        "properties": {
-          "estado": {
-            "type": "string",
-            "enum": [
-              "INACTIVO",
-              "BORRADOR",
-              "SOLICITADA",
-              "CONFIRMADA",
-              "EN_CURSO",
-              "COMPLETADA",
-              "NO_ASISTIO",
-              "CANCELADA",
-              "RECHAZADA"
-            ],
-            "description": "Nuevo estado de la cita"
-          },
-          "comentario": {
-            "type": "string",
-            "description": "Comentario opcional para el cambio de estado"
-          }
-        },
-        "required": [
+          "nombre",
+          "colorHex",
           "estado"
         ]
       },
-      "ReprogramarCitaDto": {
+      "EstudioCitaDto": {
         "type": "object",
         "properties": {
-          "fechaInicio": {
+          "id": {
             "type": "string",
-            "description": "Nueva fecha de inicio",
-            "example": "2024-06-20T12:00:00Z"
+            "description": "Identificador del estudio",
+            "example": "10"
           },
-          "fechaFin": {
+          "nombre": {
             "type": "string",
-            "description": "Nueva fecha de fin",
-            "example": "2024-06-20T13:00:00Z"
+            "description": "Nombre del estudio",
+            "example": "Ecografía abdominal"
           },
-          "comentario": {
+          "descripcion": {
             "type": "string",
-            "description": "Comentario o motivo de la reprogramación"
+            "description": "Descripción del estudio",
+            "example": "Evaluación ecográfica de órganos abdominales"
+          },
+          "duracionMinutos": {
+            "type": "number",
+            "description": "Duración estimada del estudio en minutos",
+            "example": 30
+          },
+          "estado": {
+            "type": "string",
+            "description": "Estado actual del estudio",
+            "example": "ACTIVO"
           }
         },
         "required": [
-          "fechaInicio",
-          "fechaFin"
+          "id",
+          "nombre",
+          "descripcion",
+          "duracionMinutos",
+          "estado"
         ]
-      },
-      "CancelarCitaDto": {
-        "type": "object",
-        "properties": {
-          "comentario": {
-            "type": "string",
-            "description": "Motivo de cancelación"
-          }
-        }
       },
       "ConsultorioResponseDto": {
         "type": "object",
@@ -4439,6 +4370,317 @@
           "estado",
           "colorHex"
         ]
+      },
+      "CitaResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identificador de la cita",
+            "example": "cita-001"
+          },
+          "detalle": {
+            "type": "string",
+            "description": "Detalle o motivo de la cita",
+            "example": "Control nutricional mensual"
+          },
+          "fechaInicio": {
+            "type": "string",
+            "description": "Fecha de inicio en ISO 8601",
+            "example": "2024-06-15T10:00:00Z"
+          },
+          "fechaFin": {
+            "type": "string",
+            "description": "Fecha de fin en ISO 8601",
+            "example": "2024-06-15T11:00:00Z"
+          },
+          "tipoCita": {
+            "type": "string",
+            "enum": [
+              "CONSULTA",
+              "ESTUDIO"
+            ],
+            "description": "Tipo de cita (CONSULTA o ESTUDIO)"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "INACTIVO",
+              "BORRADOR",
+              "SOLICITADA",
+              "CONFIRMADA",
+              "EN_CURSO",
+              "COMPLETADA",
+              "NO_ASISTIO",
+              "CANCELADA",
+              "RECHAZADA"
+            ],
+            "description": "Estado actual de la cita"
+          },
+          "medicoId": {
+            "type": "string",
+            "description": "Identificador del médico asignado",
+            "example": "42"
+          },
+          "pacienteId": {
+            "type": "string",
+            "description": "Identificador del paciente asignado",
+            "example": "105"
+          },
+          "consultorioId": {
+            "type": "string",
+            "description": "Identificador del consultorio asignado",
+            "example": "8"
+          },
+          "especialidadId": {
+            "type": "string",
+            "description": "Identificador de la especialidad asociada",
+            "example": "12"
+          },
+          "estudioId": {
+            "type": "string",
+            "description": "Identificador del estudio asociado (solo si es estudio)",
+            "example": "5"
+          },
+          "comentario": {
+            "type": "string",
+            "description": "Comentario opcional del cambio de estado"
+          },
+          "comentarioNutricionista": {
+            "type": "string",
+            "description": "Comentario interno del nutricionista"
+          },
+          "medico": {
+            "description": "Datos del profesional de salud asignado a la cita",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PersonalResponseDto"
+              }
+            ]
+          },
+          "paciente": {
+            "description": "Datos del paciente asignado a la cita",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PersonalResponseDto"
+              }
+            ]
+          },
+          "especialidad": {
+            "description": "Especialidad asociada a la cita",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EspecialidadCitaDto"
+              }
+            ]
+          },
+          "estudio": {
+            "description": "Estudio asociado a la cita",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EstudioCitaDto"
+              }
+            ]
+          },
+          "consultorio": {
+            "description": "Consultorio asociado a la cita",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ConsultorioResponseDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "detalle",
+          "fechaInicio",
+          "fechaFin",
+          "tipoCita",
+          "estado",
+          "medicoId",
+          "medico"
+        ]
+      },
+      "CrearCitaDto": {
+        "type": "object",
+        "properties": {
+          "detalle": {
+            "type": "string",
+            "description": "Detalle o motivo de la cita",
+            "example": "Control nutricional mensual"
+          },
+          "fechaInicio": {
+            "type": "string",
+            "description": "Fecha de inicio (ISO)",
+            "example": "2024-06-15T10:00:00Z"
+          },
+          "idMedico": {
+            "type": "string",
+            "description": "Identificador del médico responsable",
+            "example": "42"
+          },
+          "idPaciente": {
+            "type": "string",
+            "description": "Identificador del paciente asignado",
+            "example": "105"
+          },
+          "idConsultorio": {
+            "type": "string",
+            "description": "Identificador del consultorio asignado",
+            "example": "8"
+          },
+          "idEspecialidad": {
+            "type": "string",
+            "description": "Identificador de la especialidad asociada",
+            "example": "12"
+          },
+          "tipoCita": {
+            "type": "string",
+            "enum": [
+              "CONSULTA",
+              "ESTUDIO"
+            ],
+            "description": "Tipo de cita: CONSULTA o ESTUDIO",
+            "example": "CONSULTA"
+          },
+          "idEstudio": {
+            "type": "string",
+            "description": "Identificador del estudio a realizar (requerido cuando el tipo es ESTUDIO)",
+            "example": "5"
+          }
+        },
+        "required": [
+          "detalle",
+          "fechaInicio",
+          "idMedico",
+          "idEspecialidad",
+          "tipoCita"
+        ]
+      },
+      "ActualizarCitaDto": {
+        "type": "object",
+        "properties": {
+          "detalle": {
+            "type": "string",
+            "description": "Detalle o motivo de la cita",
+            "example": "Control nutricional mensual"
+          },
+          "fechaInicio": {
+            "type": "string",
+            "description": "Fecha de inicio (ISO)",
+            "example": "2024-06-15T10:00:00Z"
+          },
+          "idMedico": {
+            "type": "string",
+            "description": "Identificador del médico responsable",
+            "example": "42"
+          },
+          "idPaciente": {
+            "type": "string",
+            "description": "Identificador del paciente asignado",
+            "example": "105"
+          },
+          "idConsultorio": {
+            "type": "string",
+            "description": "Identificador del consultorio asignado",
+            "example": "8"
+          },
+          "idEspecialidad": {
+            "type": "string",
+            "description": "Identificador de la especialidad asociada",
+            "example": "12"
+          },
+          "tipoCita": {
+            "type": "string",
+            "enum": [
+              "CONSULTA",
+              "ESTUDIO"
+            ],
+            "description": "Tipo de cita: CONSULTA o ESTUDIO",
+            "example": "CONSULTA"
+          },
+          "idEstudio": {
+            "type": "string",
+            "description": "Identificador del estudio a realizar (requerido cuando el tipo es ESTUDIO)",
+            "example": "5"
+          }
+        },
+        "required": [
+          "detalle",
+          "fechaInicio",
+          "idMedico",
+          "idEspecialidad",
+          "tipoCita"
+        ]
+      },
+      "ActualizarEstadoCitaDto": {
+        "type": "object",
+        "properties": {
+          "estado": {
+            "type": "string",
+            "enum": [
+              "INACTIVO",
+              "BORRADOR",
+              "SOLICITADA",
+              "CONFIRMADA",
+              "EN_CURSO",
+              "COMPLETADA",
+              "NO_ASISTIO",
+              "CANCELADA",
+              "RECHAZADA"
+            ],
+            "description": "Nuevo estado de la cita"
+          },
+          "comentario": {
+            "type": "string",
+            "description": "Comentario opcional para el cambio de estado"
+          }
+        },
+        "required": [
+          "estado"
+        ]
+      },
+      "ReprogramarCitaDto": {
+        "type": "object",
+        "properties": {
+          "fechaInicio": {
+            "type": "string",
+            "description": "Nueva fecha de inicio",
+            "example": "2024-06-20T12:00:00Z"
+          },
+          "tipoCita": {
+            "type": "string",
+            "enum": [
+              "CONSULTA",
+              "ESTUDIO"
+            ],
+            "description": "Tipo de cita: CONSULTA o ESTUDIO",
+            "example": "CONSULTA"
+          },
+          "idEstudio": {
+            "type": "string",
+            "description": "Identificador del estudio a realizar (requerido cuando el tipo es ESTUDIO)",
+            "example": "5"
+          },
+          "comentario": {
+            "type": "string",
+            "description": "Comentario o motivo de la reprogramación"
+          }
+        },
+        "required": [
+          "fechaInicio",
+          "tipoCita"
+        ]
+      },
+      "CancelarCitaDto": {
+        "type": "object",
+        "properties": {
+          "comentario": {
+            "type": "string",
+            "description": "Motivo de cancelación"
+          }
+        }
       },
       "CrearConsultorioDto": {
         "type": "object",
