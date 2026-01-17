@@ -139,6 +139,14 @@ class CitasService extends ServiceConfig {
     );
   }
 
+  Future<ResponseApi> crearCita(Map<String, dynamic> body) async {
+    return fetch(
+      '/citas',
+      type: HttpProtocol.post,
+      body: body,
+    );
+  }
+
   Future<CatalogoPageResult<Especialidad>> obtenerEspecialidades({
     int page = 1,
     int limit = 10,

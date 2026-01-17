@@ -1346,7 +1346,8 @@ class _CitasPageState extends State<CitasPage>
     final especialidadId = especialidadSeleccionada?.id ?? '';
 
     if (cita == null) {
-      _socketClient.emitCreate({
+      // Endpoint REST: POST /citas (creación de cita).
+      final response = await _service.crearCita({
         'detalle': detalle,
         'fechaInicio': fechaInicio!.toUtc().toIso8601String(),
         'idMedico': medicoId,
@@ -1355,6 +1356,11 @@ class _CitasPageState extends State<CitasPage>
         if (tipoCita == 'ESTUDIO' && estudioSeleccionado != null)
           'idEstudio': estudioSeleccionado!.id,
       });
+      final ok = await _handleResponseError(
+        response,
+        'No se pudo crear la cita.',
+      );
+      if (!ok) return;
       showSnackBar(
         citasMessenger,
         'Cita enviada al calendario',
@@ -2002,7 +2008,7 @@ class _CitasPageState extends State<CitasPage>
                     ),
                   if (cita.tipoCita?.isNotEmpty ?? false)
                     InfoPill(
-                      icon: PhosphorIconsRegular.folderNotch,
+                      icon: PhosphorIconsRegular.folder,
                       label: 'Tipo: ${cita.tipoCita}',
                     ),
                   if ((cita.estudioNombre ?? cita.estudioId)?.isNotEmpty ??
