@@ -1,55 +1,3 @@
-class EtiquetaCita {
-  final String id;
-  final String nombre;
-  final String colorHex;
-  final String estado;
-
-  const EtiquetaCita({
-    required this.id,
-    required this.nombre,
-    required this.colorHex,
-    required this.estado,
-  });
-
-  factory EtiquetaCita.fromJson(Map<String, dynamic> json) => EtiquetaCita(
-        id: (json['id'] ?? '').toString(),
-        nombre: (json['nombre'] ?? '').toString(),
-        colorHex: (json['colorHex'] ?? '#9ca3af').toString(),
-        estado: (json['estado'] ?? '').toString(),
-      );
-
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'nombre': nombre,
-        'colorHex': colorHex,
-        'estado': estado,
-      };
-}
-
-class AgrupadorCita {
-  final String id;
-  final String nombre;
-  final String? descripcion;
-  final String colorHex;
-  final String estado;
-
-  const AgrupadorCita({
-    required this.id,
-    required this.nombre,
-    this.descripcion,
-    required this.colorHex,
-    required this.estado,
-  });
-
-  factory AgrupadorCita.fromJson(Map<String, dynamic> json) => AgrupadorCita(
-        id: (json['id'] ?? '').toString(),
-        nombre: (json['nombre'] ?? '').toString(),
-        descripcion: json['descripcion']?.toString(),
-        colorHex: (json['colorHex'] ?? '#94a3b8').toString(),
-        estado: (json['estado'] ?? '').toString(),
-      );
-}
-
 class CitaMedica {
   final String id;
   final String detalle;
@@ -57,8 +5,11 @@ class CitaMedica {
   final DateTime? fechaFin;
   final String estado;
   final String medicoId;
-  final String? agrupadorId;
-  final List<EtiquetaCita> etiquetas;
+  final String? especialidadId;
+  final String? especialidadNombre;
+  final String? tipoCita;
+  final String? estudioId;
+  final String? estudioNombre;
   final String? comentario;
 
   const CitaMedica({
@@ -68,8 +19,11 @@ class CitaMedica {
     required this.fechaFin,
     required this.estado,
     required this.medicoId,
-    required this.agrupadorId,
-    required this.etiquetas,
+    required this.especialidadId,
+    required this.especialidadNombre,
+    required this.tipoCita,
+    required this.estudioId,
+    required this.estudioNombre,
     required this.comentario,
   });
 
@@ -77,14 +31,8 @@ class CitaMedica {
     final json = (jsonRaw['datos'] is Map<String, dynamic>)
         ? (jsonRaw['datos'] as Map<String, dynamic>)
         : jsonRaw;
-
-    final etiquetasRaw = json['etiquetas'];
-    final etiquetas = etiquetasRaw is List
-        ? etiquetasRaw
-            .whereType<Map<String, dynamic>>()
-            .map(EtiquetaCita.fromJson)
-            .toList()
-        : <EtiquetaCita>[];
+    final especialidadRaw = json['especialidad'];
+    final estudioRaw = json['estudio'];
 
     return CitaMedica(
       id: (json['id'] ?? json['citaId'] ?? '').toString(),
@@ -92,9 +40,27 @@ class CitaMedica {
       fechaInicio: _parseDate(json['fechaInicio']),
       fechaFin: _parseDate(json['fechaFin']),
       estado: (json['estado'] ?? '').toString(),
-      medicoId: (json['medicoId'] ?? '').toString(),
-      agrupadorId: json['agrupadorId']?.toString(),
-      etiquetas: etiquetas,
+      medicoId: (json['medicoId'] ?? json['idMedico'] ?? '').toString(),
+      especialidadId: (json['especialidadId'] ?? json['idEspecialidad'] ?? '')
+          .toString()
+          .isNotEmpty
+          ? (json['especialidadId'] ?? json['idEspecialidad']).toString()
+          : (especialidadRaw is Map<String, dynamic>
+              ? especialidadRaw['id']?.toString()
+              : null),
+      especialidadNombre: especialidadRaw is Map<String, dynamic>
+          ? especialidadRaw['nombre']?.toString()
+          : json['especialidadNombre']?.toString(),
+      tipoCita: (json['tipoCita'] ?? json['tipo'] ?? '').toString(),
+      estudioId:
+          (json['estudioId'] ?? json['idEstudio'] ?? '').toString().isNotEmpty
+              ? (json['estudioId'] ?? json['idEstudio']).toString()
+              : (estudioRaw is Map<String, dynamic>
+                  ? estudioRaw['id']?.toString()
+                  : null),
+      estudioNombre: estudioRaw is Map<String, dynamic>
+          ? estudioRaw['nombre']?.toString()
+          : json['estudioNombre']?.toString(),
       comentario: json['comentario']?.toString(),
     );
   }
@@ -106,8 +72,11 @@ class CitaMedica {
     DateTime? fechaFin,
     String? estado,
     String? medicoId,
-    String? agrupadorId,
-    List<EtiquetaCita>? etiquetas,
+    String? especialidadId,
+    String? especialidadNombre,
+    String? tipoCita,
+    String? estudioId,
+    String? estudioNombre,
     String? comentario,
   }) {
     return CitaMedica(
@@ -117,8 +86,11 @@ class CitaMedica {
       fechaFin: fechaFin ?? this.fechaFin,
       estado: estado ?? this.estado,
       medicoId: medicoId ?? this.medicoId,
-      agrupadorId: agrupadorId ?? this.agrupadorId,
-      etiquetas: etiquetas ?? this.etiquetas,
+      especialidadId: especialidadId ?? this.especialidadId,
+      especialidadNombre: especialidadNombre ?? this.especialidadNombre,
+      tipoCita: tipoCita ?? this.tipoCita,
+      estudioId: estudioId ?? this.estudioId,
+      estudioNombre: estudioNombre ?? this.estudioNombre,
       comentario: comentario ?? this.comentario,
     );
   }

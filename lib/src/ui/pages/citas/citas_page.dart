@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -6,6 +8,8 @@ import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/constants.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
+import 'package:red_neuro_app/src/models/especialidad.dart';
+import 'package:red_neuro_app/src/models/estudio.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
@@ -48,8 +52,6 @@ class _CitasPageState extends State<CitasPage>
   List<CitaMedica> _citasCalendario = [];
   List<CitaMedica> _citasListado = [];
   List<CitaMedica> _citasSeleccionadas = [];
-  List<EtiquetaCita> _etiquetas = [];
-  List<AgrupadorCita> _agrupadores = [];
 
   bool _loading = false;
   bool _dayLoading = false;
@@ -67,16 +69,12 @@ class _CitasPageState extends State<CitasPage>
   final ScrollController _listScrollController = ScrollController();
   String? _estadoFiltro;
   String? _medicoFiltro;
-  String? _agrupadorFiltro;
-  String? _etiquetaFiltro;
   DateTime? _fechaInicioFiltro;
   DateTime? _fechaFinFiltro;
   bool get _hasActiveFilters =>
       _buscarTexto.trim().isNotEmpty ||
       (_estadoFiltro?.isNotEmpty ?? false) ||
       (_medicoFiltro?.isNotEmpty ?? false) ||
-      (_agrupadorFiltro?.isNotEmpty ?? false) ||
-      (_etiquetaFiltro?.isNotEmpty ?? false) ||
       _fechaInicioFiltro != null ||
       _fechaFinFiltro != null;
 
@@ -128,20 +126,7 @@ class _CitasPageState extends State<CitasPage>
 
   Future<void> _cargarInicial() async {
     await _socketClient.connect();
-    await _cargarCatalogos();
     await _cargarCitasCalendario();
-  }
-
-  Future<void> _cargarCatalogos() async {
-    final resultados = await Future.wait([
-      _service.obtenerEtiquetas(),
-      _service.obtenerAgrupadores(),
-    ]);
-
-    setState(() {
-      _etiquetas = resultados[0] as List<EtiquetaCita>;
-      _agrupadores = resultados[1] as List<AgrupadorCita>;
-    });
   }
 
   Future<void> _cargarCitasCalendario() async {
@@ -198,7 +183,7 @@ class _CitasPageState extends State<CitasPage>
     if (widget.soloMisCitas) {
       final medicoId = Auth.instance.profile.id ?? '';
       if (medicoId.isNotEmpty && (_medicoFiltro?.isNotEmpty ?? false) == false) {
-        filtros['medicoId'] = medicoId;
+        filtros['idMedico'] = medicoId;
       }
     }
     if (_fechaInicioFiltro != null) {
@@ -227,13 +212,7 @@ class _CitasPageState extends State<CitasPage>
       filtros['estado'] = _estadoFiltro!;
     }
     if (_medicoFiltro != null && _medicoFiltro!.isNotEmpty) {
-      filtros['medicoId'] = _medicoFiltro!;
-    }
-    if (_agrupadorFiltro != null && _agrupadorFiltro!.isNotEmpty) {
-      filtros['agrupadorId'] = _agrupadorFiltro!;
-    }
-    if (_etiquetaFiltro != null && _etiquetaFiltro!.isNotEmpty) {
-      filtros['etiquetaId'] = _etiquetaFiltro!;
+      filtros['idMedico'] = _medicoFiltro!;
     }
 
     return filtros;
@@ -402,6 +381,28 @@ class _CitasPageState extends State<CitasPage>
       data.putIfAbsent(key, () => []).add(cita);
     }
     return data;
+  }
+
+  DateTime _resolveDefaultStartTime(DateTime baseDay) {
+    final key = DateTime(baseDay.year, baseDay.month, baseDay.day);
+    final citasDelDia = _citasPorDia[key] ?? [];
+    DateTime? ultimaHora;
+    for (final cita in citasDelDia) {
+      final fecha = cita.fechaFin ?? cita.fechaInicio;
+      if (fecha == null) continue;
+      if (ultimaHora == null || fecha.isAfter(ultimaHora)) {
+        ultimaHora = fecha;
+      }
+    }
+    if (ultimaHora != null) return ultimaHora;
+    final now = DateTime.now();
+    return DateTime(
+      baseDay.year,
+      baseDay.month,
+      baseDay.day,
+      now.hour,
+      now.minute,
+    );
   }
 
   void _toggleFilters() {
@@ -577,8 +578,6 @@ class _CitasPageState extends State<CitasPage>
     setState(() {
       _estadoFiltro = null;
       _medicoFiltro = null;
-      _agrupadorFiltro = null;
-      _etiquetaFiltro = null;
       _fechaInicioFiltro = null;
       _fechaFinFiltro = null;
       _buscarTexto = '';
@@ -638,307 +637,729 @@ class _CitasPageState extends State<CitasPage>
     );
     final comentarioController = TextEditingController();
     DateTime? fechaInicio = cita?.fechaInicio;
-    DateTime? fechaFin = cita?.fechaFin;
     final baseSeleccionada = fechaBase ?? _selectedDay;
-    final duracionDefecto = Duration(
-      minutes: Constantes.citasDuracionDefectoMinutos,
-    );
-    final duracionBase = (cita != null && fechaInicio != null && fechaFin != null)
-        ? fechaFin.difference(fechaInicio)
-        : duracionDefecto;
     if (cita == null && baseSeleccionada != null) {
-      final base = DateTime(
-        baseSeleccionada.year,
-        baseSeleccionada.month,
-        baseSeleccionada.day,
-        DateTime.now().hour,
-        DateTime.now().minute,
-      );
-      fechaInicio ??= base;
-      fechaFin ??= base.add(duracionBase);
+      fechaInicio ??= _resolveDefaultStartTime(baseSeleccionada);
     }
     String? estado = cita?.estado;
-    String? agrupadorId = cita?.agrupadorId;
-    final selectedEtiquetas =
-        cita?.etiquetas.map((etiqueta) => etiqueta.id).toSet() ?? <String>{};
-    final nuevaEtiquetaNombre = TextEditingController();
-    String colorEtiquetaSeleccionado = '#64748b';
-    bool mostrarNuevaEtiqueta = false;
+    String tipoCita =
+        (cita?.tipoCita?.isNotEmpty ?? false) ? cita!.tipoCita! : 'CONSULTA';
+    Especialidad? especialidadSeleccionada;
+    Estudio? estudioSeleccionado;
+    if (cita?.especialidadId != null && cita!.especialidadId!.isNotEmpty) {
+      especialidadSeleccionada = Especialidad(
+        id: cita.especialidadId!,
+        nombre: cita.especialidadNombre ?? 'Especialidad ${cita.especialidadId}',
+        descripcion: null,
+        estado: 'ACTIVO',
+        colorHex: '#64748b',
+        estudios: const [],
+      );
+    }
+    if (cita?.estudioId != null && cita!.estudioId!.isNotEmpty) {
+      estudioSeleccionado = Estudio(
+        id: cita.estudioId!,
+        nombre: cita.estudioNombre ?? 'Estudio ${cita.estudioId}',
+        descripcion: '',
+        duracionMinutos: Constantes.citasDuracionDefectoMinutos,
+        estado: 'ACTIVO',
+        especialidades: const [],
+      );
+    }
+    final List<Especialidad> especialidadesDisponibles = [];
+    final List<Estudio> estudiosDisponibles = [];
+    bool especialidadesLoading = false;
+    bool estudiosLoading = false;
+    bool especialidadesHasMore = true;
+    bool estudiosHasMore = true;
+    int especialidadesPage = 1;
+    int estudiosPage = 1;
+    String especialidadesFiltro = '';
+    String estudiosFiltro = '';
+    TextEditingController? estudioController;
+    Timer? especialidadesDebounce;
+    Timer? estudiosDebounce;
+    bool inicializado = false;
 
     final result = await showDialog<bool>(
       context: context,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
+            Future<void> cargarEspecialidades({bool reset = false}) async {
+              if (especialidadesLoading) return;
+              setStateDialog(() => especialidadesLoading = true);
+              if (reset) {
+                especialidadesPage = 1;
+                especialidadesHasMore = true;
+                especialidadesDisponibles.clear();
+              }
+              final result = await _service.obtenerEspecialidades(
+                page: especialidadesPage,
+                limit: 10,
+                filtro: especialidadesFiltro,
+              );
+              if (!mounted) return;
+              setStateDialog(() {
+                if (reset) {
+                  especialidadesDisponibles
+                    ..clear()
+                    ..addAll(result.items);
+                } else {
+                  especialidadesDisponibles.addAll(result.items);
+                }
+                final total = result.total;
+                especialidadesHasMore =
+                    especialidadesDisponibles.length < total;
+                especialidadesPage += 1;
+                especialidadesLoading = false;
+              });
+            }
+
+            Future<void> cargarEstudios({bool reset = false}) async {
+              if (estudiosLoading) return;
+              final especialidadId = especialidadSeleccionada?.id ?? '';
+              if (especialidadId.isEmpty) return;
+              setStateDialog(() => estudiosLoading = true);
+              if (reset) {
+                estudiosPage = 1;
+                estudiosHasMore = true;
+                estudiosDisponibles.clear();
+              }
+              final result = await _service.obtenerEstudiosPorEspecialidad(
+                especialidadId: especialidadId,
+                page: estudiosPage,
+                limit: 10,
+                filtro: estudiosFiltro,
+              );
+              if (!mounted) return;
+              setStateDialog(() {
+                if (reset) {
+                  estudiosDisponibles
+                    ..clear()
+                    ..addAll(result.items);
+                } else {
+                  estudiosDisponibles.addAll(result.items);
+                }
+                final total = result.total;
+                estudiosHasMore = estudiosDisponibles.length < total;
+                estudiosPage += 1;
+                estudiosLoading = false;
+              });
+            }
+
+            if (!inicializado) {
+              inicializado = true;
+              unawaited(cargarEspecialidades(reset: true));
+              if (tipoCita == 'ESTUDIO' &&
+                  especialidadSeleccionada != null) {
+                unawaited(cargarEstudios(reset: true));
+              }
+            }
+
             void updateFechaInicio() async {
               final picked = await _seleccionarFechaHora(fechaInicio);
               if (picked != null) {
                 setStateDialog(() {
                   fechaInicio = picked;
-                  fechaFin = picked.add(duracionBase);
                 });
               }
             }
 
-            return AlertDialog(
-              title: Text(cita == null ? 'Nueva cita' : 'Editar cita'),
-              content: SizedBox(
-                width: 520,
-                child: SingleChildScrollView(
+            return Dialog.fullscreen(
+              child: Scaffold(
+                appBar: AppBar(
+                  title: Text(cita == null ? 'Nueva cita' : 'Editar cita'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Cancelar'),
+                    ),
+                    const SizedBox(width: 12),
+                  ],
+                ),
+                body: SafeArea(
                   child: Form(
                     key: formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
+                    child: ListView(
+                      padding: const EdgeInsets.all(24),
                       children: [
-                        CustomTextInput(
-                          title: 'Detalle',
-                          controller: detalleController,
-                          requiredData: true,
-                          validate: _validarRequerido,
+                        Text(
+                          'Datos de la cita',
+                          style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const SizedBox(height: 12),
-                        CustomTextInput(
-                          title: 'Médico (ID)',
-                          controller: medicoController,
-                          requiredData: true,
-                          validate: _validarRequerido,
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: FechaSelector(
-                                label: 'Inicio',
-                                value: fechaInicio,
-                                formatter: _dateTimeFormat,
-                                onTap: updateFechaInicio,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        DropdownButtonFormField<String?>(
-                          initialValue: agrupadorId,
-                          decoration: const InputDecoration(
-                            labelText: 'Agrupador',
-                            border: OutlineInputBorder(),
+                        Card(
+                          elevation: 0,
+                          color: Colors.grey.shade50,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          items: [
-                            const DropdownMenuItem(
-                              value: null,
-                              child: Text('Sin agrupador'),
-                            ),
-                            ..._agrupadores.map(
-                              (agrupador) => DropdownMenuItem(
-                                value: agrupador.id,
-                                child: Text(agrupador.nombre),
-                              ),
-                            ),
-                          ],
-                          onChanged: (value) {
-                            setStateDialog(() => agrupadorId = value);
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              children: [
+                        FormField<Especialidad>(
+                          validator: (_) {
+                            if (especialidadSeleccionada == null) {
+                              return 'Selecciona una especialidad';
+                            }
+                            return null;
                           },
-                        ),
-                        const SizedBox(height: 12),
-                        if (cita != null)
-                          DropdownButtonFormField<String?>(
-                            initialValue: estado,
-                            decoration: const InputDecoration(
-                              labelText: 'Estado',
-                              border: OutlineInputBorder(),
-                            ),
-                            items: CitaEstado.values
-                                .map(
-                                  (estado) => DropdownMenuItem(
-                                    value: estado,
-                                    child: Text(estado),
+                          builder: (state) {
+                            return Autocomplete<Especialidad>(
+                              initialValue: TextEditingValue(
+                                text: especialidadSeleccionada?.nombre ?? '',
+                              ),
+                              displayStringForOption: (option) => option.nombre,
+                              optionsBuilder: (textEditingValue) {
+                                final query =
+                                    textEditingValue.text.toLowerCase();
+                                return especialidadesDisponibles.where(
+                                  (option) =>
+                                      option.nombre.toLowerCase().contains(
+                                            query,
+                                          ),
+                                );
+                              },
+                              onSelected: (option) {
+                                setStateDialog(() {
+                                  especialidadSeleccionada = option;
+                                  tipoCita = tipoCita.isNotEmpty
+                                      ? tipoCita
+                                      : 'CONSULTA';
+                                  estudioSeleccionado = null;
+                                  estudioController?.clear();
+                                  estudiosFiltro = '';
+                                  estudiosDisponibles.clear();
+                                  estudiosHasMore = true;
+                                  estudiosPage = 1;
+                                  state.didChange(option);
+                                });
+                                if (tipoCita == 'ESTUDIO') {
+                                  unawaited(cargarEstudios(reset: true));
+                                }
+                              },
+                              fieldViewBuilder: (
+                                context,
+                                textController,
+                                focusNode,
+                                onFieldSubmitted,
+                              ) {
+                                if (textController.text.isEmpty &&
+                                    (especialidadSeleccionada?.nombre
+                                                .isNotEmpty ??
+                                            false)) {
+                                  textController.text =
+                                      especialidadSeleccionada!.nombre;
+                                }
+                                return TextFormField(
+                                  controller: textController,
+                                  focusNode: focusNode,
+                                  decoration: InputDecoration(
+                                    labelText: 'Especialidad',
+                                    hintText: 'Busca una especialidad',
+                                    border: const OutlineInputBorder(),
+                                    errorText: state.errorText,
+                                    suffixIcon: especialidadesLoading
+                                        ? const SizedBox(
+                                            width: 18,
+                                            height: 18,
+                                            child: Padding(
+                                              padding: EdgeInsets.all(12),
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
+                                            ),
+                                          )
+                                        : null,
                                   ),
-                                )
-                                .toList(),
-                            onChanged: (value) {
-                              setStateDialog(() => estado = value);
-                            },
-                          ),
-                        if (cita != null) const SizedBox(height: 12),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            'Etiquetas',
-                            style: Theme.of(context).textTheme.titleSmall,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: _etiquetas
-                              .map(
-                                (etiqueta) => FilterChip(
-                                  label: Text(etiqueta.nombre),
-                                  selected: selectedEtiquetas.contains(
-                                    etiqueta.id,
-                                  ),
-                                  backgroundColor: Colors.grey.shade100,
-                                  selectedColor: _resolveColor(
-                                    etiqueta.colorHex,
-                                  ).withValues(alpha: 0.2),
-                                  onSelected: (selected) {
+                                  onChanged: (value) {
+                                    especialidadesFiltro = value;
                                     setStateDialog(() {
-                                      if (selected) {
-                                        selectedEtiquetas.add(etiqueta.id);
-                                      } else {
-                                        selectedEtiquetas.remove(etiqueta.id);
-                                      }
+                                      especialidadSeleccionada = null;
+                                      estudioSeleccionado = null;
+                                      estudiosDisponibles.clear();
+                                      estudiosHasMore = true;
+                                      estudiosPage = 1;
+                                      estudiosFiltro = '';
+                                      state.didChange(null);
                                     });
+                                    especialidadesDebounce?.cancel();
+                                    especialidadesDebounce = Timer(
+                                      const Duration(milliseconds: 300),
+                                      () => cargarEspecialidades(reset: true),
+                                    );
                                   },
-                                ),
-                              )
-                              .toList(),
-                        ),
-                        const SizedBox(height: 12),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: OutlinedButton.icon(
-                            onPressed: () {
-                              setStateDialog(() {
-                                mostrarNuevaEtiqueta = !mostrarNuevaEtiqueta;
-                              });
-                            },
-                            icon: Icon(
-                              mostrarNuevaEtiqueta
-                                  ? Icons.remove
-                                  : Icons.add,
-                            ),
-                            label: Text(
-                              mostrarNuevaEtiqueta
-                                  ? 'Ocultar nueva etiqueta'
-                                  : 'Agregar etiqueta',
-                            ),
-                          ),
-                        ),
-                        if (mostrarNuevaEtiqueta) ...[
-                          const SizedBox(height: 12),
-                          CustomTextInput(
-                            title: 'Nueva etiqueta',
-                            controller: nuevaEtiquetaNombre,
-                          ),
-                          const SizedBox(height: 12),
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Color',
-                              style: Theme.of(context).textTheme.labelSmall,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              '#64748b',
-                              '#ef4444',
-                              '#f59e0b',
-                              '#22c55e',
-                              '#3b82f6',
-                              '#6366f1',
-                              '#a855f7',
-                              '#ec4899',
-                              '#14b8a6',
-                            ]
-                                .map(
-                                  (hex) => GestureDetector(
-                                    onTap: () {
-                                      setStateDialog(() {
-                                        colorEtiquetaSeleccionado = hex;
-                                      });
-                                    },
-                                    child: Container(
-                                      width: 32,
-                                      height: 32,
-                                      decoration: BoxDecoration(
-                                        color: _resolveColor(hex),
-                                        shape: BoxShape.circle,
-                                        border: Border.all(
-                                          color:
-                                              colorEtiquetaSeleccionado == hex
-                                                  ? _theme.primary
-                                                  : Colors.transparent,
-                                          width: 2,
-                                        ),
+                                );
+                              },
+                              optionsViewBuilder: (
+                                context,
+                                onSelected,
+                                options,
+                              ) {
+                                final optionList = options.toList();
+                                return Align(
+                                  alignment: Alignment.topLeft,
+                                  child: Material(
+                                    elevation: 4,
+                                    child: ConstrainedBox(
+                                      constraints:
+                                          const BoxConstraints(maxHeight: 240),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          if (optionList.isEmpty &&
+                                              especialidadesLoading)
+                                            const Padding(
+                                              padding: EdgeInsets.all(16),
+                                              child: Center(
+                                                child:
+                                                    CircularProgressIndicator(),
+                                              ),
+                                            )
+                                          else if (optionList.isEmpty)
+                                            const Padding(
+                                              padding: EdgeInsets.all(12),
+                                              child: Text('Sin resultados'),
+                                            )
+                                          else
+                                            Flexible(
+                                              child: ListView.builder(
+                                                padding: EdgeInsets.zero,
+                                                itemCount: optionList.length,
+                                                shrinkWrap: true,
+                                                itemBuilder: (context, index) {
+                                                  final option =
+                                                      optionList[index];
+                                                  return ListTile(
+                                                    title: Text(option.nombre),
+                                                    subtitle: option
+                                                                .descripcion !=
+                                                            null
+                                                        ? Text(
+                                                            option
+                                                                .descripcion!,
+                                                          )
+                                                        : null,
+                                                    onTap: () =>
+                                                        onSelected(option),
+                                                  );
+                                                },
+                                              ),
+                                            ),
+                                          if (especialidadesHasMore)
+                                            TextButton.icon(
+                                              onPressed: especialidadesLoading
+                                                  ? null
+                                                  : () => cargarEspecialidades(
+                                                        reset: false,
+                                                      ),
+                                              icon: const Icon(
+                                                Icons.expand_more,
+                                              ),
+                                              label: const Text('Cargar más'),
+                                            ),
+                                        ],
                                       ),
                                     ),
                                   ),
-                                )
-                                .toList(),
+                                );
+                              },
+                            );
+                          },
+                        ),
+                                const SizedBox(height: 16),
+                                DropdownButtonFormField<String>(
+                                  value: tipoCita,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Tipo de cita',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  items: const [
+                                    DropdownMenuItem(
+                                      value: 'CONSULTA',
+                                      child: Text('Consulta'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'ESTUDIO',
+                                      child: Text('Estudio'),
+                                    ),
+                                  ],
+                                  onChanged: especialidadSeleccionada == null
+                                      ? null
+                                      : (value) {
+                                          if (value == null) return;
+                                          setStateDialog(() {
+                                            tipoCita = value;
+                                            if (tipoCita != 'ESTUDIO') {
+                                              estudioSeleccionado = null;
+                                              estudioController?.clear();
+                                            } else if (especialidadSeleccionada !=
+                                                null) {
+                                              estudiosDisponibles.clear();
+                                              estudiosHasMore = true;
+                                              estudiosPage = 1;
+                                              unawaited(
+                                                cargarEstudios(reset: true),
+                                              );
+                                            }
+                                          });
+                                        },
+                                ),
+                                if (especialidadSeleccionada == null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 8),
+                                    child: Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        'Selecciona una especialidad para habilitar el tipo de cita.',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: Colors.grey.shade600,
+                                            ),
+                                      ),
+                                    ),
+                                  ),
+                                if (tipoCita == 'ESTUDIO') ...[
+                                  const SizedBox(height: 16),
+                                  FormField<Estudio>(
+                                    validator: (_) {
+                                      if (tipoCita == 'ESTUDIO' &&
+                                          estudioSeleccionado == null) {
+                                        return 'Selecciona un estudio';
+                                      }
+                                      return null;
+                                    },
+                                    builder: (state) {
+                                      return Autocomplete<Estudio>(
+                                        initialValue: TextEditingValue(
+                                          text:
+                                              estudioSeleccionado?.nombre ?? '',
+                                        ),
+                                        displayStringForOption: (option) =>
+                                            option.nombre,
+                                        optionsBuilder: (textEditingValue) {
+                                          final query = textEditingValue.text
+                                              .toLowerCase();
+                                          return estudiosDisponibles.where(
+                                            (option) => option.nombre
+                                                .toLowerCase()
+                                                .contains(query),
+                                          );
+                                        },
+                                        onSelected: (option) {
+                                          setStateDialog(() {
+                                            estudioSeleccionado = option;
+                                            state.didChange(option);
+                                          });
+                                        },
+                                        fieldViewBuilder: (
+                                          context,
+                                          textController,
+                                          focusNode,
+                                          onFieldSubmitted,
+                                        ) {
+                                          estudioController ??= textController;
+                                          if (textController.text.isEmpty &&
+                                              (estudioSeleccionado?.nombre
+                                                          .isNotEmpty ??
+                                                      false)) {
+                                            textController.text =
+                                                estudioSeleccionado!.nombre;
+                                          }
+                                          return TextFormField(
+                                            controller: textController,
+                                            focusNode: focusNode,
+                                            decoration: InputDecoration(
+                                              labelText: 'Estudio',
+                                              hintText:
+                                                  'Busca estudios de la especialidad',
+                                              border:
+                                                  const OutlineInputBorder(),
+                                              errorText: state.errorText,
+                                              suffixIcon: estudiosLoading
+                                                  ? const SizedBox(
+                                                      width: 18,
+                                                      height: 18,
+                                                      child: Padding(
+                                                        padding:
+                                                            EdgeInsets.all(12),
+                                                        child:
+                                                            CircularProgressIndicator(
+                                                          strokeWidth: 2,
+                                                        ),
+                                                      ),
+                                                    )
+                                                  : null,
+                                            ),
+                                            onChanged: (value) {
+                                              estudiosFiltro = value;
+                                              setStateDialog(
+                                                () {
+                                                  estudioSeleccionado = null;
+                                                  state.didChange(null);
+                                                },
+                                              );
+                                              estudiosDebounce?.cancel();
+                                              estudiosDebounce = Timer(
+                                                const Duration(
+                                                  milliseconds: 300,
+                                                ),
+                                                () => cargarEstudios(
+                                                  reset: true,
+                                                ),
+                                              );
+                                            },
+                                          );
+                                        },
+                                        optionsViewBuilder: (
+                                          context,
+                                          onSelected,
+                                          options,
+                                        ) {
+                                          final optionList = options.toList();
+                                          return Align(
+                                            alignment: Alignment.topLeft,
+                                            child: Material(
+                                              elevation: 4,
+                                              child: ConstrainedBox(
+                                                constraints:
+                                                    const BoxConstraints(
+                                                  maxHeight: 240,
+                                                ),
+                                                child: Column(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    if (optionList.isEmpty &&
+                                                        estudiosLoading)
+                                                      const Padding(
+                                                        padding:
+                                                            EdgeInsets.all(16),
+                                                        child: Center(
+                                                          child:
+                                                              CircularProgressIndicator(),
+                                                        ),
+                                                      )
+                                                    else if (optionList.isEmpty)
+                                                      const Padding(
+                                                        padding:
+                                                            EdgeInsets.all(12),
+                                                        child: Text(
+                                                          'Sin resultados',
+                                                        ),
+                                                      )
+                                                    else
+                                                      Flexible(
+                                                        child:
+                                                            ListView.builder(
+                                                          padding:
+                                                              EdgeInsets.zero,
+                                                          itemCount:
+                                                              optionList.length,
+                                                          shrinkWrap: true,
+                                                          itemBuilder:
+                                                              (context, index) {
+                                                            final option =
+                                                                optionList[
+                                                                    index];
+                                                            return ListTile(
+                                                              title: Text(
+                                                                option.nombre,
+                                                              ),
+                                                              subtitle: option
+                                                                      .descripcion
+                                                                      .isNotEmpty
+                                                                  ? Text(
+                                                                      option
+                                                                          .descripcion,
+                                                                    )
+                                                                  : null,
+                                                              onTap: () =>
+                                                                  onSelected(
+                                                                option,
+                                                              ),
+                                                            );
+                                                          },
+                                                        ),
+                                                      ),
+                                                    if (estudiosHasMore)
+                                                      TextButton.icon(
+                                                        onPressed:
+                                                            estudiosLoading
+                                                                ? null
+                                                                : () =>
+                                                                    cargarEstudios(
+                                                                  reset: false,
+                                                                ),
+                                                        icon: const Icon(
+                                                          Icons.expand_more,
+                                                        ),
+                                                        label: const Text(
+                                                          'Cargar más',
+                                                        ),
+                                                      ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ],
+                            ),
                           ),
-                        ],
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          'Detalle y agenda',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
                         const SizedBox(height: 12),
-                        CustomTextInput(
-                          title: 'Comentario',
-                          controller: comentarioController,
-                          lines: 2,
+                        Card(
+                          elevation: 0,
+                          color: Colors.grey.shade50,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              children: [
+                                CustomTextInput(
+                                  title: 'Detalle',
+                                  controller: detalleController,
+                                  requiredData: true,
+                                  validate: _validarRequerido,
+                                ),
+                                const SizedBox(height: 12),
+                                CustomTextInput(
+                                  title: 'Médico (ID)',
+                                  controller: medicoController,
+                                  requiredData: true,
+                                  validate: _validarRequerido,
+                                ),
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: FechaSelector(
+                                        label: 'Inicio',
+                                        value: fechaInicio,
+                                        formatter: _dateTimeFormat,
+                                        onTap: updateFechaInicio,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                if (cita != null)
+                                  DropdownButtonFormField<String?>(
+                                    initialValue: estado,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Estado',
+                                      border: OutlineInputBorder(),
+                                    ),
+                                    items: CitaEstado.values
+                                        .map(
+                                          (estado) => DropdownMenuItem(
+                                            value: estado,
+                                            child: Text(estado),
+                                          ),
+                                        )
+                                        .toList(),
+                                    onChanged: (value) {
+                                      setStateDialog(() => estado = value);
+                                    },
+                                  ),
+                                if (cita != null) const SizedBox(height: 12),
+                                CustomTextInput(
+                                  title: 'Comentario',
+                                  controller: comentarioController,
+                                  lines: 2,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed: () async {
+                                  if (!formKey.currentState!.validate()) return;
+                                  if (fechaInicio == null) {
+                                    showSnackBar(
+                                      citasMessenger,
+                                      'Selecciona fecha y hora de inicio',
+                                      state: StatusSnackBar.error,
+                                      colorText: _theme.white,
+                                    );
+                                    return;
+                                  }
+                                  if (tipoCita == 'ESTUDIO' &&
+                                      estudioSeleccionado == null) {
+                                    showSnackBar(
+                                      citasMessenger,
+                                      'Selecciona un estudio',
+                                      state: StatusSnackBar.error,
+                                      colorText: _theme.white,
+                                    );
+                                    return;
+                                  }
+                                  if (especialidadSeleccionada == null) {
+                                    showSnackBar(
+                                      citasMessenger,
+                                      'Selecciona una especialidad',
+                                      state: StatusSnackBar.error,
+                                      colorText: _theme.white,
+                                    );
+                                    return;
+                                  }
+                                  Navigator.pop(context, true);
+                                },
+                                child: Text(
+                                  cita == null ? 'Crear cita' : 'Guardar cambios',
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ),
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Cancelar'),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (!formKey.currentState!.validate()) return;
-                    if (fechaInicio != null && fechaFin == null) {
-                      fechaFin = fechaInicio!.add(duracionBase);
-                    }
-                    if (fechaInicio == null || fechaFin == null) {
-                      showSnackBar(
-                        citasMessenger,
-                        'Selecciona fecha y hora de inicio/fin',
-                        state: StatusSnackBar.error,
-                        colorText: _theme.white,
-                      );
-                      return;
-                    }
-                    Navigator.pop(context, true);
-                  },
-                  child: Text(cita == null ? 'Crear' : 'Guardar'),
-                ),
-              ],
             );
           },
         );
       },
     );
 
+    especialidadesDebounce?.cancel();
+    estudiosDebounce?.cancel();
     if (result != true) return;
-
-    final payloadEtiquetas = <Map<String, dynamic>>[];
-    for (final id in selectedEtiquetas) {
-      payloadEtiquetas.add({'id': id});
-    }
-    if (nuevaEtiquetaNombre.text.trim().isNotEmpty) {
-      payloadEtiquetas.add({
-        'nombre': nuevaEtiquetaNombre.text.trim(),
-        'colorHex': colorEtiquetaSeleccionado,
-      });
-    }
 
     final detalle = detalleController.text.trim();
     final medicoId = medicoController.text.trim();
+    final especialidadId = especialidadSeleccionada?.id ?? '';
 
     if (cita == null) {
       _socketClient.emitCreate({
         'detalle': detalle,
         'fechaInicio': fechaInicio!.toUtc().toIso8601String(),
-        'fechaFin': fechaFin!.toUtc().toIso8601String(),
-        'medicoId': medicoId,
-        if (agrupadorId != null && agrupadorId!.isNotEmpty)
-          'agrupadorId': agrupadorId,
-        if (payloadEtiquetas.isNotEmpty) 'etiquetas': payloadEtiquetas,
+        'idMedico': medicoId,
+        'idEspecialidad': especialidadId,
+        'tipoCita': tipoCita,
+        if (tipoCita == 'ESTUDIO' && estudioSeleccionado != null)
+          'idEstudio': estudioSeleccionado!.id,
       });
       showSnackBar(
         citasMessenger,
@@ -955,13 +1376,15 @@ class _CitasPageState extends State<CitasPage>
 
     final updates = <String, dynamic>{};
     if (detalle != cita.detalle) updates['detalle'] = detalle;
-    if (medicoId != cita.medicoId) updates['medicoId'] = medicoId;
-
-    final agrupadorCambio = agrupadorId != cita.agrupadorId;
-    final etiquetasCambio = !_listasIguales(
-      selectedEtiquetas,
-      cita.etiquetas.map((e) => e.id),
-    );
+    if (medicoId != cita.medicoId) updates['idMedico'] = medicoId;
+    if (especialidadId != (cita.especialidadId ?? '')) {
+      updates['idEspecialidad'] = especialidadId;
+    }
+    if (tipoCita != (cita.tipoCita ?? '')) updates['tipoCita'] = tipoCita;
+    if (tipoCita == 'ESTUDIO' &&
+        estudioSeleccionado?.id != (cita.estudioId ?? '')) {
+      updates['idEstudio'] = estudioSeleccionado?.id;
+    }
 
     if (updates.isNotEmpty) {
       final response = await _service.actualizarCita(cita.id, updates);
@@ -972,32 +1395,13 @@ class _CitasPageState extends State<CitasPage>
       if (!ok) return;
     }
 
-    if (agrupadorCambio) {
-      final response = await _service.actualizarAgrupador(cita.id, agrupadorId);
-      final ok = await _handleResponseError(
-        response,
-        'No se pudo actualizar el agrupador.',
-      );
-      if (!ok) return;
-    }
-
-    if (etiquetasCambio) {
-      final response = await _service.actualizarEtiquetas(
-        cita.id,
-        payloadEtiquetas,
-      );
-      final ok = await _handleResponseError(
-        response,
-        'No se pudieron actualizar las etiquetas.',
-      );
-      if (!ok) return;
-    }
-
-    if (fechaInicio != cita.fechaInicio || fechaFin != cita.fechaFin) {
+    if (fechaInicio != cita.fechaInicio) {
       _socketClient.emitReprogramar({
         'id': cita.id,
         'fechaInicio': fechaInicio!.toUtc().toIso8601String(),
-        'fechaFin': fechaFin!.toUtc().toIso8601String(),
+        'tipoCita': tipoCita,
+        if (tipoCita == 'ESTUDIO' && estudioSeleccionado != null)
+          'idEstudio': estudioSeleccionado!.id,
         if (comentarioController.text.trim().isNotEmpty)
           'comentario': comentarioController.text.trim(),
       });
@@ -1023,21 +1427,6 @@ class _CitasPageState extends State<CitasPage>
     await _cargarCitasCalendario();
     if (_currentTabIndex == 1) {
       await _cargarCitasListado();
-    }
-  }
-
-  bool _listasIguales(Set<String> selected, Iterable<String> actual) {
-    final actualSet = actual.toSet();
-    if (selected.length != actualSet.length) return false;
-    return selected.difference(actualSet).isEmpty;
-  }
-
-  Color _resolveColor(String hex) {
-    try {
-      final value = hex.replaceAll('#', '');
-      return Color(int.parse('FF$value', radix: 16));
-    } catch (_) {
-      return _theme.primary;
     }
   }
 
@@ -1212,46 +1601,6 @@ class _CitasPageState extends State<CitasPage>
               },
             ),
           ),
-        SizedBox(
-          width: isCompact ? double.infinity : 180,
-          child: DropdownButtonFormField<String?>(
-            initialValue: _agrupadorFiltro,
-            decoration: const InputDecoration(
-              labelText: 'Agrupador',
-              border: OutlineInputBorder(),
-            ),
-            items: [
-              const DropdownMenuItem(value: null, child: Text('Todos')),
-              ..._agrupadores.map(
-                (agrupador) => DropdownMenuItem(
-                  value: agrupador.id,
-                  child: Text(agrupador.nombre),
-                ),
-              ),
-            ],
-            onChanged: (value) => setState(() => _agrupadorFiltro = value),
-          ),
-        ),
-        SizedBox(
-          width: isCompact ? double.infinity : 180,
-          child: DropdownButtonFormField<String?>(
-            initialValue: _etiquetaFiltro,
-            decoration: const InputDecoration(
-              labelText: 'Etiqueta',
-              border: OutlineInputBorder(),
-            ),
-            items: [
-              const DropdownMenuItem(value: null, child: Text('Todas')),
-              ..._etiquetas.map(
-                (etiqueta) => DropdownMenuItem(
-                  value: etiqueta.id,
-                  child: Text(etiqueta.nombre),
-                ),
-              ),
-            ],
-            onChanged: (value) => setState(() => _etiquetaFiltro = value),
-          ),
-        ),
         FiltroFecha(
           label: 'Desde',
           value: _fechaInicioFiltro,
@@ -1311,12 +1660,6 @@ class _CitasPageState extends State<CitasPage>
     }
     if (_medicoFiltro?.isNotEmpty ?? false) {
       chips.add(ActiveFilterChip(label: 'Médico: $_medicoFiltro'));
-    }
-    if (_agrupadorFiltro?.isNotEmpty ?? false) {
-      chips.add(ActiveFilterChip(label: 'Agrupador: $_agrupadorFiltro'));
-    }
-    if (_etiquetaFiltro?.isNotEmpty ?? false) {
-      chips.add(ActiveFilterChip(label: 'Etiqueta: $_etiquetaFiltro'));
     }
     if (_fechaInicioFiltro != null || _fechaFinFiltro != null) {
       final inicio = _fechaInicioFiltro != null
@@ -1591,7 +1934,6 @@ class _CitasPageState extends State<CitasPage>
       itemBuilder: (context, index) {
         final cita = citas[index];
         final estadoColor = _colorEstado(cita.estado);
-        final etiquetas = cita.etiquetas;
 
         return Container(
           padding: const EdgeInsets.all(16),
@@ -1656,30 +1998,28 @@ class _CitasPageState extends State<CitasPage>
                     icon: PhosphorIconsRegular.user,
                     label: 'Médico: ${cita.medicoId}',
                   ),
-                  if (cita.agrupadorId != null && cita.agrupadorId!.isNotEmpty)
+                  if ((cita.especialidadNombre ?? cita.especialidadId)
+                          ?.isNotEmpty ??
+                      false)
                     InfoPill(
-                      icon: PhosphorIconsRegular.buildings,
-                      label: 'Agrupador: ${cita.agrupadorId}',
+                      icon: PhosphorIconsRegular.stethoscope,
+                      label:
+                          'Especialidad: ${cita.especialidadNombre ?? cita.especialidadId}',
+                    ),
+                  if (cita.tipoCita?.isNotEmpty ?? false)
+                    InfoPill(
+                      icon: PhosphorIconsRegular.folderNotch,
+                      label: 'Tipo: ${cita.tipoCita}',
+                    ),
+                  if ((cita.estudioNombre ?? cita.estudioId)?.isNotEmpty ??
+                      false)
+                    InfoPill(
+                      icon: PhosphorIconsRegular.testTube,
+                      label:
+                          'Estudio: ${cita.estudioNombre ?? cita.estudioId}',
                     ),
                 ],
               ),
-              if (etiquetas.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 4,
-                  children: etiquetas
-                      .map(
-                        (etiqueta) => Chip(
-                          label: Text(etiqueta.nombre),
-                          backgroundColor: _resolveColor(
-                            etiqueta.colorHex,
-                          ).withValues(alpha: 0.15),
-                        ),
-                      )
-                      .toList(),
-                ),
-              ],
               if (!compact) ...[
                 const SizedBox(height: 12),
                 Row(

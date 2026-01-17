@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:red_neuro_app/src/config/service_config.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
+import 'package:red_neuro_app/src/models/especialidad.dart';
+import 'package:red_neuro_app/src/models/estudio.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 
@@ -137,76 +139,114 @@ class CitasService extends ServiceConfig {
     );
   }
 
-  Future<ResponseApi> actualizarEtiquetas(
-    String id,
-    List<Map<String, dynamic>> etiquetas,
-  ) async {
-    return fetch(
-      '/citas/$id/etiquetas',
-      type: HttpProtocol.patch,
-      body: {'etiquetas': etiquetas},
-    );
-  }
-
-  Future<ResponseApi> actualizarAgrupador(
-    String id,
-    String? agrupadorId,
-  ) async {
-    return fetch(
-      '/citas/$id/agrupador',
-      type: HttpProtocol.patch,
-      body: {'agrupadorId': agrupadorId},
-    );
-  }
-
-  Future<List<EtiquetaCita>> obtenerEtiquetas() async {
+  Future<CatalogoPageResult<Especialidad>> obtenerEspecialidades({
+    int page = 1,
+    int limit = 10,
+    String? filtro,
+  }) async {
     try {
-      final response = await fetch('/etiquetas');
+      final params = <String, String>{
+        'pagina': '$page',
+        'limite': '$limit',
+        if (filtro != null && filtro.trim().isNotEmpty) 'filtro': filtro.trim(),
+      };
+      final response = await fetch('/api/especialidades', params: params);
       if (response.status != StatusNetwork.connected) {
-        return [];
+        return CatalogoPageResult.empty(
+          response.message.isNotEmpty
+              ? response.message
+              : 'No se pudieron cargar las especialidades.',
+        );
       }
-      final raw = response.data['datos'] ??
-          response.data['data'] ??
-          response.data['list'] ??
-          response.data['items'] ??
+      final data = response.data;
+      final datos = data['datos'] ?? data['data'] ?? {};
+      final totalRaw = datos['total'] ?? data['total'] ?? 0;
+      final filasRaw = datos['filas'] ??
+          datos['items'] ??
+          data['datos'] ??
+          data['items'] ??
           [];
-
-      if (raw is List) {
-        return raw
-            .whereType<Map<String, dynamic>>()
-            .map(EtiquetaCita.fromJson)
-            .toList();
-      }
+      final especialidades = (filasRaw is List)
+          ? filasRaw
+              .whereType<Map<String, dynamic>>()
+              .map(Especialidad.fromJson)
+              .toList()
+          : <Especialidad>[];
+      final total = totalRaw is int
+          ? totalRaw
+          : int.tryParse('$totalRaw') ?? especialidades.length;
+      return CatalogoPageResult(
+        items: especialidades,
+        total: total,
+        page: page,
+        limit: limit,
+        message: response.message,
+        status: response.status,
+      );
     } catch (e, stacktrace) {
-      Logger.error('Error al obtener etiquetas $e');
+      Logger.error('Error al obtener especialidades $e');
       Logger.error('stacktrace $stacktrace');
+      return CatalogoPageResult.empty(
+        'No se pudieron cargar las especialidades.',
+      );
     }
-    return [];
   }
 
-  Future<List<AgrupadorCita>> obtenerAgrupadores() async {
+  Future<CatalogoPageResult<Estudio>> obtenerEstudiosPorEspecialidad({
+    required String especialidadId,
+    int page = 1,
+    int limit = 10,
+    String? filtro,
+  }) async {
     try {
-      final response = await fetch('/agrupadores');
+      final params = <String, String>{
+        'pagina': '$page',
+        'limite': '$limit',
+        if (filtro != null && filtro.trim().isNotEmpty) 'filtro': filtro.trim(),
+      };
+      final response = await fetch(
+        '/api/estudios/especialidades/$especialidadId',
+        params: params,
+      );
       if (response.status != StatusNetwork.connected) {
-        return [];
+        return CatalogoPageResult.empty(
+          response.message.isNotEmpty
+              ? response.message
+              : 'No se pudieron cargar los estudios.',
+        );
       }
-      final raw = response.data['datos'] ??
-          response.data['data'] ??
-          response.data['list'] ??
-          response.data['items'] ??
+      final data = response.data;
+      final datos = data['datos'] ?? data['data'] ?? {};
+      final totalRaw = datos['total'] ?? data['total'] ?? 0;
+      final filasRaw = datos['filas'] ??
+          datos['items'] ??
+          data['datos'] ??
+          data['items'] ??
           [];
-
-      if (raw is List) {
-        return raw
-            .whereType<Map<String, dynamic>>()
-            .map(AgrupadorCita.fromJson)
-            .toList();
-      }
+      final estudios = (filasRaw is List)
+          ? filasRaw
+              .whereType<Map<String, dynamic>>()
+              .map(Estudio.fromJson)
+              .toList()
+          : <Estudio>[];
+      final total = totalRaw is int
+          ? totalRaw
+          : int.tryParse('$totalRaw') ?? estudios.length;
+      return CatalogoPageResult(
+        items: estudios,
+        total: total,
+        page: page,
+        limit: limit,
+        message: response.message,
+        status: response.status,
+      );
     } catch (e, stacktrace) {
-      Logger.error('Error al obtener agrupadores $e');
+      Logger.error('Error al obtener estudios por especialidad $e');
       Logger.error('stacktrace $stacktrace');
+      return CatalogoPageResult.empty(
+        'No se pudieron cargar los estudios.',
+      );
     }
-    return [];
   }
 }
 
@@ -229,6 +269,33 @@ class CitasPageResult {
 
   factory CitasPageResult.empty(String message) => CitasPageResult(
         citas: const [],
+        total: 0,
+        page: 1,
+        limit: 10,
+        message: message,
+        status: StatusNetwork.noContent,
+      );
+}
+
+class CatalogoPageResult<T> {
+  final List<T> items;
+  final int total;
+  final int page;
+  final int limit;
+  final String message;
+  final StatusNetwork status;
+
+  const CatalogoPageResult({
+    required this.items,
+    required this.total,
+    required this.page,
+    required this.limit,
+    required this.message,
+    required this.status,
+  });
+
+  factory CatalogoPageResult.empty(String message) => CatalogoPageResult(
+        items: const [],
         total: 0,
         page: 1,
         limit: 10,
