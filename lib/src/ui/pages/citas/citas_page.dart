@@ -10,6 +10,7 @@ import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/models/especialidad.dart';
 import 'package:red_neuro_app/src/models/estudio.dart';
+import 'package:red_neuro_app/src/models/paciente.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
@@ -635,6 +636,8 @@ class _CitasPageState extends State<CitasPage>
       text: cita?.medicoId ?? Auth.instance.profile.id ?? '',
     );
     final comentarioController = TextEditingController();
+    Paciente? pacienteSeleccionado;
+    TextEditingController? pacienteAutocompleteController;
     DateTime? fechaInicio = cita?.fechaInicio;
     final baseSeleccionada = fechaBase ?? _selectedDay;
     if (cita == null && baseSeleccionada != null) {
@@ -673,16 +676,22 @@ class _CitasPageState extends State<CitasPage>
     );
     final List<Especialidad> especialidadesDisponibles = [];
     final List<Estudio> estudiosDisponibles = [];
+    final List<Paciente> pacientesDisponibles = [];
     bool especialidadesLoading = false;
     bool estudiosLoading = false;
+    bool pacientesLoading = false;
     bool especialidadesHasMore = true;
     bool estudiosHasMore = true;
+    bool pacientesHasMore = true;
     int especialidadesPage = 1;
     int estudiosPage = 1;
+    int pacientesPage = 1;
     String especialidadesFiltro = '';
     String estudiosFiltro = '';
+    String pacientesFiltro = '';
     Timer? especialidadesDebounce;
     Timer? estudiosDebounce;
+    Timer? pacientesDebounce;
     bool inicializado = false;
 
     final result = await showDialog<bool>(
@@ -756,6 +765,39 @@ class _CitasPageState extends State<CitasPage>
                 estudiosHasMore = estudiosDisponibles.length < total;
                 estudiosPage += 1;
                 estudiosLoading = false;
+              });
+              onUpdated?.call();
+            }
+
+            Future<void> cargarPacientes({
+              bool reset = false,
+              void Function()? onUpdated,
+            }) async {
+              if (pacientesLoading) return;
+              setStateDialog(() => pacientesLoading = true);
+              if (reset) {
+                pacientesPage = 1;
+                pacientesHasMore = true;
+                pacientesDisponibles.clear();
+              }
+              final result = await _service.obtenerPacientes(
+                page: pacientesPage,
+                limit: 10,
+                filtro: pacientesFiltro,
+              );
+              if (!mounted) return;
+              setStateDialog(() {
+                if (reset) {
+                  pacientesDisponibles
+                    ..clear()
+                    ..addAll(result.items);
+                } else {
+                  pacientesDisponibles.addAll(result.items);
+                }
+                final total = result.total;
+                pacientesHasMore = pacientesDisponibles.length < total;
+                pacientesPage += 1;
+                pacientesLoading = false;
               });
               onUpdated?.call();
             }
@@ -1062,6 +1104,223 @@ class _CitasPageState extends State<CitasPage>
               });
             }
 
+            Future<Paciente?> abrirNuevoPaciente() async {
+              final formKeyPaciente = GlobalKey<FormState>();
+              final nombresController = TextEditingController();
+              final primerApellidoController = TextEditingController();
+              final segundoApellidoController = TextEditingController();
+              final nroDocumentoController = TextEditingController();
+              final fechaNacimientoController = TextEditingController();
+              final telefonoController = TextEditingController();
+              final observacionController = TextEditingController();
+              DateTime? fechaNacimiento;
+              String? generoSeleccionado;
+              bool guardando = false;
+
+              return showDialog<Paciente>(
+                context: context,
+                builder: (context) {
+                  return StatefulBuilder(
+                    builder: (context, setStatePaciente) {
+                      Future<void> seleccionarFechaNacimiento() async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime(1900),
+                          lastDate: DateTime.now(),
+                        );
+                        if (picked == null) return;
+                        setStatePaciente(() {
+                          fechaNacimiento = picked;
+                          fechaNacimientoController.text =
+                              DateFormat('yyyy-MM-dd').format(picked);
+                        });
+                      }
+
+                      Future<void> guardarPaciente() async {
+                        if (!formKeyPaciente.currentState!.validate()) return;
+                        setStatePaciente(() => guardando = true);
+                        final body = <String, dynamic>{
+                          'nombres': nombresController.text.trim(),
+                          if (primerApellidoController.text.trim().isNotEmpty)
+                            'primerApellido':
+                                primerApellidoController.text.trim(),
+                          if (segundoApellidoController.text.trim().isNotEmpty)
+                            'segundoApellido':
+                                segundoApellidoController.text.trim(),
+                          if (nroDocumentoController.text.trim().isNotEmpty)
+                            'nroDocumento': nroDocumentoController.text.trim(),
+                          if (fechaNacimiento != null)
+                            'fechaNacimiento': DateFormat('yyyy-MM-dd')
+                                .format(fechaNacimiento!),
+                          if (telefonoController.text.trim().isNotEmpty)
+                            'telefono': telefonoController.text.trim(),
+                          if (generoSeleccionado?.trim().isNotEmpty ?? false)
+                            'genero': generoSeleccionado,
+                          if (observacionController.text.trim().isNotEmpty)
+                            'observacion': observacionController.text.trim(),
+                        };
+                        final response = await _service.crearPaciente(body);
+                        final ok = await _handleResponseError(
+                          response,
+                          'No se pudo registrar el paciente.',
+                        );
+                        if (!ok) {
+                          setStatePaciente(() => guardando = false);
+                          return;
+                        }
+                        final raw = response.data['datos'] ??
+                            response.data['data'] ??
+                            response.data;
+                        if (raw is Map<String, dynamic>) {
+                          final paciente = Paciente.fromJson(raw);
+                          showSnackBar(
+                            citasMessenger,
+                            'Paciente creado correctamente',
+                            state: StatusSnackBar.success,
+                            colorText: _theme.white,
+                          );
+                          Navigator.pop(context, paciente);
+                          return;
+                        }
+                        Navigator.pop(context);
+                      }
+
+                      return AlertDialog(
+                        title: const Text('Nuevo paciente'),
+                        content: SingleChildScrollView(
+                          child: Form(
+                            key: formKeyPaciente,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                TextFormField(
+                                  controller: nombresController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Nombres',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  validator: (value) {
+                                    final result = _validarRequerido(
+                                      value,
+                                      'Nombres',
+                                    );
+                                    return result.isEmpty ? null : result;
+                                  },
+                                ),
+                                const SizedBox(height: 12),
+                                TextFormField(
+                                  controller: primerApellidoController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Primer apellido',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                TextFormField(
+                                  controller: segundoApellidoController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Segundo apellido',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                TextFormField(
+                                  controller: nroDocumentoController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Número de documento',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                TextFormField(
+                                  controller: fechaNacimientoController,
+                                  readOnly: true,
+                                  decoration: InputDecoration(
+                                    labelText: 'Fecha de nacimiento',
+                                    border: const OutlineInputBorder(),
+                                    suffixIcon: IconButton(
+                                      icon: const Icon(Icons.event),
+                                      onPressed: seleccionarFechaNacimiento,
+                                    ),
+                                  ),
+                                  onTap: seleccionarFechaNacimiento,
+                                ),
+                                const SizedBox(height: 12),
+                                TextFormField(
+                                  controller: telefonoController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Teléfono',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  keyboardType: TextInputType.phone,
+                                ),
+                                const SizedBox(height: 12),
+                                DropdownButtonFormField<String>(
+                                  value: generoSeleccionado,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Género',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  items: const [
+                                    DropdownMenuItem(
+                                      value: 'F',
+                                      child: Text('Femenino'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'M',
+                                      child: Text('Masculino'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'O',
+                                      child: Text('Otro'),
+                                    ),
+                                  ],
+                                  onChanged: (value) {
+                                    setStatePaciente(
+                                      () => generoSeleccionado = value,
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: 12),
+                                TextFormField(
+                                  controller: observacionController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Observaciones',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  maxLines: 2,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed:
+                                guardando ? null : () => Navigator.pop(context),
+                            child: const Text('Cancelar'),
+                          ),
+                          ElevatedButton(
+                            onPressed: guardando ? null : guardarPaciente,
+                            child: guardando
+                                ? const SizedBox(
+                                    height: 18,
+                                    width: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text('Guardar'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+              );
+            }
+
             return Dialog.fullscreen(
               child: Scaffold(
                 appBar: AppBar(
@@ -1095,31 +1354,261 @@ class _CitasPageState extends State<CitasPage>
                             padding: const EdgeInsets.all(16),
                             child: Column(
                               children: [
-                        FormField<Especialidad>(
-                          validator: (_) {
-                            if (especialidadSeleccionada == null) {
-                              return 'Selecciona una especialidad';
-                            }
-                            return null;
-                          },
-                          builder: (state) {
-                            return TextFormField(
-                              controller: especialidadController,
-                              readOnly: true,
-                              decoration: InputDecoration(
-                                labelText: 'Especialidad',
-                                hintText: 'Selecciona una especialidad',
-                                border: const OutlineInputBorder(),
-                                errorText: state.errorText,
-                                suffixIcon: const Icon(Icons.expand_more),
-                              ),
-                              onTap: () async {
-                                await abrirSelectorEspecialidad();
-                                state.didChange(especialidadSeleccionada);
-                              },
-                            );
-                          },
-                        ),
+                                if (cita == null) ...[
+                                  FormField<Paciente>(
+                                    validator: (_) {
+                                      if (pacienteSeleccionado == null) {
+                                        return 'Selecciona un paciente';
+                                      }
+                                      return null;
+                                    },
+                                    builder: (state) {
+                                      return Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            child: Autocomplete<Paciente>(
+                                              displayStringForOption:
+                                                  (option) =>
+                                                      option.nombreCompleto,
+                                              optionsBuilder:
+                                                  (TextEditingValue value) {
+                                                if (value.text
+                                                    .trim()
+                                                    .isEmpty) {
+                                                  return const Iterable<
+                                                      Paciente>.empty();
+                                                }
+                                                return pacientesDisponibles;
+                                              },
+                                              fieldViewBuilder: (
+                                                context,
+                                                textController,
+                                                focusNode,
+                                                onFieldSubmitted,
+                                              ) {
+                                                pacienteAutocompleteController =
+                                                    textController;
+                                                return TextFormField(
+                                                  controller: textController,
+                                                  focusNode: focusNode,
+                                                  decoration: InputDecoration(
+                                                    labelText: 'Paciente',
+                                                    hintText:
+                                                        'Busca por nombre o documento',
+                                                    border:
+                                                        const OutlineInputBorder(),
+                                                    errorText: state.errorText,
+                                                    suffixIcon: pacientesLoading
+                                                        ? const Padding(
+                                                            padding:
+                                                                EdgeInsets.all(
+                                                              12,
+                                                            ),
+                                                            child: SizedBox(
+                                                              height: 16,
+                                                              width: 16,
+                                                              child:
+                                                                  CircularProgressIndicator(
+                                                                strokeWidth: 2,
+                                                              ),
+                                                            ),
+                                                          )
+                                                        : const Icon(
+                                                            Icons.search,
+                                                          ),
+                                                  ),
+                                                  onChanged: (value) {
+                                                    pacienteSeleccionado = null;
+                                                    state.didChange(null);
+                                                    pacientesFiltro = value;
+                                                    pacientesDebounce?.cancel();
+                                                    if (value
+                                                        .trim()
+                                                        .isEmpty) {
+                                                      setStateDialog(() {
+                                                        pacientesDisponibles
+                                                            .clear();
+                                                        pacientesHasMore = true;
+                                                        pacientesLoading = false;
+                                                      });
+                                                      return;
+                                                    }
+                                                    pacientesDebounce = Timer(
+                                                      const Duration(
+                                                        milliseconds: 300,
+                                                      ),
+                                                      () =>
+                                                          cargarPacientes(
+                                                            reset: true,
+                                                          ),
+                                                    );
+                                                  },
+                                                );
+                                              },
+                                              onSelected: (selection) {
+                                                setStateDialog(() {
+                                                  pacienteSeleccionado =
+                                                      selection;
+                                                  pacienteAutocompleteController
+                                                      ?.text = selection
+                                                          .nombreCompleto;
+                                                });
+                                                state.didChange(selection);
+                                              },
+                                              optionsViewBuilder: (
+                                                context,
+                                                onSelected,
+                                                options,
+                                              ) {
+                                                final opciones =
+                                                    options.toList();
+                                                if (opciones.isEmpty) {
+                                                  return Align(
+                                                    alignment: Alignment.topLeft,
+                                                    child: Material(
+                                                      elevation: 4,
+                                                      child: Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(12),
+                                                        child: Text(
+                                                          pacientesLoading
+                                                              ? 'Buscando pacientes...'
+                                                              : 'Sin resultados',
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  );
+                                                }
+                                                return Align(
+                                                  alignment: Alignment.topLeft,
+                                                  child: Material(
+                                                    elevation: 4,
+                                                    child: ConstrainedBox(
+                                                      constraints:
+                                                          const BoxConstraints(
+                                                        maxHeight: 260,
+                                                        minWidth: 320,
+                                                      ),
+                                                      child: ListView.builder(
+                                                        padding: EdgeInsets.zero,
+                                                        shrinkWrap: true,
+                                                        itemCount:
+                                                            opciones.length +
+                                                                (pacientesHasMore
+                                                                    ? 1
+                                                                    : 0),
+                                                        itemBuilder:
+                                                            (context, index) {
+                                                          if (index ==
+                                                                  opciones
+                                                                      .length &&
+                                                              pacientesHasMore) {
+                                                            return TextButton
+                                                                .icon(
+                                                              onPressed:
+                                                                  pacientesLoading
+                                                                      ? null
+                                                                      : () =>
+                                                                          cargarPacientes(
+                                                                            reset:
+                                                                                false,
+                                                                          ),
+                                                              icon: const Icon(
+                                                                Icons
+                                                                    .expand_more,
+                                                              ),
+                                                              label: const Text(
+                                                                'Cargar más',
+                                                              ),
+                                                            );
+                                                          }
+                                                          final option =
+                                                              opciones[index];
+                                                          return ListTile(
+                                                            title: Text(
+                                                              option
+                                                                  .nombreCompleto,
+                                                            ),
+                                                            subtitle: (option
+                                                                            .nroDocumento
+                                                                            ?.isNotEmpty ??
+                                                                        false)
+                                                                ? Text(
+                                                                    'Documento: ${option.nroDocumento}',
+                                                                  )
+                                                                : null,
+                                                            onTap: () =>
+                                                                onSelected(
+                                                              option,
+                                                            ),
+                                                          );
+                                                        },
+                                                      ),
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          ElevatedButton.icon(
+                                            onPressed: () async {
+                                              final nuevo =
+                                                  await abrirNuevoPaciente();
+                                              if (nuevo == null) return;
+                                              setStateDialog(() {
+                                                pacienteSeleccionado = nuevo;
+                                                pacienteAutocompleteController
+                                                    ?.text =
+                                                        nuevo.nombreCompleto;
+                                                pacientesDisponibles.insert(
+                                                  0,
+                                                  nuevo,
+                                                );
+                                              });
+                                              state.didChange(nuevo);
+                                            },
+                                            icon:
+                                                const Icon(Icons.person_add),
+                                            label: const Text('Nuevo'),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  ),
+                                  const SizedBox(height: 16),
+                                ],
+                                FormField<Especialidad>(
+                                  validator: (_) {
+                                    if (especialidadSeleccionada == null) {
+                                      return 'Selecciona una especialidad';
+                                    }
+                                    return null;
+                                  },
+                                  builder: (state) {
+                                    return TextFormField(
+                                      controller: especialidadController,
+                                      readOnly: true,
+                                      decoration: InputDecoration(
+                                        labelText: 'Especialidad',
+                                        hintText: 'Selecciona una especialidad',
+                                        border: const OutlineInputBorder(),
+                                        errorText: state.errorText,
+                                        suffixIcon:
+                                            const Icon(Icons.expand_more),
+                                      ),
+                                      onTap: () async {
+                                        await abrirSelectorEspecialidad();
+                                        state.didChange(
+                                          especialidadSeleccionada,
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
                                 const SizedBox(height: 16),
                                 DropdownButtonFormField<String>(
                                   value: tipoCita,
@@ -1316,6 +1805,16 @@ class _CitasPageState extends State<CitasPage>
                                     );
                                     return;
                                   }
+                                  if (cita == null &&
+                                      pacienteSeleccionado == null) {
+                                    showSnackBar(
+                                      citasMessenger,
+                                      'Selecciona un paciente',
+                                      state: StatusSnackBar.error,
+                                      colorText: _theme.white,
+                                    );
+                                    return;
+                                  }
                                   Navigator.pop(context, true);
                                 },
                                 child: Text(
@@ -1338,6 +1837,7 @@ class _CitasPageState extends State<CitasPage>
 
     especialidadesDebounce?.cancel();
     estudiosDebounce?.cancel();
+    pacientesDebounce?.cancel();
     if (result != true) return;
 
     final detalle = detalleController.text.trim();
@@ -1350,6 +1850,7 @@ class _CitasPageState extends State<CitasPage>
         'detalle': detalle,
         'fechaInicio': fechaInicio!.toUtc().toIso8601String(),
         'idMedico': medicoId,
+        if (pacienteSeleccionado != null) 'idPaciente': pacienteSeleccionado.id,
         'idEspecialidad': especialidadId,
         'tipoCita': tipoCita,
         if (tipoCita == 'ESTUDIO' && estudioSeleccionado != null)

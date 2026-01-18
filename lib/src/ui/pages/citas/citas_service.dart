@@ -4,6 +4,7 @@ import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/models/especialidad.dart';
 import 'package:red_neuro_app/src/models/estudio.dart';
+import 'package:red_neuro_app/src/models/paciente.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 
@@ -257,6 +258,66 @@ class CitasService extends ServiceConfig {
         'No se pudieron cargar los estudios.',
       );
     }
+  }
+
+  Future<CatalogoPageResult<Paciente>> obtenerPacientes({
+    int page = 1,
+    int limit = 10,
+    String? filtro,
+  }) async {
+    try {
+      final params = <String, String>{
+        'pagina': '$page',
+        'limite': '$limit',
+        if (filtro != null && filtro.trim().isNotEmpty) 'filtro': filtro.trim(),
+      };
+      final response = await fetch('/pacientes', params: params);
+      if (response.status != StatusNetwork.connected) {
+        return CatalogoPageResult.empty(
+          response.message.isNotEmpty
+              ? response.message
+              : 'No se pudieron cargar los pacientes.',
+        );
+      }
+      final data = response.data;
+      final datos = data['datos'] ?? data['data'] ?? data;
+      final totalRaw = datos['total'] ?? data['total'] ?? 0;
+      final filasRaw = datos['filas'] ??
+          datos['items'] ??
+          data['filas'] ??
+          data['items'] ??
+          data['datos'] ??
+          [];
+      final pacientes = (filasRaw is List)
+          ? filasRaw
+              .whereType<Map<String, dynamic>>()
+              .map(Paciente.fromJson)
+              .toList()
+          : <Paciente>[];
+      final total = totalRaw is int
+          ? totalRaw
+          : int.tryParse('$totalRaw') ?? pacientes.length;
+      return CatalogoPageResult(
+        items: pacientes,
+        total: total,
+        page: page,
+        limit: limit,
+        message: response.message,
+        status: response.status,
+      );
+    } catch (e, stacktrace) {
+      Logger.error('Error al obtener pacientes $e');
+      Logger.error('stacktrace $stacktrace');
+      return CatalogoPageResult.empty('No se pudieron cargar los pacientes.');
+    }
+  }
+
+  Future<ResponseApi> crearPaciente(Map<String, dynamic> body) async {
+    return fetch(
+      '/pacientes',
+      type: HttpProtocol.post,
+      body: body,
+    );
   }
 }
 
