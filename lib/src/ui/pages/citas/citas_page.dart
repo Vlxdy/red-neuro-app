@@ -637,6 +637,7 @@ class _CitasPageState extends State<CitasPage>
     );
     final comentarioController = TextEditingController();
     Paciente? pacienteSeleccionado;
+    final pacienteFieldKey = GlobalKey<FormFieldState<Paciente>>();
     TextEditingController? pacienteAutocompleteController;
     DateTime? fechaInicio = cita?.fechaInicio;
     final baseSeleccionada = fechaBase ?? _selectedDay;
@@ -1358,6 +1359,7 @@ class _CitasPageState extends State<CitasPage>
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
                                   FormField<Paciente>(
+                                    key: pacienteFieldKey,
                                     validator: (_) {
                                       if (pacienteSeleccionado == null) {
                                         return 'Selecciona un paciente';
@@ -1552,7 +1554,8 @@ class _CitasPageState extends State<CitasPage>
                                             nuevo.nombreCompleto;
                                         pacientesDisponibles.insert(0, nuevo);
                                       });
-                                      state.didChange(nuevo);
+                                      pacienteFieldKey.currentState
+                                          ?.didChange(nuevo);
                                     },
                                     icon: const Icon(Icons.person_add),
                                     label: const Text('Registrar paciente'),
