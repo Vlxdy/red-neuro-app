@@ -1848,7 +1848,7 @@ class _CitasPageState extends State<CitasPage>
         'detalle': detalle,
         'fechaInicio': fechaInicio!.toUtc().toIso8601String(),
         'idMedico': medicoId,
-        if (pacienteSeleccionado != null) 'idPaciente': pacienteSeleccionado.id,
+        if (pacienteSeleccionado != null) 'idPaciente': pacienteSeleccionado?.id,
         'idEspecialidad': especialidadId,
         'tipoCita': tipoCita,
         if (tipoCita == 'ESTUDIO' && estudioSeleccionado != null)
