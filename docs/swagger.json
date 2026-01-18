@@ -5016,14 +5016,6 @@
             "description": "Identificador del estudio asociado (solo si es estudio)",
             "example": "5"
           },
-          "comentario": {
-            "type": "string",
-            "description": "Comentario opcional del cambio de estado"
-          },
-          "comentarioNutricionista": {
-            "type": "string",
-            "description": "Comentario interno del nutricionista"
-          },
           "medico": {
             "description": "Datos del profesional de salud asignado a la cita",
             "allOf": [
@@ -5205,10 +5197,6 @@
               "RECHAZADA"
             ],
             "description": "Nuevo estado de la cita"
-          },
-          "comentario": {
-            "type": "string",
-            "description": "Comentario opcional para el cambio de estado"
           }
         },
         "required": [
@@ -5236,10 +5224,6 @@
             "type": "string",
             "description": "Identificador del estudio a realizar (requerido cuando el tipo es ESTUDIO)",
             "example": "5"
-          },
-          "comentario": {
-            "type": "string",
-            "description": "Comentario o motivo de la reprogramación"
           }
         },
         "required": [
@@ -5252,7 +5236,7 @@
         "properties": {
           "comentario": {
             "type": "string",
-            "description": "Motivo de cancelación"
+            "description": "Comentario asociado a la cancelación (se guarda en historial)"
           }
         }
       },
