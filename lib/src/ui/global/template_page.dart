@@ -54,7 +54,7 @@ class TemplatePage extends StatelessWidget {
                 ? customLoading != null
                       ? customLoading!
                       : Container(
-                          color: Colors.black26,
+                          color: theme.black.withValues(alpha: 0.26),
                           height: double.infinity,
                           width: double.infinity,
                           child: Center(

@@ -79,7 +79,7 @@ class _CustomTextInputState extends State<CustomTextInput> {
         decoration: BoxDecoration(
           border: Border.all(
             color: !widget.withBorder
-                ? Colors.transparent
+                ? theme.transparent
                 : _error
                 ? theme.error
                 : widget.borderColor != null

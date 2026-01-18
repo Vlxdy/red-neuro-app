@@ -196,7 +196,7 @@ class _MicuentaState extends State<Micuenta> {
                           ),
                           child: ListTile(
                             onTap: logout,
-                            tileColor: Colors.red,
+                            tileColor: theme.error.withValues(alpha: 0.1),
                             leading: Icon(
                               SolarIconsOutline.logout_3,
                               color: theme.error,

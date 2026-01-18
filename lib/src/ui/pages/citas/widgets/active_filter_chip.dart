@@ -12,7 +12,7 @@ class ActiveFilterChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: theme.bgCard,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: theme.primary.withValues(alpha: 0.2)),
       ),

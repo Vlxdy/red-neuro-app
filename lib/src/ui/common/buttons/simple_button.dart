@@ -61,7 +61,7 @@ class SimpleButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(50),
       ),
       child: Material(
-        color: Colors.transparent,
+        color: theme.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(50),
           onTap: disabled! ? null : onTap,
@@ -87,7 +87,7 @@ class SimpleButton extends StatelessWidget {
                           ? theme.grey
                           : outlined
                           ? background
-                          : textColor ?? Colors.white,
+                          : textColor ?? theme.white,
                     ),
                   ),
                 ),
@@ -109,7 +109,7 @@ class SimpleButton extends StatelessWidget {
                 ? theme.grey
                 : outlined
                 ? background
-                : textColor ?? Colors.white,
+                : textColor ?? theme.white,
           )
         : const SizedBox();
   }
@@ -122,12 +122,12 @@ class SimpleButton extends StatelessWidget {
                 ? theme.grey
                 : outlined
                 ? background
-                : textColor ?? Colors.white,
+                : textColor ?? theme.white,
           )
         : const SizedBox();
   }
 
   Color get _boxShadowColor {
-    return elevated ? theme.grey.withValues(alpha: 0.1) : Colors.transparent;
+    return elevated ? theme.grey.withValues(alpha: 0.1) : theme.transparent;
   }
 }

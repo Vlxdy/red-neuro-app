@@ -1,5 +1,6 @@
 import 'package:red_neuro_app/src/constants/resources.dart';
 import 'package:flutter/material.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/pages/login/componentes/credenciales.dart';
 
@@ -16,11 +17,12 @@ class LoginAccount extends StatefulWidget {
 class _LoginState extends State<LoginAccount> {
   @override
   Widget build(BuildContext context) {
+    final theme = ThemeController.instance;
     return TemplatePage(
       page: ScaffoldMessenger(
         key: loginAccountMessenger,
         child: Scaffold(
-          backgroundColor: Colors.transparent,
+          backgroundColor: theme.transparent,
           body: Stack(
             children: <Widget>[
               Positioned.fill(

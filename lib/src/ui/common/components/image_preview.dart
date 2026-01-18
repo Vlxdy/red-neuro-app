@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
 
 class ImagePreviewDialog extends StatelessWidget {
   final String imagePath;
@@ -8,8 +9,9 @@ class ImagePreviewDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = ThemeController.instance;
     return Dialog(
-      backgroundColor: Colors.transparent,
+      backgroundColor: theme.transparent,
       child: Stack(
         alignment: Alignment.topRight,
         children: [
@@ -18,7 +20,7 @@ class ImagePreviewDialog extends StatelessWidget {
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8.0),
-                color: Colors.black,
+                color: theme.black,
               ),
               child: Image.file(File(imagePath), fit: BoxFit.contain),
             ),
@@ -28,9 +30,9 @@ class ImagePreviewDialog extends StatelessWidget {
             right: 16,
             child: FloatingActionButton(
               mini: true,
-              backgroundColor: Colors.black54,
+              backgroundColor: theme.black.withValues(alpha: 0.54),
               onPressed: () => Navigator.of(context).pop(),
-              child: const Icon(Icons.close, color: Colors.white),
+              child: Icon(Icons.close, color: theme.white),
             ),
           ),
         ],

@@ -68,7 +68,7 @@ class MultipleCampoFotografia extends StatelessWidget {
                               height: 35,
                               width: double.infinity,
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.5),
+                                color: theme.black.withValues(alpha: 0.5),
                                 borderRadius: const BorderRadius.only(
                                   bottomLeft: Radius.circular(4.0),
                                   bottomRight: Radius.circular(4.0),
@@ -183,8 +183,8 @@ class MultipleCampoFotografia extends StatelessWidget {
                               height: 35,
                               width: double.infinity,
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(
-                                  0.5,
+                                color: theme.black.withValues(
+                                  alpha: 0.5,
                                 ), // Fondo semitransparente
                                 borderRadius: const BorderRadius.only(
                                   bottomLeft: Radius.circular(4.0),

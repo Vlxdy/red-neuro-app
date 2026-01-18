@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
 
 class LoadingAnimation with ChangeNotifier {
   LoadingAnimation._();
@@ -19,38 +20,41 @@ class LoadingAnimation with ChangeNotifier {
 
   void showLoading({String? mensaje}) {
     _overlayEntry = OverlayEntry(
-      builder: (BuildContext context) => Container(
-        alignment: Alignment.center,
-        child: Container(
-          height: double.infinity,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            color: Colors.white.withValues(alpha: .6),
-          ),
-          child: Center(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                const CircularProgressIndicator(color: Colors.amber),
-                if (mensaje != null)
-                  Container(
-                    margin: const EdgeInsets.only(top: 15),
-                    child: Text(
-                      mensaje,
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontSize: 15,
-                        decoration: TextDecoration.none,
+      builder: (BuildContext context) {
+        final theme = ThemeController.instance;
+        return Container(
+          alignment: Alignment.center,
+          child: Container(
+            height: double.infinity,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              color: theme.white.withValues(alpha: .6),
+            ),
+            child: Center(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  CircularProgressIndicator(color: theme.warning),
+                  if (mensaje != null)
+                    Container(
+                      margin: const EdgeInsets.only(top: 15),
+                      child: Text(
+                        mensaje,
+                        style: TextStyle(
+                          color: theme.fontColor,
+                          fontSize: 15,
+                          decoration: TextDecoration.none,
+                        ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
     if (_overlayEntry != null) {
       isLoading = true;

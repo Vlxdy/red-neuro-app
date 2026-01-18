@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
 
 class Dialogo {
   static Future showNativeModalBottomSheet({
@@ -19,7 +20,7 @@ class Dialogo {
             expand: true,
             enableDrag: dragable,
             context: context,
-            backgroundColor: Colors.transparent,
+            backgroundColor: ThemeController.instance.transparent,
             builder: (context) =>
                 PopScope(canPop: isDismissible, child: widget),
             isDismissible: isDismissible,
@@ -28,7 +29,7 @@ class Dialogo {
             expand: true,
             enableDrag: dragable,
             context: context,
-            backgroundColor: Colors.transparent,
+            backgroundColor: ThemeController.instance.transparent,
             builder: (context) =>
                 PopScope(canPop: isDismissible, child: widget),
             isDismissible: isDismissible,

@@ -7,6 +7,7 @@ import 'package:red_neuro_app/src/plugins/utils/preferences.dart';
 import 'package:red_neuro_app/src/plugins/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:red_neuro_app/src/config/app_theme.dart';
 import 'package:red_neuro_app/src/config/init_app.dart';
 import 'package:red_neuro_app/src/config/providers.dart';
 import 'package:red_neuro_app/src/config/routes.dart';
@@ -18,6 +19,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
 
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
@@ -87,7 +89,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
-    TextTheme textTheme = ThemeData.light().textTheme;
     return MultiProvider(
       providers: proveedores(context),
       child: FutureBuilder(
@@ -103,33 +104,37 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             refreshListenable: appState,
           );
 
-          return MaterialApp.router(
-            // ✅ idioma por defecto español
-            locale: const Locale('es'),
+          return ValueListenableBuilder<bool>(
+            valueListenable: ThemeController.instance.brightness,
+            builder: (BuildContext context, bool isLight, Widget? child) {
+              return MaterialApp.router(
+                // ✅ idioma por defecto español
+                locale: const Locale('es'),
 
-            // ✅ soporta solo español (puedes agregar más si deseas)
-            supportedLocales: const <Locale>[
-              Locale('es', ''), // Español
-            ],
+                // ✅ soporta solo español (puedes agregar más si deseas)
+                supportedLocales: const <Locale>[
+                  Locale('es', ''), // Español
+                ],
 
-            // ✅ agrega las delegaciones necesarias
-            localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
+                // ✅ agrega las delegaciones necesarias
+                localizationsDelegates:
+                    const <LocalizationsDelegate<dynamic>>[
+                  GlobalMaterialLocalizations.delegate,
+                  GlobalWidgetsLocalizations.delegate,
+                  GlobalCupertinoLocalizations.delegate,
+                ],
 
-            debugShowCheckedModeBanner: false,
-            title: 'Red Neuro',
-            scaffoldMessengerKey: rootScaffoldMessengerKey,
-            theme: ThemeData(
-              useMaterial3: true,
-              textTheme: textTheme,
-              fontFamily: 'Poppins',
-            ),
-            routeInformationParser: router.routeInformationParser,
-            routeInformationProvider: router.routeInformationProvider,
-            routerDelegate: router.routerDelegate,
+                debugShowCheckedModeBanner: false,
+                title: 'Red Neuro',
+                scaffoldMessengerKey: rootScaffoldMessengerKey,
+                theme: AppTheme.lightTheme,
+                darkTheme: AppTheme.darkTheme,
+                themeMode: isLight ? ThemeMode.light : ThemeMode.dark,
+                routeInformationParser: router.routeInformationParser,
+                routeInformationProvider: router.routeInformationProvider,
+                routerDelegate: router.routerDelegate,
+              );
+            },
           );
         },
       ),

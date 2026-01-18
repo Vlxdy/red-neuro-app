@@ -30,7 +30,7 @@ void showSnackBar(
   if (!hasScaffold) return;
   messenger.showSnackBar(
     SnackBar(
-      backgroundColor: Colors.transparent,
+      backgroundColor: _theme.transparent,
       elevation: 0,
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxHeight: 50, minHeight: 40),
