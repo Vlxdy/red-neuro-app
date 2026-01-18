@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
 
 class FechaSelector extends StatelessWidget {
   final String label;
@@ -17,6 +18,7 @@ class FechaSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = ThemeController.instance;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
@@ -24,11 +26,11 @@ class FechaSelector extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade300),
+          border: Border.all(color: theme.monochromatic500),
         ),
         child: Row(
           children: [
-            const Icon(Icons.event, size: 18),
+            Icon(Icons.event, size: 18, color: theme.primary),
             const SizedBox(width: 8),
             Expanded(
               child: Text(value != null ? formatter.format(value!) : label),

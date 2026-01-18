@@ -203,8 +203,8 @@ class _PerfilState extends State<Perfil> {
                       boxShadow: <BoxShadow>[
                         BoxShadow(
                           color: theme.isLight
-                              ? Colors.black.withValues(alpha: 0.1)
-                              : Colors.white.withValues(alpha: 0.05),
+                              ? theme.black.withValues(alpha: 0.1)
+                              : theme.white.withValues(alpha: 0.05),
                           blurRadius: 6,
                           offset: const Offset(0, 3),
                         ),
@@ -332,8 +332,8 @@ class _SessionActions extends StatelessWidget {
         boxShadow: <BoxShadow>[
           BoxShadow(
             color: theme.isLight
-                ? Colors.black.withValues(alpha: 0.05)
-                : Colors.black.withValues(alpha: 0.1),
+                ? theme.black.withValues(alpha: 0.05)
+                : theme.black.withValues(alpha: 0.1),
             blurRadius: 6,
             offset: const Offset(0, 3),
           ),
@@ -422,8 +422,8 @@ class _RoleCard extends StatelessWidget {
         boxShadow: <BoxShadow>[
           BoxShadow(
             color: theme.isLight
-                ? Colors.black.withValues(alpha: 0.05)
-                : Colors.black.withValues(alpha: 0.1),
+                ? theme.black.withValues(alpha: 0.05)
+                : theme.black.withValues(alpha: 0.1),
             blurRadius: 6,
             offset: const Offset(0, 3),
           ),

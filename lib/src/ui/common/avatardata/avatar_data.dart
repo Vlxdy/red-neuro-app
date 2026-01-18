@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
 
 class AvatarType {
   final String text;
@@ -23,6 +24,7 @@ class AvatarData extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = ThemeController.instance;
     return SizedBox(
       height: size,
       width:
@@ -39,17 +41,17 @@ class AvatarData extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
+                  border: Border.all(color: theme.white, width: 2),
                 ),
                 child: CircleAvatar(
                   radius: size / 2,
                   backgroundColor:
-                      avatars[index].background ?? Colors.blue[100],
+                      avatars[index].background ?? theme.primary20,
                   child: Text(
                     avatars[index].text,
                     // _getInitials(avatars[index].text),
                     style: TextStyle(
-                      color: Colors.white,
+                      color: theme.white,
                       fontSize: size / 2,
                       fontWeight: FontWeight.bold,
                     ),
@@ -64,16 +66,16 @@ class AvatarData extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
-                  color: Colors.grey[300],
+                  border: Border.all(color: theme.white, width: 2),
+                  color: theme.monochromatic200,
                 ),
                 child: CircleAvatar(
                   radius: size / 2,
-                  backgroundColor: Colors.grey[300],
+                  backgroundColor: theme.monochromatic200,
                   child: Text(
                     '+$remainingCount',
                     style: TextStyle(
-                      color: Colors.black87,
+                      color: theme.fontColor,
                       fontSize: size / 2,
                       fontWeight: FontWeight.bold,
                     ),

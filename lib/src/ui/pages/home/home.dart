@@ -369,7 +369,7 @@ class _HomePageState extends State<HomePage> {
                   : Brightness.light,
               statusBarColor: theme.transparent,
             ),
-            backgroundColor: Colors.transparent,
+            backgroundColor: theme.transparent,
             centerTitle: false,
           ),
           body: Column(

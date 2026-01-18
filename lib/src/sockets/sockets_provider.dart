@@ -1,6 +1,7 @@
 // lib/src/providers/socket_provider.dart
 import 'package:red_neuro_app/main.dart';
 import 'package:red_neuro_app/src/config/socket_service.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +13,7 @@ class SocketProvider extends ChangeNotifier {
 
   /// Llamar tras el login, cuando tengas el userId
   Future<void> init(String userId, BuildContext context) async {
+    final ThemeController theme = ThemeController.instance;
     SocketService.instance.connect(userId);
     // Cuando se conecte/desconecte
     SocketService.instance.on('connect', (_) {
@@ -36,7 +38,7 @@ class SocketProvider extends ChangeNotifier {
         state: advertencia != null
             ? StatusSnackBar.error
             : StatusSnackBar.success,
-        colorText: Colors.white,
+        colorText: theme.white,
       );
 
       // Se elimina la actualización automática de dependientes ya que el

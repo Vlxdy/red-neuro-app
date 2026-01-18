@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
 
 class FormStepper extends StatefulWidget {
   final int longitud;
   final int currentStep;
-  final Color activeColor;
-  final Color inactiveColor;
+  final Color? activeColor;
+  final Color? inactiveColor;
 
   const FormStepper({
     super.key,
     required this.longitud,
     required this.currentStep,
-    this.activeColor = Colors.blue,
-    this.inactiveColor = const Color(0xFFE0E0E0),
+    this.activeColor,
+    this.inactiveColor,
   });
 
   @override
@@ -20,6 +21,9 @@ class FormStepper extends StatefulWidget {
 
 class _FormStepperState extends State<FormStepper> {
   Widget _buildStepper(int index) {
+    final ThemeController theme = ThemeController.instance;
+    final Color activeColor = widget.activeColor ?? theme.primary;
+    final Color inactiveColor = widget.inactiveColor ?? theme.monochromatic500;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 4),
       width: 24,
@@ -27,14 +31,16 @@ class _FormStepperState extends State<FormStepper> {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: widget.currentStep == index
-            ? widget.activeColor
-            : widget.inactiveColor,
+            ? activeColor
+            : inactiveColor,
       ),
       child: Center(
         child: Text(
           '${index + 1}',
           style: TextStyle(
-            color: widget.currentStep == index ? Colors.white : Colors.black,
+            color: widget.currentStep == index
+                ? theme.calculateTextColor(activeColor)
+                : theme.fontColor,
             fontSize: 12,
           ),
         ),

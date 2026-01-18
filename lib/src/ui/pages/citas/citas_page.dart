@@ -1489,7 +1489,7 @@ class _CitasPageState extends State<CitasPage>
                           const SizedBox(height: 12),
                           Card(
                             elevation: 0,
-                            color: Colors.grey.shade50,
+                            color: _theme.bgCard2,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -1571,7 +1571,7 @@ class _CitasPageState extends State<CitasPage>
                         const SizedBox(height: 12),
                         Card(
                           elevation: 0,
-                          color: Colors.grey.shade50,
+                          color: _theme.bgCard2,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -1655,9 +1655,7 @@ class _CitasPageState extends State<CitasPage>
                                         style: Theme.of(context)
                                             .textTheme
                                             .bodySmall
-                                            ?.copyWith(
-                                              color: Colors.grey.shade600,
-                                            ),
+                                            ?.copyWith(color: _theme.grey),
                                       ),
                                     ),
                                   ),
@@ -1704,7 +1702,7 @@ class _CitasPageState extends State<CitasPage>
                         const SizedBox(height: 12),
                         Card(
                           elevation: 0,
-                          color: Colors.grey.shade50,
+                          color: _theme.bgCard2,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -1931,22 +1929,22 @@ class _CitasPageState extends State<CitasPage>
   Color _colorEstado(String estado) {
     switch (estado) {
       case 'CONFIRMADA':
-        return Colors.green.shade600;
+        return _theme.success;
       case 'EN_CURSO':
-        return Colors.orange.shade600;
+        return _theme.warning;
       case 'COMPLETADA':
-        return Colors.blue.shade600;
+        return _theme.primary;
       case 'CANCELADA':
       case 'RECHAZADA':
-        return Colors.red.shade600;
+        return _theme.error;
       case 'NO_ASISTIO':
-        return Colors.red.shade400;
+        return _theme.error.withValues(alpha: 0.7);
       case 'SOLICITADA':
-        return Colors.amber.shade700;
+        return _theme.secondary;
       case 'BORRADOR':
-        return Colors.grey.shade500;
+        return _theme.neutral;
       default:
-        return Colors.grey.shade400;
+        return _theme.grey.withValues(alpha: 0.6);
     }
   }
 
@@ -1965,7 +1963,7 @@ class _CitasPageState extends State<CitasPage>
         child: ScaffoldMessenger(
           key: citasMessenger,
           child: Scaffold(
-            backgroundColor: Colors.transparent,
+            backgroundColor: _theme.transparent,
             body: LayoutBuilder(
               builder: (context, constraints) {
                 final isCompact = constraints.maxWidth < 980;
@@ -2008,7 +2006,7 @@ class _CitasPageState extends State<CitasPage>
                         onPressed: () =>
                             _abrirFormulario(fechaBase: _selectedDay),
                         backgroundColor: _theme.primary,
-                        child: const Icon(Icons.add, color: Colors.white),
+                        child: Icon(Icons.add, color: _theme.white),
                       ),
                     ),
                   ],
@@ -2217,11 +2215,11 @@ class _CitasPageState extends State<CitasPage>
     final calendario = Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: _theme.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: _theme.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -2300,7 +2298,9 @@ class _CitasPageState extends State<CitasPage>
                   DateFormat.E(locale).format(date)[0].toUpperCase(),
               weekdayStyle:
                   TextStyle(color: _theme.primary, fontWeight: FontWeight.w600),
-              weekendStyle: const TextStyle(color: Colors.black54),
+              weekendStyle: TextStyle(
+                color: _theme.black.withValues(alpha: 0.54),
+              ),
             ),
             calendarBuilders: CalendarBuilders(
               dowBuilder: (context, day) {
@@ -2386,14 +2386,14 @@ class _CitasPageState extends State<CitasPage>
           Icon(
             PhosphorIconsRegular.calendarBlank,
             size: 48,
-            color: Colors.grey.shade400,
+            color: _theme.grey.withValues(alpha: 0.6),
           ),
           const SizedBox(height: 8),
           Text(
             'No hay citas registradas',
             style: Theme.of(
               context,
-            ).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
+            ).textTheme.bodyMedium?.copyWith(color: _theme.grey),
           ),
         ],
       );
@@ -2436,7 +2436,7 @@ class _CitasPageState extends State<CitasPage>
         return Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: _theme.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: estadoColor.withValues(alpha: 0.2),
@@ -2444,7 +2444,7 @@ class _CitasPageState extends State<CitasPage>
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
+                color: _theme.black.withValues(alpha: 0.04),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),

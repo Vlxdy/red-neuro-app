@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
 
 class SkeletonGrid extends StatelessWidget {
   final int rows;
@@ -31,17 +32,18 @@ class SkeletonGrid extends StatelessWidget {
       ),
       itemCount: rows * columns,
       itemBuilder: (context, index) {
-        return _buildSkeletonItem();
+        return _buildSkeletonItem(context);
       },
     );
   }
 
-  Widget _buildSkeletonItem() {
+  Widget _buildSkeletonItem(BuildContext context) {
+    final theme = ThemeController.instance;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 800),
       curve: Curves.easeInOut,
       decoration: BoxDecoration(
-        color: Colors.grey[300], // Color de carga
+        color: theme.monochromatic200, // Color de carga
         borderRadius: BorderRadius.circular(isCircular ? itemWidth / 2 : 10),
       ),
     );
