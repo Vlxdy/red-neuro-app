@@ -10,7 +10,6 @@ class CitaMedica {
   final String? tipoCita;
   final String? estudioId;
   final String? estudioNombre;
-  final String? comentario;
 
   const CitaMedica({
     required this.id,
@@ -24,7 +23,6 @@ class CitaMedica {
     required this.tipoCita,
     required this.estudioId,
     required this.estudioNombre,
-    required this.comentario,
   });
 
   factory CitaMedica.fromJson(Map<String, dynamic> jsonRaw) {
@@ -61,7 +59,6 @@ class CitaMedica {
       estudioNombre: estudioRaw is Map<String, dynamic>
           ? estudioRaw['nombre']?.toString()
           : json['estudioNombre']?.toString(),
-      comentario: json['comentario']?.toString(),
     );
   }
 
@@ -77,7 +74,6 @@ class CitaMedica {
     String? tipoCita,
     String? estudioId,
     String? estudioNombre,
-    String? comentario,
   }) {
     return CitaMedica(
       id: id ?? this.id,
@@ -91,7 +87,6 @@ class CitaMedica {
       tipoCita: tipoCita ?? this.tipoCita,
       estudioId: estudioId ?? this.estudioId,
       estudioNombre: estudioNombre ?? this.estudioNombre,
-      comentario: comentario ?? this.comentario,
     );
   }
 

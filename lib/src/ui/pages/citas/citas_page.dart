@@ -266,7 +266,6 @@ class _CitasPageState extends State<CitasPage>
         id,
         (cita) => cita.copyWith(
           estado: estado.isNotEmpty ? estado : cita.estado,
-          comentario: data['comentario']?.toString(),
         ),
       );
       return;
@@ -291,7 +290,6 @@ class _CitasPageState extends State<CitasPage>
         (cita) => cita.copyWith(
           fechaInicio: _parseDate(data['fechaInicio']),
           fechaFin: _parseDate(data['fechaFin']),
-          comentario: data['comentario']?.toString(),
         ),
       );
     }
@@ -305,7 +303,6 @@ class _CitasPageState extends State<CitasPage>
         id,
         (cita) => cita.copyWith(
           estado: 'CANCELADA',
-          comentario: data['comentario']?.toString(),
         ),
       );
       return;
@@ -636,7 +633,6 @@ class _CitasPageState extends State<CitasPage>
     final medicoController = TextEditingController(
       text: cita?.medicoId ?? '',
     );
-    final comentarioController = TextEditingController();
     String? medicoIdSeleccionado =
         (cita?.medicoId.isNotEmpty ?? false) ? cita?.medicoId : null;
     PersonalMedico? medicoSeleccionado;
@@ -1969,11 +1965,6 @@ class _CitasPageState extends State<CitasPage>
                                     },
                                   ),
                                 if (cita != null) const SizedBox(height: 12),
-                                CustomTextInput(
-                                  title: 'Comentario',
-                                  controller: comentarioController,
-                                  lines: 2,
-                                ),
                               ],
                             ),
                           ),
@@ -2101,8 +2092,6 @@ class _CitasPageState extends State<CitasPage>
         'tipoCita': tipoCita,
         if (tipoCita == 'ESTUDIO' && estudioSeleccionado != null)
           'idEstudio': estudioSeleccionado!.id,
-        if (comentarioController.text.trim().isNotEmpty)
-          'comentario': comentarioController.text.trim(),
       });
     }
 
@@ -2110,15 +2099,11 @@ class _CitasPageState extends State<CitasPage>
       if (estado == 'CANCELADA') {
         _socketClient.emitCancelar({
           'id': cita.id,
-          if (comentarioController.text.trim().isNotEmpty)
-            'comentario': comentarioController.text.trim(),
         });
       } else {
         _socketClient.emitEstado({
           'id': cita.id,
           'estado': estado,
-          if (comentarioController.text.trim().isNotEmpty)
-            'comentario': comentarioController.text.trim(),
         });
       }
     }
