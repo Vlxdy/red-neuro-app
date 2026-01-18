@@ -10,6 +10,7 @@ import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/models/especialidad.dart';
 import 'package:red_neuro_app/src/models/estudio.dart';
+import 'package:red_neuro_app/src/models/paciente.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
@@ -635,6 +636,9 @@ class _CitasPageState extends State<CitasPage>
       text: cita?.medicoId ?? Auth.instance.profile.id ?? '',
     );
     final comentarioController = TextEditingController();
+    Paciente? pacienteSeleccionado;
+    final pacienteFieldKey = GlobalKey<FormFieldState<Paciente>>();
+    final pacienteAutocompleteController = TextEditingController();
     DateTime? fechaInicio = cita?.fechaInicio;
     final baseSeleccionada = fechaBase ?? _selectedDay;
     if (cita == null && baseSeleccionada != null) {
@@ -673,16 +677,22 @@ class _CitasPageState extends State<CitasPage>
     );
     final List<Especialidad> especialidadesDisponibles = [];
     final List<Estudio> estudiosDisponibles = [];
+    final List<Paciente> pacientesDisponibles = [];
     bool especialidadesLoading = false;
     bool estudiosLoading = false;
+    bool pacientesLoading = false;
     bool especialidadesHasMore = true;
     bool estudiosHasMore = true;
+    bool pacientesHasMore = true;
     int especialidadesPage = 1;
     int estudiosPage = 1;
+    int pacientesPage = 1;
     String especialidadesFiltro = '';
     String estudiosFiltro = '';
+    String pacientesFiltro = '';
     Timer? especialidadesDebounce;
     Timer? estudiosDebounce;
+    Timer? pacientesDebounce;
     bool inicializado = false;
 
     final result = await showDialog<bool>(
@@ -760,6 +770,39 @@ class _CitasPageState extends State<CitasPage>
               onUpdated?.call();
             }
 
+            Future<void> cargarPacientes({
+              bool reset = false,
+              void Function()? onUpdated,
+            }) async {
+              if (pacientesLoading) return;
+              setStateDialog(() => pacientesLoading = true);
+              if (reset) {
+                pacientesPage = 1;
+                pacientesHasMore = true;
+                pacientesDisponibles.clear();
+              }
+              final result = await _service.obtenerPacientes(
+                page: pacientesPage,
+                limit: 10,
+                filtro: pacientesFiltro,
+              );
+              if (!mounted) return;
+              setStateDialog(() {
+                if (reset) {
+                  pacientesDisponibles
+                    ..clear()
+                    ..addAll(result.items);
+                } else {
+                  pacientesDisponibles.addAll(result.items);
+                }
+                final total = result.total;
+                pacientesHasMore = pacientesDisponibles.length < total;
+                pacientesPage += 1;
+                pacientesLoading = false;
+              });
+              onUpdated?.call();
+            }
+
             if (!inicializado) {
               inicializado = true;
               unawaited(cargarEspecialidades(reset: true));
@@ -776,6 +819,147 @@ class _CitasPageState extends State<CitasPage>
                   fechaInicio = picked;
                 });
               }
+            }
+
+            Future<void> abrirSelectorPaciente() async {
+              if (pacientesDisponibles.isEmpty && !pacientesLoading) {
+                await cargarPacientes(reset: true);
+              }
+              final seleccion = await showModalBottomSheet<Paciente>(
+                context: context,
+                isScrollControlled: true,
+                builder: (context) {
+                  final searchController = TextEditingController(
+                    text: pacientesFiltro,
+                  );
+                  return StatefulBuilder(
+                    builder: (context, setStateSheet) {
+                      Future<void> cargar({
+                        required bool reset,
+                      }) async {
+                        await cargarPacientes(
+                          reset: reset,
+                          onUpdated: () => setStateSheet(() {}),
+                        );
+                      }
+
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          bottom: MediaQuery.of(context).viewInsets.bottom,
+                        ),
+                        child: SafeArea(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  20,
+                                  16,
+                                  20,
+                                  8,
+                                ),
+                                child: Text(
+                                  'Selecciona un paciente',
+                                  style: Theme.of(context).textTheme.titleMedium,
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 20),
+                                child: TextField(
+                                  controller: searchController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Buscar paciente',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  onChanged: (value) {
+                                    pacientesFiltro = value;
+                                    pacientesDebounce?.cancel();
+                                    pacientesDebounce = Timer(
+                                      const Duration(milliseconds: 300),
+                                      () => cargar(reset: true),
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Flexible(
+                                child: Builder(
+                                  builder: (context) {
+                                    if (pacientesDisponibles.isEmpty &&
+                                        pacientesLoading) {
+                                      return const Center(
+                                        child: CircularProgressIndicator(),
+                                      );
+                                    }
+                                    if (pacientesDisponibles.isEmpty) {
+                                      return const Center(
+                                        child: Text('Sin resultados'),
+                                      );
+                                    }
+                                    return ListView.builder(
+                                      shrinkWrap: true,
+                                      itemCount: pacientesDisponibles.length +
+                                          (pacientesHasMore ? 1 : 0),
+                                      itemBuilder: (context, index) {
+                                        if (index ==
+                                                pacientesDisponibles.length &&
+                                            pacientesHasMore) {
+                                          return Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 8,
+                                            ),
+                                            child: Center(
+                                              child: TextButton.icon(
+                                                onPressed: pacientesLoading
+                                                    ? null
+                                                    : () => cargar(
+                                                          reset: false,
+                                                        ),
+                                                icon: const Icon(
+                                                  Icons.expand_more,
+                                                ),
+                                                label:
+                                                    const Text('Cargar más'),
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                        final option =
+                                            pacientesDisponibles[index];
+                                        return ListTile(
+                                          title: Text(option.nombreCompleto),
+                                          subtitle: (option.nroDocumento
+                                                      ?.isNotEmpty ??
+                                                  false)
+                                              ? Text(
+                                                  'Documento: ${option.nroDocumento}',
+                                                )
+                                              : null,
+                                          onTap: () =>
+                                              Navigator.pop(context, option),
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              );
+              if (seleccion == null) return;
+              setStateDialog(() {
+                pacienteSeleccionado = seleccion;
+                pacienteAutocompleteController.text = seleccion.nombreCompleto;
+              });
+              pacienteFieldKey.currentState?.didChange(seleccion);
             }
 
             Future<void> abrirSelectorEspecialidad() async {
@@ -1062,6 +1246,223 @@ class _CitasPageState extends State<CitasPage>
               });
             }
 
+            Future<Paciente?> abrirNuevoPaciente() async {
+              final formKeyPaciente = GlobalKey<FormState>();
+              final nombresController = TextEditingController();
+              final primerApellidoController = TextEditingController();
+              final segundoApellidoController = TextEditingController();
+              final nroDocumentoController = TextEditingController();
+              final fechaNacimientoController = TextEditingController();
+              final telefonoController = TextEditingController();
+              final observacionController = TextEditingController();
+              DateTime? fechaNacimiento;
+              String? generoSeleccionado;
+              bool guardando = false;
+
+              return showDialog<Paciente>(
+                context: context,
+                builder: (context) {
+                  return StatefulBuilder(
+                    builder: (context, setStatePaciente) {
+                      Future<void> seleccionarFechaNacimiento() async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime(1900),
+                          lastDate: DateTime.now(),
+                        );
+                        if (picked == null) return;
+                        setStatePaciente(() {
+                          fechaNacimiento = picked;
+                          fechaNacimientoController.text =
+                              DateFormat('yyyy-MM-dd').format(picked);
+                        });
+                      }
+
+                      Future<void> guardarPaciente() async {
+                        if (!formKeyPaciente.currentState!.validate()) return;
+                        setStatePaciente(() => guardando = true);
+                        final body = <String, dynamic>{
+                          'nombres': nombresController.text.trim(),
+                          if (primerApellidoController.text.trim().isNotEmpty)
+                            'primerApellido':
+                                primerApellidoController.text.trim(),
+                          if (segundoApellidoController.text.trim().isNotEmpty)
+                            'segundoApellido':
+                                segundoApellidoController.text.trim(),
+                          if (nroDocumentoController.text.trim().isNotEmpty)
+                            'nroDocumento': nroDocumentoController.text.trim(),
+                          if (fechaNacimiento != null)
+                            'fechaNacimiento': DateFormat('yyyy-MM-dd')
+                                .format(fechaNacimiento!),
+                          if (telefonoController.text.trim().isNotEmpty)
+                            'telefono': telefonoController.text.trim(),
+                          if (generoSeleccionado?.trim().isNotEmpty ?? false)
+                            'genero': generoSeleccionado,
+                          if (observacionController.text.trim().isNotEmpty)
+                            'observacion': observacionController.text.trim(),
+                        };
+                        final response = await _service.crearPaciente(body);
+                        final ok = await _handleResponseError(
+                          response,
+                          'No se pudo registrar el paciente.',
+                        );
+                        if (!ok) {
+                          setStatePaciente(() => guardando = false);
+                          return;
+                        }
+                        final raw = response.data['datos'] ??
+                            response.data['data'] ??
+                            response.data;
+                        if (raw is Map<String, dynamic>) {
+                          final paciente = Paciente.fromJson(raw);
+                          showSnackBar(
+                            citasMessenger,
+                            'Paciente creado correctamente',
+                            state: StatusSnackBar.success,
+                            colorText: _theme.white,
+                          );
+                          Navigator.pop(context, paciente);
+                          return;
+                        }
+                        Navigator.pop(context);
+                      }
+
+                      return AlertDialog(
+                        title: const Text('Nuevo paciente'),
+                        content: SingleChildScrollView(
+                          child: Form(
+                            key: formKeyPaciente,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                TextFormField(
+                                  controller: nombresController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Nombres',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  validator: (value) {
+                                    final result = _validarRequerido(
+                                      value,
+                                      'Nombres',
+                                    );
+                                    return result.isEmpty ? null : result;
+                                  },
+                                ),
+                                const SizedBox(height: 12),
+                                TextFormField(
+                                  controller: primerApellidoController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Primer apellido',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                TextFormField(
+                                  controller: segundoApellidoController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Segundo apellido',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                TextFormField(
+                                  controller: nroDocumentoController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Número de documento',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                TextFormField(
+                                  controller: fechaNacimientoController,
+                                  readOnly: true,
+                                  decoration: InputDecoration(
+                                    labelText: 'Fecha de nacimiento',
+                                    border: const OutlineInputBorder(),
+                                    suffixIcon: IconButton(
+                                      icon: const Icon(Icons.event),
+                                      onPressed: seleccionarFechaNacimiento,
+                                    ),
+                                  ),
+                                  onTap: seleccionarFechaNacimiento,
+                                ),
+                                const SizedBox(height: 12),
+                                TextFormField(
+                                  controller: telefonoController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Teléfono',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  keyboardType: TextInputType.phone,
+                                ),
+                                const SizedBox(height: 12),
+                                DropdownButtonFormField<String>(
+                                  value: generoSeleccionado,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Género',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  items: const [
+                                    DropdownMenuItem(
+                                      value: 'F',
+                                      child: Text('Femenino'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'M',
+                                      child: Text('Masculino'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'O',
+                                      child: Text('Otro'),
+                                    ),
+                                  ],
+                                  onChanged: (value) {
+                                    setStatePaciente(
+                                      () => generoSeleccionado = value,
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: 12),
+                                TextFormField(
+                                  controller: observacionController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Observaciones',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  maxLines: 2,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed:
+                                guardando ? null : () => Navigator.pop(context),
+                            child: const Text('Cancelar'),
+                          ),
+                          ElevatedButton(
+                            onPressed: guardando ? null : guardarPaciente,
+                            child: guardando
+                                ? const SizedBox(
+                                    height: 18,
+                                    width: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text('Guardar'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+              );
+            }
+
             return Dialog.fullscreen(
               child: Scaffold(
                 appBar: AppBar(
@@ -1080,6 +1481,89 @@ class _CitasPageState extends State<CitasPage>
                     child: ListView(
                       padding: const EdgeInsets.all(24),
                       children: [
+                        if (cita == null) ...[
+                          Text(
+                            'Paciente',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 12),
+                          Card(
+                            elevation: 0,
+                            color: Colors.grey.shade50,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  FormField<Paciente>(
+                                    key: pacienteFieldKey,
+                                    validator: (_) {
+                                      if (pacienteSeleccionado == null) {
+                                        return 'Selecciona un paciente';
+                                      }
+                                      return null;
+                                    },
+                                    builder: (state) {
+                                      return TextFormField(
+                                        controller:
+                                            pacienteAutocompleteController,
+                                        readOnly: true,
+                                        decoration: InputDecoration(
+                                          labelText: 'Paciente',
+                                          hintText:
+                                              'Selecciona un paciente',
+                                          border: const OutlineInputBorder(),
+                                          errorText: state.errorText,
+                                          suffixIcon:
+                                              pacienteSeleccionado == null
+                                                  ? const Icon(
+                                                      Icons.expand_more,
+                                                    )
+                                                  : IconButton(
+                                                      tooltip: 'Quitar',
+                                                      icon:
+                                                          const Icon(Icons.close),
+                                                      onPressed: () {
+                                                        setStateDialog(() {
+                                                          pacienteSeleccionado =
+                                                              null;
+                                        pacienteAutocompleteController.clear();
+                                                        });
+                                                        state.didChange(null);
+                                                      },
+                                                    ),
+                                        ),
+                                        onTap: abrirSelectorPaciente,
+                                      );
+                                    },
+                                  ),
+                                  const SizedBox(height: 12),
+                                  ElevatedButton.icon(
+                                    onPressed: () async {
+                                      final nuevo =
+                                          await abrirNuevoPaciente();
+                                      if (nuevo == null) return;
+                                      setStateDialog(() {
+                                        pacienteSeleccionado = nuevo;
+                                        pacienteAutocompleteController.text =
+                                            nuevo.nombreCompleto;
+                                        pacientesDisponibles.insert(0, nuevo);
+                                      });
+                                      pacienteFieldKey.currentState
+                                          ?.didChange(nuevo);
+                                    },
+                                    icon: const Icon(Icons.person_add),
+                                    label: const Text('Registrar paciente'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
                         Text(
                           'Datos de la cita',
                           style: Theme.of(context).textTheme.titleMedium,
@@ -1095,31 +1579,34 @@ class _CitasPageState extends State<CitasPage>
                             padding: const EdgeInsets.all(16),
                             child: Column(
                               children: [
-                        FormField<Especialidad>(
-                          validator: (_) {
-                            if (especialidadSeleccionada == null) {
-                              return 'Selecciona una especialidad';
-                            }
-                            return null;
-                          },
-                          builder: (state) {
-                            return TextFormField(
-                              controller: especialidadController,
-                              readOnly: true,
-                              decoration: InputDecoration(
-                                labelText: 'Especialidad',
-                                hintText: 'Selecciona una especialidad',
-                                border: const OutlineInputBorder(),
-                                errorText: state.errorText,
-                                suffixIcon: const Icon(Icons.expand_more),
-                              ),
-                              onTap: () async {
-                                await abrirSelectorEspecialidad();
-                                state.didChange(especialidadSeleccionada);
-                              },
-                            );
-                          },
-                        ),
+                                FormField<Especialidad>(
+                                  validator: (_) {
+                                    if (especialidadSeleccionada == null) {
+                                      return 'Selecciona una especialidad';
+                                    }
+                                    return null;
+                                  },
+                                  builder: (state) {
+                                    return TextFormField(
+                                      controller: especialidadController,
+                                      readOnly: true,
+                                      decoration: InputDecoration(
+                                        labelText: 'Especialidad',
+                                        hintText: 'Selecciona una especialidad',
+                                        border: const OutlineInputBorder(),
+                                        errorText: state.errorText,
+                                        suffixIcon:
+                                            const Icon(Icons.expand_more),
+                                      ),
+                                      onTap: () async {
+                                        await abrirSelectorEspecialidad();
+                                        state.didChange(
+                                          especialidadSeleccionada,
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
                                 const SizedBox(height: 16),
                                 DropdownButtonFormField<String>(
                                   value: tipoCita,
@@ -1316,6 +1803,16 @@ class _CitasPageState extends State<CitasPage>
                                     );
                                     return;
                                   }
+                                  if (cita == null &&
+                                      pacienteSeleccionado == null) {
+                                    showSnackBar(
+                                      citasMessenger,
+                                      'Selecciona un paciente',
+                                      state: StatusSnackBar.error,
+                                      colorText: _theme.white,
+                                    );
+                                    return;
+                                  }
                                   Navigator.pop(context, true);
                                 },
                                 child: Text(
@@ -1338,6 +1835,7 @@ class _CitasPageState extends State<CitasPage>
 
     especialidadesDebounce?.cancel();
     estudiosDebounce?.cancel();
+    pacientesDebounce?.cancel();
     if (result != true) return;
 
     final detalle = detalleController.text.trim();
@@ -1350,6 +1848,7 @@ class _CitasPageState extends State<CitasPage>
         'detalle': detalle,
         'fechaInicio': fechaInicio!.toUtc().toIso8601String(),
         'idMedico': medicoId,
+        if (pacienteSeleccionado != null) 'idPaciente': pacienteSeleccionado?.id,
         'idEspecialidad': especialidadId,
         'tipoCita': tipoCita,
         if (tipoCita == 'ESTUDIO' && estudioSeleccionado != null)
