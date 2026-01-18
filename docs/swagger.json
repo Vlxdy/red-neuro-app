@@ -3327,6 +3327,337 @@
         ]
       }
     },
+    "/pacientes": {
+      "get": {
+        "operationId": "PacienteController_listar",
+        "parameters": [
+          {
+            "name": "limite",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 10,
+              "maximum": 50,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pagina",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "filtro",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ordenRaw",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "number"
+                            },
+                            "filas": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/PacienteResponseDto"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lista los pacientes registrados",
+        "tags": [
+          "Pacientes"
+        ]
+      },
+      "post": {
+        "operationId": "PacienteController_crear",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearPacienteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/PacienteResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Crea un nuevo paciente",
+        "tags": [
+          "Pacientes"
+        ]
+      }
+    },
+    "/pacientes/{id}": {
+      "get": {
+        "operationId": "PacienteController_obtenerPorId",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/PacienteResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Obtiene el detalle de un paciente",
+        "tags": [
+          "Pacientes"
+        ]
+      },
+      "patch": {
+        "operationId": "PacienteController_actualizar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActualizarPacienteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/PacienteResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Actualiza la información de un paciente",
+        "tags": [
+          "Pacientes"
+        ]
+      },
+      "delete": {
+        "operationId": "PacienteController_eliminar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/PacienteResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Elimina un paciente",
+        "tags": [
+          "Pacientes"
+        ]
+      }
+    },
+    "/pacientes/{id}/cambiar-estado": {
+      "patch": {
+        "operationId": "PacienteController_cambiarEstado",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/PacienteResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cambiar estado del paciente",
+        "tags": [
+          "Pacientes"
+        ]
+      }
+    },
     "/docs/errors/estructura": {
       "get": {
         "description": "Todos los errores de la API siguen esta estructura JSON.",
@@ -4358,6 +4689,66 @@
           "nombres"
         ]
       },
+      "PacienteResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identificador único del paciente",
+            "example": "100"
+          },
+          "nombres": {
+            "type": "string",
+            "description": "Nombres del paciente",
+            "example": "Gabriela"
+          },
+          "primerApellido": {
+            "type": "object",
+            "description": "Primer apellido del paciente",
+            "example": "Ramos"
+          },
+          "segundoApellido": {
+            "type": "object",
+            "description": "Segundo apellido del paciente",
+            "example": "Paredes"
+          },
+          "nroDocumento": {
+            "type": "object",
+            "description": "Número de documento del paciente",
+            "example": "4022331"
+          },
+          "fechaNacimiento": {
+            "type": "object",
+            "description": "Fecha de nacimiento del paciente",
+            "example": "1994-03-12"
+          },
+          "telefono": {
+            "type": "object",
+            "description": "Teléfono de contacto del paciente",
+            "example": "71234567"
+          },
+          "genero": {
+            "type": "object",
+            "description": "Género del paciente",
+            "example": "F"
+          },
+          "observacion": {
+            "type": "object",
+            "description": "Observaciones o notas adicionales del paciente",
+            "example": "Prefiere atención en horario de mañana."
+          },
+          "estado": {
+            "type": "string",
+            "description": "Estado del paciente",
+            "example": "ACTIVO"
+          }
+        },
+        "required": [
+          "id",
+          "nombres",
+          "estado"
+        ]
+      },
       "EspecialidadCitaDto": {
         "type": "object",
         "properties": {
@@ -4558,7 +4949,7 @@
             "description": "Datos del paciente asignado a la cita",
             "allOf": [
               {
-                "$ref": "#/components/schemas/PersonalResponseDto"
+                "$ref": "#/components/schemas/PacienteResponseDto"
               }
             ]
           },
@@ -5074,6 +5465,104 @@
           "estado": {
             "type": "string",
             "description": "Permite reactivar o desactivar la especialidad",
+            "example": "ACTIVO"
+          }
+        }
+      },
+      "CrearPacienteDto": {
+        "type": "object",
+        "properties": {
+          "nombres": {
+            "type": "string",
+            "description": "Nombres del paciente",
+            "example": "Gabriela"
+          },
+          "primerApellido": {
+            "type": "string",
+            "description": "Primer apellido del paciente",
+            "example": "Ramos"
+          },
+          "segundoApellido": {
+            "type": "string",
+            "description": "Segundo apellido del paciente",
+            "example": "Paredes"
+          },
+          "nroDocumento": {
+            "type": "string",
+            "description": "Número de documento del paciente",
+            "example": "4022331"
+          },
+          "fechaNacimiento": {
+            "type": "string",
+            "description": "Fecha de nacimiento del paciente (ISO)",
+            "example": "1994-03-12"
+          },
+          "telefono": {
+            "type": "string",
+            "description": "Teléfono de contacto del paciente",
+            "example": "71234567"
+          },
+          "genero": {
+            "type": "string",
+            "description": "Género del paciente",
+            "example": "F"
+          },
+          "observacion": {
+            "type": "string",
+            "description": "Observaciones o notas adicionales del paciente",
+            "example": "Prefiere atención en horario de mañana."
+          }
+        },
+        "required": [
+          "nombres"
+        ]
+      },
+      "ActualizarPacienteDto": {
+        "type": "object",
+        "properties": {
+          "nombres": {
+            "type": "string",
+            "description": "Nombres del paciente",
+            "example": "Gabriela"
+          },
+          "primerApellido": {
+            "type": "string",
+            "description": "Primer apellido del paciente",
+            "example": "Ramos"
+          },
+          "segundoApellido": {
+            "type": "string",
+            "description": "Segundo apellido del paciente",
+            "example": "Paredes"
+          },
+          "nroDocumento": {
+            "type": "string",
+            "description": "Número de documento del paciente",
+            "example": "4022331"
+          },
+          "fechaNacimiento": {
+            "type": "string",
+            "description": "Fecha de nacimiento del paciente (ISO)",
+            "example": "1994-03-12"
+          },
+          "telefono": {
+            "type": "string",
+            "description": "Teléfono de contacto del paciente",
+            "example": "71234567"
+          },
+          "genero": {
+            "type": "string",
+            "description": "Género del paciente",
+            "example": "F"
+          },
+          "observacion": {
+            "type": "string",
+            "description": "Observaciones o notas adicionales del paciente",
+            "example": "Prefiere atención en horario de mañana."
+          },
+          "estado": {
+            "type": "string",
+            "description": "Permite activar o desactivar al paciente",
             "example": "ACTIVO"
           }
         }
