@@ -11,6 +11,7 @@ import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/models/especialidad.dart';
 import 'package:red_neuro_app/src/models/estudio.dart';
 import 'package:red_neuro_app/src/models/paciente.dart';
+import 'package:red_neuro_app/src/models/personal_medico.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
@@ -633,9 +634,12 @@ class _CitasPageState extends State<CitasPage>
     final formKey = GlobalKey<FormState>();
     final detalleController = TextEditingController(text: cita?.detalle ?? '');
     final medicoController = TextEditingController(
-      text: cita?.medicoId ?? Auth.instance.profile.id ?? '',
+      text: cita?.medicoId ?? '',
     );
     final comentarioController = TextEditingController();
+    String? medicoIdSeleccionado =
+        (cita?.medicoId.isNotEmpty ?? false) ? cita?.medicoId : null;
+    PersonalMedico? medicoSeleccionado;
     Paciente? pacienteSeleccionado;
     final pacienteFieldKey = GlobalKey<FormFieldState<Paciente>>();
     final pacienteAutocompleteController = TextEditingController();
@@ -678,21 +682,27 @@ class _CitasPageState extends State<CitasPage>
     final List<Especialidad> especialidadesDisponibles = [];
     final List<Estudio> estudiosDisponibles = [];
     final List<Paciente> pacientesDisponibles = [];
+    final List<PersonalMedico> medicosDisponibles = [];
     bool especialidadesLoading = false;
     bool estudiosLoading = false;
     bool pacientesLoading = false;
+    bool medicosLoading = false;
     bool especialidadesHasMore = true;
     bool estudiosHasMore = true;
     bool pacientesHasMore = true;
+    bool medicosHasMore = true;
     int especialidadesPage = 1;
     int estudiosPage = 1;
     int pacientesPage = 1;
+    int medicosPage = 1;
     String especialidadesFiltro = '';
     String estudiosFiltro = '';
     String pacientesFiltro = '';
+    String medicosFiltro = '';
     Timer? especialidadesDebounce;
     Timer? estudiosDebounce;
     Timer? pacientesDebounce;
+    Timer? medicosDebounce;
     bool inicializado = false;
 
     final result = await showDialog<bool>(
@@ -799,6 +809,39 @@ class _CitasPageState extends State<CitasPage>
                 pacientesHasMore = pacientesDisponibles.length < total;
                 pacientesPage += 1;
                 pacientesLoading = false;
+              });
+              onUpdated?.call();
+            }
+
+            Future<void> cargarMedicos({
+              bool reset = false,
+              void Function()? onUpdated,
+            }) async {
+              if (medicosLoading) return;
+              setStateDialog(() => medicosLoading = true);
+              if (reset) {
+                medicosPage = 1;
+                medicosHasMore = true;
+                medicosDisponibles.clear();
+              }
+              final result = await _service.obtenerPersonalMedico(
+                page: medicosPage,
+                limit: 10,
+                filtro: medicosFiltro,
+              );
+              if (!mounted) return;
+              setStateDialog(() {
+                if (reset) {
+                  medicosDisponibles
+                    ..clear()
+                    ..addAll(result.items);
+                } else {
+                  medicosDisponibles.addAll(result.items);
+                }
+                final total = result.total;
+                medicosHasMore = medicosDisponibles.length < total;
+                medicosPage += 1;
+                medicosLoading = false;
               });
               onUpdated?.call();
             }
@@ -960,6 +1003,146 @@ class _CitasPageState extends State<CitasPage>
                 pacienteAutocompleteController.text = seleccion.nombreCompleto;
               });
               pacienteFieldKey.currentState?.didChange(seleccion);
+            }
+
+            Future<void> abrirSelectorMedico() async {
+              if (medicosDisponibles.isEmpty && !medicosLoading) {
+                await cargarMedicos(reset: true);
+              }
+              final seleccion = await showModalBottomSheet<PersonalMedico>(
+                context: context,
+                isScrollControlled: true,
+                builder: (context) {
+                  final searchController = TextEditingController(
+                    text: medicosFiltro,
+                  );
+                  return StatefulBuilder(
+                    builder: (context, setStateSheet) {
+                      Future<void> cargar({
+                        required bool reset,
+                      }) async {
+                        await cargarMedicos(
+                          reset: reset,
+                          onUpdated: () => setStateSheet(() {}),
+                        );
+                      }
+
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          bottom: MediaQuery.of(context).viewInsets.bottom,
+                        ),
+                        child: SafeArea(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  20,
+                                  16,
+                                  20,
+                                  8,
+                                ),
+                                child: Text(
+                                  'Selecciona un médico',
+                                  style: Theme.of(context).textTheme.titleMedium,
+                                ),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 20),
+                                child: TextField(
+                                  controller: searchController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Buscar médico',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  onChanged: (value) {
+                                    medicosFiltro = value;
+                                    medicosDebounce?.cancel();
+                                    medicosDebounce = Timer(
+                                      const Duration(milliseconds: 300),
+                                      () => cargar(reset: true),
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Flexible(
+                                child: Builder(
+                                  builder: (context) {
+                                    if (medicosDisponibles.isEmpty &&
+                                        medicosLoading) {
+                                      return const Center(
+                                        child: CircularProgressIndicator(),
+                                      );
+                                    }
+                                    if (medicosDisponibles.isEmpty) {
+                                      return const Center(
+                                        child: Text('Sin resultados'),
+                                      );
+                                    }
+                                    return ListView.builder(
+                                      shrinkWrap: true,
+                                      itemCount: medicosDisponibles.length +
+                                          (medicosHasMore ? 1 : 0),
+                                      itemBuilder: (context, index) {
+                                        if (index ==
+                                                medicosDisponibles.length &&
+                                            medicosHasMore) {
+                                          return Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 8,
+                                            ),
+                                            child: Center(
+                                              child: TextButton.icon(
+                                                onPressed: medicosLoading
+                                                    ? null
+                                                    : () => cargar(
+                                                          reset: false,
+                                                        ),
+                                                icon: const Icon(
+                                                  Icons.expand_more,
+                                                ),
+                                                label:
+                                                    const Text('Cargar más'),
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                        final option = medicosDisponibles[index];
+                                        return ListTile(
+                                          title: Text(option.nombreCompleto),
+                                          subtitle: (option.nroDocumento
+                                                      ?.isNotEmpty ??
+                                                  false)
+                                              ? Text(
+                                                  'Documento: ${option.nroDocumento}',
+                                                )
+                                              : null,
+                                          onTap: () =>
+                                              Navigator.pop(context, option),
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              );
+              if (seleccion == null) return;
+              setStateDialog(() {
+                medicoSeleccionado = seleccion;
+                medicoIdSeleccionado = seleccion.id;
+                medicoController.text = seleccion.nombreCompleto;
+              });
             }
 
             Future<void> abrirSelectorEspecialidad() async {
@@ -1498,18 +1681,12 @@ class _CitasPageState extends State<CitasPage>
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
-                                  FormField<Paciente>(
-                                    key: pacienteFieldKey,
-                                    validator: (_) {
-                                      if (pacienteSeleccionado == null) {
-                                        return 'Selecciona un paciente';
-                                      }
-                                      return null;
-                                    },
-                                    builder: (state) {
-                                      return TextFormField(
-                                        controller:
-                                            pacienteAutocompleteController,
+                                FormField<Paciente>(
+                                  key: pacienteFieldKey,
+                                  builder: (state) {
+                                    return TextFormField(
+                                      controller:
+                                          pacienteAutocompleteController,
                                         readOnly: true,
                                         decoration: InputDecoration(
                                           labelText: 'Paciente',
@@ -1719,11 +1896,46 @@ class _CitasPageState extends State<CitasPage>
                                   validate: _validarRequerido,
                                 ),
                                 const SizedBox(height: 12),
-                                CustomTextInput(
-                                  title: 'Médico (ID)',
-                                  controller: medicoController,
-                                  requiredData: true,
-                                  validate: _validarRequerido,
+                                FormField<PersonalMedico>(
+                                  builder: (state) {
+                                    return TextFormField(
+                                      controller: medicoController,
+                                      readOnly: true,
+                                      decoration: InputDecoration(
+                                        labelText: 'Médico',
+                                        hintText:
+                                            'Selecciona un médico (opcional)',
+                                        border: const OutlineInputBorder(),
+                                        errorText: state.errorText,
+                                        suffixIcon:
+                                            medicoIdSeleccionado == null
+                                                ? const Icon(
+                                                    Icons.expand_more,
+                                                  )
+                                                : IconButton(
+                                                    tooltip: 'Quitar',
+                                                    icon: const Icon(
+                                                      Icons.close,
+                                                    ),
+                                                    onPressed: () {
+                                                      setStateDialog(() {
+                                                        medicoSeleccionado =
+                                                            null;
+                                                        medicoIdSeleccionado =
+                                                            null;
+                                                        medicoController
+                                                            .clear();
+                                                      });
+                                                      state.didChange(null);
+                                                    },
+                                                  ),
+                                      ),
+                                      onTap: () async {
+                                        await abrirSelectorMedico();
+                                        state.didChange(medicoSeleccionado);
+                                      },
+                                    );
+                                  },
                                 ),
                                 const SizedBox(height: 12),
                                 Row(
@@ -1803,16 +2015,6 @@ class _CitasPageState extends State<CitasPage>
                                     );
                                     return;
                                   }
-                                  if (cita == null &&
-                                      pacienteSeleccionado == null) {
-                                    showSnackBar(
-                                      citasMessenger,
-                                      'Selecciona un paciente',
-                                      state: StatusSnackBar.error,
-                                      colorText: _theme.white,
-                                    );
-                                    return;
-                                  }
                                   Navigator.pop(context, true);
                                 },
                                 child: Text(
@@ -1836,10 +2038,11 @@ class _CitasPageState extends State<CitasPage>
     especialidadesDebounce?.cancel();
     estudiosDebounce?.cancel();
     pacientesDebounce?.cancel();
+    medicosDebounce?.cancel();
     if (result != true) return;
 
     final detalle = detalleController.text.trim();
-    final medicoId = medicoController.text.trim();
+    final medicoId = (medicoIdSeleccionado ?? '').trim();
     final especialidadId = especialidadSeleccionada?.id ?? '';
 
     if (cita == null) {
@@ -1847,7 +2050,7 @@ class _CitasPageState extends State<CitasPage>
       final response = await _service.crearCita({
         'detalle': detalle,
         'fechaInicio': fechaInicio!.toUtc().toIso8601String(),
-        'idMedico': medicoId,
+        if (medicoId.isNotEmpty) 'idMedico': medicoId,
         if (pacienteSeleccionado != null) 'idPaciente': pacienteSeleccionado?.id,
         'idEspecialidad': especialidadId,
         'tipoCita': tipoCita,
