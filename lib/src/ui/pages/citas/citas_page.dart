@@ -693,6 +693,7 @@ class _CitasPageState extends State<CitasPage>
     Timer? estudiosDebounce;
     Timer? pacientesDebounce;
     bool inicializado = false;
+    bool pacienteFocusListenerReady = false;
 
     final result = await showDialog<bool>(
       context: context,
@@ -1339,6 +1340,229 @@ class _CitasPageState extends State<CitasPage>
                     child: ListView(
                       padding: const EdgeInsets.all(24),
                       children: [
+                        if (cita == null) ...[
+                          Text(
+                            'Paciente',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 12),
+                          Card(
+                            elevation: 0,
+                            color: Colors.grey.shade50,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  FormField<Paciente>(
+                                    validator: (_) {
+                                      if (pacienteSeleccionado == null) {
+                                        return 'Selecciona un paciente';
+                                      }
+                                      return null;
+                                    },
+                                    builder: (state) {
+                                      return Autocomplete<Paciente>(
+                                        displayStringForOption: (option) =>
+                                            option.nombreCompleto,
+                                        optionsBuilder:
+                                            (TextEditingValue value) {
+                                          return pacientesDisponibles;
+                                        },
+                                        fieldViewBuilder: (
+                                          context,
+                                          textController,
+                                          focusNode,
+                                          onFieldSubmitted,
+                                        ) {
+                                          pacienteAutocompleteController =
+                                              textController;
+                                          if (!pacienteFocusListenerReady) {
+                                            pacienteFocusListenerReady = true;
+                                            focusNode.addListener(() {
+                                              if (!focusNode.hasFocus) return;
+                                              if (pacientesDisponibles.isEmpty &&
+                                                  !pacientesLoading) {
+                                                pacientesFiltro =
+                                                    textController.text.trim();
+                                                unawaited(
+                                                  cargarPacientes(reset: true),
+                                                );
+                                              }
+                                            });
+                                          }
+                                          return TextFormField(
+                                            controller: textController,
+                                            focusNode: focusNode,
+                                            decoration: InputDecoration(
+                                              labelText: 'Paciente',
+                                              hintText:
+                                                  'Busca por nombre o documento',
+                                              border:
+                                                  const OutlineInputBorder(),
+                                              errorText: state.errorText,
+                                              suffixIcon: pacientesLoading
+                                                  ? const Padding(
+                                                      padding:
+                                                          EdgeInsets.all(12),
+                                                      child: SizedBox(
+                                                        height: 16,
+                                                        width: 16,
+                                                        child:
+                                                            CircularProgressIndicator(
+                                                          strokeWidth: 2,
+                                                        ),
+                                                      ),
+                                                    )
+                                                  : const Icon(Icons.search),
+                                            ),
+                                            onTap: () {
+                                              if (pacientesDisponibles.isEmpty &&
+                                                  !pacientesLoading) {
+                                                pacientesFiltro =
+                                                    textController.text.trim();
+                                                unawaited(
+                                                  cargarPacientes(reset: true),
+                                                );
+                                              }
+                                            },
+                                            onChanged: (value) {
+                                              pacienteSeleccionado = null;
+                                              state.didChange(null);
+                                              pacientesFiltro = value;
+                                              pacientesDebounce?.cancel();
+                                              pacientesDebounce = Timer(
+                                                const Duration(
+                                                  milliseconds: 300,
+                                                ),
+                                                () => cargarPacientes(
+                                                  reset: true,
+                                                ),
+                                              );
+                                            },
+                                          );
+                                        },
+                                        onSelected: (selection) {
+                                          setStateDialog(() {
+                                            pacienteSeleccionado = selection;
+                                            pacienteAutocompleteController
+                                                ?.text =
+                                                    selection.nombreCompleto;
+                                          });
+                                          state.didChange(selection);
+                                        },
+                                        optionsViewBuilder: (
+                                          context,
+                                          onSelected,
+                                          options,
+                                        ) {
+                                          final opciones = options.toList();
+                                          if (opciones.isEmpty) {
+                                            return Align(
+                                              alignment: Alignment.topLeft,
+                                              child: Material(
+                                                elevation: 4,
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(12),
+                                                  child: Text(
+                                                    pacientesLoading
+                                                        ? 'Buscando pacientes...'
+                                                        : 'Sin resultados',
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                          return Align(
+                                            alignment: Alignment.topLeft,
+                                            child: Material(
+                                              elevation: 4,
+                                              child: ConstrainedBox(
+                                                constraints:
+                                                    const BoxConstraints(
+                                                  maxHeight: 260,
+                                                  minWidth: 320,
+                                                ),
+                                                child: ListView.builder(
+                                                  padding: EdgeInsets.zero,
+                                                  shrinkWrap: true,
+                                                  itemCount: opciones.length +
+                                                      (pacientesHasMore ? 1 : 0),
+                                                  itemBuilder:
+                                                      (context, index) {
+                                                    if (index ==
+                                                            opciones.length &&
+                                                        pacientesHasMore) {
+                                                      return TextButton.icon(
+                                                        onPressed:
+                                                            pacientesLoading
+                                                                ? null
+                                                                : () =>
+                                                                    cargarPacientes(
+                                                                      reset:
+                                                                          false,
+                                                                    ),
+                                                        icon: const Icon(
+                                                          Icons.expand_more,
+                                                        ),
+                                                        label: const Text(
+                                                          'Cargar más',
+                                                        ),
+                                                      );
+                                                    }
+                                                    final option =
+                                                        opciones[index];
+                                                    return ListTile(
+                                                      title: Text(
+                                                        option.nombreCompleto,
+                                                      ),
+                                                      subtitle: (option
+                                                                      .nroDocumento
+                                                                      ?.isNotEmpty ??
+                                                                  false)
+                                                          ? Text(
+                                                              'Documento: ${option.nroDocumento}',
+                                                            )
+                                                          : null,
+                                                      onTap: () =>
+                                                          onSelected(option),
+                                                    );
+                                                  },
+                                                ),
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                      );
+                                    },
+                                  ),
+                                  const SizedBox(height: 12),
+                                  ElevatedButton.icon(
+                                    onPressed: () async {
+                                      final nuevo =
+                                          await abrirNuevoPaciente();
+                                      if (nuevo == null) return;
+                                      setStateDialog(() {
+                                        pacienteSeleccionado = nuevo;
+                                        pacienteAutocompleteController?.text =
+                                            nuevo.nombreCompleto;
+                                        pacientesDisponibles.insert(0, nuevo);
+                                      });
+                                      state.didChange(nuevo);
+                                    },
+                                    icon: const Icon(Icons.person_add),
+                                    label: const Text('Registrar paciente'),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
                         Text(
                           'Datos de la cita',
                           style: Theme.of(context).textTheme.titleMedium,
@@ -1354,233 +1578,6 @@ class _CitasPageState extends State<CitasPage>
                             padding: const EdgeInsets.all(16),
                             child: Column(
                               children: [
-                                if (cita == null) ...[
-                                  FormField<Paciente>(
-                                    validator: (_) {
-                                      if (pacienteSeleccionado == null) {
-                                        return 'Selecciona un paciente';
-                                      }
-                                      return null;
-                                    },
-                                    builder: (state) {
-                                      return Row(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Expanded(
-                                            child: Autocomplete<Paciente>(
-                                              displayStringForOption:
-                                                  (option) =>
-                                                      option.nombreCompleto,
-                                              optionsBuilder:
-                                                  (TextEditingValue value) {
-                                                if (value.text
-                                                    .trim()
-                                                    .isEmpty) {
-                                                  return const Iterable<
-                                                      Paciente>.empty();
-                                                }
-                                                return pacientesDisponibles;
-                                              },
-                                              fieldViewBuilder: (
-                                                context,
-                                                textController,
-                                                focusNode,
-                                                onFieldSubmitted,
-                                              ) {
-                                                pacienteAutocompleteController =
-                                                    textController;
-                                                return TextFormField(
-                                                  controller: textController,
-                                                  focusNode: focusNode,
-                                                  decoration: InputDecoration(
-                                                    labelText: 'Paciente',
-                                                    hintText:
-                                                        'Busca por nombre o documento',
-                                                    border:
-                                                        const OutlineInputBorder(),
-                                                    errorText: state.errorText,
-                                                    suffixIcon: pacientesLoading
-                                                        ? const Padding(
-                                                            padding:
-                                                                EdgeInsets.all(
-                                                              12,
-                                                            ),
-                                                            child: SizedBox(
-                                                              height: 16,
-                                                              width: 16,
-                                                              child:
-                                                                  CircularProgressIndicator(
-                                                                strokeWidth: 2,
-                                                              ),
-                                                            ),
-                                                          )
-                                                        : const Icon(
-                                                            Icons.search,
-                                                          ),
-                                                  ),
-                                                  onChanged: (value) {
-                                                    pacienteSeleccionado = null;
-                                                    state.didChange(null);
-                                                    pacientesFiltro = value;
-                                                    pacientesDebounce?.cancel();
-                                                    if (value
-                                                        .trim()
-                                                        .isEmpty) {
-                                                      setStateDialog(() {
-                                                        pacientesDisponibles
-                                                            .clear();
-                                                        pacientesHasMore = true;
-                                                        pacientesLoading = false;
-                                                      });
-                                                      return;
-                                                    }
-                                                    pacientesDebounce = Timer(
-                                                      const Duration(
-                                                        milliseconds: 300,
-                                                      ),
-                                                      () =>
-                                                          cargarPacientes(
-                                                            reset: true,
-                                                          ),
-                                                    );
-                                                  },
-                                                );
-                                              },
-                                              onSelected: (selection) {
-                                                setStateDialog(() {
-                                                  pacienteSeleccionado =
-                                                      selection;
-                                                  pacienteAutocompleteController
-                                                      ?.text = selection
-                                                          .nombreCompleto;
-                                                });
-                                                state.didChange(selection);
-                                              },
-                                              optionsViewBuilder: (
-                                                context,
-                                                onSelected,
-                                                options,
-                                              ) {
-                                                final opciones =
-                                                    options.toList();
-                                                if (opciones.isEmpty) {
-                                                  return Align(
-                                                    alignment: Alignment.topLeft,
-                                                    child: Material(
-                                                      elevation: 4,
-                                                      child: Padding(
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .all(12),
-                                                        child: Text(
-                                                          pacientesLoading
-                                                              ? 'Buscando pacientes...'
-                                                              : 'Sin resultados',
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  );
-                                                }
-                                                return Align(
-                                                  alignment: Alignment.topLeft,
-                                                  child: Material(
-                                                    elevation: 4,
-                                                    child: ConstrainedBox(
-                                                      constraints:
-                                                          const BoxConstraints(
-                                                        maxHeight: 260,
-                                                        minWidth: 320,
-                                                      ),
-                                                      child: ListView.builder(
-                                                        padding: EdgeInsets.zero,
-                                                        shrinkWrap: true,
-                                                        itemCount:
-                                                            opciones.length +
-                                                                (pacientesHasMore
-                                                                    ? 1
-                                                                    : 0),
-                                                        itemBuilder:
-                                                            (context, index) {
-                                                          if (index ==
-                                                                  opciones
-                                                                      .length &&
-                                                              pacientesHasMore) {
-                                                            return TextButton
-                                                                .icon(
-                                                              onPressed:
-                                                                  pacientesLoading
-                                                                      ? null
-                                                                      : () =>
-                                                                          cargarPacientes(
-                                                                            reset:
-                                                                                false,
-                                                                          ),
-                                                              icon: const Icon(
-                                                                Icons
-                                                                    .expand_more,
-                                                              ),
-                                                              label: const Text(
-                                                                'Cargar más',
-                                                              ),
-                                                            );
-                                                          }
-                                                          final option =
-                                                              opciones[index];
-                                                          return ListTile(
-                                                            title: Text(
-                                                              option
-                                                                  .nombreCompleto,
-                                                            ),
-                                                            subtitle: (option
-                                                                            .nroDocumento
-                                                                            ?.isNotEmpty ??
-                                                                        false)
-                                                                ? Text(
-                                                                    'Documento: ${option.nroDocumento}',
-                                                                  )
-                                                                : null,
-                                                            onTap: () =>
-                                                                onSelected(
-                                                              option,
-                                                            ),
-                                                          );
-                                                        },
-                                                      ),
-                                                    ),
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          ElevatedButton.icon(
-                                            onPressed: () async {
-                                              final nuevo =
-                                                  await abrirNuevoPaciente();
-                                              if (nuevo == null) return;
-                                              setStateDialog(() {
-                                                pacienteSeleccionado = nuevo;
-                                                pacienteAutocompleteController
-                                                    ?.text =
-                                                        nuevo.nombreCompleto;
-                                                pacientesDisponibles.insert(
-                                                  0,
-                                                  nuevo,
-                                                );
-                                              });
-                                              state.didChange(nuevo);
-                                            },
-                                            icon:
-                                                const Icon(Icons.person_add),
-                                            label: const Text('Nuevo'),
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  ),
-                                  const SizedBox(height: 16),
-                                ],
                                 FormField<Especialidad>(
                                   validator: (_) {
                                     if (especialidadSeleccionada == null) {
