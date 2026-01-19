@@ -168,72 +168,77 @@ class _AgendaWeekCalendar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeInOut,
-      height: isCollapsed ? 0 : 118,
-      child: TableCalendar<CitaMedica>(
-        locale: 'es_ES',
-        firstDay: DateTime.utc(2020, 1, 1),
-        lastDay: DateTime.utc(2100, 12, 31),
-        focusedDay: agendaFocusedDay,
-        calendarFormat: CalendarFormat.week,
-        availableCalendarFormats: const {
-          CalendarFormat.week: 'Semana',
-        },
-        startingDayOfWeek: StartingDayOfWeek.monday,
-        selectedDayPredicate: (day) => isSameDay(agendaDay, day),
-        headerVisible: !isCollapsed,
-        rowHeight: 30,
-        daysOfWeekHeight: 20,
-        eventLoader: (day) {
-          final key = DateTime(day.year, day.month, day.day);
-          return citasAgendaPorDia[key] ?? [];
-        },
-        headerStyle: HeaderStyle(
-          titleTextStyle: Theme.of(context).textTheme.labelLarge ??
-              const TextStyle(fontWeight: FontWeight.w600),
-          titleCentered: false,
-          formatButtonVisible: false,
-          leftChevronIcon:
-              Icon(Icons.chevron_left, size: 18, color: theme.primary),
-          rightChevronIcon:
-              Icon(Icons.chevron_right, size: 18, color: theme.primary),
-          headerPadding: EdgeInsets.zero,
-          leftChevronMargin: EdgeInsets.zero,
-          rightChevronMargin: EdgeInsets.zero,
-        ),
-        onDaySelected: onAgendaDaySelected,
-        onPageChanged: onPageChanged,
-        daysOfWeekStyle: DaysOfWeekStyle(
-          dowTextFormatter: (date, locale) =>
-              DateFormat.E(locale).format(date)[0].toUpperCase(),
-          weekdayStyle: TextStyle(
-            color: theme.primary,
-            fontWeight: FontWeight.w600,
-          ),
-          weekendStyle: TextStyle(
-            color: theme.black.withValues(alpha: 0.54),
-          ),
-        ),
-        calendarStyle: CalendarStyle(
-          outsideDaysVisible: false,
-          cellMargin: EdgeInsets.zero,
-          cellPadding: EdgeInsets.zero,
-          markerSize: 5,
-          markersAlignment: Alignment.bottomCenter,
-          markerMargin: EdgeInsets.zero,
-          markerDecoration: BoxDecoration(
-            color: theme.secondary,
-            shape: BoxShape.circle,
-          ),
-          todayDecoration: BoxDecoration(
-            color: theme.primary.withValues(alpha: 0.2),
-            shape: BoxShape.circle,
-          ),
-          selectedDecoration: BoxDecoration(
-            color: theme.primary,
-            shape: BoxShape.circle,
+    return ClipRect(
+      child: AnimatedSize(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeInOut,
+        child: Align(
+          alignment: Alignment.topCenter,
+          heightFactor: isCollapsed ? 0 : 1,
+          child: TableCalendar<CitaMedica>(
+            locale: 'es_ES',
+            firstDay: DateTime.utc(2020, 1, 1),
+            lastDay: DateTime.utc(2100, 12, 31),
+            focusedDay: agendaFocusedDay,
+            calendarFormat: CalendarFormat.week,
+            availableCalendarFormats: const {
+              CalendarFormat.week: 'Semana',
+            },
+            startingDayOfWeek: StartingDayOfWeek.monday,
+            selectedDayPredicate: (day) => isSameDay(agendaDay, day),
+            headerVisible: !isCollapsed,
+            rowHeight: 30,
+            daysOfWeekHeight: 20,
+            eventLoader: (day) {
+              final key = DateTime(day.year, day.month, day.day);
+              return citasAgendaPorDia[key] ?? [];
+            },
+            headerStyle: HeaderStyle(
+              titleTextStyle: Theme.of(context).textTheme.labelLarge ??
+                  const TextStyle(fontWeight: FontWeight.w600),
+              titleCentered: false,
+              formatButtonVisible: false,
+              leftChevronIcon:
+                  Icon(Icons.chevron_left, size: 18, color: theme.primary),
+              rightChevronIcon:
+                  Icon(Icons.chevron_right, size: 18, color: theme.primary),
+              headerPadding: EdgeInsets.zero,
+              leftChevronMargin: EdgeInsets.zero,
+              rightChevronMargin: EdgeInsets.zero,
+            ),
+            onDaySelected: onAgendaDaySelected,
+            onPageChanged: onPageChanged,
+            daysOfWeekStyle: DaysOfWeekStyle(
+              dowTextFormatter: (date, locale) =>
+                  DateFormat.E(locale).format(date)[0].toUpperCase(),
+              weekdayStyle: TextStyle(
+                color: theme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+              weekendStyle: TextStyle(
+                color: theme.black.withValues(alpha: 0.54),
+              ),
+            ),
+            calendarStyle: CalendarStyle(
+              outsideDaysVisible: false,
+              cellMargin: EdgeInsets.zero,
+              cellPadding: EdgeInsets.zero,
+              markerSize: 5,
+              markersAlignment: Alignment.bottomCenter,
+              markerMargin: EdgeInsets.zero,
+              markerDecoration: BoxDecoration(
+                color: theme.secondary,
+                shape: BoxShape.circle,
+              ),
+              todayDecoration: BoxDecoration(
+                color: theme.primary.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              selectedDecoration: BoxDecoration(
+                color: theme.primary,
+                shape: BoxShape.circle,
+              ),
+            ),
           ),
         ),
       ),
