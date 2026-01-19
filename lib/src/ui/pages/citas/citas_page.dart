@@ -81,6 +81,8 @@ class _CitasPageState extends State<CitasPage>
   final ScrollController _listScrollController = ScrollController();
   final ScrollController _agendaScrollController = ScrollController();
   bool _agendaCalendarCollapsed = false;
+  double _agendaLastScrollOffset = 0;
+  DateTime? _agendaLastScrollTime;
   String? _estadoFiltro;
   String? _medicoFiltro;
   DateTime? _fechaInicioFiltro;
@@ -618,12 +620,21 @@ class _CitasPageState extends State<CitasPage>
 
   void _handleAgendaScroll() {
     if (_currentTabIndex != 2 || !_agendaScrollController.hasClients) return;
-    final direction = _agendaScrollController.position.userScrollDirection;
-    if (direction == ScrollDirection.reverse && !_agendaCalendarCollapsed) {
-      setState(() => _agendaCalendarCollapsed = true);
-    } else if (direction == ScrollDirection.forward &&
-        _agendaCalendarCollapsed) {
+    final position = _agendaScrollController.position;
+    final now = DateTime.now();
+    final currentOffset = position.pixels;
+    final lastTime = _agendaLastScrollTime ?? now;
+    final elapsedMs = now.difference(lastTime).inMilliseconds;
+    if (elapsedMs <= 0) return;
+    final delta = currentOffset - _agendaLastScrollOffset;
+    final speed = delta.abs() / elapsedMs;
+    _agendaLastScrollOffset = currentOffset;
+    _agendaLastScrollTime = now;
+
+    if (delta < 0 && _agendaCalendarCollapsed) {
       setState(() => _agendaCalendarCollapsed = false);
+    } else if (delta > 0 && speed > 1.2 && !_agendaCalendarCollapsed) {
+      setState(() => _agendaCalendarCollapsed = true);
     }
   }
 
@@ -2730,35 +2741,42 @@ class _CitasPageState extends State<CitasPage>
       citasPorHora.putIfAbsent(inicio.hour, () => []).add(cita);
     }
 
+    final header = GestureDetector(
+      onTap: _agendaCalendarCollapsed
+          ? () => setState(() => _agendaCalendarCollapsed = false)
+          : null,
+      child: Wrap(
+        spacing: 12,
+        runSpacing: 12,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          SizedBox(
+            width: isCompact ? double.infinity : 320,
+            child: _buildAgendaWeekCalendar(),
+          ),
+          InfoPill(
+            icon: PhosphorIconsRegular.calendarBlank,
+            label: 'Agenda ${_dateFormat.format(_agendaDay)}',
+            color: _theme.primary,
+          ),
+          InfoPill(
+            icon: PhosphorIconsRegular.clock,
+            label: '08:00 - 20:00',
+            color: _theme.grey,
+          ),
+          InfoPill(
+            icon: PhosphorIconsRegular.stethoscope,
+            label: '${ordenadas.length} citas',
+            color: _theme.secondary,
+          ),
+        ],
+      ),
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            SizedBox(
-              width: isCompact ? double.infinity : 320,
-              child: _buildAgendaWeekCalendar(),
-            ),
-            InfoPill(
-              icon: PhosphorIconsRegular.calendarBlank,
-              label: 'Agenda ${_dateFormat.format(_agendaDay)}',
-              color: _theme.primary,
-            ),
-            InfoPill(
-              icon: PhosphorIconsRegular.clock,
-              label: '08:00 - 20:00',
-              color: _theme.grey,
-            ),
-            InfoPill(
-              icon: PhosphorIconsRegular.stethoscope,
-              label: '${ordenadas.length} citas',
-              color: _theme.secondary,
-            ),
-          ],
-        ),
+        header,
         const SizedBox(height: 16),
         Expanded(
           child: _agendaLoading
@@ -2780,7 +2798,7 @@ class _CitasPageState extends State<CitasPage>
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeInOut,
-      height: isCollapsed ? 60 : 124,
+      height: isCollapsed ? 0 : 118,
       child: TableCalendar<CitaMedica>(
         locale: 'es_ES',
         firstDay: DateTime.utc(2020, 1, 1),
@@ -2793,8 +2811,8 @@ class _CitasPageState extends State<CitasPage>
         startingDayOfWeek: StartingDayOfWeek.monday,
         selectedDayPredicate: (day) => isSameDay(_agendaDay, day),
         headerVisible: !isCollapsed,
-        rowHeight: isCollapsed ? 24 : 30,
-        daysOfWeekHeight: isCollapsed ? 0 : 20,
+        rowHeight: 30,
+        daysOfWeekHeight: 20,
         eventLoader: (day) {
           final key = DateTime(day.year, day.month, day.day);
           return _citasAgendaPorDia[key] ?? [];
@@ -2833,11 +2851,11 @@ class _CitasPageState extends State<CitasPage>
         ),
         calendarStyle: CalendarStyle(
           outsideDaysVisible: false,
-          cellMargin: EdgeInsets.zero,
-          cellPadding: EdgeInsets.zero,
-          markerSize: isCollapsed ? 4 : 5,
+          cellMargin: const EdgeInsets.symmetric(horizontal: 2, vertical: 1),
+          cellPadding: const EdgeInsets.only(bottom: 2),
+          markerSize: 5,
           markersAlignment: Alignment.bottomCenter,
-          markerMargin: EdgeInsets.only(top: isCollapsed ? 1 : 3),
+          markerMargin: const EdgeInsets.only(top: 3),
           markerDecoration: BoxDecoration(
             color: _theme.secondary,
             shape: BoxShape.circle,
