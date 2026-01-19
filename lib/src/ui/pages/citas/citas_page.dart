@@ -2725,58 +2725,75 @@ class _CitasPageState extends State<CitasPage>
       separatorBuilder: (_, __) => const SizedBox(height: 2),
       itemBuilder: (context, index) {
         final hour = horas[index];
-        final label = '${hour.toString().padLeft(2, '0')}:00';
+        final hourLabel = '${hour.toString().padLeft(2, '0')}:00';
         final citas = citasPorHora[hour] ?? [];
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 1),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: 60,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: _theme.primary,
-                          ),
-                    ),
-                    const SizedBox(height: 6),
-                    Container(
-                      height: 1,
-                      color: _theme.grey.withValues(alpha: 0.2),
-                    ),
-                  ],
+        if (citas.isEmpty) {
+          return _buildAgendaRow(
+            label: hourLabel,
+            child: Text(
+              'Sin citas',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: _theme.grey.withValues(alpha: 0.7),
+                  ),
+            ),
+          );
+        }
+
+        return Column(
+          children: [
+            for (var i = 0; i < citas.length; i++)
+              _buildAgendaRow(
+                label: i == 0
+                    ? hourLabel
+                    : _formatoHoraAgenda(citas[i].fechaInicio, hour),
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: i == citas.length - 1 ? 0 : 4),
+                  child: _buildAgendaCitaCard(citas[i]),
                 ),
               ),
-              const SizedBox(width: 6),
-              Expanded(
-                child: citas.isEmpty
-                    ? Text(
-                        'Sin citas',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: _theme.grey.withValues(alpha: 0.7),
-                            ),
-                      )
-                    : Column(
-                        children: citas
-                            .map(
-                              (cita) => Padding(
-                                padding: const EdgeInsets.only(bottom: 4),
-                                child: _buildAgendaCitaCard(cita),
-                              ),
-                            )
-                            .toList(),
-                      ),
-              ),
-            ],
-          ),
+          ],
         );
       },
     );
+  }
+
+  Widget _buildAgendaRow({required String label, required Widget child}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 1),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 60,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: _theme.primary,
+                      ),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  height: 1,
+                  color: _theme.grey.withValues(alpha: 0.2),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 6),
+          Expanded(child: child),
+        ],
+      ),
+    );
+  }
+
+  String _formatoHoraAgenda(DateTime? inicio, int hour) {
+    if (inicio == null) return '${hour.toString().padLeft(2, '0')}:00';
+    if (inicio.minute == 0) return '${hour.toString().padLeft(2, '0')}:00';
+    return _timeFormat.format(inicio);
   }
 
   Widget _buildAgendaCitaCard(CitaMedica cita) {
@@ -2785,9 +2802,6 @@ class _CitasPageState extends State<CitasPage>
     final titulo = _tituloCita(cita);
     final medico = _nombreMedico(cita);
     final paciente = _nombrePaciente(cita);
-    final inicio = cita.fechaInicio;
-    final horaInicio = inicio != null ? _timeFormat.format(inicio) : '';
-    final mostrarHoraDetalle = inicio != null && inicio.minute != 0;
     return InkWell(
       onTap: () => _mostrarDetalleCita(cita),
       borderRadius: BorderRadius.circular(16),
@@ -2813,23 +2827,6 @@ class _CitasPageState extends State<CitasPage>
           children: [
             Row(
               children: [
-                if (mostrarHoraDetalle)
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    margin: const EdgeInsets.only(right: 8),
-                    decoration: BoxDecoration(
-                      color: _theme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      horaInicio,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: _theme.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                  ),
                 Icon(
                   _iconoTipoCita(cita),
                   size: 18,
