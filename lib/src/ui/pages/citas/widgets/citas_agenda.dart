@@ -308,7 +308,7 @@ class _AgendaTimeline extends StatelessWidget {
                     : formatoHoraAgenda(citas[i].fechaInicio, hour),
                 theme: theme,
                 child: Padding(
-                  padding: EdgeInsets.only(bottom: i == citas.length - 1 ? 0 : 4),
+                  padding: EdgeInsets.only(bottom: i == citas.length - 1 ? 0 : 2),
                   child: _AgendaCitaCard(
                     cita: citas[i],
                     theme: theme,
@@ -344,7 +344,7 @@ class _AgendaRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 1),
+      padding: const EdgeInsets.symmetric(vertical: 0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -411,12 +411,12 @@ class _AgendaCitaCard extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: theme.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: especialidadColor.withValues(alpha: 0.25),
             width: 1.2,
@@ -424,8 +424,8 @@ class _AgendaCitaCard extends StatelessWidget {
           boxShadow: [
             BoxShadow(
               color: theme.black.withValues(alpha: 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
