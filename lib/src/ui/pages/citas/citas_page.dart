@@ -640,11 +640,12 @@ class _CitasPageState extends State<CitasPage>
 
   void _handleAgendaScroll() {
     if (_currentTabIndex != 2 || !_agendaScrollController.hasClients) return;
-    final direction = _agendaScrollController.position.userScrollDirection;
+    final position = _agendaScrollController.position;
+    final direction = position.userScrollDirection;
     if (direction == ScrollDirection.reverse && !_agendaCalendarCollapsed) {
       setState(() => _agendaCalendarCollapsed = true);
-    } else if (direction == ScrollDirection.forward &&
-        _agendaCalendarCollapsed) {
+    } else if (_agendaCalendarCollapsed &&
+        position.pixels <= position.minScrollExtent + 1) {
       setState(() => _agendaCalendarCollapsed = false);
     }
   }
