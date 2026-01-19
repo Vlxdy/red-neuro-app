@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:meta/meta.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:red_neuro_app/src/config/service_config.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
@@ -3085,12 +3086,27 @@ class _CitasSocketClient {
       io.OptionBuilder()
           .setTransports(['websocket'])
           .setAuth({'token': token})
+          .setReconnectionAttempts(0)
+          .setTimeout(5000)
           .disableAutoConnect()
           .build(),
     );
 
-    _socket!.on('connect', (_) => connectionNotifier.value = true);
-    _socket!.on('disconnect', (_) => connectionNotifier.value = false);
+    _socket!.on('connect', (_) {
+      connectionNotifier.value = true;
+    });
+    _socket!.on('disconnect', (reason) {
+      connectionNotifier.value = false;
+      Logger.warning('Citas socket disconnected: $reason');
+    });
+    _socket!.on('connect_error', (error) {
+      connectionNotifier.value = false;
+      Logger.warning('Citas socket connect_error: $error');
+    });
+    _socket!.on('error', (error) {
+      connectionNotifier.value = false;
+      Logger.warning('Citas socket error: $error');
+    });
 
     _socket!.on('citas:created', onCreated);
     _socket!.on('citas:estado-actualizado', onEstadoActualizado);
@@ -3128,6 +3144,8 @@ class _CitasSocketClient {
     _socket?.off('citas:cancelada');
     _socket?.off('connect');
     _socket?.off('disconnect');
+    _socket?.off('connect_error');
+    _socket?.off('error');
     _socket?.disconnect();
     _socket = null;
   }
