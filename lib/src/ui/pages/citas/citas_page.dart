@@ -57,12 +57,16 @@ class _CitasPageState extends State<CitasPage>
   List<CitaMedica> _citasCalendario = [];
   List<CitaMedica> _citasListado = [];
   List<CitaMedica> _citasSeleccionadas = [];
+  List<CitaMedica> _citasAgenda = [];
 
   bool _loading = false;
   bool _dayLoading = false;
+  bool _agendaLoading = false;
   int _dayRequestId = 0;
+  int _agendaRequestId = 0;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
+  late DateTime _agendaDay;
   CalendarFormat _calendarFormat = CalendarFormat.week;
   late final TabController _tabController;
   int _currentTabIndex = 0;
@@ -99,10 +103,11 @@ class _CitasPageState extends State<CitasPage>
     final now = DateTime.now();
     _focusedDay = DateTime(now.year, now.month, now.day);
     _selectedDay = _focusedDay;
+    _agendaDay = DateTime(now.year, now.month, now.day);
     _buscarController = TextEditingController();
     _medicoFiltroController = TextEditingController();
     _service = CitasService(context);
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(_handleTabChange);
     _listScrollController.addListener(_handleListScroll);
     _socketClient = _CitasSocketClient(
@@ -327,6 +332,7 @@ class _CitasPageState extends State<CitasPage>
     setState(() {
       _citasCalendario = _upsertCitaEnLista(_citasCalendario, cita);
       _citasListado = _upsertCitaEnLista(_citasListado, cita);
+      _citasAgenda = _upsertAgendaList(_citasAgenda, cita);
     });
   }
 
@@ -337,7 +343,44 @@ class _CitasPageState extends State<CitasPage>
     setState(() {
       _citasCalendario = _actualizarCitaEnLista(_citasCalendario, id, updater);
       _citasListado = _actualizarCitaEnLista(_citasListado, id, updater);
+      _citasAgenda = _actualizarAgendaList(_citasAgenda, id, updater);
     });
+  }
+
+  List<CitaMedica> _upsertAgendaList(
+    List<CitaMedica> lista,
+    CitaMedica cita,
+  ) {
+    final fecha = cita.fechaInicio;
+    final index = lista.indexWhere((item) => item.id == cita.id);
+    final mismaFecha = fecha != null && isSameDay(fecha, _agendaDay);
+    if (!mismaFecha) {
+      if (index < 0) return lista;
+      final updated = [...lista]..removeAt(index);
+      return updated;
+    }
+    if (index >= 0) {
+      final updated = [...lista];
+      updated[index] = cita;
+      return updated;
+    }
+    return [...lista, cita];
+  }
+
+  List<CitaMedica> _actualizarAgendaList(
+    List<CitaMedica> lista,
+    String id,
+    CitaMedica Function(CitaMedica) updater,
+  ) {
+    final index = lista.indexWhere((item) => item.id == id);
+    if (index < 0) return lista;
+    final updated = [...lista];
+    updated[index] = updater(lista[index]);
+    final fecha = updated[index].fechaInicio;
+    if (fecha == null || !isSameDay(fecha, _agendaDay)) {
+      updated.removeAt(index);
+    }
+    return updated;
   }
 
   List<CitaMedica> _upsertCitaEnLista(List<CitaMedica> lista, CitaMedica cita) {
@@ -512,8 +555,10 @@ class _CitasPageState extends State<CitasPage>
     setState(() => _currentTabIndex = _tabController.index);
     if (_currentTabIndex == 0) {
       _cargarCitasCalendario();
-    } else {
+    } else if (_currentTabIndex == 1) {
       _cargarCitasListado();
+    } else {
+      _cargarCitasAgendaDay(day: _agendaDay);
     }
   }
 
@@ -589,21 +634,25 @@ class _CitasPageState extends State<CitasPage>
     });
     if (_currentTabIndex == 0) {
       _cargarCitasCalendario();
-    } else {
+    } else if (_currentTabIndex == 1) {
       _cargarCitasListado(page: 1);
+    } else {
+      _cargarCitasAgendaDay(day: _agendaDay);
     }
   }
 
   void _aplicarFiltros() {
     if (_currentTabIndex == 0) {
       _cargarCitasCalendario();
-    } else {
+    } else if (_currentTabIndex == 1) {
       _listPage = 1;
       _listLoadingMore = false;
       if (_listScrollController.hasClients) {
         _listScrollController.jumpTo(0);
       }
       _cargarCitasListado(page: 1);
+    } else {
+      _cargarCitasAgendaDay(day: _agendaDay);
     }
   }
 
@@ -628,6 +677,36 @@ class _CitasPageState extends State<CitasPage>
       _citasSeleccionadas = citas;
       _dayLoading = false;
     });
+  }
+
+  Future<void> _cargarCitasAgendaDay({DateTime? day}) async {
+    final fecha = day ?? _agendaDay;
+    final requestId = ++_agendaRequestId;
+    setState(() => _agendaLoading = true);
+    final filtros = _buildDayFiltersQuery(fecha);
+    final citas = await _service.obtenerCitas(
+      soloMisCitas: widget.soloMisCitas,
+      filtros: filtros.isNotEmpty ? filtros : null,
+    );
+    if (!mounted || requestId != _agendaRequestId) return;
+    setState(() {
+      _citasAgenda = citas;
+      _agendaLoading = false;
+    });
+  }
+
+  Future<void> _seleccionarFechaAgenda() async {
+    final fecha = await showDatePicker(
+      context: context,
+      initialDate: _agendaDay,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+    );
+    if (fecha == null) return;
+    setState(() {
+      _agendaDay = DateTime(fecha.year, fecha.month, fecha.day);
+    });
+    await _cargarCitasAgendaDay(day: _agendaDay);
   }
 
   Future<void> _abrirFormulario({CitaMedica? cita, DateTime? fechaBase}) async {
@@ -2181,6 +2260,10 @@ class _CitasPageState extends State<CitasPage>
                                         isCompact: isCompact,
                                       ),
                                       _buildListadoTab(citasListadoFiltradas),
+                                      _buildAgendaTab(
+                                        _filtrarCitasLocal(_citasAgenda),
+                                        isCompact: isCompact,
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -2316,6 +2399,7 @@ class _CitasPageState extends State<CitasPage>
             tabs: const [
               Tab(text: 'Calendario'),
               Tab(text: 'Listado'),
+              Tab(text: 'Agenda diaria'),
             ],
           ),
         ),
@@ -2561,6 +2645,246 @@ class _CitasPageState extends State<CitasPage>
             ),
           ),
       ],
+    );
+  }
+
+  Widget _buildAgendaTab(List<CitaMedica> citas, {required bool isCompact}) {
+    final ordenadas = [...citas]
+      ..sort(
+        (a, b) =>
+            (a.fechaInicio ?? DateTime(1970))
+                .compareTo(b.fechaInicio ?? DateTime(1970)),
+      );
+    final citasPorHora = <int, List<CitaMedica>>{};
+    for (final cita in ordenadas) {
+      final inicio = cita.fechaInicio;
+      if (inicio == null) continue;
+      if (inicio.hour < 8 || inicio.hour > 20) continue;
+      citasPorHora.putIfAbsent(inicio.hour, () => []).add(cita);
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            SizedBox(
+              width: isCompact ? double.infinity : 240,
+              child: FechaSelector(
+                label: 'Selecciona una fecha',
+                value: _agendaDay,
+                formatter: _dateFormat,
+                onTap: _seleccionarFechaAgenda,
+              ),
+            ),
+            InfoPill(
+              icon: PhosphorIconsRegular.calendarBlank,
+              label: 'Agenda ${_dateFormat.format(_agendaDay)}',
+              color: _theme.primary,
+            ),
+            InfoPill(
+              icon: PhosphorIconsRegular.clock,
+              label: '08:00 - 20:00',
+              color: _theme.grey,
+            ),
+            InfoPill(
+              icon: PhosphorIconsRegular.activity,
+              label: '${ordenadas.length} citas',
+              color: _theme.secondary,
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Expanded(
+          child: _agendaLoading
+              ? Center(
+                  child: SizedBox(
+                    height: 28,
+                    width: 28,
+                    child: CircularProgressIndicator(color: _theme.primary),
+                  ),
+                )
+              : _buildAgendaTimeline(citasPorHora),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAgendaTimeline(Map<int, List<CitaMedica>> citasPorHora) {
+    final horas = List.generate(13, (index) => index + 8);
+    if (horas.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.only(bottom: 16),
+      itemCount: horas.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 2),
+      itemBuilder: (context, index) {
+        final hour = horas[index];
+        final hourLabel = '${hour.toString().padLeft(2, '0')}:00';
+        final citas = citasPorHora[hour] ?? [];
+        if (citas.isEmpty) {
+          return _buildAgendaRow(
+            label: hourLabel,
+            child: Text(
+              'Sin citas',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: _theme.grey.withValues(alpha: 0.7),
+                  ),
+            ),
+          );
+        }
+
+        return Column(
+          children: [
+            for (var i = 0; i < citas.length; i++)
+              _buildAgendaRow(
+                label: i == 0
+                    ? hourLabel
+                    : _formatoHoraAgenda(citas[i].fechaInicio, hour),
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: i == citas.length - 1 ? 0 : 4),
+                  child: _buildAgendaCitaCard(citas[i]),
+                ),
+              ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildAgendaRow({required String label, required Widget child}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 1),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 60,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: _theme.primary,
+                      ),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  height: 1,
+                  color: _theme.grey.withValues(alpha: 0.2),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 6),
+          Expanded(child: child),
+        ],
+      ),
+    );
+  }
+
+  String _formatoHoraAgenda(DateTime? inicio, int hour) {
+    if (inicio == null) return '${hour.toString().padLeft(2, '0')}:00';
+    if (inicio.minute == 0) return '${hour.toString().padLeft(2, '0')}:00';
+    return _timeFormat.format(inicio);
+  }
+
+  Widget _buildAgendaCitaCard(CitaMedica cita) {
+    final especialidadColor = _colorEspecialidad(cita);
+    final horario = _formatoHorarioCita(cita.fechaInicio, cita.fechaFin);
+    final titulo = _tituloCita(cita);
+    final medico = _nombreMedico(cita);
+    final paciente = _nombrePaciente(cita);
+    return InkWell(
+      onTap: () => _mostrarDetalleCita(cita),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: _theme.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: especialidadColor.withValues(alpha: 0.25),
+            width: 1.2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: _theme.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  _iconoTipoCita(cita),
+                  size: 18,
+                  color: _theme.primary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    titulo,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ),
+                _buildEstadoBadge(cita.estado),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Icon(PhosphorIconsRegular.clock, size: 16, color: _theme.grey),
+                const SizedBox(width: 6),
+                Text(
+                  horario,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: _theme.grey,
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 12,
+              runSpacing: 6,
+              children: [
+                if (paciente.isNotEmpty)
+                  InfoPill(
+                    icon: PhosphorIconsRegular.userCircle,
+                    label: paciente,
+                    color: _theme.grey,
+                  ),
+                if (medico.isNotEmpty)
+                  InfoPill(
+                    icon: PhosphorIconsRegular.stethoscope,
+                    label: medico,
+                    color: _theme.grey,
+                  ),
+                if ((cita.especialidadNombre ?? '').trim().isNotEmpty)
+                  InfoPill(
+                    icon: PhosphorIconsRegular.tag,
+                    label: cita.especialidadNombre!.trim(),
+                    color: especialidadColor,
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 
