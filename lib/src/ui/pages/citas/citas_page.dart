@@ -7,6 +7,7 @@ import 'package:red_neuro_app/src/config/service_config.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/constants.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
+import 'package:red_neuro_app/src/extensions/colores_extension.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/models/especialidad.dart';
 import 'package:red_neuro_app/src/models/estudio.dart';
@@ -50,6 +51,7 @@ class _CitasPageState extends State<CitasPage>
   late final CitasService _service;
   final DateFormat _dateFormat = DateFormat('dd/MM/yyyy');
   final DateFormat _dateTimeFormat = DateFormat('dd/MM/yyyy HH:mm');
+  final DateFormat _timeFormat = DateFormat('HH:mm');
 
   List<CitaMedica> _citasCalendario = [];
   List<CitaMedica> _citasListado = [];
@@ -655,7 +657,7 @@ class _CitasPageState extends State<CitasPage>
         nombre: cita.especialidadNombre ?? 'Especialidad ${cita.especialidadId}',
         descripcion: null,
         estado: 'ACTIVO',
-        colorHex: '#64748b',
+        colorHex: cita.especialidadColorHex ?? '#64748b',
         estudios: const [],
       );
     }
@@ -2620,6 +2622,14 @@ class _CitasPageState extends State<CitasPage>
       itemBuilder: (context, index) {
         final cita = citas[index];
         final estadoColor = _colorEstado(cita.estado);
+        final especialidadColor = _colorEspecialidad(cita);
+        final resumenFecha = _formatoFechaCita(cita.fechaInicio);
+        final resumenHorario =
+            _formatoHorarioCita(cita.fechaInicio, cita.fechaFin);
+        final medicoNombre = _nombreMedico(cita);
+        final pacienteNombre = _nombrePaciente(cita);
+        final titulo = _tituloCita(cita);
+        final tipoIcono = _iconoTipoCita(cita);
 
         return Container(
           padding: const EdgeInsets.all(16),
@@ -2627,7 +2637,7 @@ class _CitasPageState extends State<CitasPage>
             color: _theme.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: estadoColor.withValues(alpha: 0.2),
+              color: especialidadColor.withValues(alpha: 0.25),
               width: 1.2,
             ),
             boxShadow: [
@@ -2638,88 +2648,123 @@ class _CitasPageState extends State<CitasPage>
               ),
             ],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      cita.detalle,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 4,
+                  margin: const EdgeInsets.only(right: 12, top: 4),
+                  decoration: BoxDecoration(
+                    color: especialidadColor,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Icon(
+                                  tipoIcono,
+                                  size: 20,
+                                  color: _theme.primary,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    titulo,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleMedium?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: estadoColor.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              cita.estado,
+                              style: Theme.of(
+                                context,
+                              ).textTheme.labelSmall?.copyWith(
+                                    color: estadoColor,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: estadoColor.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      cita.estado,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: estadoColor,
-                        fontWeight: FontWeight.bold,
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 16,
+                        runSpacing: 8,
+                        children: [
+                          InfoPill(
+                            icon: PhosphorIconsRegular.calendar,
+                            label: resumenFecha,
+                          ),
+                          InfoPill(
+                            icon: PhosphorIconsRegular.clock,
+                            label: resumenHorario,
+                          ),
+                          if (pacienteNombre.isNotEmpty)
+                            InfoPill(
+                              icon: PhosphorIconsRegular.userCircle,
+                              label: pacienteNombre,
+                              color: _theme.primary,
+                            ),
+                          if (medicoNombre.isNotEmpty)
+                            InfoPill(
+                              icon: PhosphorIconsRegular.stethoscope,
+                              label: medicoNombre,
+                              color: _theme.secondary,
+                            ),
+                        ],
                       ),
-                    ),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          if ((cita.especialidadNombre ?? cita.especialidadId)
+                                  ?.isNotEmpty ??
+                              false)
+                            _buildEspecialidadTag(
+                              cita.especialidadNombre ?? cita.especialidadId!,
+                              especialidadColor,
+                            ),
+                          const Spacer(),
+                          IconButton(
+                            onPressed: () => _mostrarDetalleCita(cita),
+                            icon: const Icon(Icons.info_outline),
+                            tooltip: 'Ver detalles',
+                          ),
+                          IconButton(
+                            onPressed: () => _abrirFormulario(cita: cita),
+                            icon: const Icon(Icons.edit),
+                            tooltip: 'Editar',
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 16,
-                runSpacing: 8,
-                children: [
-                  InfoPill(
-                    icon: PhosphorIconsRegular.clock,
-                    label:
-                        '${_formatoFecha(cita.fechaInicio)} - ${_formatoFecha(cita.fechaFin)}',
-                  ),
-                  InfoPill(
-                    icon: PhosphorIconsRegular.user,
-                    label: 'Médico: ${cita.medicoId}',
-                  ),
-                  if ((cita.especialidadNombre ?? cita.especialidadId)
-                          ?.isNotEmpty ??
-                      false)
-                    InfoPill(
-                      icon: PhosphorIconsRegular.stethoscope,
-                      label:
-                          'Especialidad: ${cita.especialidadNombre ?? cita.especialidadId}',
-                    ),
-                  if (cita.tipoCita?.isNotEmpty ?? false)
-                    InfoPill(
-                      icon: PhosphorIconsRegular.folder,
-                      label: 'Tipo: ${cita.tipoCita}',
-                    ),
-                  if ((cita.estudioNombre ?? cita.estudioId)?.isNotEmpty ??
-                      false)
-                    InfoPill(
-                      icon: PhosphorIconsRegular.testTube,
-                      label:
-                          'Estudio: ${cita.estudioNombre ?? cita.estudioId}',
-                    ),
-                ],
-              ),
-              if (!compact) ...[
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton.icon(
-                      onPressed: () => _abrirFormulario(cita: cita),
-                      icon: const Icon(Icons.edit, size: 18),
-                      label: const Text('Editar'),
-                    ),
-                  ],
                 ),
               ],
-            ],
+            ),
           ),
         );
       },
@@ -2735,6 +2780,283 @@ class _CitasPageState extends State<CitasPage>
   String _formatoFecha(DateTime? fecha) {
     if (fecha == null) return '--';
     return _dateTimeFormat.format(fecha);
+  }
+
+  String _formatoFechaCita(DateTime? fecha) {
+    if (fecha == null) return '--';
+    return _dateFormat.format(fecha);
+  }
+
+  String _formatoHorarioCita(DateTime? inicio, DateTime? fin) {
+    if (inicio == null && fin == null) return '--';
+    if (inicio != null && fin != null) {
+      return '${_timeFormat.format(inicio)} - ${_timeFormat.format(fin)}';
+    }
+    final referencia = inicio ?? fin;
+    if (referencia == null) return '--';
+    return _timeFormat.format(referencia);
+  }
+
+  Color _colorEspecialidad(CitaMedica cita) {
+    return HexColor.fromHex(cita.especialidadColorHex ?? '#64748b');
+  }
+
+  String _nombreMedico(CitaMedica cita) {
+    return (cita.medicoNombre ?? '').trim();
+  }
+
+  String _nombrePaciente(CitaMedica cita) {
+    return (cita.pacienteNombre ?? '').trim();
+  }
+
+  String _tituloCita(CitaMedica cita) {
+    final estudio = (cita.estudioNombre ?? '').trim();
+    if (estudio.isNotEmpty) return estudio;
+    final tipo = (cita.tipoCita ?? '').trim().toUpperCase();
+    if (tipo == 'CONSULTA') return 'Consulta';
+    if (tipo == 'ESTUDIO') return 'Estudio';
+    if (tipo.isNotEmpty) return cita.tipoCita!.trim();
+    if ((cita.especialidadNombre ?? '').trim().isNotEmpty) return 'Consulta';
+    return 'Cita médica';
+  }
+
+  IconData _iconoTipoCita(CitaMedica cita) {
+    final tipo = (cita.tipoCita ?? '').trim().toUpperCase();
+    if (tipo == 'ESTUDIO' ||
+        (cita.estudioNombre ?? '').trim().isNotEmpty) {
+      return PhosphorIconsRegular.testTube;
+    }
+    if (tipo == 'CONSULTA' ||
+        (cita.especialidadNombre ?? '').trim().isNotEmpty) {
+      return PhosphorIconsRegular.stethoscope;
+    }
+    return PhosphorIconsRegular.calendarCheck;
+  }
+
+  String _subtituloCita(CitaMedica cita) {
+    final estudio = (cita.estudioNombre ?? cita.estudioId ?? '').trim();
+    final especialidad =
+        (cita.especialidadNombre ?? cita.especialidadId ?? '').trim();
+    final detalle = cita.detalle.trim();
+    final parts = <String>[
+      if (estudio.isNotEmpty) estudio,
+      if (especialidad.isNotEmpty) especialidad,
+      if (detalle.isNotEmpty) detalle,
+    ];
+    return parts.join(' • ');
+  }
+
+  Widget _buildEspecialidadTag(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(PhosphorIconsRegular.stethoscope, size: 14, color: color),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _mostrarDetalleCita(CitaMedica cita) async {
+    final especialidadNombre =
+        (cita.especialidadNombre ?? cita.especialidadId)?.trim();
+    final estudioNombre = (cita.estudioNombre ?? cita.estudioId)?.trim();
+    final especialidadColor = _colorEspecialidad(cita);
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(_tituloCita(cita)),
+              if (_subtituloCita(cita).isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  _subtituloCita(cita),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: _theme.grey,
+                      ),
+                ),
+              ],
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _buildEstadoBadge(cita.estado),
+                  if (especialidadNombre?.isNotEmpty ?? false)
+                    _buildEspecialidadTag(
+                      especialidadNombre!,
+                      especialidadColor,
+                    ),
+                ],
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildDetalleSection(
+                  'Horario',
+                  [
+                    _buildDetalleRow(
+                      PhosphorIconsRegular.calendar,
+                      'Fecha',
+                      _formatoFechaCita(cita.fechaInicio),
+                    ),
+                    _buildDetalleRow(
+                      PhosphorIconsRegular.clock,
+                      'Hora',
+                      _formatoHorarioCita(cita.fechaInicio, cita.fechaFin),
+                    ),
+                  ],
+                ),
+                _buildDetalleSection(
+                  'Información clínica',
+                  [
+                    if (_nombrePaciente(cita).isNotEmpty)
+                      _buildDetalleRow(
+                        PhosphorIconsRegular.userCircle,
+                        'Paciente',
+                        _nombrePaciente(cita),
+                      ),
+                    if (_nombreMedico(cita).isNotEmpty)
+                      _buildDetalleRow(
+                        PhosphorIconsRegular.stethoscope,
+                        'Médico',
+                        _nombreMedico(cita),
+                      ),
+                    if (especialidadNombre?.isNotEmpty ?? false)
+                      _buildDetalleRow(
+                        PhosphorIconsRegular.stethoscope,
+                        'Especialidad',
+                        especialidadNombre!,
+                      ),
+                    if (cita.tipoCita?.isNotEmpty ?? false)
+                      _buildDetalleRow(
+                        PhosphorIconsRegular.folder,
+                        'Tipo de cita',
+                        cita.tipoCita!,
+                      ),
+                    if (estudioNombre?.isNotEmpty ?? false)
+                      _buildDetalleRow(
+                        PhosphorIconsRegular.testTube,
+                        'Estudio',
+                        estudioNombre!,
+                      ),
+                  ],
+                ),
+                if (cita.detalle.trim().isNotEmpty)
+                  _buildDetalleSection(
+                    'Notas',
+                    [
+                      _buildDetalleRow(
+                        PhosphorIconsRegular.note,
+                        'Detalle',
+                        cita.detalle.trim(),
+                      ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cerrar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildEstadoBadge(String estado) {
+    final color = _colorEstado(estado);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        estado,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.bold,
+            ),
+      ),
+    );
+  }
+
+  Widget _buildDetalleSection(String title, List<Widget> children) {
+    if (children.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: _theme.grey,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+          const SizedBox(height: 8),
+          ...children,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDetalleRow(IconData icon, String label, String value) {
+    final resolvedValue = value.trim().isNotEmpty ? value : '--';
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: _theme.grey),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        color: _theme.grey,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  resolvedValue,
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

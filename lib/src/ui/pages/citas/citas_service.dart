@@ -90,6 +90,7 @@ class CitasService extends ServiceConfig {
       final resolvedLimit = meta['limite'] ?? limit;
 
       final listRaw = data['datos'] ??
+          data['filas'] ??
           data['list'] ??
           data['data'] ??
           data['items'] ??
