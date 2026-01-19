@@ -2720,20 +2720,20 @@ class _CitasPageState extends State<CitasPage>
     }
 
     return ListView.separated(
-      padding: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.only(bottom: 16),
       itemCount: horas.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 6),
+      separatorBuilder: (_, __) => const SizedBox(height: 4),
       itemBuilder: (context, index) {
         final hour = horas[index];
         final label = '${hour.toString().padLeft(2, '0')}:00';
         final citas = citasPorHora[hour] ?? [];
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
+          padding: const EdgeInsets.symmetric(vertical: 2),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(
-                width: 72,
+                width: 60,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -2752,7 +2752,7 @@ class _CitasPageState extends State<CitasPage>
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 8),
               Expanded(
                 child: citas.isEmpty
                     ? Text(
@@ -2765,8 +2765,7 @@ class _CitasPageState extends State<CitasPage>
                         children: citas
                             .map(
                               (cita) => Padding(
-                                padding:
-                                    const EdgeInsets.only(bottom: 12),
+                                padding: const EdgeInsets.only(bottom: 8),
                                 child: _buildAgendaCitaCard(cita),
                               ),
                             )
@@ -2786,6 +2785,9 @@ class _CitasPageState extends State<CitasPage>
     final titulo = _tituloCita(cita);
     final medico = _nombreMedico(cita);
     final paciente = _nombrePaciente(cita);
+    final inicio = cita.fechaInicio;
+    final horaInicio = inicio != null ? _timeFormat.format(inicio) : '';
+    final mostrarHoraDetalle = inicio != null && inicio.minute != 0;
     return InkWell(
       onTap: () => _mostrarDetalleCita(cita),
       borderRadius: BorderRadius.circular(16),
@@ -2825,6 +2827,23 @@ class _CitasPageState extends State<CitasPage>
                         ),
                   ),
                 ),
+                if (mostrarHoraDetalle)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: BoxDecoration(
+                      color: _theme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      horaInicio,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: _theme.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ),
                 _buildEstadoBadge(cita.estado),
               ],
             ),
