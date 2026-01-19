@@ -287,6 +287,8 @@ class _PerfilState extends State<Perfil> {
                   onRoleSelected: hasMultipleRoles ? _changeRole : null,
                 ),
                 const SizedBox(height: 20),
+                const _ThemePreference(),
+                const SizedBox(height: 20),
                 _SessionActions(
                   onChangePassword: () => Navigator.of(context).push(
                     MaterialPageRoute(
@@ -302,6 +304,68 @@ class _PerfilState extends State<Perfil> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ThemePreference extends StatelessWidget {
+  const _ThemePreference();
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeController theme = ThemeController.instance;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: theme.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: theme.grey.withValues(alpha: 0.3)),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: theme.isLight
+                ? theme.black.withValues(alpha: 0.05)
+                : theme.black.withValues(alpha: 0.1),
+            blurRadius: 6,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            'Preferencias',
+            style: TextStyle(
+              color: theme.secondary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ValueListenableBuilder<bool>(
+            valueListenable: theme.brightness,
+            builder: (BuildContext context, bool isLight, Widget? child) {
+              final bool isDark = !isLight;
+
+              return SwitchListTile.adaptive(
+                contentPadding: EdgeInsets.zero,
+                secondary: Icon(
+                  isDark ? Icons.dark_mode : Icons.light_mode,
+                  color: theme.primary,
+                ),
+                title: const Text('Tema oscuro'),
+                subtitle: Text(
+                  isDark ? 'Activado' : 'Desactivado',
+                  style: TextStyle(color: theme.grey),
+                ),
+                value: isDark,
+                onChanged: (_) => theme.changeTheme(),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
