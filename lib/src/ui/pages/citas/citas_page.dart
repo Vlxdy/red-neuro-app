@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:intl/intl.dart';
 import 'package:meta/meta.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -58,6 +59,7 @@ class _CitasPageState extends State<CitasPage>
   List<CitaMedica> _citasListado = [];
   List<CitaMedica> _citasSeleccionadas = [];
   List<CitaMedica> _citasAgenda = [];
+  List<CitaMedica> _citasAgendaCalendario = [];
 
   bool _loading = false;
   bool _dayLoading = false;
@@ -67,6 +69,7 @@ class _CitasPageState extends State<CitasPage>
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   late DateTime _agendaDay;
+  late DateTime _agendaFocusedDay;
   CalendarFormat _calendarFormat = CalendarFormat.week;
   late final TabController _tabController;
   int _currentTabIndex = 0;
@@ -76,6 +79,8 @@ class _CitasPageState extends State<CitasPage>
   late final TextEditingController _medicoFiltroController;
   final ScrollController _filtersScrollController = ScrollController();
   final ScrollController _listScrollController = ScrollController();
+  final ScrollController _agendaScrollController = ScrollController();
+  bool _agendaCalendarCollapsed = false;
   String? _estadoFiltro;
   String? _medicoFiltro;
   DateTime? _fechaInicioFiltro;
@@ -104,12 +109,14 @@ class _CitasPageState extends State<CitasPage>
     _focusedDay = DateTime(now.year, now.month, now.day);
     _selectedDay = _focusedDay;
     _agendaDay = DateTime(now.year, now.month, now.day);
+    _agendaFocusedDay = _agendaDay;
     _buscarController = TextEditingController();
     _medicoFiltroController = TextEditingController();
     _service = CitasService(context);
     _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(_handleTabChange);
     _listScrollController.addListener(_handleListScroll);
+    _agendaScrollController.addListener(_handleAgendaScroll);
     _socketClient = _CitasSocketClient(
       onCreated: _onSocketCreated,
       onEstadoActualizado: _onSocketEstadoActualizado,
@@ -126,6 +133,9 @@ class _CitasPageState extends State<CitasPage>
     _filtersScrollController.dispose();
     _listScrollController
       ..removeListener(_handleListScroll)
+      ..dispose();
+    _agendaScrollController
+      ..removeListener(_handleAgendaScroll)
       ..dispose();
     _tabController
       ..removeListener(_handleTabChange)
@@ -152,6 +162,18 @@ class _CitasPageState extends State<CitasPage>
       _loading = false;
     });
     await _cargarCitasDelDia();
+  }
+
+  Future<void> _cargarCitasAgendaSemana() async {
+    final filtros = _buildAgendaWeekFiltersQuery();
+    final citas = await _service.obtenerCitas(
+      soloMisCitas: widget.soloMisCitas,
+      filtros: filtros.isNotEmpty ? filtros : null,
+    );
+    if (!mounted) return;
+    setState(() {
+      _citasAgendaCalendario = citas;
+    });
   }
 
   Future<void> _cargarCitasListado({int? page}) async {
@@ -185,6 +207,17 @@ class _CitasPageState extends State<CitasPage>
     final range = _resolveCalendarRange();
     filtros['fechaInicio'] = range.start.toUtc().toIso8601String();
     filtros['fechaFin'] = range.end.toUtc().toIso8601String();
+    return filtros;
+  }
+
+  Map<String, String> _buildAgendaWeekFiltersQuery() {
+    final filtros = _buildBaseFiltersQuery();
+    final start = _agendaFocusedDay.subtract(
+      Duration(days: _agendaFocusedDay.weekday - 1),
+    );
+    final end = start.add(const Duration(days: 6, hours: 23, minutes: 59));
+    filtros['fechaInicio'] = start.toUtc().toIso8601String();
+    filtros['fechaFin'] = end.toUtc().toIso8601String();
     return filtros;
   }
 
@@ -428,6 +461,17 @@ class _CitasPageState extends State<CitasPage>
     return data;
   }
 
+  Map<DateTime, List<CitaMedica>> get _citasAgendaPorDia {
+    final Map<DateTime, List<CitaMedica>> data = {};
+    for (final cita in _citasAgendaCalendario) {
+      final fecha = cita.fechaInicio;
+      if (fecha == null) continue;
+      final key = DateTime(fecha.year, fecha.month, fecha.day);
+      data.putIfAbsent(key, () => []).add(cita);
+    }
+    return data;
+  }
+
   DateTime _resolveDefaultStartTime(DateTime baseDay) {
     final key = DateTime(baseDay.year, baseDay.month, baseDay.day);
     final citasDelDia = _citasPorDia[key] ?? [];
@@ -558,6 +602,7 @@ class _CitasPageState extends State<CitasPage>
     } else if (_currentTabIndex == 1) {
       _cargarCitasListado();
     } else {
+      _cargarCitasAgendaSemana();
       _cargarCitasAgendaDay(day: _agendaDay);
     }
   }
@@ -568,6 +613,17 @@ class _CitasPageState extends State<CitasPage>
         _listScrollController.position.maxScrollExtent - 240) {
       setState(() => _listLoadingMore = true);
       _cargarCitasListado(page: _listPage + 1);
+    }
+  }
+
+  void _handleAgendaScroll() {
+    if (_currentTabIndex != 2 || !_agendaScrollController.hasClients) return;
+    final direction = _agendaScrollController.position.userScrollDirection;
+    if (direction == ScrollDirection.reverse && !_agendaCalendarCollapsed) {
+      setState(() => _agendaCalendarCollapsed = true);
+    } else if (direction == ScrollDirection.forward &&
+        _agendaCalendarCollapsed) {
+      setState(() => _agendaCalendarCollapsed = false);
     }
   }
 
@@ -705,6 +761,17 @@ class _CitasPageState extends State<CitasPage>
     if (fecha == null) return;
     setState(() {
       _agendaDay = DateTime(fecha.year, fecha.month, fecha.day);
+      _agendaFocusedDay = _agendaDay;
+    });
+    await _cargarCitasAgendaDay(day: _agendaDay);
+  }
+
+  Future<void> _seleccionarAgendaDay(DateTime day) async {
+    final fecha = DateTime(day.year, day.month, day.day);
+    if (isSameDay(fecha, _agendaDay)) return;
+    setState(() {
+      _agendaDay = fecha;
+      _agendaFocusedDay = fecha;
     });
     await _cargarCitasAgendaDay(day: _agendaDay);
   }
@@ -2663,40 +2730,42 @@ class _CitasPageState extends State<CitasPage>
       citasPorHora.putIfAbsent(inicio.hour, () => []).add(cita);
     }
 
+    final header = GestureDetector(
+      onTap: _agendaCalendarCollapsed
+          ? () => setState(() => _agendaCalendarCollapsed = false)
+          : null,
+      child: Wrap(
+        spacing: 12,
+        runSpacing: 12,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          SizedBox(
+            width: isCompact ? double.infinity : 320,
+            child: _buildAgendaWeekCalendar(),
+          ),
+          InfoPill(
+            icon: PhosphorIconsRegular.calendarBlank,
+            label: 'Agenda ${_dateFormat.format(_agendaDay)}',
+            color: _theme.primary,
+          ),
+          InfoPill(
+            icon: PhosphorIconsRegular.clock,
+            label: '08:00 - 20:00',
+            color: _theme.grey,
+          ),
+          InfoPill(
+            icon: PhosphorIconsRegular.stethoscope,
+            label: '${ordenadas.length} citas',
+            color: _theme.secondary,
+          ),
+        ],
+      ),
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            SizedBox(
-              width: isCompact ? double.infinity : 240,
-              child: FechaSelector(
-                label: 'Selecciona una fecha',
-                value: _agendaDay,
-                formatter: _dateFormat,
-                onTap: _seleccionarFechaAgenda,
-              ),
-            ),
-            InfoPill(
-              icon: PhosphorIconsRegular.calendarBlank,
-              label: 'Agenda ${_dateFormat.format(_agendaDay)}',
-              color: _theme.primary,
-            ),
-            InfoPill(
-              icon: PhosphorIconsRegular.clock,
-              label: '08:00 - 20:00',
-              color: _theme.grey,
-            ),
-            InfoPill(
-              icon: PhosphorIconsRegular.activity,
-              label: '${ordenadas.length} citas',
-              color: _theme.secondary,
-            ),
-          ],
-        ),
+        header,
         const SizedBox(height: 16),
         Expanded(
           child: _agendaLoading
@@ -2713,6 +2782,86 @@ class _CitasPageState extends State<CitasPage>
     );
   }
 
+  Widget _buildAgendaWeekCalendar() {
+    final isCollapsed = _agendaCalendarCollapsed;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeInOut,
+      height: isCollapsed ? 0 : 118,
+      child: TableCalendar<CitaMedica>(
+        locale: 'es_ES',
+        firstDay: DateTime.utc(2020, 1, 1),
+        lastDay: DateTime.utc(2100, 12, 31),
+        focusedDay: _agendaFocusedDay,
+        calendarFormat: CalendarFormat.week,
+        availableCalendarFormats: const {
+          CalendarFormat.week: 'Semana',
+        },
+        startingDayOfWeek: StartingDayOfWeek.monday,
+        selectedDayPredicate: (day) => isSameDay(_agendaDay, day),
+        headerVisible: !isCollapsed,
+        rowHeight: 30,
+        daysOfWeekHeight: 20,
+        eventLoader: (day) {
+          final key = DateTime(day.year, day.month, day.day);
+          return _citasAgendaPorDia[key] ?? [];
+        },
+        headerStyle: HeaderStyle(
+          titleTextStyle: Theme.of(context).textTheme.labelLarge ??
+              const TextStyle(fontWeight: FontWeight.w600),
+          titleCentered: false,
+          formatButtonVisible: false,
+          leftChevronIcon:
+              Icon(Icons.chevron_left, size: 18, color: _theme.primary),
+          rightChevronIcon:
+              Icon(Icons.chevron_right, size: 18, color: _theme.primary),
+          headerPadding: EdgeInsets.zero,
+          leftChevronMargin: EdgeInsets.zero,
+          rightChevronMargin: EdgeInsets.zero,
+        ),
+        onDaySelected: (selectedDay, focusedDay) {
+          setState(() => _agendaFocusedDay = focusedDay);
+          _seleccionarAgendaDay(selectedDay);
+        },
+        onPageChanged: (focusedDay) {
+          setState(() => _agendaFocusedDay = focusedDay);
+          _cargarCitasAgendaSemana();
+        },
+        daysOfWeekStyle: DaysOfWeekStyle(
+          dowTextFormatter: (date, locale) =>
+              DateFormat.E(locale).format(date)[0].toUpperCase(),
+          weekdayStyle: TextStyle(
+            color: _theme.primary,
+            fontWeight: FontWeight.w600,
+          ),
+          weekendStyle: TextStyle(
+            color: _theme.black.withValues(alpha: 0.54),
+          ),
+        ),
+        calendarStyle: CalendarStyle(
+          outsideDaysVisible: false,
+          cellMargin: EdgeInsets.zero,
+          cellPadding: EdgeInsets.zero,
+          markerSize: 5,
+          markersAlignment: Alignment.bottomCenter,
+          markerMargin: EdgeInsets.zero,
+          markerDecoration: BoxDecoration(
+            color: _theme.secondary,
+            shape: BoxShape.circle,
+          ),
+          todayDecoration: BoxDecoration(
+            color: _theme.primary.withValues(alpha: 0.2),
+            shape: BoxShape.circle,
+          ),
+          selectedDecoration: BoxDecoration(
+            color: _theme.primary,
+            shape: BoxShape.circle,
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildAgendaTimeline(Map<int, List<CitaMedica>> citasPorHora) {
     final horas = List.generate(13, (index) => index + 8);
     if (horas.isEmpty) {
@@ -2720,6 +2869,7 @@ class _CitasPageState extends State<CitasPage>
     }
 
     return ListView.separated(
+      controller: _agendaScrollController,
       padding: const EdgeInsets.only(bottom: 16),
       itemCount: horas.length,
       separatorBuilder: (_, __) => const SizedBox(height: 2),
