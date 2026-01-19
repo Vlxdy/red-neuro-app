@@ -411,12 +411,12 @@ class _AgendaCitaCard extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: theme.white,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: especialidadColor.withValues(alpha: 0.25),
             width: 1.2,
