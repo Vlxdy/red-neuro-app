@@ -21,12 +21,17 @@ import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_service.dart';
-import 'package:red_neuro_app/src/ui/pages/citas/widgets/active_filter_chip.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_active_filters.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_agenda.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_badges.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_calendario_panel.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_detalle_widgets.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_filters_fields.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_header.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_listado.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_tabs_row.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/fecha_selector.dart';
-import 'package:red_neuro_app/src/ui/pages/citas/widgets/filtro_fecha.dart';
-import 'package:red_neuro_app/src/ui/pages/citas/widgets/info_pill.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
-import 'package:table_calendar/table_calendar.dart';
 
 final GlobalKey<ScaffoldMessengerState> citasMessenger =
     GlobalKey<ScaffoldMessengerState>();
@@ -85,13 +90,6 @@ class _CitasPageState extends State<CitasPage>
   String? _medicoFiltro;
   DateTime? _fechaInicioFiltro;
   DateTime? _fechaFinFiltro;
-  bool get _hasActiveFilters =>
-      _buscarTexto.trim().isNotEmpty ||
-      (_estadoFiltro?.isNotEmpty ?? false) ||
-      (_medicoFiltro?.isNotEmpty ?? false) ||
-      _fechaInicioFiltro != null ||
-      _fechaFinFiltro != null;
-
   int _listPage = 1;
   int _listLimit = 10;
   int _listTotal = 0;
@@ -538,7 +536,32 @@ class _CitasPageState extends State<CitasPage>
                           controller: _filtersScrollController,
                           child: SingleChildScrollView(
                             controller: _filtersScrollController,
-                            child: _buildFiltersFields(isCompact: true),
+                            child: CitasFiltersFields(
+                              isCompact: true,
+                              buscarController: _buscarController,
+                              onBuscarChanged: (value) {
+                                setState(() => _buscarTexto = value);
+                                setStateModal(() {});
+                              },
+                              estadoFiltro: _estadoFiltro,
+                              onEstadoChanged: (value) {
+                                setState(() => _estadoFiltro = value);
+                                setStateModal(() {});
+                              },
+                              mostrarFiltroMedico: widget.mostrarFiltroMedico,
+                              medicoController: _medicoFiltroController,
+                              onMedicoChanged: (value) {
+                                setState(() => _medicoFiltro = value);
+                                setStateModal(() {});
+                              },
+                              fechaInicio: _fechaInicioFiltro,
+                              fechaFin: _fechaFinFiltro,
+                              formatter: _dateFormat,
+                              onTapFechaInicio: () =>
+                                  _seleccionarFecha(inicio: true),
+                              onTapFechaFin: () =>
+                                  _seleccionarFecha(inicio: false),
+                            ),
                           ),
                         ),
                       ),
@@ -2311,25 +2334,147 @@ class _CitasPageState extends State<CitasPage>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildHeader(isCompact: isCompact),
-                          _buildActiveFiltersRibbon(),
+                          CitasHeader(
+                            titulo: widget.titulo,
+                            subtitulo: widget.soloMisCitas
+                                ? 'Agenda personal en tiempo real'
+                                : 'Supervisa, crea y edita citas médicas en vivo',
+                            isCompact: isCompact,
+                            theme: _theme,
+                          ),
+                          CitasActiveFiltersRibbon(
+                            theme: _theme,
+                            buscarTexto: _buscarTexto,
+                            estadoFiltro: _estadoFiltro,
+                            medicoFiltro: _medicoFiltro,
+                            fechaInicioFiltro: _fechaInicioFiltro,
+                            fechaFinFiltro: _fechaFinFiltro,
+                            formatter: _dateFormat,
+                          ),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _buildTabsRow(),
+                                CitasTabsRow(
+                                  tabController: _tabController,
+                                  onToggleFilters: _toggleFilters,
+                                  theme: _theme,
+                                ),
                                 Expanded(
                                   child: TabBarView(
                                     controller: _tabController,
                                     children: [
-                                      _buildCalendario(
-                                        citasSeleccionadas,
+                                      CitasCalendarioPanel(
+                                        theme: _theme,
+                                        calendarFormat: _calendarFormat,
+                                        focusedDay: _focusedDay,
+                                        selectedDay: _selectedDay,
+                                        citasPorDia: _citasPorDia,
+                                        onFormatChanged: (format) {
+                                          if (_calendarFormat != format) {
+                                            setState(() {
+                                              _calendarFormat = format;
+                                            });
+                                            _cargarCitasCalendario();
+                                          }
+                                        },
+                                        onDaySelected:
+                                            (selectedDay, focusedDay) {
+                                          setState(() {
+                                            _selectedDay = selectedDay;
+                                            _focusedDay = focusedDay;
+                                          });
+                                          _cargarCitasDelDia(
+                                            day: selectedDay,
+                                          );
+                                        },
+                                        onPageChanged: (focusedDay) {
+                                          _focusedDay = focusedDay;
+                                          if (_currentTabIndex == 0) {
+                                            _cargarCitasCalendario();
+                                          }
+                                        },
                                         isCompact: isCompact,
+                                        dayLoading: _dayLoading,
+                                        listado: CitasListado(
+                                          citas: citasSeleccionadas,
+                                          theme: _theme,
+                                          controller: null,
+                                          onRefresh:
+                                              isCompact ? null : _refreshCalendario,
+                                          embedInScroll: isCompact,
+                                          colorEstado: _colorEstado,
+                                          colorEspecialidad: _colorEspecialidad,
+                                          formatoFecha: _formatoFechaCita,
+                                          formatoHorario: _formatoHorarioCita,
+                                          tituloCita: _tituloCita,
+                                          iconoTipoCita: _iconoTipoCita,
+                                          nombreMedico: _nombreMedico,
+                                          nombrePaciente: _nombrePaciente,
+                                          onVerDetalle: (cita) =>
+                                              () => _mostrarDetalleCita(cita),
+                                          onEditar: (cita) =>
+                                              () => _abrirFormulario(cita: cita),
+                                        ),
+                                        onRefresh: _refreshCalendario,
                                       ),
-                                      _buildListadoTab(citasListadoFiltradas),
-                                      _buildAgendaTab(
-                                        _filtrarCitasLocal(_citasAgenda),
+                                      CitasListadoTab(
+                                        citas: citasListadoFiltradas,
+                                        theme: _theme,
+                                        controller: _listScrollController,
+                                        onRefresh: _refreshListado,
+                                        isLoadingMore: _listLoadingMore,
+                                        colorEstado: _colorEstado,
+                                        colorEspecialidad: _colorEspecialidad,
+                                        formatoFecha: _formatoFechaCita,
+                                        formatoHorario: _formatoHorarioCita,
+                                        tituloCita: _tituloCita,
+                                        iconoTipoCita: _iconoTipoCita,
+                                        nombreMedico: _nombreMedico,
+                                        nombrePaciente: _nombrePaciente,
+                                        onVerDetalle: (cita) =>
+                                            () => _mostrarDetalleCita(cita),
+                                        onEditar: (cita) =>
+                                            () => _abrirFormulario(cita: cita),
+                                      ),
+                                      CitasAgendaSection(
+                                        citas: _filtrarCitasLocal(_citasAgenda),
                                         isCompact: isCompact,
+                                        theme: _theme,
+                                        dateFormat: _dateFormat,
+                                        agendaDay: _agendaDay,
+                                        agendaFocusedDay: _agendaFocusedDay,
+                                        agendaCalendarCollapsed:
+                                            _agendaCalendarCollapsed,
+                                        citasAgendaPorDia: _citasAgendaPorDia,
+                                        onAgendaDaySelected:
+                                            (selectedDay, focusedDay) {
+                                          setState(
+                                            () => _agendaFocusedDay = focusedDay,
+                                          );
+                                          _seleccionarAgendaDay(selectedDay);
+                                        },
+                                        onPageChanged: (focusedDay) {
+                                          setState(
+                                            () => _agendaFocusedDay = focusedDay,
+                                          );
+                                          _cargarCitasAgendaSemana();
+                                        },
+                                        onExpandCalendar: () => setState(
+                                          () => _agendaCalendarCollapsed = false,
+                                        ),
+                                        isLoading: _agendaLoading,
+                                        scrollController: _agendaScrollController,
+                                        formatoHoraAgenda: _formatoHoraAgenda,
+                                        formatoHorarioCita: _formatoHorarioCita,
+                                        tituloCita: _tituloCita,
+                                        nombreMedico: _nombreMedico,
+                                        nombrePaciente: _nombrePaciente,
+                                        iconoTipoCita: _iconoTipoCita,
+                                        colorEspecialidad: _colorEspecialidad,
+                                        colorEstado: _colorEstado,
+                                        onTapCita: (cita) =>
+                                            () => _mostrarDetalleCita(cita),
                                       ),
                                     ],
                                   ),
@@ -2360,897 +2505,10 @@ class _CitasPageState extends State<CitasPage>
     );
   }
 
-  Widget _buildHeader({required bool isCompact}) {
-    return Wrap(
-      spacing: 16,
-      runSpacing: 12,
-      alignment: WrapAlignment.spaceBetween,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        SizedBox(
-          width: isCompact ? double.infinity : 420,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                widget.titulo,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: _theme.primary,
-                ),
-              ),
-              Text(
-                widget.soloMisCitas
-                    ? 'Agenda personal en tiempo real'
-                    : 'Supervisa, crea y edita citas médicas en vivo',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-          ),
-        ),
-        if (isCompact == false)
-          Text('Agenda médica', style: Theme.of(context).textTheme.bodySmall),
-      ],
-    );
-  }
-
-  Widget _buildFiltersFields({required bool isCompact}) {
-    return Wrap(
-      spacing: 16,
-      runSpacing: 12,
-      children: [
-        SizedBox(
-          width: isCompact ? double.infinity : 180,
-          child: CustomTextInput(
-            title: 'Buscar',
-            controller: _buscarController,
-            onChange: (value) {
-              setState(() => _buscarTexto = value);
-            },
-          ),
-        ),
-        SizedBox(
-          width: isCompact ? double.infinity : 160,
-          child: DropdownButtonFormField<String?>(
-            initialValue: _estadoFiltro,
-            decoration: const InputDecoration(
-              labelText: 'Estado',
-              border: OutlineInputBorder(),
-            ),
-            items: [
-              const DropdownMenuItem(value: null, child: Text('Todos')),
-              ...CitaEstado.values.map(
-                (estado) =>
-                    DropdownMenuItem(value: estado, child: Text(estado)),
-              ),
-            ],
-            onChanged: (value) => setState(() => _estadoFiltro = value),
-          ),
-        ),
-        if (widget.mostrarFiltroMedico)
-          SizedBox(
-            width: isCompact ? double.infinity : 160,
-            child: CustomTextInput(
-              title: 'Médico ID',
-              controller: _medicoFiltroController,
-              onChange: (value) {
-                setState(() => _medicoFiltro = value);
-              },
-            ),
-          ),
-        FiltroFecha(
-          label: 'Desde',
-          value: _fechaInicioFiltro,
-          formatter: _dateFormat,
-          onTap: () => _seleccionarFecha(inicio: true),
-        ),
-        FiltroFecha(
-          label: 'Hasta',
-          value: _fechaFinFiltro,
-          formatter: _dateFormat,
-          onTap: () => _seleccionarFecha(inicio: false),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTabsRow() {
-    return Row(
-      children: [
-        Expanded(
-          child: TabBar(
-            controller: _tabController,
-            isScrollable: true,
-            labelColor: _theme.primary,
-            indicatorColor: _theme.primary,
-            tabs: const [
-              Tab(text: 'Calendario'),
-              Tab(text: 'Listado'),
-              Tab(text: 'Agenda diaria'),
-            ],
-          ),
-        ),
-        const SizedBox(width: 8),
-        IconButton(
-          onPressed: _toggleFilters,
-          icon: const Icon(PhosphorIconsRegular.funnel),
-          style: IconButton.styleFrom(
-            padding: const EdgeInsets.all(8),
-            minimumSize: const Size(40, 40),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActiveFiltersRibbon() {
-    if (!_hasActiveFilters) return const SizedBox.shrink();
-
-    final chips = <Widget>[];
-    if (_buscarTexto.trim().isNotEmpty) {
-      chips.add(ActiveFilterChip(label: 'Buscar: ${_buscarTexto.trim()}'));
-    }
-    if (_estadoFiltro?.isNotEmpty ?? false) {
-      chips.add(ActiveFilterChip(label: 'Estado: $_estadoFiltro'));
-    }
-    if (_medicoFiltro?.isNotEmpty ?? false) {
-      chips.add(ActiveFilterChip(label: 'Médico: $_medicoFiltro'));
-    }
-    if (_fechaInicioFiltro != null || _fechaFinFiltro != null) {
-      final inicio = _fechaInicioFiltro != null
-          ? _dateFormat.format(_fechaInicioFiltro!)
-          : '--';
-      final fin = _fechaFinFiltro != null
-          ? _dateFormat.format(_fechaFinFiltro!)
-          : '--';
-      chips.add(ActiveFilterChip(label: 'Rango: $inicio → $fin'));
-    }
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: _theme.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  PhosphorIconsRegular.funnel,
-                  size: 16,
-                  color: _theme.primary,
-                ),
-                const SizedBox(width: 8),
-                Wrap(spacing: 8, children: chips),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCalendario(
-    List<CitaMedica> citasSeleccionadas, {
-    required bool isCompact,
-  }) {
-    final listado = _dayLoading
-        ? Center(
-            child: SizedBox(
-              height: 28,
-              width: 28,
-              child: CircularProgressIndicator(color: _theme.primary),
-            ),
-          )
-        : _buildListado(
-            citasSeleccionadas,
-            compact: true,
-            onRefresh: isCompact ? null : _refreshCalendario,
-            embedInScroll: isCompact,
-          );
-    final calendario = Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _theme.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: _theme.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          TableCalendar<CitaMedica>(
-            locale: 'es_ES',
-            firstDay: DateTime.utc(2020, 1, 1),
-            lastDay: DateTime.utc(2100, 12, 31),
-            focusedDay: _focusedDay,
-            calendarFormat: _calendarFormat,
-            startingDayOfWeek: StartingDayOfWeek.monday,
-            selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-            sixWeekMonthsEnforced: true,
-            availableCalendarFormats: const {
-              CalendarFormat.month: 'Mes',
-              CalendarFormat.week: 'Semana',
-            },
-            headerStyle: HeaderStyle(
-              titleTextStyle: Theme.of(context).textTheme.titleSmall ??
-                  const TextStyle(fontWeight: FontWeight.w600),
-              titleCentered: false,
-              formatButtonVisible: true,
-              formatButtonDecoration: BoxDecoration(
-                color: _theme.primary.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              formatButtonTextStyle: TextStyle(
-                color: _theme.primary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            onFormatChanged: (format) {
-              if (_calendarFormat != format) {
-                setState(() {
-                  _calendarFormat = format;
-                });
-                _cargarCitasCalendario();
-              }
-            },
-            eventLoader: (day) {
-              final key = DateTime(day.year, day.month, day.day);
-              return _citasPorDia[key] ?? [];
-            },
-            onDaySelected: (selectedDay, focusedDay) {
-              setState(() {
-                _selectedDay = selectedDay;
-                _focusedDay = focusedDay;
-              });
-              _cargarCitasDelDia(day: selectedDay);
-            },
-            onPageChanged: (focusedDay) {
-              _focusedDay = focusedDay;
-              if (_currentTabIndex == 0) {
-                _cargarCitasCalendario();
-              }
-            },
-            availableGestures: AvailableGestures.all,
-            calendarStyle: CalendarStyle(
-              todayDecoration: BoxDecoration(
-                color: _theme.primary.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
-              ),
-              selectedDecoration: BoxDecoration(
-                color: _theme.primary,
-                shape: BoxShape.circle,
-              ),
-              markerDecoration: BoxDecoration(
-                color: _theme.secondary,
-                shape: BoxShape.circle,
-              ),
-            ),
-            daysOfWeekStyle: DaysOfWeekStyle(
-              dowTextFormatter: (date, locale) =>
-                  DateFormat.E(locale).format(date)[0].toUpperCase(),
-              weekdayStyle:
-                  TextStyle(color: _theme.primary, fontWeight: FontWeight.w600),
-              weekendStyle: TextStyle(
-                color: _theme.black.withValues(alpha: 0.54),
-              ),
-            ),
-            calendarBuilders: CalendarBuilders(
-              dowBuilder: (context, day) {
-                final text = DateFormat.E('es_ES')
-                    .format(day)
-                    .substring(0, 1)
-                    .toUpperCase();
-                return Center(
-                  child: Text(
-                    text,
-                    style: TextStyle(
-                      color: _theme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-
-    if (isCompact) {
-      return RefreshIndicator(
-        onRefresh: _refreshCalendario,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            children: [
-              calendario,
-              const SizedBox(height: 16),
-              listado,
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Row(
-      children: [
-        Expanded(child: calendario),
-        const SizedBox(width: 16),
-        Expanded(child: listado),
-      ],
-    );
-  }
-
-  Widget _buildListadoTab(List<CitaMedica> citas) {
-    return Column(
-      children: [
-        Expanded(
-          child: _buildListado(
-            citas,
-            controller: _listScrollController,
-            onRefresh: _refreshListado,
-          ),
-        ),
-        if (_listLoadingMore) const SizedBox(height: 12),
-        if (_listLoadingMore)
-          Center(
-            child: SizedBox(
-              height: 28,
-              width: 28,
-              child: CircularProgressIndicator(color: _theme.primary),
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildAgendaTab(List<CitaMedica> citas, {required bool isCompact}) {
-    final ordenadas = [...citas]
-      ..sort(
-        (a, b) =>
-            (a.fechaInicio ?? DateTime(1970))
-                .compareTo(b.fechaInicio ?? DateTime(1970)),
-      );
-    final citasPorHora = <int, List<CitaMedica>>{};
-    for (final cita in ordenadas) {
-      final inicio = cita.fechaInicio;
-      if (inicio == null) continue;
-      if (inicio.hour < 8 || inicio.hour > 20) continue;
-      citasPorHora.putIfAbsent(inicio.hour, () => []).add(cita);
-    }
-
-    final header = GestureDetector(
-      onTap: _agendaCalendarCollapsed
-          ? () => setState(() => _agendaCalendarCollapsed = false)
-          : null,
-      child: Wrap(
-        spacing: 12,
-        runSpacing: 12,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          SizedBox(
-            width: isCompact ? double.infinity : 320,
-            child: _buildAgendaWeekCalendar(),
-          ),
-          InfoPill(
-            icon: PhosphorIconsRegular.calendarBlank,
-            label: 'Agenda ${_dateFormat.format(_agendaDay)}',
-            color: _theme.primary,
-          ),
-          InfoPill(
-            icon: PhosphorIconsRegular.clock,
-            label: '08:00 - 20:00',
-            color: _theme.grey,
-          ),
-          InfoPill(
-            icon: PhosphorIconsRegular.stethoscope,
-            label: '${ordenadas.length} citas',
-            color: _theme.secondary,
-          ),
-        ],
-      ),
-    );
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        header,
-        const SizedBox(height: 16),
-        Expanded(
-          child: _agendaLoading
-              ? Center(
-                  child: SizedBox(
-                    height: 28,
-                    width: 28,
-                    child: CircularProgressIndicator(color: _theme.primary),
-                  ),
-                )
-              : _buildAgendaTimeline(citasPorHora),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAgendaWeekCalendar() {
-    final isCollapsed = _agendaCalendarCollapsed;
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      curve: Curves.easeInOut,
-      height: isCollapsed ? 0 : 118,
-      child: TableCalendar<CitaMedica>(
-        locale: 'es_ES',
-        firstDay: DateTime.utc(2020, 1, 1),
-        lastDay: DateTime.utc(2100, 12, 31),
-        focusedDay: _agendaFocusedDay,
-        calendarFormat: CalendarFormat.week,
-        availableCalendarFormats: const {
-          CalendarFormat.week: 'Semana',
-        },
-        startingDayOfWeek: StartingDayOfWeek.monday,
-        selectedDayPredicate: (day) => isSameDay(_agendaDay, day),
-        headerVisible: !isCollapsed,
-        rowHeight: 30,
-        daysOfWeekHeight: 20,
-        eventLoader: (day) {
-          final key = DateTime(day.year, day.month, day.day);
-          return _citasAgendaPorDia[key] ?? [];
-        },
-        headerStyle: HeaderStyle(
-          titleTextStyle: Theme.of(context).textTheme.labelLarge ??
-              const TextStyle(fontWeight: FontWeight.w600),
-          titleCentered: false,
-          formatButtonVisible: false,
-          leftChevronIcon:
-              Icon(Icons.chevron_left, size: 18, color: _theme.primary),
-          rightChevronIcon:
-              Icon(Icons.chevron_right, size: 18, color: _theme.primary),
-          headerPadding: EdgeInsets.zero,
-          leftChevronMargin: EdgeInsets.zero,
-          rightChevronMargin: EdgeInsets.zero,
-        ),
-        onDaySelected: (selectedDay, focusedDay) {
-          setState(() => _agendaFocusedDay = focusedDay);
-          _seleccionarAgendaDay(selectedDay);
-        },
-        onPageChanged: (focusedDay) {
-          setState(() => _agendaFocusedDay = focusedDay);
-          _cargarCitasAgendaSemana();
-        },
-        daysOfWeekStyle: DaysOfWeekStyle(
-          dowTextFormatter: (date, locale) =>
-              DateFormat.E(locale).format(date)[0].toUpperCase(),
-          weekdayStyle: TextStyle(
-            color: _theme.primary,
-            fontWeight: FontWeight.w600,
-          ),
-          weekendStyle: TextStyle(
-            color: _theme.black.withValues(alpha: 0.54),
-          ),
-        ),
-        calendarStyle: CalendarStyle(
-          outsideDaysVisible: false,
-          cellMargin: EdgeInsets.zero,
-          cellPadding: EdgeInsets.zero,
-          markerSize: 5,
-          markersAlignment: Alignment.bottomCenter,
-          markerMargin: EdgeInsets.zero,
-          markerDecoration: BoxDecoration(
-            color: _theme.secondary,
-            shape: BoxShape.circle,
-          ),
-          todayDecoration: BoxDecoration(
-            color: _theme.primary.withValues(alpha: 0.2),
-            shape: BoxShape.circle,
-          ),
-          selectedDecoration: BoxDecoration(
-            color: _theme.primary,
-            shape: BoxShape.circle,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAgendaTimeline(Map<int, List<CitaMedica>> citasPorHora) {
-    final horas = List.generate(13, (index) => index + 8);
-    if (horas.isEmpty) {
-      return const SizedBox.shrink();
-    }
-
-    return ListView.separated(
-      controller: _agendaScrollController,
-      padding: const EdgeInsets.only(bottom: 16),
-      itemCount: horas.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 2),
-      itemBuilder: (context, index) {
-        final hour = horas[index];
-        final hourLabel = '${hour.toString().padLeft(2, '0')}:00';
-        final citas = citasPorHora[hour] ?? [];
-        if (citas.isEmpty) {
-          return _buildAgendaRow(
-            label: hourLabel,
-            child: Text(
-              'Sin citas',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: _theme.grey.withValues(alpha: 0.7),
-                  ),
-            ),
-          );
-        }
-
-        return Column(
-          children: [
-            for (var i = 0; i < citas.length; i++)
-              _buildAgendaRow(
-                label: i == 0
-                    ? hourLabel
-                    : _formatoHoraAgenda(citas[i].fechaInicio, hour),
-                child: Padding(
-                  padding: EdgeInsets.only(bottom: i == citas.length - 1 ? 0 : 4),
-                  child: _buildAgendaCitaCard(citas[i]),
-                ),
-              ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildAgendaRow({required String label, required Widget child}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 1),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 60,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: _theme.primary,
-                      ),
-                ),
-                const SizedBox(height: 6),
-                Container(
-                  height: 1,
-                  color: _theme.grey.withValues(alpha: 0.2),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 6),
-          Expanded(child: child),
-        ],
-      ),
-    );
-  }
-
   String _formatoHoraAgenda(DateTime? inicio, int hour) {
     if (inicio == null) return '${hour.toString().padLeft(2, '0')}:00';
     if (inicio.minute == 0) return '${hour.toString().padLeft(2, '0')}:00';
     return _timeFormat.format(inicio);
-  }
-
-  Widget _buildAgendaCitaCard(CitaMedica cita) {
-    final especialidadColor = _colorEspecialidad(cita);
-    final horario = _formatoHorarioCita(cita.fechaInicio, cita.fechaFin);
-    final titulo = _tituloCita(cita);
-    final medico = _nombreMedico(cita);
-    final paciente = _nombrePaciente(cita);
-    return InkWell(
-      onTap: () => _mostrarDetalleCita(cita),
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: _theme.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: especialidadColor.withValues(alpha: 0.25),
-            width: 1.2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: _theme.black.withValues(alpha: 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  _iconoTipoCita(cita),
-                  size: 18,
-                  color: _theme.primary,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    titulo,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                ),
-                _buildEstadoBadge(cita.estado),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Row(
-              children: [
-                Icon(PhosphorIconsRegular.clock, size: 16, color: _theme.grey),
-                const SizedBox(width: 6),
-                Text(
-                  horario,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: _theme.grey,
-                      ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Wrap(
-              spacing: 12,
-              runSpacing: 6,
-              children: [
-                if (paciente.isNotEmpty)
-                  InfoPill(
-                    icon: PhosphorIconsRegular.userCircle,
-                    label: paciente,
-                    color: _theme.grey,
-                  ),
-                if (medico.isNotEmpty)
-                  InfoPill(
-                    icon: PhosphorIconsRegular.stethoscope,
-                    label: medico,
-                    color: _theme.grey,
-                  ),
-                if ((cita.especialidadNombre ?? '').trim().isNotEmpty)
-                  InfoPill(
-                    icon: PhosphorIconsRegular.tag,
-                    label: cita.especialidadNombre!.trim(),
-                    color: especialidadColor,
-                  ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildListado(
-    List<CitaMedica> citas, {
-    bool compact = false,
-    ScrollController? controller,
-    Future<void> Function()? onRefresh,
-    bool embedInScroll = false,
-  }) {
-    if (citas.isEmpty) {
-      final emptyState = Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            PhosphorIconsRegular.calendarBlank,
-            size: 48,
-            color: _theme.grey.withValues(alpha: 0.6),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'No hay citas registradas',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: _theme.grey),
-          ),
-        ],
-      );
-
-      if (embedInScroll) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 32),
-          child: Center(child: emptyState),
-        );
-      }
-
-      final emptyList = ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        children: [
-          const SizedBox(height: 120),
-          Center(child: emptyState),
-        ],
-      );
-
-      return onRefresh != null
-          ? RefreshIndicator(onRefresh: onRefresh, child: emptyList)
-          : Center(child: emptyState);
-    }
-
-    final listView = ListView.separated(
-      controller: controller,
-      physics: embedInScroll
-          ? const NeverScrollableScrollPhysics()
-          : onRefresh != null
-              ? const AlwaysScrollableScrollPhysics()
-              : null,
-      padding: const EdgeInsets.only(top: 8),
-      shrinkWrap: embedInScroll,
-      itemCount: citas.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final cita = citas[index];
-        final estadoColor = _colorEstado(cita.estado);
-        final especialidadColor = _colorEspecialidad(cita);
-        final resumenFecha = _formatoFechaCita(cita.fechaInicio);
-        final resumenHorario =
-            _formatoHorarioCita(cita.fechaInicio, cita.fechaFin);
-        final medicoNombre = _nombreMedico(cita);
-        final pacienteNombre = _nombrePaciente(cita);
-        final titulo = _tituloCita(cita);
-        final tipoIcono = _iconoTipoCita(cita);
-
-        return Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: _theme.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: especialidadColor.withValues(alpha: 0.25),
-              width: 1.2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: _theme.black.withValues(alpha: 0.04),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 4,
-                  margin: const EdgeInsets.only(right: 12, top: 4),
-                  decoration: BoxDecoration(
-                    color: especialidadColor,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Row(
-                              children: [
-                                Icon(
-                                  tipoIcono,
-                                  size: 20,
-                                  color: _theme.primary,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    titulo,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.titleMedium?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: estadoColor.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              cita.estado,
-                              style: Theme.of(
-                                context,
-                              ).textTheme.labelSmall?.copyWith(
-                                    color: estadoColor,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 16,
-                        runSpacing: 8,
-                        children: [
-                          InfoPill(
-                            icon: PhosphorIconsRegular.calendar,
-                            label: resumenFecha,
-                          ),
-                          InfoPill(
-                            icon: PhosphorIconsRegular.clock,
-                            label: resumenHorario,
-                          ),
-                          if (pacienteNombre.isNotEmpty)
-                            InfoPill(
-                              icon: PhosphorIconsRegular.userCircle,
-                              label: pacienteNombre,
-                              color: _theme.primary,
-                            ),
-                          if (medicoNombre.isNotEmpty)
-                            InfoPill(
-                              icon: PhosphorIconsRegular.stethoscope,
-                              label: medicoNombre,
-                              color: _theme.secondary,
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          if ((cita.especialidadNombre ?? cita.especialidadId)
-                                  ?.isNotEmpty ??
-                              false)
-                            _buildEspecialidadTag(
-                              cita.especialidadNombre ?? cita.especialidadId!,
-                              especialidadColor,
-                            ),
-                          const Spacer(),
-                          IconButton(
-                            onPressed: () => _mostrarDetalleCita(cita),
-                            icon: const Icon(Icons.info_outline),
-                            tooltip: 'Ver detalles',
-                          ),
-                          IconButton(
-                            onPressed: () => _abrirFormulario(cita: cita),
-                            icon: const Icon(Icons.edit),
-                            tooltip: 'Editar',
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-
-    if (onRefresh == null) {
-      return listView;
-    }
-
-    return RefreshIndicator(onRefresh: onRefresh, child: listView);
   }
 
   String _formatoFecha(DateTime? fecha) {
@@ -3322,30 +2580,6 @@ class _CitasPageState extends State<CitasPage>
     return parts.join(' • ');
   }
 
-  Widget _buildEspecialidadTag(String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(PhosphorIconsRegular.stethoscope, size: 14, color: color),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w600,
-                ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _mostrarDetalleCita(CitaMedica cita) async {
     final especialidadNombre =
         (cita.especialidadNombre ?? cita.especialidadId)?.trim();
@@ -3374,11 +2608,14 @@ class _CitasPageState extends State<CitasPage>
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  _buildEstadoBadge(cita.estado),
+                  CitasEstadoBadge(
+                    estado: cita.estado,
+                    color: _colorEstado(cita.estado),
+                  ),
                   if (especialidadNombre?.isNotEmpty ?? false)
-                    _buildEspecialidadTag(
-                      especialidadNombre!,
-                      especialidadColor,
+                    CitasEspecialidadTag(
+                      label: especialidadNombre!,
+                      color: especialidadColor,
                     ),
                 ],
               ),
@@ -3388,64 +2625,78 @@ class _CitasPageState extends State<CitasPage>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildDetalleSection(
-                  'Horario',
-                  [
-                    _buildDetalleRow(
-                      PhosphorIconsRegular.calendar,
-                      'Fecha',
-                      _formatoFechaCita(cita.fechaInicio),
+                CitasDetalleSection(
+                  title: 'Horario',
+                  theme: _theme,
+                  children: [
+                    CitasDetalleRow(
+                      icon: PhosphorIconsRegular.calendar,
+                      label: 'Fecha',
+                      value: _formatoFechaCita(cita.fechaInicio),
+                      theme: _theme,
                     ),
-                    _buildDetalleRow(
-                      PhosphorIconsRegular.clock,
-                      'Hora',
-                      _formatoHorarioCita(cita.fechaInicio, cita.fechaFin),
+                    CitasDetalleRow(
+                      icon: PhosphorIconsRegular.clock,
+                      label: 'Hora',
+                      value: _formatoHorarioCita(
+                        cita.fechaInicio,
+                        cita.fechaFin,
+                      ),
+                      theme: _theme,
                     ),
                   ],
                 ),
-                _buildDetalleSection(
-                  'Información clínica',
-                  [
+                CitasDetalleSection(
+                  title: 'Información clínica',
+                  theme: _theme,
+                  children: [
                     if (_nombrePaciente(cita).isNotEmpty)
-                      _buildDetalleRow(
-                        PhosphorIconsRegular.userCircle,
-                        'Paciente',
-                        _nombrePaciente(cita),
+                      CitasDetalleRow(
+                        icon: PhosphorIconsRegular.userCircle,
+                        label: 'Paciente',
+                        value: _nombrePaciente(cita),
+                        theme: _theme,
                       ),
                     if (_nombreMedico(cita).isNotEmpty)
-                      _buildDetalleRow(
-                        PhosphorIconsRegular.stethoscope,
-                        'Médico',
-                        _nombreMedico(cita),
+                      CitasDetalleRow(
+                        icon: PhosphorIconsRegular.stethoscope,
+                        label: 'Médico',
+                        value: _nombreMedico(cita),
+                        theme: _theme,
                       ),
                     if (especialidadNombre?.isNotEmpty ?? false)
-                      _buildDetalleRow(
-                        PhosphorIconsRegular.stethoscope,
-                        'Especialidad',
-                        especialidadNombre!,
+                      CitasDetalleRow(
+                        icon: PhosphorIconsRegular.stethoscope,
+                        label: 'Especialidad',
+                        value: especialidadNombre!,
+                        theme: _theme,
                       ),
                     if (cita.tipoCita?.isNotEmpty ?? false)
-                      _buildDetalleRow(
-                        PhosphorIconsRegular.folder,
-                        'Tipo de cita',
-                        cita.tipoCita!,
+                      CitasDetalleRow(
+                        icon: PhosphorIconsRegular.folder,
+                        label: 'Tipo de cita',
+                        value: cita.tipoCita!,
+                        theme: _theme,
                       ),
                     if (estudioNombre?.isNotEmpty ?? false)
-                      _buildDetalleRow(
-                        PhosphorIconsRegular.testTube,
-                        'Estudio',
-                        estudioNombre!,
+                      CitasDetalleRow(
+                        icon: PhosphorIconsRegular.testTube,
+                        label: 'Estudio',
+                        value: estudioNombre!,
+                        theme: _theme,
                       ),
                   ],
                 ),
                 if (cita.detalle.trim().isNotEmpty)
-                  _buildDetalleSection(
-                    'Notas',
-                    [
-                      _buildDetalleRow(
-                        PhosphorIconsRegular.note,
-                        'Detalle',
-                        cita.detalle.trim(),
+                  CitasDetalleSection(
+                    title: 'Notas',
+                    theme: _theme,
+                    children: [
+                      CitasDetalleRow(
+                        icon: PhosphorIconsRegular.note,
+                        label: 'Detalle',
+                        value: cita.detalle.trim(),
+                        theme: _theme,
                       ),
                     ],
                   ),
@@ -3463,77 +2714,6 @@ class _CitasPageState extends State<CitasPage>
     );
   }
 
-  Widget _buildEstadoBadge(String estado) {
-    final color = _colorEstado(estado);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Text(
-        estado,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.bold,
-            ),
-      ),
-    );
-  }
-
-  Widget _buildDetalleSection(String title, List<Widget> children) {
-    if (children.isEmpty) return const SizedBox.shrink();
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: _theme.grey,
-                  fontWeight: FontWeight.w600,
-                ),
-          ),
-          const SizedBox(height: 8),
-          ...children,
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetalleRow(IconData icon, String label, String value) {
-    final resolvedValue = value.trim().isNotEmpty ? value : '--';
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 18, color: _theme.grey),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: _theme.grey,
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  resolvedValue,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 
