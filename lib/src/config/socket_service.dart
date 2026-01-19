@@ -20,6 +20,8 @@ class SocketService {
       IO.OptionBuilder()
           .setTransports(['websocket']) // Forzar websocket
           .setQuery({'userId': userId}) // params si necesitas
+          .setReconnectionAttempts(0)
+          .setTimeout(5000)
           .disableAutoConnect() // conectar manualmente
           .build(),
     );
@@ -30,8 +32,16 @@ class SocketService {
       debugPrint('🔌 Socket connected: ${_socket!.id}');
     });
 
-    _socket!.on('disconnect', (_) {
-      debugPrint('🔌 Socket disconnected');
+    _socket!.on('disconnect', (reason) {
+      debugPrint('🔌 Socket disconnected: $reason');
+    });
+
+    _socket!.on('connect_error', (error) {
+      debugPrint('🔌 Socket connect_error: $error');
+    });
+
+    _socket!.on('error', (error) {
+      debugPrint('🔌 Socket error: $error');
     });
   }
 
