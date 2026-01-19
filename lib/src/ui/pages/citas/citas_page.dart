@@ -2735,7 +2735,7 @@ class _CitasPageState extends State<CitasPage>
               color: _theme.grey,
             ),
             InfoPill(
-              icon: PhosphorIconsRegular.activity,
+              icon: PhosphorIconsRegular.stethoscope,
               label: '${ordenadas.length} citas',
               color: _theme.secondary,
             ),
