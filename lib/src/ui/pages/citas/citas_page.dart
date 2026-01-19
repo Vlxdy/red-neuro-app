@@ -2423,6 +2423,7 @@ class _CitasPageState extends State<CitasPage>
             lastDay: DateTime.utc(2100, 12, 31),
             focusedDay: _focusedDay,
             calendarFormat: _calendarFormat,
+            startingDayOfWeek: StartingDayOfWeek.monday,
             selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
             sixWeekMonthsEnforced: true,
             availableCalendarFormats: const {
