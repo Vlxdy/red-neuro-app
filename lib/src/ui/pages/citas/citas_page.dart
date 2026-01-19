@@ -2722,13 +2722,13 @@ class _CitasPageState extends State<CitasPage>
     return ListView.separated(
       padding: const EdgeInsets.only(bottom: 16),
       itemCount: horas.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 4),
+      separatorBuilder: (_, __) => const SizedBox(height: 2),
       itemBuilder: (context, index) {
         final hour = horas[index];
         final label = '${hour.toString().padLeft(2, '0')}:00';
         final citas = citasPorHora[hour] ?? [];
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2),
+          padding: const EdgeInsets.symmetric(vertical: 1),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -2752,7 +2752,7 @@ class _CitasPageState extends State<CitasPage>
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               Expanded(
                 child: citas.isEmpty
                     ? Text(
@@ -2765,7 +2765,7 @@ class _CitasPageState extends State<CitasPage>
                         children: citas
                             .map(
                               (cita) => Padding(
-                                padding: const EdgeInsets.only(bottom: 8),
+                                padding: const EdgeInsets.only(bottom: 4),
                                 child: _buildAgendaCitaCard(cita),
                               ),
                             )
@@ -2792,7 +2792,7 @@ class _CitasPageState extends State<CitasPage>
       onTap: () => _mostrarDetalleCita(cita),
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: _theme.white,
           borderRadius: BorderRadius.circular(16),
@@ -2813,20 +2813,6 @@ class _CitasPageState extends State<CitasPage>
           children: [
             Row(
               children: [
-                Icon(
-                  _iconoTipoCita(cita),
-                  size: 18,
-                  color: _theme.primary,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    titulo,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                ),
                 if (mostrarHoraDetalle)
                   Container(
                     padding:
@@ -2844,10 +2830,24 @@ class _CitasPageState extends State<CitasPage>
                           ),
                     ),
                   ),
+                Icon(
+                  _iconoTipoCita(cita),
+                  size: 18,
+                  color: _theme.primary,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    titulo,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ),
                 _buildEstadoBadge(cita.estado),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Row(
               children: [
                 Icon(PhosphorIconsRegular.clock, size: 16, color: _theme.grey),
@@ -2860,7 +2860,7 @@ class _CitasPageState extends State<CitasPage>
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Wrap(
               spacing: 12,
               runSpacing: 6,
