@@ -101,7 +101,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
             initialLocation: '/${RouteNames.splashScreen}',
             routes: routes,
             redirect: redirectRoutes,
-            refreshListenable: appState,
+            refreshListenable:
+                Listenable.merge(<Listenable>[appState, ThemeController.instance]),
           );
 
           return ValueListenableBuilder<bool>(

@@ -39,40 +39,45 @@ class TemplatePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ThemeController theme = ThemeController.instance;
     final String environment = Constantes.entorno;
-    return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
-      child: Scaffold(
-        backgroundColor: theme.background,
-        body: Stack(
-          children: <Widget>[
-            background ?? const SizedBox(),
-            appBar(typeAppBar),
-            page ?? const SizedBox(),
-            cargando
-                ? customLoading != null
-                      ? customLoading!
-                      : Container(
-                          color: theme.black.withValues(alpha: 0.26),
-                          height: double.infinity,
-                          width: double.infinity,
-                          child: Center(
-                            child: CircularProgressIndicator(
-                              color: theme.primary,
-                            ),
-                          ),
-                        )
-                : const SizedBox(),
-            showEnvironmentBanner && environment != 'PRODUCTION'
-                ? Banner(
-                    location: BannerLocation.topStart,
-                    message: environment,
-                  )
-                : const SizedBox(),
-          ],
-        ),
-      ),
+    return ValueListenableBuilder<bool>(
+      valueListenable: ThemeController.instance.brightness,
+      builder: (BuildContext context, bool _, Widget? child) {
+        final ThemeController theme = ThemeController.instance;
+        return GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: Scaffold(
+            backgroundColor: theme.background,
+            body: Stack(
+              children: <Widget>[
+                background ?? const SizedBox(),
+                appBar(typeAppBar),
+                page ?? const SizedBox(),
+                cargando
+                    ? customLoading != null
+                          ? customLoading!
+                          : Container(
+                              color: theme.black.withValues(alpha: 0.26),
+                              height: double.infinity,
+                              width: double.infinity,
+                              child: Center(
+                                child: CircularProgressIndicator(
+                                  color: theme.primary,
+                                ),
+                              ),
+                            )
+                    : const SizedBox(),
+                showEnvironmentBanner && environment != 'PRODUCTION'
+                    ? Banner(
+                        location: BannerLocation.topStart,
+                        message: environment,
+                      )
+                    : const SizedBox(),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

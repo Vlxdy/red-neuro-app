@@ -31,7 +31,7 @@ class ConfirmationDialog extends StatelessWidget {
         width: size.width, // Makes it half the screen width
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
         decoration: BoxDecoration(
-          color: theme.background,
+          color: theme.bgCard,
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -40,8 +40,8 @@ class ConfirmationDialog extends StatelessWidget {
             Text(
               (title ?? ""),
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Color(0xFFBEC3D2),
+              style: TextStyle(
+                color: theme.fontColor,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -58,7 +58,10 @@ class ConfirmationDialog extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     text ?? '¿Está seguro de realizar esta acción?',
-                    style: TextStyle(color: theme.grey, fontSize: 15),
+                    style: TextStyle(
+                      color: theme.fontColor.withValues(alpha: 0.7),
+                      fontSize: 15,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -70,7 +73,7 @@ class ConfirmationDialog extends StatelessWidget {
                   visible: withCancel,
                   child: Flexible(
                     child: SimpleButton(
-                      textColor: theme.black,
+                      textColor: theme.primary,
                       outlined: true,
                       title: 'Cancelar',
                       onTap: () => Navigator.pop(context),

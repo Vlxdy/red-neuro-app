@@ -49,11 +49,11 @@ class CitasCalendarioPanel extends StatelessWidget {
     final calendario = Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.white,
+        color: theme.bgCard,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: theme.black.withValues(alpha: 0.05),
+            color: theme.black.withValues(alpha: theme.isLight ? 0.05 : 0.2),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -116,7 +116,7 @@ class CitasCalendarioPanel extends StatelessWidget {
               weekdayStyle:
                   TextStyle(color: theme.primary, fontWeight: FontWeight.w600),
               weekendStyle: TextStyle(
-                color: theme.black.withValues(alpha: 0.54),
+                color: theme.fontColor.withValues(alpha: 0.6),
               ),
             ),
             calendarBuilders: CalendarBuilders(

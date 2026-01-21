@@ -16,6 +16,7 @@ import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:red_neuro_app/src/ui/pages/login/login.dart';
 import 'package:red_neuro_app/src/ui/pages/login/componentes/login_account_page.dart';
 import 'package:red_neuro_app/src/ui/pages/splash_screen.dart';
+import 'package:red_neuro_app/src/ui/global/theme_rebuild.dart';
 import 'package:go_router/go_router.dart';
 
 // import '../plugins/camera/camera_screen.dart';
@@ -59,69 +60,77 @@ List<RouteBase> routes = [
   GoRoute(
     name: RouteNames.splashScreen,
     path: '/${RouteNames.splashScreen}',
-    builder: (context, state) => const SplashScreen(),
+    builder: (context, state) =>
+        const ThemeRebuild(child: SplashScreen()),
   ),
   GoRoute(
     name: RouteNames.login,
     path: '/${RouteNames.login}',
-    builder: (context, state) => const Login(),
+    builder: (context, state) => const ThemeRebuild(child: Login()),
   ),
   GoRoute(
     name: RouteNames.loginAccount,
     path: '/${RouteNames.loginAccount}',
-    builder: (context, state) => const LoginAccount(),
+    builder: (context, state) => const ThemeRebuild(child: LoginAccount()),
   ),
   GoRoute(
     name: RouteNames.olvideContrasena,
     path: '/${RouteNames.olvideContrasena}',
-    builder: (context, state) => const OlvideContrasena(),
+    builder: (context, state) =>
+        const ThemeRebuild(child: OlvideContrasena()),
   ),
   GoRoute(
     name: RouteNames.informacionPersonal,
     path: '/${RouteNames.informacionPersonal}',
-    builder: (context, state) => const InformacionPersonal(),
+    builder: (context, state) =>
+        const ThemeRebuild(child: InformacionPersonal()),
   ),
   GoRoute(
     name: RouteNames.cambiarContrasena,
     path: '/${RouteNames.cambiarContrasena}',
-    builder: (context, state) => const CambiarContrasena(),
+    builder: (context, state) =>
+        const ThemeRebuild(child: CambiarContrasena()),
   ),
   GoRoute(
     name: RouteNames.configuraciones,
     path: '/${RouteNames.configuraciones}',
-    builder: (context, state) => const Micuenta(),
+    builder: (context, state) => const ThemeRebuild(child: Micuenta()),
   ),
 
   /// New routes
   GoRoute(
     name: RouteNames.perfil,
     path: '/${RouteNames.perfil}',
-    builder: (context, state) => const Perfil(),
+    builder: (context, state) => const ThemeRebuild(child: Perfil()),
   ),
   GoRoute(
     name: RouteNames.home,
     path: '/${RouteNames.home}',
-    builder: (context, state) => const HomePage(),
+    builder: (context, state) => const ThemeRebuild(child: HomePage()),
   ),
   GoRoute(
     name: RouteNames.procesarSesion,
     path: '/${RouteNames.procesarSesion}',
-    builder: (context, state) => const ProcesarSesion(),
+    builder: (context, state) =>
+        const ThemeRebuild(child: ProcesarSesion()),
   ),
   GoRoute(
     name: RouteNames.configurarPinSeguridad,
     path: '/${RouteNames.configurarPinSeguridad}',
-    builder: (context, state) => const ConfiguracionPinSeguridad(),
+    builder: (context, state) =>
+        const ThemeRebuild(child: ConfiguracionPinSeguridad()),
   ),
   GoRoute(
     name: RouteNames.configurarDesbloqueo,
     path: '/${RouteNames.configurarDesbloqueo}',
-    builder: (context, state) => const ConfiguracionDesbloqueo(),
+    builder: (context, state) =>
+        const ThemeRebuild(child: ConfiguracionDesbloqueo()),
   ),
   GoRoute(
     name: RouteNames.modificarPin,
     path: '/${RouteNames.modificarPin}',
-    builder: (context, state) => const ModificarPinSeguridad(),
+    builder: (context, state) =>
+        const ThemeRebuild(child: ModificarPinSeguridad()),
   ),
 ];
 

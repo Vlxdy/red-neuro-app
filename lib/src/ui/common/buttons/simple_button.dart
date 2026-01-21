@@ -38,12 +38,19 @@ class SimpleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Color effectiveBackground = background ?? theme.primary;
+    final Color effectiveTextColor = disabled!
+        ? theme.grey
+        : outlined
+        ? (textColor ?? background ?? theme.primary)
+        : (textColor ?? theme.calculateTextColor(effectiveBackground));
+
     return Container(
       decoration: BoxDecoration(
         border: Border.all(
           color: disabled!
               ? theme.grey.withValues(alpha: .3)
-              : background ?? theme.primary,
+              : effectiveBackground,
         ),
         boxShadow: [
           BoxShadow(
@@ -57,7 +64,7 @@ class SimpleButton extends StatelessWidget {
             ? theme.grey.withValues(alpha: .3)
             : outlined
             ? theme.transparent
-            : background ?? theme.primary,
+            : effectiveBackground,
         borderRadius: BorderRadius.circular(50),
       ),
       child: Material(
@@ -73,7 +80,7 @@ class SimpleButton extends StatelessWidget {
                   ? MainAxisSize.max
                   : MainAxisSize.min,
               children: [
-                customPreffixicon ?? _preffixicon,
+                customPreffixicon ?? _buildPrefixIcon(effectiveTextColor),
                 SizedBox(width: preffixicon != null ? 8 : 0),
                 Center(
                   child: AutoSizeText(
@@ -83,16 +90,12 @@ class SimpleButton extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: disabled!
-                          ? theme.grey
-                          : outlined
-                          ? background
-                          : textColor ?? theme.white,
+                      color: effectiveTextColor,
                     ),
                   ),
                 ),
                 SizedBox(width: suffixicon != null ? 8 : 0),
-                _suffixicon,
+                _buildSuffixIcon(effectiveTextColor),
               ],
             ),
           ),
@@ -101,28 +104,20 @@ class SimpleButton extends StatelessWidget {
     );
   }
 
-  Widget get _preffixicon {
+  Widget _buildPrefixIcon(Color color) {
     return preffixicon != null
         ? Icon(
             preffixicon,
-            color: disabled!
-                ? theme.grey
-                : outlined
-                ? background
-                : textColor ?? theme.white,
+            color: color,
           )
         : const SizedBox();
   }
 
-  Widget get _suffixicon {
+  Widget _buildSuffixIcon(Color color) {
     return suffixicon != null
         ? Icon(
             suffixicon,
-            color: disabled!
-                ? theme.grey
-                : outlined
-                ? background
-                : textColor ?? theme.white,
+            color: color,
           )
         : const SizedBox();
   }

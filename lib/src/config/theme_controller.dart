@@ -1,9 +1,11 @@
-import 'package:red_neuro_app/src/plugins/utils/preferences.dart';
-import 'package:red_neuro_app/src/config/app_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:red_neuro_app/src/config/app_theme.dart';
+import 'package:red_neuro_app/src/plugins/utils/preferences.dart';
 
-class ThemeController {
-  ThemeController._();
+class ThemeController extends ChangeNotifier {
+  ThemeController._() {
+    brightness.addListener(notifyListeners);
+  }
   static final instance = ThemeController._();
 
   ValueNotifier<bool> brightness = ValueNotifier<bool>(true);
@@ -27,7 +29,7 @@ class ThemeController {
   // Secondary (naranja zanahoria)
   Color get secondary => palette.secondary;
 
-  // Accent (rosa acento)
+  // Accent (azul acento)
   Color get accent50 => palette.accent50;
   Color get accent100 => palette.accent100;
   Color get accent200 => palette.accent200;
@@ -84,9 +86,11 @@ class ThemeController {
   void changeTheme() async {
     brightness.value = !brightness.value;
     await PreferencesService.instance.setBool('theme', brightness.value);
+    notifyListeners();
   }
 
   Future<void> initTheme() async {
     brightness.value = await PreferencesService.instance.getBool('theme');
+    notifyListeners();
   }
 }

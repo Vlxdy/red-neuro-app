@@ -154,157 +154,164 @@ class _PerfilState extends State<Perfil> {
 
   @override
   Widget build(BuildContext context) {
-    final ThemeController theme = ThemeController.instance;
-    final Usuario profile = _profile ?? Auth.instance.profile;
+    return ValueListenableBuilder<bool>(
+      valueListenable: ThemeController.instance.brightness,
+      builder: (BuildContext context, bool _, Widget? child) {
+        final ThemeController theme = ThemeController.instance;
+        final Usuario profile = _profile ?? Auth.instance.profile;
 
-    if (_loading && _profile == null) {
-      return Scaffold(
-        backgroundColor: theme.background,
-        body: Center(child: CircularProgressIndicator(color: theme.primary)),
-      );
-    }
+        if (_loading && _profile == null) {
+          return Scaffold(
+            backgroundColor: theme.background,
+            body: Center(child: CircularProgressIndicator(color: theme.primary)),
+          );
+        }
 
-    final bool hasMultipleRoles = _roles.length > 1;
+        final bool hasMultipleRoles = _roles.length > 1;
 
-    return ScaffoldMessenger(
-      key: perfilMessenger,
-      child: Scaffold(
-        backgroundColor: theme.background,
-        appBar: AppBar(
-          scrolledUnderElevation: 0,
-          elevation: 0,
-          systemOverlayStyle: SystemUiOverlayStyle(
-            statusBarBrightness: theme.isDark
-                ? Brightness.dark
-                : Brightness.light,
-            statusBarColor: theme.transparent,
-          ),
-          backgroundColor: theme.transparent,
-          centerTitle: true,
-          title: const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: <Widget>[
-              Text('Perfil', style: TextStyle(fontWeight: FontWeight.bold)),
-            ],
-          ),
-        ),
-        body: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: SingleChildScrollView(
-            child: Column(
-              children: <Widget>[
-                const SizedBox(height: 20),
-                Center(
-                  child: Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: <BoxShadow>[
-                        BoxShadow(
-                          color: theme.isLight
-                              ? theme.black.withValues(alpha: 0.1)
-                              : theme.white.withValues(alpha: 0.05),
-                          blurRadius: 6,
-                          offset: const Offset(0, 3),
+        return ScaffoldMessenger(
+          key: perfilMessenger,
+          child: Scaffold(
+            backgroundColor: theme.background,
+            appBar: AppBar(
+              scrolledUnderElevation: 0,
+              elevation: 0,
+              systemOverlayStyle: SystemUiOverlayStyle(
+                statusBarBrightness: theme.isDark
+                    ? Brightness.dark
+                    : Brightness.light,
+                statusBarColor: theme.transparent,
+              ),
+              backgroundColor: theme.transparent,
+              centerTitle: true,
+              title: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Text('Perfil', style: TextStyle(fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ),
+            body: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: SingleChildScrollView(
+                child: Column(
+                  children: <Widget>[
+                    const SizedBox(height: 20),
+                    Center(
+                      child: Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: <BoxShadow>[
+                            BoxShadow(
+                              color: theme.black.withValues(
+                                alpha: theme.isLight ? 0.1 : 0.4,
+                              ),
+                              blurRadius: 6,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                          border: Border.all(
+                            color: theme.primary.withValues(alpha: 0.6),
+                            width: 2,
+                          ),
                         ),
-                      ],
-                      border: Border.all(
-                        color: theme.primary.withValues(alpha: 0.6),
-                        width: 2,
+                        child: ClipOval(
+                          child:
+                              profile.urlFoto != null &&
+                                      profile.urlFoto!.isNotEmpty &&
+                                      Uri.tryParse(profile.urlFoto!) != null
+                                  ? Image.network(
+                                      profile.urlFoto!.startsWith('http')
+                                          ? profile.urlFoto!
+                                          : '${Constantes.apiUrl}${profile.urlFoto!}',
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (
+                                            BuildContext context,
+                                            Object error,
+                                            StackTrace? stackTrace,
+                                          ) =>
+                                              _buildAvatarFallback(theme, profile),
+                                    )
+                                  : _buildAvatarFallback(theme, profile),
+                        ),
                       ),
                     ),
-                    child: ClipOval(
-                      child:
-                          profile.urlFoto != null &&
-                              profile.urlFoto!.isNotEmpty &&
-                              Uri.tryParse(profile.urlFoto!) != null
-                          ? Image.network(
-                              profile.urlFoto!.startsWith('http')
-                                  ? profile.urlFoto!
-                                  : '${Constantes.apiUrl}${profile.urlFoto!}',
-                              fit: BoxFit.cover,
-                              errorBuilder:
-                                  (
-                                    BuildContext context,
-                                    Object error,
-                                    StackTrace? stackTrace,
-                                  ) => _buildAvatarFallback(theme, profile),
-                            )
-                          : _buildAvatarFallback(theme, profile),
+                    const SizedBox(height: 20),
+                    Text(
+                      "${profile.nombres} ${profile.primerApellido} ${profile.segundoApellido}",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                        color: theme.fontColor,
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  "${profile.nombres} ${profile.primerApellido} ${profile.segundoApellido}",
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                PerfilInfoCard(
-                  bgColor: theme.white,
-                  borderColor: theme.grey.withValues(alpha: .4),
-                  headerIcon: Icons.person_outline_rounded,
-                  headerTitle: 'Datitos personales',
-                  items: <Map<String, dynamic>>[
-                    <String, dynamic>{
-                      "clave": "Nombres",
-                      "valor":
-                          "${profile.nombres} ${profile.primerApellido} ${profile.segundoApellido}",
-                    },
-                    <String, dynamic>{
-                      "clave": "Fecha de nacimiento",
-                      "valor": profile.fechaNacimiento,
-                    },
+                    const SizedBox(height: 20),
+                    PerfilInfoCard(
+                      bgColor: theme.bgCard,
+                      borderColor: theme.grey.withValues(alpha: .4),
+                      headerIcon: Icons.person_outline_rounded,
+                      headerTitle: 'Datitos personales',
+                      items: <Map<String, dynamic>>[
+                        <String, dynamic>{
+                          "clave": "Nombres",
+                          "valor":
+                              "${profile.nombres} ${profile.primerApellido} ${profile.segundoApellido}",
+                        },
+                        <String, dynamic>{
+                          "clave": "Fecha de nacimiento",
+                          "valor": profile.fechaNacimiento,
+                        },
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    PerfilInfoCard(
+                      bgColor: theme.bgCard,
+                      borderColor: theme.grey.withValues(alpha: .4),
+                      headerIcon: Icons.contact_page_outlined,
+                      headerTitle: 'Datos de contacto',
+                      items: <Map<String, dynamic>>[
+                        <String, dynamic>{
+                          "clave": "Celular",
+                          "valor": profile.telefono,
+                        },
+                        <String, dynamic>{
+                          "clave": "Correo electrónico",
+                          "valor": profile.correoElectronico,
+                        },
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    _RoleCard(
+                      theme: theme,
+                      roles: _roles,
+                      activeRoleId: _activeRoleId,
+                      changing: _changingRole,
+                      onRoleSelected: hasMultipleRoles ? _changeRole : null,
+                    ),
+                    const SizedBox(height: 20),
+                    const _ThemePreference(),
+                    const SizedBox(height: 20),
+                    _SessionActions(
+                      onChangePassword: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (BuildContext context) =>
+                              const CambiarContrasena(),
+                        ),
+                      ),
+                      onLogout: _logout,
+                      loggingOut: _loggingOut,
+                    ),
+                    const SizedBox(height: 20),
                   ],
                 ),
-                const SizedBox(height: 20),
-                PerfilInfoCard(
-                  bgColor: theme.white,
-                  borderColor: theme.grey.withValues(alpha: .4),
-                  headerIcon: Icons.contact_page_outlined,
-                  headerTitle: 'Datos de contacto',
-                  items: <Map<String, dynamic>>[
-                    <String, dynamic>{
-                      "clave": "Celular",
-                      "valor": profile.telefono,
-                    },
-                    <String, dynamic>{
-                      "clave": "Correo electrónico",
-                      "valor": profile.correoElectronico,
-                    },
-                  ],
-                ),
-                const SizedBox(height: 20),
-                _RoleCard(
-                  theme: theme,
-                  roles: _roles,
-                  activeRoleId: _activeRoleId,
-                  changing: _changingRole,
-                  onRoleSelected: hasMultipleRoles ? _changeRole : null,
-                ),
-                const SizedBox(height: 20),
-                const _ThemePreference(),
-                const SizedBox(height: 20),
-                _SessionActions(
-                  onChangePassword: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (BuildContext context) =>
-                          const CambiarContrasena(),
-                    ),
-                  ),
-                  onLogout: _logout,
-                  loggingOut: _loggingOut,
-                ),
-                const SizedBox(height: 20),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -320,7 +327,7 @@ class _ThemePreference extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.white,
+        color: theme.bgCard,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: theme.grey.withValues(alpha: 0.3)),
         boxShadow: <BoxShadow>[
@@ -390,7 +397,7 @@ class _SessionActions extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.white,
+        color: theme.bgCard,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: theme.grey.withValues(alpha: 0.3)),
         boxShadow: <BoxShadow>[
@@ -480,7 +487,7 @@ class _RoleCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.white,
+        color: theme.bgCard,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: theme.grey.withValues(alpha: 0.3)),
         boxShadow: <BoxShadow>[
@@ -528,13 +535,16 @@ class _RoleCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             'Elige otro rol para actualizar los módulos visibles.',
-            style: TextStyle(color: theme.secondary, fontSize: 13),
+            style: TextStyle(
+              color: theme.fontColor.withValues(alpha: 0.7),
+              fontSize: 13,
+            ),
           ),
           if (onRoleSelected == null) ...<Widget>[
             const SizedBox(height: 8),
             Text(
               'Este usuario solo tiene un rol asignado.',
-              style: TextStyle(color: theme.secondary),
+              style: TextStyle(color: theme.fontColor.withValues(alpha: 0.7)),
             ),
           ] else ...<Widget>[
             const SizedBox(height: 12),
@@ -577,7 +587,7 @@ class _RoleCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     'Cambiando rol...',
-                    style: TextStyle(color: theme.secondary),
+                    style: TextStyle(color: theme.fontColor.withValues(alpha: 0.7)),
                   ),
                 ],
               ),
