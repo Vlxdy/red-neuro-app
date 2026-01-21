@@ -17,9 +17,11 @@ class HeaderLoginAccount extends StatelessWidget {
             Container(
               height: 200,
               width: 200,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage(Recursos.logoPrincipal),
+                  image: AssetImage(
+                    Recursos.logoPrincipalFor(isDark: theme.isDark),
+                  ),
                   fit: BoxFit.contain,
                 ),
               ),

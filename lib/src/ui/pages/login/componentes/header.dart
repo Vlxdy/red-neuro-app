@@ -13,9 +13,13 @@ class HeaderLogin extends StatelessWidget {
           margin: const EdgeInsets.symmetric(vertical: 16),
           height: 100,
           width: 250,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             image: DecorationImage(
-              image: AssetImage(Recursos.logoPrincipal),
+              image: AssetImage(
+                Recursos.logoPrincipalFor(
+                  isDark: Theme.of(context).brightness == Brightness.dark,
+                ),
+              ),
               fit: BoxFit.contain,
             ),
           ),
