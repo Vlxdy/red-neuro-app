@@ -1670,7 +1670,6 @@
               "type": "string",
               "enum": [
                 "INACTIVO",
-                "BORRADOR",
                 "SOLICITADA",
                 "CONFIRMADA",
                 "EN_CURSO",
@@ -1845,7 +1844,6 @@
               "type": "string",
               "enum": [
                 "INACTIVO",
-                "BORRADOR",
                 "SOLICITADA",
                 "CONFIRMADA",
                 "EN_CURSO",
@@ -1945,7 +1943,6 @@
               "type": "string",
               "enum": [
                 "INACTIVO",
-                "BORRADOR",
                 "SOLICITADA",
                 "CONFIRMADA",
                 "EN_CURSO",
@@ -2269,6 +2266,161 @@
         "summary": "Cancela una cita",
         "tags": [
           "Gestión de Citas"
+        ]
+      }
+    },
+    "/citas/{id}/historial": {
+      "get": {
+        "operationId": "HistorialCitasController_listarHistorial",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limite",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 10,
+              "maximum": 50,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pagina",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "filtro",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ordenRaw",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fechaInicio",
+            "required": false,
+            "in": "query",
+            "description": "Fecha de inicio (ISO) para filtrar el historial",
+            "schema": {
+              "example": "2024-06-01T00:00:00Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "fechaFin",
+            "required": false,
+            "in": "query",
+            "description": "Fecha de fin (ISO) para filtrar el historial",
+            "schema": {
+              "example": "2024-06-30T23:59:59Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "estadoAnterior",
+            "required": false,
+            "in": "query",
+            "description": "Filtrar por estado anterior",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "INACTIVO",
+                "SOLICITADA",
+                "CONFIRMADA",
+                "EN_CURSO",
+                "COMPLETADA",
+                "NO_ASISTIO",
+                "CANCELADA",
+                "RECHAZADA"
+              ]
+            }
+          },
+          {
+            "name": "rolEjecutor",
+            "required": false,
+            "in": "query",
+            "description": "Rol del usuario ejecutor",
+            "schema": {
+              "example": "MEDICO",
+              "type": "string"
+            }
+          },
+          {
+            "name": "idEjecutor",
+            "required": false,
+            "in": "query",
+            "description": "Identificador del usuario ejecutor",
+            "schema": {
+              "example": "42",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "number"
+                            },
+                            "filas": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/HistorialCitaResponseDto"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lista el historial de una cita médica",
+        "tags": [
+          "Historial de Citas"
         ]
       }
     },
@@ -4980,7 +5132,6 @@
             "type": "string",
             "enum": [
               "INACTIVO",
-              "BORRADOR",
               "SOLICITADA",
               "CONFIRMADA",
               "EN_CURSO",
@@ -5187,7 +5338,6 @@
             "type": "string",
             "enum": [
               "INACTIVO",
-              "BORRADOR",
               "SOLICITADA",
               "CONFIRMADA",
               "EN_CURSO",
@@ -5239,6 +5389,71 @@
             "description": "Comentario asociado a la cancelación (se guarda en historial)"
           }
         }
+      },
+      "HistorialCitaResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identificador del registro de historial"
+          },
+          "citaId": {
+            "type": "string",
+            "description": "Identificador de la cita asociada"
+          },
+          "estadoAnterior": {
+            "type": "string",
+            "enum": [
+              "INACTIVO",
+              "SOLICITADA",
+              "CONFIRMADA",
+              "EN_CURSO",
+              "COMPLETADA",
+              "NO_ASISTIO",
+              "CANCELADA",
+              "RECHAZADA"
+            ],
+            "description": "Estado previo de la cita antes de la transición"
+          },
+          "rolEjecutor": {
+            "type": "string",
+            "description": "Rol del usuario que ejecutó la acción registrada"
+          },
+          "idEjecutor": {
+            "type": "string",
+            "description": "Identificador del usuario que ejecutó la acción"
+          },
+          "comentario": {
+            "type": "string",
+            "description": "Comentario asociado a la transición"
+          },
+          "detalleCambios": {
+            "description": "Detalle de cambios realizados sobre la cita",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ejecutor": {
+            "description": "Datos del usuario ejecutor",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PersonalResponseDto"
+              }
+            ]
+          },
+          "fechaCreacion": {
+            "type": "string",
+            "description": "Fecha de creación del registro en formato ISO 8601"
+          }
+        },
+        "required": [
+          "id",
+          "citaId",
+          "rolEjecutor",
+          "idEjecutor",
+          "fechaCreacion"
+        ]
       },
       "CrearConsultorioDto": {
         "type": "object",
