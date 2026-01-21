@@ -80,7 +80,7 @@ class SimpleButton extends StatelessWidget {
                   ? MainAxisSize.max
                   : MainAxisSize.min,
               children: [
-                customPreffixicon ?? _preffixicon,
+                customPreffixicon ?? _buildPrefixIcon(effectiveTextColor),
                 SizedBox(width: preffixicon != null ? 8 : 0),
                 Center(
                   child: AutoSizeText(
@@ -95,7 +95,7 @@ class SimpleButton extends StatelessWidget {
                   ),
                 ),
                 SizedBox(width: suffixicon != null ? 8 : 0),
-                _suffixicon,
+                _buildSuffixIcon(effectiveTextColor),
               ],
             ),
           ),
@@ -104,20 +104,20 @@ class SimpleButton extends StatelessWidget {
     );
   }
 
-  Widget get _preffixicon {
+  Widget _buildPrefixIcon(Color color) {
     return preffixicon != null
         ? Icon(
             preffixicon,
-            color: effectiveTextColor,
+            color: color,
           )
         : const SizedBox();
   }
 
-  Widget get _suffixicon {
+  Widget _buildSuffixIcon(Color color) {
     return suffixicon != null
         ? Icon(
             suffixicon,
-            color: effectiveTextColor,
+            color: color,
           )
         : const SizedBox();
   }
