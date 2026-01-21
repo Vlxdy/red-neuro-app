@@ -11,16 +11,16 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
-  Widget _logo() {
+  Widget _logo(bool isDark) {
     return Column(
       children: <Widget>[
         Container(
           height: 100,
           width: 200,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             image: DecorationImage(
               fit: BoxFit.contain,
-              image: AssetImage(Recursos.logoPrincipal),
+              image: AssetImage(Recursos.logoPrincipalFor(isDark: isDark)),
             ),
           ),
         ),
@@ -52,7 +52,7 @@ class _SplashScreenState extends State<SplashScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: <Widget>[
-            _logo(),
+            _logo(theme.isDark),
             const SizedBox(height: 48),
             CircularProgressIndicator(color: theme.primary),
           ],

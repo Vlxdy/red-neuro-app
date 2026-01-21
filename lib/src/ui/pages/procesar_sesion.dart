@@ -96,10 +96,12 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
               Container(
                 height: 250,
                 width: 250,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   image: DecorationImage(
                     fit: BoxFit.contain,
-                    image: AssetImage(Recursos.logoPrincipal),
+                    image: AssetImage(
+                      Recursos.logoPrincipalFor(isDark: theme.isDark),
+                    ),
                   ),
                 ),
               ),
