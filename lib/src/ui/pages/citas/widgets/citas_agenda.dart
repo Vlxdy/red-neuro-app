@@ -216,7 +216,7 @@ class _AgendaWeekCalendar extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
               weekendStyle: TextStyle(
-                color: theme.black.withValues(alpha: 0.54),
+                color: theme.fontColor.withValues(alpha: 0.6),
               ),
             ),
             calendarStyle: CalendarStyle(
@@ -420,7 +420,7 @@ class _AgendaCitaCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: theme.white,
+          color: theme.bgCard,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: especialidadColor.withValues(alpha: 0.25),
@@ -428,7 +428,7 @@ class _AgendaCitaCard extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: theme.black.withValues(alpha: 0.04),
+              color: theme.black.withValues(alpha: theme.isLight ? 0.04 : 0.2),
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),

@@ -19,7 +19,7 @@ class AvatarPerfil extends StatelessWidget {
         const SizedBox(height: 10),
         CircleAvatar(
           radius: 32,
-          backgroundColor: theme.white,
+          backgroundColor: theme.bgCard2,
           child: Text(
             '${perfil.nombres[0]}${perfil.primerApellido[0]}',
             style: TextStyle(

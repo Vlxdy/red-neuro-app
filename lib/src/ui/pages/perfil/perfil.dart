@@ -245,7 +245,7 @@ class _PerfilState extends State<Perfil> {
                 ),
                 const SizedBox(height: 20),
                 PerfilInfoCard(
-                  bgColor: theme.white,
+                  bgColor: theme.bgCard,
                   borderColor: theme.grey.withValues(alpha: .4),
                   headerIcon: Icons.person_outline_rounded,
                   headerTitle: 'Datitos personales',
@@ -263,7 +263,7 @@ class _PerfilState extends State<Perfil> {
                 ),
                 const SizedBox(height: 20),
                 PerfilInfoCard(
-                  bgColor: theme.white,
+                  bgColor: theme.bgCard,
                   borderColor: theme.grey.withValues(alpha: .4),
                   headerIcon: Icons.contact_page_outlined,
                   headerTitle: 'Datos de contacto',
@@ -320,7 +320,7 @@ class _ThemePreference extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.white,
+        color: theme.bgCard,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: theme.grey.withValues(alpha: 0.3)),
         boxShadow: <BoxShadow>[

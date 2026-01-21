@@ -38,12 +38,19 @@ class SimpleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Color effectiveBackground = background ?? theme.primary;
+    final Color effectiveTextColor = disabled!
+        ? theme.grey
+        : outlined
+        ? (textColor ?? background ?? theme.primary)
+        : (textColor ?? theme.calculateTextColor(effectiveBackground));
+
     return Container(
       decoration: BoxDecoration(
         border: Border.all(
           color: disabled!
               ? theme.grey.withValues(alpha: .3)
-              : background ?? theme.primary,
+              : effectiveBackground,
         ),
         boxShadow: [
           BoxShadow(
@@ -57,7 +64,7 @@ class SimpleButton extends StatelessWidget {
             ? theme.grey.withValues(alpha: .3)
             : outlined
             ? theme.transparent
-            : background ?? theme.primary,
+            : effectiveBackground,
         borderRadius: BorderRadius.circular(50),
       ),
       child: Material(
@@ -83,11 +90,7 @@ class SimpleButton extends StatelessWidget {
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: disabled!
-                          ? theme.grey
-                          : outlined
-                          ? background
-                          : textColor ?? theme.white,
+                      color: effectiveTextColor,
                     ),
                   ),
                 ),
@@ -105,11 +108,7 @@ class SimpleButton extends StatelessWidget {
     return preffixicon != null
         ? Icon(
             preffixicon,
-            color: disabled!
-                ? theme.grey
-                : outlined
-                ? background
-                : textColor ?? theme.white,
+            color: effectiveTextColor,
           )
         : const SizedBox();
   }
@@ -118,11 +117,7 @@ class SimpleButton extends StatelessWidget {
     return suffixicon != null
         ? Icon(
             suffixicon,
-            color: disabled!
-                ? theme.grey
-                : outlined
-                ? background
-                : textColor ?? theme.white,
+            color: effectiveTextColor,
           )
         : const SizedBox();
   }

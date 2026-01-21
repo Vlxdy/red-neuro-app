@@ -126,7 +126,7 @@ class _MicuentaState extends State<Micuenta> {
                         Container(
                           margin: const EdgeInsets.symmetric(vertical: 5),
                           decoration: BoxDecoration(
-                            color: theme.white,
+                            color: theme.bgCard,
                             // backgroundBlendMode: BlendMode.colorBurn,
                             borderRadius: BorderRadius.circular(14),
                           ),
@@ -190,7 +190,7 @@ class _MicuentaState extends State<Micuenta> {
                         Container(
                           margin: const EdgeInsets.symmetric(vertical: 5),
                           decoration: BoxDecoration(
-                            color: theme.white,
+                            color: theme.bgCard,
                             // backgroundBlendMode: BlendMode.colorBurn,
                             borderRadius: BorderRadius.circular(14),
                           ),
