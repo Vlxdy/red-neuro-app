@@ -202,9 +202,9 @@ class _PerfilState extends State<Perfil> {
                       shape: BoxShape.circle,
                       boxShadow: <BoxShadow>[
                         BoxShadow(
-                          color: theme.isLight
-                              ? theme.black.withValues(alpha: 0.1)
-                              : theme.white.withValues(alpha: 0.05),
+                          color: theme.black.withValues(
+                            alpha: theme.isLight ? 0.1 : 0.4,
+                          ),
                           blurRadius: 6,
                           offset: const Offset(0, 3),
                         ),
@@ -238,9 +238,10 @@ class _PerfilState extends State<Perfil> {
                 const SizedBox(height: 20),
                 Text(
                   "${profile.nombres} ${profile.primerApellido} ${profile.segundoApellido}",
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 18,
+                    color: theme.fontColor,
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -390,7 +391,7 @@ class _SessionActions extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.white,
+        color: theme.bgCard,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: theme.grey.withValues(alpha: 0.3)),
         boxShadow: <BoxShadow>[
@@ -480,7 +481,7 @@ class _RoleCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: theme.white,
+        color: theme.bgCard,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: theme.grey.withValues(alpha: 0.3)),
         boxShadow: <BoxShadow>[
@@ -528,13 +529,16 @@ class _RoleCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             'Elige otro rol para actualizar los módulos visibles.',
-            style: TextStyle(color: theme.secondary, fontSize: 13),
+            style: TextStyle(
+              color: theme.fontColor.withValues(alpha: 0.7),
+              fontSize: 13,
+            ),
           ),
           if (onRoleSelected == null) ...<Widget>[
             const SizedBox(height: 8),
             Text(
               'Este usuario solo tiene un rol asignado.',
-              style: TextStyle(color: theme.secondary),
+              style: TextStyle(color: theme.fontColor.withValues(alpha: 0.7)),
             ),
           ] else ...<Widget>[
             const SizedBox(height: 12),
@@ -577,7 +581,7 @@ class _RoleCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     'Cambiando rol...',
-                    style: TextStyle(color: theme.secondary),
+                    style: TextStyle(color: theme.fontColor.withValues(alpha: 0.7)),
                   ),
                 ],
               ),

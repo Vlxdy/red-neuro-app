@@ -154,12 +154,15 @@ class _InicioPageState extends State<InicioPage> with WidgetsBindingObserver {
   }) {
     return Card(
       elevation: 1,
-      color: theme.primary,
+      color: theme.bgCard,
       margin: const EdgeInsets.symmetric(vertical: 4),
       child: ListTile(
         leading: Text(
           hora,
-          style: TextStyle(fontWeight: FontWeight.w600, color: theme.primary),
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: theme.fontColor,
+          ),
         ),
         title: Row(
           mainAxisAlignment: MainAxisAlignment.start,
@@ -169,7 +172,7 @@ class _InicioPageState extends State<InicioPage> with WidgetsBindingObserver {
             Text(
               tanque,
               style: TextStyle(
-                color: theme.primary,
+                color: theme.fontColor,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -180,7 +183,7 @@ class _InicioPageState extends State<InicioPage> with WidgetsBindingObserver {
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: theme.primary,
+            color: theme.fontColor,
           ),
         ),
       ),
@@ -195,20 +198,23 @@ class _InicioPageState extends State<InicioPage> with WidgetsBindingObserver {
   }) {
     return Card(
       elevation: 1,
-      color: theme.success,
+      color: theme.bgCard,
       margin: const EdgeInsets.symmetric(vertical: 4),
       child: ListTile(
         leading: Icon(iconData, color: theme.primary),
         title: Text(
           titulo,
-          style: TextStyle(fontWeight: FontWeight.w600, color: theme.primary),
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: theme.fontColor,
+          ),
         ),
         trailing: Text(
           cantidad,
           style: TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.bold,
-            color: theme.primary,
+            color: theme.fontColor,
           ),
         ),
       ),
@@ -223,7 +229,10 @@ class _InicioPageState extends State<InicioPage> with WidgetsBindingObserver {
     return Chip(
       label: Text(
         label,
-        style: TextStyle(color: theme.white, fontWeight: FontWeight.w600),
+        style: TextStyle(
+          color: theme.calculateTextColor(color),
+          fontWeight: FontWeight.w600,
+        ),
       ),
       backgroundColor: color,
     );
