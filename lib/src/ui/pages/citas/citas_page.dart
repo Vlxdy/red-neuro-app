@@ -2453,7 +2453,80 @@ class _CitasPageState extends State<CitasPage>
     return value;
   }
 
-  String? _formatearDetalleCambio(String raw) {
+  String _formatearDetallePersona(HistorialDetallePersona detalle) {
+    final nombre = detalle.nombreCompleto;
+    final parts = <String>[
+      if (nombre.trim().isNotEmpty) nombre,
+      if ((detalle.nroDocumento ?? '').trim().isNotEmpty)
+        detalle.nroDocumento!.trim(),
+      if (detalle.especialidades.isNotEmpty)
+        detalle.especialidades.join(', '),
+    ];
+    return parts.isEmpty ? '--' : parts.join(' · ');
+  }
+
+  String _formatearCambioPersona({
+    required String label,
+    required String beforeValue,
+    required String afterValue,
+    HistorialDetallePersona? beforeDetalle,
+    HistorialDetallePersona? afterDetalle,
+  }) {
+    final antes = beforeDetalle != null
+        ? _formatearDetallePersona(beforeDetalle)
+        : beforeValue;
+    final despues = afterDetalle != null
+        ? _formatearDetallePersona(afterDetalle)
+        : afterValue;
+    final antesNormalizado = antes == '--' ? '' : antes;
+    final despuesNormalizado = despues == '--' ? '' : despues;
+
+    if (antesNormalizado.isEmpty && despuesNormalizado.isNotEmpty) {
+      return '$label asignado: $despuesNormalizado';
+    }
+    if (antesNormalizado.isNotEmpty && despuesNormalizado.isEmpty) {
+      return '$label removido: $antesNormalizado';
+    }
+    if (antesNormalizado.isNotEmpty && despuesNormalizado.isNotEmpty) {
+      return '$label: $antesNormalizado → $despuesNormalizado';
+    }
+    return 'Actualización de $label';
+  }
+
+  String _formatearDetalleEstudio(HistorialDetalleEstudio detalle) {
+    final nombre = detalle.nombre.trim();
+    return nombre.isNotEmpty ? nombre : '--';
+  }
+
+  String _formatearCambioEstudio({
+    required String label,
+    required String beforeValue,
+    required String afterValue,
+    HistorialDetalleEstudio? beforeDetalle,
+    HistorialDetalleEstudio? afterDetalle,
+  }) {
+    final antes = beforeDetalle != null
+        ? _formatearDetalleEstudio(beforeDetalle)
+        : beforeValue;
+    final despues = afterDetalle != null
+        ? _formatearDetalleEstudio(afterDetalle)
+        : afterValue;
+    final antesNormalizado = antes == '--' ? '' : antes;
+    final despuesNormalizado = despues == '--' ? '' : despues;
+
+    if (antesNormalizado.isEmpty && despuesNormalizado.isNotEmpty) {
+      return '$label asignado: $despuesNormalizado';
+    }
+    if (antesNormalizado.isNotEmpty && despuesNormalizado.isEmpty) {
+      return '$label removido: $antesNormalizado';
+    }
+    if (antesNormalizado.isNotEmpty && despuesNormalizado.isNotEmpty) {
+      return '$label: $antesNormalizado → $despuesNormalizado';
+    }
+    return 'Actualización de $label';
+  }
+
+  String? _formatearDetalleCambioLegacy(String raw) {
     final trimmed = raw.trim();
     if (trimmed.isEmpty) return null;
     if (!trimmed.contains('field:')) {
@@ -2488,6 +2561,66 @@ class _CitasPageState extends State<CitasPage>
     final afterValue =
         afterMatch != null ? _normalizarValorHistorial(afterMatch.group(1)!) : '';
 
+    if (esIdRelacionado) {
+      return _formatearCambioId(
+        label: label,
+        before: beforeValue,
+        after: afterValue,
+      );
+    }
+    if (field == 'tipoCita') {
+      return '$label: ${_formatearTipoCita(beforeValue)} → ${_formatearTipoCita(afterValue)}';
+    }
+    if (beforeValue.isNotEmpty && afterValue.isNotEmpty) {
+      return '$label: $beforeValue → $afterValue';
+    }
+    return 'Actualización de $label';
+  }
+
+  String? _formatearDetalleCambio(HistorialCambio cambio) {
+    if (cambio.rawDetalle != null) {
+      return _formatearDetalleCambioLegacy(cambio.rawDetalle!);
+    }
+    final field = cambio.field.trim();
+    if (field.isEmpty) return null;
+    final esIdRelacionado = field.toLowerCase().endsWith('id');
+
+    final labels = <String, String>{
+      'fechaInicio': 'Fecha inicio',
+      'fechaFin': 'Fecha fin',
+      'detalle': 'Detalle',
+      'estado': 'Estado',
+      'tipoCita': 'Tipo de cita',
+      'esEstudio': 'Tipo de cita',
+      'idEspecialidad': 'Especialidad',
+      'idMedico': 'Médico',
+      'idPaciente': 'Paciente',
+      'idConsultorio': 'Consultorio',
+      'idEstudio': 'Estudio',
+    };
+
+    final label = labels[field] ?? field;
+    final beforeValue = _normalizarValorHistorial(cambio.before ?? '');
+    final afterValue = _normalizarValorHistorial(cambio.after ?? '');
+
+    if (field == 'idMedico' || field == 'idPaciente') {
+      return _formatearCambioPersona(
+        label: label,
+        beforeValue: beforeValue,
+        afterValue: afterValue,
+        beforeDetalle: cambio.beforeDetalle,
+        afterDetalle: cambio.afterDetalle,
+      );
+    }
+    if (field == 'idEstudio') {
+      return _formatearCambioEstudio(
+        label: label,
+        beforeValue: beforeValue,
+        afterValue: afterValue,
+        beforeDetalle: cambio.beforeDetalleEstudio,
+        afterDetalle: cambio.afterDetalleEstudio,
+      );
+    }
     if (esIdRelacionado) {
       return _formatearCambioId(
         label: label,
