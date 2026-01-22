@@ -2271,6 +2271,7 @@
     },
     "/citas/{id}/historial": {
       "get": {
+        "description": "Devuelve el listado paginado del historial con detalle de cambios y datos del ejecutor, incluyendo información de médico/paciente cuando corresponda.",
         "operationId": "HistorialCitasController_listarHistorial",
         "parameters": [
           {
@@ -2340,39 +2341,10 @@
             }
           },
           {
-            "name": "estadoAnterior",
-            "required": false,
-            "in": "query",
-            "description": "Filtrar por estado anterior",
-            "schema": {
-              "type": "string",
-              "enum": [
-                "INACTIVO",
-                "SOLICITADA",
-                "CONFIRMADA",
-                "EN_CURSO",
-                "COMPLETADA",
-                "NO_ASISTIO",
-                "CANCELADA",
-                "RECHAZADA"
-              ]
-            }
-          },
-          {
-            "name": "rolEjecutor",
-            "required": false,
-            "in": "query",
-            "description": "Rol del usuario ejecutor",
-            "schema": {
-              "example": "MEDICO",
-              "type": "string"
-            }
-          },
-          {
             "name": "idEjecutor",
             "required": false,
             "in": "query",
-            "description": "Identificador del usuario ejecutor",
+            "description": "Identificador del usuario ejecutor (usuario-rol)",
             "schema": {
               "example": "42",
               "type": "string"
@@ -5322,14 +5294,7 @@
             "description": "Identificador del estudio a realizar (requerido cuando el tipo es ESTUDIO)",
             "example": "5"
           }
-        },
-        "required": [
-          "detalle",
-          "fechaInicio",
-          "idMedico",
-          "idEspecialidad",
-          "tipoCita"
-        ]
+        }
       },
       "ActualizarEstadoCitaDto": {
         "type": "object",
@@ -5390,6 +5355,35 @@
           }
         }
       },
+      "HistorialCambioDto": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "description": "Campo modificado",
+            "example": "idMedico"
+          },
+          "before": {
+            "type": "string",
+            "description": "Valor anterior del campo"
+          },
+          "after": {
+            "type": "string",
+            "description": "Valor posterior del campo"
+          },
+          "beforeDetalle": {
+            "type": "object",
+            "description": "Detalle del valor anterior si corresponde a un médico o paciente"
+          },
+          "afterDetalle": {
+            "type": "object",
+            "description": "Detalle del valor posterior si corresponde a un médico o paciente"
+          }
+        },
+        "required": [
+          "field"
+        ]
+      },
       "HistorialCitaResponseDto": {
         "type": "object",
         "properties": {
@@ -5401,41 +5395,23 @@
             "type": "string",
             "description": "Identificador de la cita asociada"
           },
-          "estadoAnterior": {
-            "type": "string",
-            "enum": [
-              "INACTIVO",
-              "SOLICITADA",
-              "CONFIRMADA",
-              "EN_CURSO",
-              "COMPLETADA",
-              "NO_ASISTIO",
-              "CANCELADA",
-              "RECHAZADA"
-            ],
-            "description": "Estado previo de la cita antes de la transición"
-          },
-          "rolEjecutor": {
-            "type": "string",
-            "description": "Rol del usuario que ejecutó la acción registrada"
-          },
           "idEjecutor": {
             "type": "string",
-            "description": "Identificador del usuario que ejecutó la acción"
+            "description": "Identificador del usuario que ejecutó la acción (usuario-rol)"
           },
           "comentario": {
             "type": "string",
             "description": "Comentario asociado a la transición"
           },
           "detalleCambios": {
-            "description": "Detalle de cambios realizados sobre la cita",
+            "description": "Detalle de cambios realizados sobre la cita, incluyendo valores anteriores y posteriores",
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/HistorialCambioDto"
             }
           },
           "ejecutor": {
-            "description": "Datos del usuario ejecutor",
+            "description": "Datos del usuario ejecutor (cuando está disponible en el historial)",
             "allOf": [
               {
                 "$ref": "#/components/schemas/PersonalResponseDto"
@@ -5450,7 +5426,6 @@
         "required": [
           "id",
           "citaId",
-          "rolEjecutor",
           "idEjecutor",
           "fechaCreacion"
         ]
