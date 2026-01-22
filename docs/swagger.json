@@ -3532,7 +3532,7 @@
             "bearer": []
           }
         ],
-        "summary": "Lista los personales médicos y supervisores registrados",
+        "summary": "Lista el personal de salud registrado",
         "tags": [
           "Personal Médico"
         ]
@@ -4405,6 +4405,11 @@
             "items": {
               "$ref": "#/components/schemas/ModuloPermisoDto"
             }
+          },
+          "esSupervisor": {
+            "type": "boolean",
+            "description": "Indica si el rol de personal de salud cuenta con permisos de supervisión",
+            "example": false
           }
         },
         "required": [
@@ -4466,6 +4471,11 @@
           "rol": {
             "type": "string",
             "example": "ADMINISTRADOR"
+          },
+          "esSupervisor": {
+            "type": "boolean",
+            "description": "Indica si el rol activo de personal de salud cuenta con permisos de supervisión",
+            "example": false
           }
         },
         "required": [
@@ -4579,6 +4589,11 @@
             "items": {
               "type": "string"
             }
+          },
+          "esSupervisor": {
+            "type": "boolean",
+            "example": false,
+            "description": "Habilita permisos de supervisión para el rol PERSONAL_SALUD."
           }
         },
         "required": [
@@ -4771,6 +4786,11 @@
             "items": {
               "type": "string"
             }
+          },
+          "esSupervisor": {
+            "type": "boolean",
+            "example": false,
+            "description": "Habilita permisos de supervisión para el rol PERSONAL_SALUD."
           }
         },
         "required": [
@@ -4832,8 +4852,13 @@
         "properties": {
           "id": {
             "type": "string",
-            "description": "Identificador único del personal médico",
+            "description": "Identificador único del personal de salud",
             "example": "a8f4c1d2-32a1-4c2b-bff1-87fa92c1a223"
+          },
+          "esSupervisor": {
+            "type": "boolean",
+            "description": "Indica si el personal de salud tiene habilitadas funciones de supervisión",
+            "example": false
           },
           "nroDocumento": {
             "type": "string",
@@ -5373,11 +5398,11 @@
           },
           "beforeDetalle": {
             "type": "object",
-            "description": "Detalle del valor anterior si corresponde a un médico o paciente"
+            "description": "Detalle del valor anterior si corresponde a un médico, paciente o estudio"
           },
           "afterDetalle": {
             "type": "object",
-            "description": "Detalle del valor posterior si corresponde a un médico o paciente"
+            "description": "Detalle del valor posterior si corresponde a un médico, paciente o estudio"
           }
         },
         "required": [
