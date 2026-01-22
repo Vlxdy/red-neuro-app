@@ -6,6 +6,7 @@ class CitaMedica {
   final String estado;
   final String medicoId;
   final String? medicoNombre;
+  final String? pacienteId;
   final String? pacienteNombre;
   final String? especialidadId;
   final String? especialidadNombre;
@@ -22,6 +23,7 @@ class CitaMedica {
     required this.estado,
     required this.medicoId,
     required this.medicoNombre,
+    required this.pacienteId,
     required this.pacienteNombre,
     required this.especialidadId,
     required this.especialidadNombre,
@@ -51,6 +53,7 @@ class CitaMedica {
               ' ',
             )
         : null;
+    final pacienteId = (json['pacienteId'] ?? json['idPaciente'])?.toString();
     final pacienteNombre = pacienteRaw is Map<String, dynamic>
         ? [
             pacienteRaw['nombres'],
@@ -71,6 +74,11 @@ class CitaMedica {
       medicoNombre:
           (json['medicoNombre'] ?? json['nombreMedico'] ?? medicoNombre)
               ?.toString(),
+      pacienteId: (pacienteId?.isNotEmpty ?? false)
+          ? pacienteId
+          : (pacienteRaw is Map<String, dynamic>
+              ? pacienteRaw['id']?.toString()
+              : null),
       pacienteNombre:
           (json['pacienteNombre'] ?? json['nombrePaciente'] ?? pacienteNombre)
               ?.toString(),
@@ -109,6 +117,7 @@ class CitaMedica {
     String? estado,
     String? medicoId,
     String? medicoNombre,
+    String? pacienteId,
     String? pacienteNombre,
     String? especialidadId,
     String? especialidadNombre,
@@ -125,6 +134,7 @@ class CitaMedica {
       estado: estado ?? this.estado,
       medicoId: medicoId ?? this.medicoId,
       medicoNombre: medicoNombre ?? this.medicoNombre,
+      pacienteId: pacienteId ?? this.pacienteId,
       pacienteNombre: pacienteNombre ?? this.pacienteNombre,
       especialidadId: especialidadId ?? this.especialidadId,
       especialidadNombre: especialidadNombre ?? this.especialidadNombre,

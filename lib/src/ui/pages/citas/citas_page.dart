@@ -804,14 +804,18 @@ class _CitasPageState extends State<CitasPage>
     final formKey = GlobalKey<FormState>();
     final detalleController = TextEditingController(text: cita?.detalle ?? '');
     final medicoController = TextEditingController(
-      text: cita?.medicoId ?? '',
+      text: (cita?.medicoNombre ?? '').trim().isNotEmpty
+          ? cita!.medicoNombre!
+          : cita?.medicoId ?? '',
     );
     String? medicoIdSeleccionado =
         (cita?.medicoId.isNotEmpty ?? false) ? cita?.medicoId : null;
     PersonalMedico? medicoSeleccionado;
     Paciente? pacienteSeleccionado;
     final pacienteFieldKey = GlobalKey<FormFieldState<Paciente>>();
-    final pacienteAutocompleteController = TextEditingController();
+    final pacienteAutocompleteController = TextEditingController(
+      text: cita?.pacienteNombre ?? '',
+    );
     DateTime? fechaInicio = cita?.fechaInicio;
     final baseSeleccionada = fechaBase ?? _selectedDay;
     if (cita == null && baseSeleccionada != null) {
@@ -873,6 +877,20 @@ class _CitasPageState extends State<CitasPage>
     Timer? pacientesDebounce;
     Timer? medicosDebounce;
     bool inicializado = false;
+    if ((cita?.pacienteId ?? '').trim().isNotEmpty) {
+      pacienteSeleccionado = Paciente(
+        id: cita!.pacienteId!.trim(),
+        nombres: (cita.pacienteNombre ?? '').trim(),
+        primerApellido: null,
+        segundoApellido: null,
+        nroDocumento: null,
+        fechaNacimiento: null,
+        telefono: null,
+        genero: null,
+        observacion: null,
+        estado: 'ACTIVO',
+      );
+    }
 
     final result = await showDialog<bool>(
       context: context,
@@ -1833,83 +1851,80 @@ class _CitasPageState extends State<CitasPage>
                     child: ListView(
                       padding: const EdgeInsets.all(24),
                       children: [
-                        if (cita == null) ...[
-                          Text(
-                            'Paciente',
-                            style: Theme.of(context).textTheme.titleMedium,
+                        Text(
+                          'Paciente',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 12),
+                        Card(
+                          elevation: 0,
+                          color: _theme.bgCard2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          const SizedBox(height: 12),
-                          Card(
-                            elevation: 0,
-                            color: _theme.bgCard2,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
                                 FormField<Paciente>(
                                   key: pacienteFieldKey,
                                   builder: (state) {
                                     return TextFormField(
                                       controller:
                                           pacienteAutocompleteController,
-                                        readOnly: true,
-                                        decoration: InputDecoration(
-                                          labelText: 'Paciente',
-                                          hintText:
-                                              'Selecciona un paciente',
-                                          border: const OutlineInputBorder(),
-                                          errorText: state.errorText,
-                                          suffixIcon:
-                                              pacienteSeleccionado == null
-                                                  ? const Icon(
-                                                      Icons.expand_more,
-                                                    )
-                                                  : IconButton(
-                                                      tooltip: 'Quitar',
-                                                      icon:
-                                                          const Icon(Icons.close),
-                                                      onPressed: () {
-                                                        setStateDialog(() {
-                                                          pacienteSeleccionado =
-                                                              null;
-                                        pacienteAutocompleteController.clear();
-                                                        });
-                                                        state.didChange(null);
-                                                      },
-                                                    ),
-                                        ),
-                                        onTap: abrirSelectorPaciente,
-                                      );
-                                    },
-                                  ),
-                                  const SizedBox(height: 12),
-                                  ElevatedButton.icon(
-                                    onPressed: () async {
-                                      final nuevo =
-                                          await abrirNuevoPaciente();
-                                      if (nuevo == null) return;
-                                      setStateDialog(() {
-                                        pacienteSeleccionado = nuevo;
-                                        pacienteAutocompleteController.text =
-                                            nuevo.nombreCompleto;
-                                        pacientesDisponibles.insert(0, nuevo);
-                                      });
-                                      pacienteFieldKey.currentState
-                                          ?.didChange(nuevo);
-                                    },
-                                    icon: const Icon(Icons.person_add),
-                                    label: const Text('Registrar paciente'),
-                                  ),
-                                ],
-                              ),
+                                      readOnly: true,
+                                      decoration: InputDecoration(
+                                        labelText: 'Paciente',
+                                        hintText: 'Selecciona un paciente',
+                                        border: const OutlineInputBorder(),
+                                        errorText: state.errorText,
+                                        suffixIcon:
+                                            pacienteSeleccionado == null
+                                                ? const Icon(
+                                                    Icons.expand_more,
+                                                  )
+                                                : IconButton(
+                                                    tooltip: 'Quitar',
+                                                    icon:
+                                                        const Icon(Icons.close),
+                                                    onPressed: () {
+                                                      setStateDialog(() {
+                                                        pacienteSeleccionado =
+                                                            null;
+                                                        pacienteAutocompleteController
+                                                            .clear();
+                                                      });
+                                                      state.didChange(null);
+                                                    },
+                                                  ),
+                                      ),
+                                      onTap: abrirSelectorPaciente,
+                                    );
+                                  },
+                                ),
+                                const SizedBox(height: 12),
+                                ElevatedButton.icon(
+                                  onPressed: () async {
+                                    final nuevo = await abrirNuevoPaciente();
+                                    if (nuevo == null) return;
+                                    setStateDialog(() {
+                                      pacienteSeleccionado = nuevo;
+                                      pacienteAutocompleteController.text =
+                                          nuevo.nombreCompleto;
+                                      pacientesDisponibles.insert(0, nuevo);
+                                    });
+                                    pacienteFieldKey.currentState
+                                        ?.didChange(nuevo);
+                                  },
+                                  icon: const Icon(Icons.person_add),
+                                  label: const Text('Registrar paciente'),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(height: 20),
-                        ],
+                        ),
+                        const SizedBox(height: 20),
                         Text(
                           'Datos de la cita',
                           style: Theme.of(context).textTheme.titleMedium,
@@ -2056,11 +2071,13 @@ class _CitasPageState extends State<CitasPage>
                             padding: const EdgeInsets.all(16),
                             child: Column(
                               children: [
-                                CustomTextInput(
-                                  title: 'Detalle',
+                                TextFormField(
                                   controller: detalleController,
-                                  requiredData: true,
-                                  validate: _validarRequerido,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Detalle',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  maxLines: 2,
                                 ),
                                 const SizedBox(height: 12),
                                 FormField<PersonalMedico>(
@@ -2213,6 +2230,7 @@ class _CitasPageState extends State<CitasPage>
 
     final detalle = detalleController.text.trim();
     final medicoId = (medicoIdSeleccionado ?? '').trim();
+    final pacienteId = (pacienteSeleccionado?.id ?? '').trim();
     final especialidadId = especialidadSeleccionada?.id ?? '';
 
     if (cita == null) {
@@ -2248,6 +2266,9 @@ class _CitasPageState extends State<CitasPage>
     final updates = <String, dynamic>{};
     if (detalle != cita.detalle) updates['detalle'] = detalle;
     if (medicoId != cita.medicoId) updates['idMedico'] = medicoId;
+    if (pacienteId.isNotEmpty && pacienteId != (cita.pacienteId ?? '')) {
+      updates['idPaciente'] = pacienteId;
+    }
     if (especialidadId != (cita.especialidadId ?? '')) {
       updates['idEspecialidad'] = especialidadId;
     }
