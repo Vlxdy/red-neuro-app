@@ -682,24 +682,6 @@ class _CitasPageState extends State<CitasPage>
     });
   }
 
-  Future<DateTime?> _seleccionarFechaHora(DateTime? actual) async {
-    final fecha = await showDatePicker(
-      context: context,
-      initialDate: actual ?? DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2100),
-    );
-    if (fecha == null) return null;
-
-    final hora = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(actual ?? DateTime.now()),
-    );
-    if (hora == null) return null;
-
-    return DateTime(fecha.year, fecha.month, fecha.day, hora.hour, hora.minute);
-  }
-
   void _limpiarFiltros() {
     setState(() {
       _estadoFiltro = null;
@@ -1042,13 +1024,45 @@ class _CitasPageState extends State<CitasPage>
               }
             }
 
-            void updateFechaInicio() async {
-              final picked = await _seleccionarFechaHora(fechaInicio);
-              if (picked != null) {
-                setStateDialog(() {
-                  fechaInicio = picked;
-                });
-              }
+            void updateFechaInicioFecha() async {
+              final base = fechaInicio ?? DateTime.now();
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: base,
+                firstDate: DateTime(2020),
+                lastDate: DateTime(2100),
+              );
+              if (picked == null) return;
+              final horaActual =
+                  TimeOfDay.fromDateTime(fechaInicio ?? base);
+              setStateDialog(() {
+                fechaInicio = DateTime(
+                  picked.year,
+                  picked.month,
+                  picked.day,
+                  horaActual.hour,
+                  horaActual.minute,
+                );
+              });
+            }
+
+            void updateFechaInicioHora() async {
+              final base = fechaInicio ?? DateTime.now();
+              final picked = await showTimePicker(
+                context: context,
+                initialTime: TimeOfDay.fromDateTime(base),
+              );
+              if (picked == null) return;
+              final fechaActual = fechaInicio ?? base;
+              setStateDialog(() {
+                fechaInicio = DateTime(
+                  fechaActual.year,
+                  fechaActual.month,
+                  fechaActual.day,
+                  picked.hour,
+                  picked.minute,
+                );
+              });
             }
 
             Future<void> abrirSelectorPaciente() async {
@@ -1952,7 +1966,7 @@ class _CitasPageState extends State<CitasPage>
                                       controller: especialidadController,
                                       readOnly: true,
                                       decoration: InputDecoration(
-                                        labelText: 'Especialidad',
+                                        labelText: 'Especialidad *',
                                         hintText: 'Selecciona una especialidad',
                                         border: const OutlineInputBorder(),
                                         errorText: state.errorText,
@@ -1972,7 +1986,7 @@ class _CitasPageState extends State<CitasPage>
                                 DropdownButtonFormField<String>(
                                   value: tipoCita,
                                   decoration: const InputDecoration(
-                                    labelText: 'Tipo de cita',
+                                    labelText: 'Tipo de cita *',
                                     border: OutlineInputBorder(),
                                   ),
                                   items: const [
@@ -2035,7 +2049,7 @@ class _CitasPageState extends State<CitasPage>
                                         controller: estudioController,
                                         readOnly: true,
                                         decoration: InputDecoration(
-                                          labelText: 'Estudio',
+                                          labelText: 'Estudio *',
                                           hintText:
                                               'Selecciona un estudio',
                                           border: const OutlineInputBorder(),
@@ -2126,10 +2140,20 @@ class _CitasPageState extends State<CitasPage>
                                   children: [
                                     Expanded(
                                       child: FechaSelector(
-                                        label: 'Inicio',
+                                        label: 'Fecha *',
                                         value: fechaInicio,
-                                        formatter: _dateTimeFormat,
-                                        onTap: updateFechaInicio,
+                                        formatter: _dateFormat,
+                                        onTap: updateFechaInicioFecha,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: FechaSelector(
+                                        label: 'Hora *',
+                                        value: fechaInicio,
+                                        formatter: _timeFormat,
+                                        onTap: updateFechaInicioHora,
+                                        icon: Icons.schedule,
                                       ),
                                     ),
                                   ],
