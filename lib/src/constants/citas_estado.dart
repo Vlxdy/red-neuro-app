@@ -2,7 +2,6 @@ import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:flutter/material.dart';
 
 enum CitasEstado {
-  borrador('BORRADOR'),
   solicitada('SOLICITADA'),
   confirmada('CONFIRMADA'),
   enCurso('EN_CURSO'),
@@ -17,14 +16,12 @@ enum CitasEstado {
   static CitasEstado fromValue(String? value) {
     return CitasEstado.values.firstWhere(
       (estado) => estado.value == value,
-      orElse: () => CitasEstado.borrador,
+      orElse: () => CitasEstado.solicitada,
     );
   }
 
   String get label {
     switch (this) {
-      case CitasEstado.borrador:
-        return 'Borrador';
       case CitasEstado.solicitada:
         return 'Solicitada';
       case CitasEstado.confirmada:
@@ -44,8 +41,6 @@ enum CitasEstado {
 
   Color color(ThemeController theme) {
     switch (this) {
-      case CitasEstado.borrador:
-        return theme.monochromatic200;
       case CitasEstado.solicitada:
         return theme.accent200;
       case CitasEstado.confirmada:
@@ -65,7 +60,6 @@ enum CitasEstado {
 
   Color textColor(ThemeController theme) {
     switch (this) {
-      case CitasEstado.borrador:
       case CitasEstado.solicitada:
       case CitasEstado.confirmada:
       case CitasEstado.enCurso:

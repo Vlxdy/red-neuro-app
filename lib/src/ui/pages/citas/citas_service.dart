@@ -4,6 +4,7 @@ import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/models/especialidad.dart';
 import 'package:red_neuro_app/src/models/estudio.dart';
+import 'package:red_neuro_app/src/models/historial_cita.dart';
 import 'package:red_neuro_app/src/models/paciente.dart';
 import 'package:red_neuro_app/src/models/personal_medico.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
@@ -128,6 +129,65 @@ class CitasService extends ServiceConfig {
         'No se pudieron cargar las citas paginadas.',
       );
       return CitasPageResult.empty('No se pudieron cargar las citas');
+    }
+  }
+
+  Future<HistorialCitasPageResult> obtenerHistorialCita({
+    required String id,
+    int page = 1,
+    int limit = 10,
+    Map<String, String>? filtros,
+  }) async {
+    try {
+      final params = <String, String>{
+        'pagina': '$page',
+        'limite': '$limit',
+        if (filtros != null) ...filtros,
+      };
+      final response = await fetch(
+        '/citas/$id/historial',
+        params: params,
+      );
+
+      if (response.status != StatusNetwork.connected) {
+        final message = response.message.isNotEmpty
+            ? response.message
+            : 'No se pudo cargar el historial.';
+        if (response.status != StatusNetwork.noContent) {
+          await showErrorDialog(context, message);
+        }
+        return HistorialCitasPageResult.empty(message);
+      }
+
+      final data = response.data;
+      final datos = data['datos'] ?? data['data'] ?? data;
+      final totalRaw = datos['total'] ?? data['total'] ?? 0;
+      final filasRaw =
+          datos['filas'] ?? data['filas'] ?? data['datos'] ?? [];
+      final historial = (filasRaw is List)
+          ? filasRaw
+              .whereType<Map<String, dynamic>>()
+              .map(HistorialCita.fromJson)
+              .toList()
+          : <HistorialCita>[];
+
+      final total = totalRaw is int
+          ? totalRaw
+          : int.tryParse('$totalRaw') ?? historial.length;
+
+      return HistorialCitasPageResult(
+        historial: historial,
+        total: total,
+        page: page,
+        limit: limit,
+        message: response.message,
+        status: response.status,
+      );
+    } catch (e, stacktrace) {
+      Logger.error('Error al obtener historial $e');
+      Logger.error('stacktrace $stacktrace');
+      await showErrorDialog(context, 'No se pudo cargar el historial.');
+      return HistorialCitasPageResult.empty('No se pudo cargar el historial.');
     }
   }
 
@@ -402,6 +462,35 @@ class CitasPageResult {
         message: message,
         status: StatusNetwork.noContent,
       );
+}
+
+class HistorialCitasPageResult {
+  final List<HistorialCita> historial;
+  final int total;
+  final int page;
+  final int limit;
+  final String message;
+  final StatusNetwork status;
+
+  HistorialCitasPageResult({
+    required this.historial,
+    required this.total,
+    required this.page,
+    required this.limit,
+    required this.message,
+    required this.status,
+  });
+
+  factory HistorialCitasPageResult.empty([String message = '']) {
+    return HistorialCitasPageResult(
+      historial: const [],
+      total: 0,
+      page: 1,
+      limit: 10,
+      message: message,
+      status: StatusNetwork.noContent,
+    );
+  }
 }
 
 class CatalogoPageResult<T> {

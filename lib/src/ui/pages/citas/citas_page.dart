@@ -12,6 +12,7 @@ import 'package:red_neuro_app/src/extensions/colores_extension.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/models/especialidad.dart';
 import 'package:red_neuro_app/src/models/estudio.dart';
+import 'package:red_neuro_app/src/models/historial_cita.dart';
 import 'package:red_neuro_app/src/models/paciente.dart';
 import 'package:red_neuro_app/src/models/personal_medico.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
@@ -2126,12 +2127,20 @@ class _CitasPageState extends State<CitasPage>
                                     ),
                                     items: CitaEstado.values
                                         .map(
-                                          (estado) => DropdownMenuItem(
-                                            value: estado,
-                                            child: Text(estado),
-                                          ),
-                                        )
-                                        .toList(),
+                                      (estadoItem) {
+                                        final restringido =
+                                            estadoItem == 'CONFIRMADA' ||
+                                                estadoItem == 'RECHAZADA';
+                                        final habilitado = !restringido ||
+                                            _puedeAprobarRechazar(cita) ||
+                                            estadoItem == cita.estado;
+                                        return DropdownMenuItem(
+                                          value: estadoItem,
+                                          enabled: habilitado,
+                                          child: Text(estadoItem),
+                                        );
+                                      },
+                                    ).toList(),
                                     onChanged: (value) {
                                       setStateDialog(() => estado = value);
                                     },
@@ -2268,6 +2277,17 @@ class _CitasPageState extends State<CitasPage>
     }
 
     if (estado != null && estado != cita.estado) {
+      final requierePermiso =
+          estado == 'CONFIRMADA' || estado == 'RECHAZADA';
+      if (requierePermiso && !_puedeAprobarRechazar(cita)) {
+        showSnackBar(
+          citasMessenger,
+          'Solo el médico asignado o supervisores pueden aprobar o rechazar.',
+          state: StatusSnackBar.error,
+          colorText: _theme.white,
+        );
+        return;
+      }
       if (estado == 'CANCELADA') {
         _socketClient.emitCancelar({
           'id': cita.id,
@@ -2301,11 +2321,438 @@ class _CitasPageState extends State<CitasPage>
         return _theme.error.withValues(alpha: 0.7);
       case 'SOLICITADA':
         return _theme.secondary;
-      case 'BORRADOR':
-        return _theme.neutral;
       default:
         return _theme.grey.withValues(alpha: 0.6);
     }
+  }
+
+  bool _tieneRol(String rol) {
+    final normalized = rol.toUpperCase();
+    final perfil = Auth.instance.profile;
+    final roles = <String>{};
+    if ((perfil.rol ?? '').trim().isNotEmpty) {
+      roles.add(perfil.rol!.toUpperCase());
+    }
+    roles.addAll(
+      perfil.roles
+          .map((rol) => rol.rol.toUpperCase())
+          .where((rol) => rol.trim().isNotEmpty),
+    );
+    return roles.contains(normalized);
+  }
+
+  bool _esMedicoAsignado(CitaMedica cita) {
+    final idUsuario = Auth.instance.profile.id ?? '';
+    return idUsuario.isNotEmpty && cita.medicoId == idUsuario;
+  }
+
+  bool _puedeAprobarRechazar(CitaMedica cita) {
+    return _esMedicoAsignado(cita) || _tieneRol('SUPERVISOR');
+  }
+
+  String _formatoFechaHoraHistorial(DateTime? fecha) {
+    if (fecha == null) return '--';
+    return _dateTimeFormat.format(fecha);
+  }
+
+  String _tituloHistorial(HistorialCita item) {
+    final rol = item.rolEjecutor.trim();
+    final tieneCambios = item.detalleCambios.isNotEmpty;
+    if (tieneCambios) return 'Actualización de cita';
+    if (item.estadoAnterior.trim().isNotEmpty) return 'Cambio de estado';
+    if (rol.isEmpty || RegExp(r'^\d+$').hasMatch(rol)) {
+      return 'Registro de cita';
+    }
+    return 'Acción de $rol';
+  }
+
+  String _normalizarValorHistorial(String raw) {
+    var value = raw.trim();
+    if (value.startsWith('{') && value.endsWith('}')) {
+      value = value.substring(1, value.length - 1);
+    }
+    value = value.replaceAll('undefined', '').replaceAll('null', '').trim();
+    if (value.isEmpty) return '--';
+    if (value == 'true') return 'Sí';
+    if (value == 'false') return 'No';
+    final isoPattern = RegExp(r'^\d{4}-\d{2}-\d{2}');
+    if (isoPattern.hasMatch(value)) {
+      final parsed = DateTime.tryParse(value);
+      if (parsed != null) {
+        return _dateTimeFormat.format(parsed.toLocal());
+      }
+    }
+    return value;
+  }
+
+  String _formatearCambioId({
+    required String label,
+    required String before,
+    required String after,
+  }) {
+    final antes = before == '--' ? '' : before;
+    final despues = after == '--' ? '' : after;
+    if (antes.isEmpty && despues.isNotEmpty) {
+      return '$label asignado';
+    }
+    if (antes.isNotEmpty && despues.isEmpty) {
+      return '$label removido';
+    }
+    return '$label actualizado';
+  }
+
+  String _formatearTipoCita(String value) {
+    final normalized = value.trim().toUpperCase();
+    if (normalized == 'ESTUDIO') return 'Estudio';
+    if (normalized == 'CONSULTA') return 'Consulta';
+    return value;
+  }
+
+  String? _formatearDetalleCambio(String raw) {
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return null;
+    if (!trimmed.contains('field:')) {
+      return trimmed.contains('{') ? null : trimmed;
+    }
+
+    final fieldMatch = RegExp(r'field:\s*([a-zA-Z0-9_]+)').firstMatch(trimmed);
+    final field = fieldMatch?.group(1) ?? '';
+    if (field.isEmpty) return null;
+    final esIdRelacionado = field.toLowerCase().endsWith('id');
+
+    final labels = <String, String>{
+      'fechaInicio': 'Fecha inicio',
+      'fechaFin': 'Fecha fin',
+      'detalle': 'Detalle',
+      'estado': 'Estado',
+      'tipoCita': 'Tipo de cita',
+      'esEstudio': 'Tipo de cita',
+      'idEspecialidad': 'Especialidad',
+      'idMedico': 'Médico',
+      'idPaciente': 'Paciente',
+      'idConsultorio': 'Consultorio',
+      'idEstudio': 'Estudio',
+    };
+
+    final label = labels[field] ?? field;
+    final beforeMatch =
+        RegExp(r'before:\s*([^,}]+)').firstMatch(trimmed);
+    final afterMatch = RegExp(r'after:\s*([^,}]+)').firstMatch(trimmed);
+    final beforeValue =
+        beforeMatch != null ? _normalizarValorHistorial(beforeMatch.group(1)!) : '';
+    final afterValue =
+        afterMatch != null ? _normalizarValorHistorial(afterMatch.group(1)!) : '';
+
+    if (esIdRelacionado) {
+      return _formatearCambioId(
+        label: label,
+        before: beforeValue,
+        after: afterValue,
+      );
+    }
+    if (field == 'tipoCita') {
+      return '$label: ${_formatearTipoCita(beforeValue)} → ${_formatearTipoCita(afterValue)}';
+    }
+    if (beforeValue.isNotEmpty && afterValue.isNotEmpty) {
+      return '$label: $beforeValue → $afterValue';
+    }
+    return 'Actualización de $label';
+  }
+
+  DateTime _inicioDia(DateTime date) {
+    return DateTime(date.year, date.month, date.day);
+  }
+
+  DateTime _finDia(DateTime date) {
+    return DateTime(date.year, date.month, date.day, 23, 59, 59);
+  }
+
+  Future<void> _mostrarHistorialCita(CitaMedica cita) async {
+    final rolController = TextEditingController();
+    final fechaInicioController = TextEditingController();
+    final fechaFinController = TextEditingController();
+    DateTime? fechaInicio;
+    DateTime? fechaFin;
+    String? estadoAnterior;
+    int page = 1;
+    const limit = 10;
+    int total = 0;
+    bool loading = false;
+    bool loadingMore = false;
+    bool initialized = false;
+    List<HistorialCita> historial = [];
+
+    Future<void> cargarHistorial(
+      StateSetter setStateDialog, {
+      bool reset = false,
+    }) async {
+      if (loading || loadingMore) return;
+      if (reset) {
+        page = 1;
+        historial = [];
+      }
+      setStateDialog(() {
+        if (page == 1) {
+          loading = true;
+        } else {
+          loadingMore = true;
+        }
+      });
+      final filtros = <String, String>{
+        if (estadoAnterior != null && estadoAnterior!.trim().isNotEmpty)
+          'estadoAnterior': estadoAnterior!.trim(),
+        if (rolController.text.trim().isNotEmpty)
+          'rolEjecutor': rolController.text.trim(),
+        if (fechaInicio != null)
+          'fechaInicio': _inicioDia(fechaInicio!).toUtc().toIso8601String(),
+        if (fechaFin != null)
+          'fechaFin': _finDia(fechaFin!).toUtc().toIso8601String(),
+      };
+      final result = await _service.obtenerHistorialCita(
+        id: cita.id,
+        page: page,
+        limit: limit,
+        filtros: filtros,
+      );
+      setStateDialog(() {
+        if (page == 1) {
+          historial = result.historial;
+        } else {
+          historial = [...historial, ...result.historial];
+        }
+        total = result.total;
+        loading = false;
+        loadingMore = false;
+        page = page + 1;
+      });
+    }
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            if (!initialized) {
+              initialized = true;
+              unawaited(cargarHistorial(setStateDialog, reset: true));
+            }
+            final hasMore = historial.length < total;
+            return AlertDialog(
+              title: const Text('Historial de la cita'),
+              content: SizedBox(
+                width: 520,
+                height: 460,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ExpansionTile(
+                      tilePadding: EdgeInsets.zero,
+                      title: Text(
+                        'Filtros',
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: TextFormField(
+                                controller: fechaInicioController,
+                                readOnly: true,
+                                decoration: const InputDecoration(
+                                  labelText: 'Fecha inicio',
+                                  border: OutlineInputBorder(),
+                                ),
+                                onTap: () async {
+                                  final picked = await showDatePicker(
+                                    context: context,
+                                    firstDate: DateTime(2020),
+                                    lastDate: DateTime(2100),
+                                    initialDate: fechaInicio ?? DateTime.now(),
+                                  );
+                                  if (picked == null) return;
+                                  setStateDialog(() {
+                                    fechaInicio = picked;
+                                    fechaInicioController.text =
+                                        _dateFormat.format(picked);
+                                  });
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: TextFormField(
+                                controller: fechaFinController,
+                                readOnly: true,
+                                decoration: const InputDecoration(
+                                  labelText: 'Fecha fin',
+                                  border: OutlineInputBorder(),
+                                ),
+                                onTap: () async {
+                                  final picked = await showDatePicker(
+                                    context: context,
+                                    firstDate: DateTime(2020),
+                                    lastDate: DateTime(2100),
+                                    initialDate: fechaFin ?? DateTime.now(),
+                                  );
+                                  if (picked == null) return;
+                                  setStateDialog(() {
+                                    fechaFin = picked;
+                                    fechaFinController.text =
+                                        _dateFormat.format(picked);
+                                  });
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        DropdownButtonFormField<String?>(
+                          value: estadoAnterior,
+                          decoration: const InputDecoration(
+                            labelText: 'Estado anterior',
+                            border: OutlineInputBorder(),
+                          ),
+                          items: CitaEstado.values
+                              .map(
+                                (estado) => DropdownMenuItem(
+                                  value: estado,
+                                  child: Text(estado),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (value) {
+                            setStateDialog(() => estadoAnterior = value);
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: rolController,
+                          decoration: const InputDecoration(
+                            labelText: 'Rol ejecutor',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            TextButton(
+                              onPressed: () {
+                                setStateDialog(() {
+                                  estadoAnterior = null;
+                                  fechaInicio = null;
+                                  fechaFin = null;
+                                  rolController.clear();
+                                  fechaInicioController.clear();
+                                  fechaFinController.clear();
+                                });
+                                unawaited(
+                                  cargarHistorial(
+                                    setStateDialog,
+                                    reset: true,
+                                  ),
+                                );
+                              },
+                              child: const Text('Limpiar'),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton(
+                              onPressed: () {
+                                unawaited(
+                                  cargarHistorial(
+                                    setStateDialog,
+                                    reset: true,
+                                  ),
+                                );
+                              },
+                              child: const Text('Aplicar filtros'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    if (loading)
+                      const Expanded(
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    else if (historial.isEmpty)
+                      const Expanded(
+                        child: Center(
+                          child: Text('No hay historial disponible.'),
+                        ),
+                      )
+                    else
+                      Expanded(
+                        child: ListView.builder(
+                          itemCount: historial.length + (hasMore ? 1 : 0),
+                          itemBuilder: (context, index) {
+                            if (index == historial.length) {
+                              return Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 8),
+                                child: Center(
+                                  child: loadingMore
+                                      ? const CircularProgressIndicator()
+                                      : TextButton(
+                                          onPressed: () {
+                                            unawaited(
+                                              cargarHistorial(setStateDialog),
+                                            );
+                                          },
+                                          child: const Text('Cargar más'),
+                                        ),
+                                ),
+                              );
+                            }
+                            final item = historial[index];
+                            final detalles = <String>[
+                              if (item.estadoAnterior.trim().isNotEmpty)
+                                'Estado anterior: ${item.estadoAnterior}',
+                              if (item.comentario.trim().isNotEmpty)
+                                'Comentario: ${item.comentario}',
+                            ];
+                            final cambiosFormateados = item.detalleCambios
+                                .map(_formatearDetalleCambio)
+                                .whereType<String>()
+                                .toList();
+                            detalles.addAll(cambiosFormateados);
+                            if (detalles.isEmpty) {
+                              detalles.add('Sin detalles adicionales');
+                            }
+                            return CitasHistorialTimelineItem(
+                              fecha: _formatoFechaHoraHistorial(
+                                item.fechaCreacion,
+                              ),
+                              titulo: _tituloHistorial(item),
+                              subtitulo: item.ejecutorNombre.trim().isNotEmpty
+                                  ? item.ejecutorNombre
+                                  : 'Sistema',
+                              detalles: detalles,
+                              theme: _theme,
+                              isLast: index == historial.length - 1,
+                            );
+                          },
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Cerrar'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    rolController.dispose();
+    fechaInicioController.dispose();
+    fechaFinController.dispose();
   }
 
   @override
@@ -2704,6 +3151,12 @@ class _CitasPageState extends State<CitasPage>
             ),
           ),
           actions: [
+            TextButton(
+              onPressed: () async {
+                await _mostrarHistorialCita(cita);
+              },
+              child: const Text('Ver historial'),
+            ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: const Text('Cerrar'),
