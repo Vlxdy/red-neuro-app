@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:red_neuro_app/src/config/theme_controller.dart';
 
 class FechaSelector extends StatelessWidget {
   final String label;
   final DateTime? value;
   final DateFormat formatter;
   final VoidCallback onTap;
+  final IconData icon;
 
   const FechaSelector({
     super.key,
@@ -14,30 +14,27 @@ class FechaSelector extends StatelessWidget {
     required this.value,
     required this.formatter,
     required this.onTap,
+    this.icon = Icons.event,
   });
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeController.instance;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: theme.monochromatic500),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.event, size: 18, color: theme.primary),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(value != null ? formatter.format(value!) : label),
-            ),
-          ],
+    final controller = TextEditingController(
+      text: value != null ? formatter.format(value!) : '',
+    );
+    return TextFormField(
+      controller: controller,
+      readOnly: true,
+      decoration: InputDecoration(
+        labelText: label,
+        border: const OutlineInputBorder(),
+        suffixIcon: Icon(icon),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: 18,
         ),
       ),
+      onTap: onTap,
     );
   }
 }
