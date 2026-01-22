@@ -84,3 +84,155 @@ class CitasDetalleRow extends StatelessWidget {
     );
   }
 }
+
+class CitasHistorialTimelineItem extends StatelessWidget {
+  final String fecha;
+  final String titulo;
+  final String subtitulo;
+  final List<String> detalles;
+  final ThemeController theme;
+  final bool isLast;
+
+  const CitasHistorialTimelineItem({
+    super.key,
+    required this.fecha,
+    required this.titulo,
+    required this.subtitulo,
+    required this.detalles,
+    required this.theme,
+    required this.isLast,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasDetalles = detalles.isNotEmpty;
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: 20,
+            child: Stack(
+              children: [
+                if (!isLast)
+                  Positioned(
+                    left: 9,
+                    top: 14,
+                    bottom: 0,
+                    child: Container(
+                      width: 2,
+                      color: theme.grey.withValues(alpha: 0.3),
+                    ),
+                  ),
+                Positioned(
+                  left: 4,
+                  top: 2,
+                  child: Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: theme.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    fecha,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: theme.grey,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: theme.bgCard2,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: theme.grey.withValues(alpha: 0.15),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          titulo,
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        if (subtitulo.trim().isNotEmpty) ...[
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: theme.primary.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              subtitulo,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelSmall
+                                  ?.copyWith(color: theme.primary),
+                            ),
+                          ),
+                        ],
+                        if (hasDetalles) ...[
+                          const SizedBox(height: 8),
+                          ...detalles.map(
+                            (detalle) => Padding(
+                              padding: const EdgeInsets.only(bottom: 6),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    width: 6,
+                                    height: 6,
+                                    margin: const EdgeInsets.only(top: 6),
+                                    decoration: BoxDecoration(
+                                      color: theme.grey.withValues(alpha: 0.6),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      detalle,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
