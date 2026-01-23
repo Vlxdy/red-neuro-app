@@ -16,6 +16,7 @@ class Usuario extends Persona {
   String? idRol;
   String? rol;
   String? idHistoriaClinica;
+  bool esSupervisor;
   List<Rol> roles;
 
   Usuario(
@@ -37,6 +38,7 @@ class Usuario extends Persona {
     this.idRol,
     this.rol,
     this.idHistoriaClinica,
+    this.esSupervisor = false,
     this.roles = const [],
   });
 
@@ -95,6 +97,18 @@ class Usuario extends Persona {
           .toList();
     }
 
+    final rawRol = json['rol']?.toString().toUpperCase();
+    final esSupervisorValue = json['esSupervisor'] ?? json['es_supervisor'];
+    final rolEsSupervisor =
+        rawRol == 'SUPERVISOR' || rawRol == 'PERSONAL_SALUD_ADMIN';
+    if (esSupervisorValue is bool) {
+      usuario.esSupervisor = esSupervisorValue;
+    } else if (rolEsSupervisor) {
+      usuario.esSupervisor = true;
+    } else if (usuario.roles.isNotEmpty) {
+      usuario.esSupervisor = usuario.roles.any((rol) => rol.esSupervisor);
+    }
+
     // Historia clínica (puede venir en varios lugares; prioriza en `datos`)
     usuario.idHistoriaClinica = json['idHistoriaClinica']?.toString();
 
@@ -119,6 +133,7 @@ class Usuario extends Persona {
     data['idRol'] = idRol;
     data['rol'] = rol;
     data['idHistoriaClinica'] = idHistoriaClinica;
+    data['esSupervisor'] = esSupervisor;
     data['roles'] = roles.map((r) => r.toJson()).toList();
 
     return data;
