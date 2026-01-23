@@ -2324,10 +2324,10 @@ class _CitasPageState extends State<CitasPage>
     if (estado != null && estado != cita.estado) {
       final requierePermiso =
           estado == 'CONFIRMADA' || estado == 'RECHAZADA';
-      if (requierePermiso && !_puedeAprobarRechazar(cita)) {
+        if (requierePermiso && !_puedeAprobarRechazar(cita)) {
         showSnackBar(
           citasMessenger,
-          'Solo el médico asignado o supervisores pueden aprobar o rechazar.',
+          'Solo el médico asignado, el administrador o el personal de salud con permisos administrativos pueden aprobar o rechazar.',
           state: StatusSnackBar.error,
           colorText: _theme.white,
         );
@@ -2371,19 +2371,39 @@ class _CitasPageState extends State<CitasPage>
     }
   }
 
-  bool _tieneRol(String rol) {
+  String _normalizarRol(String rol) {
     final normalized = rol.toUpperCase();
+    switch (normalized) {
+      case 'ADMIN':
+        return 'ADMINISTRADOR';
+      case 'MEDICO':
+      case 'PERSONAL_MEDICO':
+      case 'SUPERVISOR':
+        return 'PERSONAL_SALUD';
+      default:
+        return normalized;
+    }
+  }
+
+  bool _tieneRol(String rol) {
+    final normalized = _normalizarRol(rol);
     final perfil = Auth.instance.profile;
     final roles = <String>{};
     if ((perfil.rol ?? '').trim().isNotEmpty) {
-      roles.add(perfil.rol!.toUpperCase());
+      roles.add(_normalizarRol(perfil.rol!));
     }
     roles.addAll(
       perfil.roles
-          .map((rol) => rol.rol.toUpperCase())
+          .map((rol) => _normalizarRol(rol.rol))
           .where((rol) => rol.trim().isNotEmpty),
     );
     return roles.contains(normalized);
+  }
+
+  bool _esAdministrador() => _tieneRol('ADMINISTRADOR');
+
+  bool _esPersonalSaludSupervisor() {
+    return _tieneRol('PERSONAL_SALUD') && Auth.instance.profile.esSupervisor;
   }
 
   bool _esMedicoAsignado(CitaMedica cita) {
@@ -2392,7 +2412,9 @@ class _CitasPageState extends State<CitasPage>
   }
 
   bool _puedeAprobarRechazar(CitaMedica cita) {
-    return _esMedicoAsignado(cita) || _tieneRol('SUPERVISOR');
+    return _esMedicoAsignado(cita) ||
+        _esAdministrador() ||
+        _esPersonalSaludSupervisor();
   }
 
   String _formatoFechaHoraHistorial(DateTime? fecha) {
