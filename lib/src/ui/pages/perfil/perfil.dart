@@ -75,6 +75,7 @@ class _PerfilState extends State<Perfil> {
             rol: '',
             nombre: '',
             descripcion: '',
+            esSupervisor: false,
             modulos: const <Modulo>[],
           ),
         );
@@ -479,6 +480,7 @@ class _RoleCard extends StatelessWidget {
               rol: '',
               nombre: '',
               descripcion: '',
+              esSupervisor: false,
               modulos: const <Modulo>[],
             ),
     );

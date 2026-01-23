@@ -64,16 +64,23 @@ class _HomePageState extends State<HomePage> {
     final List<Rol> roles = profile.roles;
     final roleId = profile.idRol ?? (roles.isNotEmpty ? roles.first.idRol : '');
     final selectedRole = _findRole(roles, roleId, profile.rol);
-    final resolvedRoleName = (selectedRole?.rol ?? profile.rol ?? '')
-        .toUpperCase();
+    final roleName = (selectedRole?.rol ?? profile.rol ?? '');
+    final resolvedRoleName = _normalizarRol(roleName);
+    final esSupervisorActivo =
+        selectedRole?.esSupervisor ?? profile.esSupervisor;
+    final roleLabel = _formatearRolActivo(
+      roleName,
+      esSupervisor: esSupervisorActivo,
+    );
 
     if (!mounted) return;
 
     setState(() {
-      _currentRole = resolvedRoleName;
+      _currentRole = roleLabel;
       _itemsMenu = _itemsByRole(
         user: profile,
         selectedRole: selectedRole,
+        esSupervisor: esSupervisorActivo,
         overview: _buildUserOverview(profile),
       );
       _selectedIndex = 0;
@@ -443,10 +450,12 @@ class _HomePageState extends State<HomePage> {
 List<ChildrenItem> _itemsByRole({
   required Usuario user,
   required Rol? selectedRole,
+  required bool esSupervisor,
   required Widget overview,
 }) {
   final theme = ThemeController.instance;
-  final resolvedRole = (selectedRole?.rol ?? user.rol ?? '').toUpperCase();
+  final resolvedRole =
+      _normalizarRol(selectedRole?.rol ?? user.rol ?? '');
 
   final homeSummary = ChildrenItem(
     iconoImagen: SolarIconsOutline.home,
@@ -467,6 +476,7 @@ List<ChildrenItem> _itemsByRole({
   final subModuleItems = _submodulesFromRole(
     selectedRole: selectedRole,
     resolvedRole: resolvedRole,
+    esSupervisor: esSupervisor,
     theme: theme,
   );
 
@@ -509,9 +519,32 @@ List<ChildrenItem> _itemsByRole({
   return navigation;
 }
 
+String _normalizarRol(String rol) {
+  final normalized = rol.toUpperCase();
+  switch (normalized) {
+    case 'ADMIN':
+      return 'ADMINISTRADOR';
+    case 'MEDICO':
+    case 'PERSONAL_MEDICO':
+    case 'SUPERVISOR':
+      return 'PERSONAL_SALUD';
+    default:
+      return normalized;
+  }
+}
+
+String _formatearRolActivo(String rol, {required bool esSupervisor}) {
+  final normalized = _normalizarRol(rol);
+  if (normalized == 'PERSONAL_SALUD' && esSupervisor) {
+    return 'PERSONAL_SALUD (ADMIN)';
+  }
+  return normalized;
+}
+
 List<ChildrenItem> _submodulesFromRole({
   required Rol? selectedRole,
   required String resolvedRole,
+  required bool esSupervisor,
   required ThemeController theme,
 }) {
   if (selectedRole != null && selectedRole.modulos.isNotEmpty) {
@@ -541,7 +574,7 @@ List<ChildrenItem> _submodulesFromRole({
       }
     }
 
-    if (resolvedRole == 'ADMIN') {
+    if (resolvedRole == 'ADMINISTRADOR') {
       final existingTitles = submodules
           .map((item) => item.titulo.toLowerCase())
           .toSet();
@@ -561,12 +594,12 @@ List<ChildrenItem> _submodulesFromRole({
   }
 
   switch (resolvedRole) {
-    case 'ADMIN':
+    case 'ADMINISTRADOR':
       return _adminMenu(theme);
-    case 'SUPERVISOR':
-      return _supervisorMenu(theme);
-    case 'MEDICO':
-      return _medicoMenu(theme);
+    case 'PERSONAL_SALUD':
+      return esSupervisor
+          ? _personalSaludAdminMenu(theme)
+          : _personalSaludMenu(theme);
     default:
       return [_noModulesPlaceholder(theme)];
   }
@@ -678,7 +711,7 @@ List<ChildrenItem> _adminMenu(ThemeController theme) => [
   ),
 ];
 
-List<ChildrenItem> _supervisorMenu(ThemeController theme) => [
+List<ChildrenItem> _personalSaludAdminMenu(ThemeController theme) => [
   ChildrenItem(
     iconoImagen: PhosphorIconsRegular.users,
     iconoImagenSeleccionada: PhosphorIconsFill.users,
@@ -692,14 +725,14 @@ List<ChildrenItem> _supervisorMenu(ThemeController theme) => [
     children: const KeepAlivePage(
       child: CitasPage(
         soloMisCitas: false,
-        titulo: 'Citas (Supervisor)',
+        titulo: 'Citas (Personal de salud - Admin)',
         mostrarFiltroMedico: true,
       ),
     ),
   ),
 ];
 
-List<ChildrenItem> _medicoMenu(ThemeController theme) => [
+List<ChildrenItem> _personalSaludMenu(ThemeController theme) => [
   ChildrenItem(
     iconoImagen: SolarIconsOutline.calendarSearch,
     iconoImagenSeleccionada: SolarIconsBold.calendarSearch,

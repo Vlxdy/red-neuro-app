@@ -41,7 +41,8 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
   final TextEditingController _searchController = TextEditingController();
   final DateFormat _dateFormatter = DateFormat('dd/MM/yyyy');
 
-  String get _currentRole => (Auth.instance.profile.rol ?? '').toUpperCase();
+  String get _currentRole =>
+      _normalizarRol(Auth.instance.profile.rol ?? '');
 
   @override
   void initState() {
@@ -95,10 +96,35 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
   }
 
   List<RolOption> get _rolesVisibles {
-    if (_currentRole == 'ADMIN') return _roles;
-    return _roles
-        .where((rol) => rol.codigo == 'MEDICO' || rol.codigo == 'SUPERVISOR')
-        .toList();
+    if (_esAdministrador(_currentRole)) return _roles;
+    return _roles.where((rol) => _esRolPersonalSalud(rol.codigo)).toList();
+  }
+
+  String _normalizarRol(String rol) {
+    final normalized = rol.toUpperCase();
+    switch (normalized) {
+      case 'ADMIN':
+        return 'ADMINISTRADOR';
+      case 'MEDICO':
+      case 'PERSONAL_MEDICO':
+      case 'SUPERVISOR':
+        return 'PERSONAL_SALUD';
+      default:
+        return normalized;
+    }
+  }
+
+  bool _esAdministrador(String rol) => _normalizarRol(rol) == 'ADMINISTRADOR';
+
+  bool _esRolPersonalSalud(String? rol) =>
+      _normalizarRol(rol ?? '') == 'PERSONAL_SALUD';
+
+  String _formatearRol(String rol, {required bool esSupervisor}) {
+    final normalized = _normalizarRol(rol);
+    if (normalized == 'PERSONAL_SALUD' && esSupervisor) {
+      return 'PERSONAL_SALUD (Admin)';
+    }
+    return normalized;
   }
 
   DateTime? _parseFechaNacimiento(String value) {
@@ -189,6 +215,7 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
     );
     final contrasena = TextEditingController();
     final repetirContrasena = TextEditingController();
+    bool esSupervisor = usuario?.esSupervisor ?? false;
 
     final selectedRoles = <String>{
       if (usuario != null)
@@ -528,9 +555,28 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
                               if (value != null) {
                                 selectedRoles.add(value);
                               }
+                              if (!_esRolPersonalSalud(value)) {
+                                esSupervisor = false;
+                              }
                             });
                           },
                         ),
+                      if (_esRolPersonalSalud(rolSeleccionado)) ...[
+                        const SizedBox(height: 12),
+                        SwitchListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: const Text('Permisos administrativos'),
+                          subtitle: const Text(
+                            'Habilita acciones de supervisión para personal de salud.',
+                          ),
+                          value: esSupervisor,
+                          onChanged: (value) {
+                            setState(() {
+                              esSupervisor = value;
+                            });
+                          },
+                        ),
+                      ],
                       const SizedBox(height: 16),
                       Align(
                         alignment: Alignment.centerRight,
@@ -555,14 +601,14 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
                               );
                               return;
                             }
-                            if (_currentRole != 'ADMIN') {
+                            if (!_esAdministrador(_currentRole)) {
                               final invalid = selectedRoles.any(
-                                (rol) => rol != 'MEDICO' && rol != 'SUPERVISOR',
+                                (rol) => !_esRolPersonalSalud(rol),
                               );
                               if (invalid) {
                                 showSnackBar(
                                   usuariosMessenger,
-                                  'Los supervisores solo pueden asignar roles MEDICO o SUPERVISOR',
+                                  'El personal de salud con permisos administrativos solo puede asignar el rol PERSONAL_SALUD',
                                   state: StatusSnackBar.error,
                                   colorText: _theme.white,
                                 );
@@ -598,6 +644,8 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
                                 'contrasena': contrasena.text,
                                 'repetirContrasena': repetirContrasena.text,
                                 'roles': selectedRoles.toList(),
+                                if (_esRolPersonalSalud(rolSeleccionado))
+                                  'esSupervisor': esSupervisor,
                               };
                             } else {
                               body = {
@@ -608,6 +656,8 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
                                 if (repetirContrasena.text.isNotEmpty)
                                   'repetirContrasena': repetirContrasena.text,
                                 'roles': selectedRoles.toList(),
+                                if (_esRolPersonalSalud(rolSeleccionado))
+                                  'esSupervisor': esSupervisor,
                               };
                             }
 
@@ -690,9 +740,16 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
 
   String _rolesTexto(Usuario usuario) {
     if (usuario.roles.isNotEmpty) {
-      return usuario.roles.map((r) => r.rol).join(', ');
+      return usuario.roles
+          .map(
+            (rol) =>
+                _formatearRol(rol.rol, esSupervisor: rol.esSupervisor),
+          )
+          .join(', ');
     }
-    return usuario.rol ?? '-';
+    final rolActivo = usuario.rol ?? '';
+    if (rolActivo.trim().isEmpty) return '-';
+    return _formatearRol(rolActivo, esSupervisor: usuario.esSupervisor);
   }
 
   @override
@@ -719,9 +776,9 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            _currentRole == 'ADMIN'
+                            _esAdministrador(_currentRole)
                                 ? 'Administra todos los roles disponibles'
-                                : 'Los supervisores solo gestionan médicos y supervisores',
+                                : 'El personal de salud con permisos administrativos gestiona usuarios del rol personal de salud',
                             style: Theme.of(context).textTheme.labelMedium,
                           ),
                         ],
