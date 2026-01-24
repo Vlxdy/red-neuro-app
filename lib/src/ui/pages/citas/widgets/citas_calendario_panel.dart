@@ -107,10 +107,6 @@ class CitasCalendarioPanel extends StatelessWidget {
                 color: theme.primary,
                 shape: BoxShape.circle,
               ),
-              markerDecoration: BoxDecoration(
-                color: theme.primary,
-                shape: BoxShape.circle,
-              ),
             ),
             daysOfWeekStyle: DaysOfWeekStyle(
               dowTextFormatter: (date, locale) =>
@@ -133,6 +129,33 @@ class CitasCalendarioPanel extends StatelessWidget {
                     style: TextStyle(
                       color: theme.primary,
                       fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                );
+              },
+              markerBuilder: (context, day, events) {
+                if (events.isEmpty) {
+                  return null;
+                }
+
+                final markerColor =
+                    events.length > 4 ? theme.error : theme.warning;
+                final markerCount = events.length > 4 ? 4 : events.length;
+
+                return Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: List.generate(
+                      markerCount,
+                      (index) => Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: markerColor,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
                     ),
                   ),
                 );
