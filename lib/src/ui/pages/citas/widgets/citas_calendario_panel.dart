@@ -97,6 +97,8 @@ class CitasCalendarioPanel extends StatelessWidget {
             onPageChanged: onPageChanged,
             availableGestures: AvailableGestures.all,
             calendarStyle: CalendarStyle(
+              markerSize: 6,
+              markersAlignment: Alignment.bottomCenter,
               todayDecoration: BoxDecoration(
                 color: theme.primary.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
@@ -106,7 +108,7 @@ class CitasCalendarioPanel extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               markerDecoration: BoxDecoration(
-                color: theme.secondary,
+                color: theme.primary,
                 shape: BoxShape.circle,
               ),
             ),

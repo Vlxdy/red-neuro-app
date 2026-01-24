@@ -76,6 +76,7 @@ class _CitasPageState extends State<CitasPage>
   late DateTime _agendaDay;
   late DateTime _agendaFocusedDay;
   CalendarFormat _calendarFormat = CalendarFormat.week;
+  CalendarFormat _agendaCalendarFormat = CalendarFormat.week;
   late final TabController _tabController;
   int _currentTabIndex = 0;
 
@@ -3027,6 +3028,8 @@ class _CitasPageState extends State<CitasPage>
                                         dateFormat: _dateFormat,
                                         agendaDay: _agendaDay,
                                         agendaFocusedDay: _agendaFocusedDay,
+                                        agendaCalendarFormat:
+                                            _agendaCalendarFormat,
                                         agendaCalendarCollapsed:
                                             _agendaCalendarCollapsed,
                                         citasAgendaPorDia: _citasAgendaPorDia,
@@ -3042,6 +3045,15 @@ class _CitasPageState extends State<CitasPage>
                                             () => _agendaFocusedDay = focusedDay,
                                           );
                                           _cargarCitasAgendaSemana();
+                                        },
+                                        onAgendaFormatChanged: (format) {
+                                          if (_agendaCalendarFormat != format) {
+                                            setState(
+                                              () =>
+                                                  _agendaCalendarFormat = format,
+                                            );
+                                            _cargarCitasAgendaSemana();
+                                          }
                                         },
                                         onExpandCalendar: () => setState(
                                           () => _agendaCalendarCollapsed = false,
