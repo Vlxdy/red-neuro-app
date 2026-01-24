@@ -81,7 +81,7 @@ class _HomePageState extends State<HomePage> {
         user: profile,
         selectedRole: selectedRole,
         esSupervisor: esSupervisorActivo,
-        overview: _buildUserOverview(profile),
+        screenWidth: _currentScreenWidth(),
       );
       _selectedIndex = 0;
       _selectedSubItem = null;
@@ -103,8 +103,9 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Widget _buildUserOverview(Usuario user) {
-    return UserOverview(user: user, currentRole: _currentRole);
+  double _currentScreenWidth() {
+    final view = WidgetsBinding.instance.platformDispatcher.views.first;
+    return view.physicalSize.width / view.devicePixelRatio;
   }
 
   void _onItemTapped(String titulo, int index) {
@@ -114,7 +115,7 @@ class _HomePageState extends State<HomePage> {
       showSubmenu = false;
     });
     Logger.info('Vista $titulo');
-    controllerPrincipal.jumpToPage(index);
+    _jumpToPageSafely(controllerPrincipal, index);
   }
 
   void _onItemTappedSubmenu(String titulo, int index, int subIndex) {
@@ -124,7 +125,20 @@ class _HomePageState extends State<HomePage> {
       showSubmenu = true;
     });
     Logger.info('Vista $titulo');
-    controllerSubmenu.jumpToPage(subIndex);
+    _jumpToPageSafely(controllerSubmenu, subIndex);
+  }
+
+  void _jumpToPageSafely(PageController controller, int pageIndex) {
+    if (controller.hasClients) {
+      controller.jumpToPage(pageIndex);
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (controller.hasClients) {
+        controller.jumpToPage(pageIndex);
+      }
+    });
   }
 
   void _showMenu(
@@ -451,24 +465,16 @@ List<ChildrenItem> _itemsByRole({
   required Usuario user,
   required Rol? selectedRole,
   required bool esSupervisor,
-  required Widget overview,
+  required double screenWidth,
 }) {
   final theme = ThemeController.instance;
   final resolvedRole =
       _normalizarRol(selectedRole?.rol ?? user.rol ?? '');
 
-  final homeSummary = ChildrenItem(
-    iconoImagen: SolarIconsOutline.home,
-    iconoImagenSeleccionada: SolarIconsBold.home,
-    titulo: 'Inicio',
-    color: theme.primary,
-    children: KeepAlivePage(child: overview),
-  );
-
   final perfilNav = ChildrenItem(
     iconoImagen: SolarIconsOutline.user,
     iconoImagenSeleccionada: SolarIconsBold.user,
-    titulo: 'Perfil',
+    titulo: 'Configuración',
     color: theme.primary,
     children: const KeepAlivePage(child: Perfil()),
   );
@@ -480,17 +486,24 @@ List<ChildrenItem> _itemsByRole({
     theme: theme,
   );
 
-  const maxDirectTabs = 4;
+  final maxNavItems = (screenWidth / 72).floor().clamp(4, 6);
+  final availableSlots = maxNavItems - 1;
+  final needsOverflow = subModuleItems.length > availableSlots;
+  final visibleSlots = needsOverflow
+      ? (maxNavItems - 2).clamp(0, availableSlots)
+      : availableSlots;
+
   final visibleSubmodules = subModuleItems
-      .take(maxDirectTabs)
+      .take(visibleSlots)
       .toList(growable: false);
   final overflowSubmodules = subModuleItems
-      .skip(maxDirectTabs)
-      .toList(growable: false);
+      .skip(visibleSlots)
+      .toList(growable: true);
 
-  final List<ChildrenItem> navigation = [homeSummary, ...visibleSubmodules];
+  final List<ChildrenItem> navigation = [...visibleSubmodules];
 
-  if (overflowSubmodules.isNotEmpty) {
+  if (needsOverflow) {
+    overflowSubmodules.add(perfilNav);
     navigation.add(
       ChildrenItem(
         iconoImagen: SolarIconsOutline.menuDots,
@@ -512,9 +525,9 @@ List<ChildrenItem> _itemsByRole({
         ),
       ),
     );
+  } else {
+    navigation.add(perfilNav);
   }
-
-  navigation.add(perfilNav);
 
   return navigation;
 }
@@ -547,6 +560,15 @@ List<ChildrenItem> _submodulesFromRole({
   required bool esSupervisor,
   required ThemeController theme,
 }) {
+  const adminRoutesOrder = [
+    '/admin/citas',
+    '/admin/pacientes',
+    '/admin/personal_medico',
+    '/admin/usuarios',
+    '/admin/especialidades',
+    '/admin/estudios',
+  ];
+
   if (selectedRole != null && selectedRole.modulos.isNotEmpty) {
     final filteredModules = selectedRole.modulos.where((module) {
       final name = module.nombre.toLowerCase();
@@ -574,22 +596,27 @@ List<ChildrenItem> _submodulesFromRole({
       }
     }
 
-    if (resolvedRole == 'ADMINISTRADOR') {
-      final existingTitles = submodules
-          .map((item) => item.titulo.toLowerCase())
-          .toSet();
-      final adminExtras = _adminMenu(theme).where((item) {
-        final title = item.titulo.toLowerCase();
-        return title == 'especialidades' || title == 'estudios';
-      });
-
-      for (final extra in adminExtras) {
-        if (!existingTitles.contains(extra.titulo.toLowerCase())) {
-          submodules.add(extra);
+    final submodulesByUrl = <String, ChildrenItem>{};
+    for (final module in orderedModules) {
+      for (final subModule in module.subModulos) {
+        final normalizedUrl = subModule.url.toLowerCase();
+        if (adminRoutesOrder.contains(normalizedUrl)) {
+          submodulesByUrl.putIfAbsent(
+            normalizedUrl,
+            () => _submoduleToItem(subModule, theme: theme),
+          );
         }
       }
     }
 
+    final orderedByPermission = adminRoutesOrder
+        .map((route) => submodulesByUrl[route])
+        .whereType<ChildrenItem>()
+        .toList();
+
+    if (orderedByPermission.isNotEmpty) {
+      return orderedByPermission;
+    }
     if (submodules.isNotEmpty) return submodules;
   }
 
@@ -619,11 +646,29 @@ ChildrenItem _submoduleToItem(
       normalizedName == 'especialidades';
   final isEstudiosModule =
       normalizedUrl.contains('estudios') || normalizedName == 'estudios';
+  final isCitasModule =
+      normalizedUrl == '/admin/citas' || normalizedName == 'citas';
+  final isPacientesModule =
+      normalizedUrl.contains('pacientes') || normalizedName == 'pacientes';
+  final isPersonalMedicoModule = normalizedUrl.contains('personal_medico') ||
+      normalizedName.contains('personal');
+
+  final resolvedIconName = isCitasModule
+      ? 'citas'
+      : isPacientesModule
+      ? 'pacientes'
+      : isPersonalMedicoModule
+      ? 'personal_medico'
+      : isEspecialidadesModule
+      ? 'especialidades'
+      : isEstudiosModule
+      ? 'estudios'
+      : subModule.propiedades?.icono;
 
   return ChildrenItem(
-    iconoImagen: _moduleIconData(subModule.propiedades?.icono),
+    iconoImagen: _moduleIconData(resolvedIconName),
     iconoImagenSeleccionada: _moduleIconData(
-      subModule.propiedades?.icono,
+      resolvedIconName,
       filled: true,
     ),
     titulo: subModule.label.isNotEmpty ? subModule.label : subModule.nombre,
@@ -635,6 +680,12 @@ ChildrenItem _submoduleToItem(
           ? const EspecialidadesPage()
           : isEstudiosModule
           ? const EstudiosPage()
+          : isCitasModule
+          ? const CitasPage(
+              soloMisCitas: false,
+              titulo: 'Citas',
+              mostrarFiltroMedico: true,
+            )
           : RoleTrayPlaceholder(
               title: blueprint.title,
               description: blueprint.description,
@@ -652,6 +703,22 @@ IconData _moduleIconData(String? iconName, {bool filled = false}) {
       return filled
           ? PhosphorIconsFill.calendarCheck
           : PhosphorIconsRegular.calendarCheck;
+    case 'pacientes':
+      return filled
+          ? PhosphorIconsFill.userCircle
+          : PhosphorIconsRegular.userCircle;
+    case 'personal_medico':
+    case 'personal-medico':
+    case 'personal medico':
+      return filled
+          ? PhosphorIconsFill.stethoscope
+          : PhosphorIconsRegular.stethoscope;
+    case 'especialidades':
+    case 'medical_services':
+      return filled ? Icons.medical_services : Icons.medical_services_outlined;
+    case 'estudios':
+    case 'science':
+      return filled ? Icons.science : Icons.science_outlined;
     case 'user':
     case 'usuarios':
       return filled ? PhosphorIconsFill.users : PhosphorIconsRegular.users;
@@ -675,6 +742,52 @@ IconData _moduleIconData(String? iconName, {bool filled = false}) {
 
 List<ChildrenItem> _adminMenu(ThemeController theme) => [
   ChildrenItem(
+    iconoImagen: PhosphorIconsRegular.calendarCheck,
+    iconoImagenSeleccionada: PhosphorIconsFill.calendarCheck,
+    titulo: 'Citas',
+    children: const KeepAlivePage(
+      child: CitasPage(
+        soloMisCitas: false,
+        titulo: 'Citas',
+        mostrarFiltroMedico: true,
+      ),
+    ),
+  ),
+  ChildrenItem(
+    iconoImagen: PhosphorIconsRegular.userCircle,
+    iconoImagenSeleccionada: PhosphorIconsFill.userCircle,
+    titulo: 'Pacientes',
+    children: const KeepAlivePage(
+      child: RoleTrayPlaceholder(
+        title: 'Pacientes',
+        description:
+            'Administra el listado de pacientes registrados en la plataforma.',
+        actions: [
+          'Listar pacientes disponibles',
+          'Crear y editar información de pacientes',
+        ],
+        leadingIcon: PhosphorIconsRegular.userCircle,
+      ),
+    ),
+  ),
+  ChildrenItem(
+    iconoImagen: PhosphorIconsRegular.stethoscope,
+    iconoImagenSeleccionada: PhosphorIconsFill.stethoscope,
+    titulo: 'Personal médico',
+    children: const KeepAlivePage(
+      child: RoleTrayPlaceholder(
+        title: 'Personal médico',
+        description:
+            'Gestiona el catálogo de médicos y personal de salud disponibles.',
+        actions: [
+          'Listar personal médico activo',
+          'Registrar o actualizar perfiles médicos',
+        ],
+        leadingIcon: PhosphorIconsRegular.stethoscope,
+      ),
+    ),
+  ),
+  ChildrenItem(
     iconoImagen: PhosphorIconsRegular.users,
     iconoImagenSeleccionada: PhosphorIconsFill.users,
     titulo: 'Usuarios',
@@ -691,23 +804,6 @@ List<ChildrenItem> _adminMenu(ThemeController theme) => [
     iconoImagenSeleccionada: Icons.science,
     titulo: 'Estudios',
     children: const KeepAlivePage(child: EstudiosPage()),
-  ),
-  ChildrenItem(
-    iconoImagen: PhosphorIconsRegular.calendarCheck,
-    iconoImagenSeleccionada: PhosphorIconsFill.calendarCheck,
-    titulo: 'Citas',
-    children: const KeepAlivePage(
-      child: RoleTrayPlaceholder(
-        title: 'Citas (Administrador)',
-        description:
-            'Bandeja vacía para monitorear y gestionar todas las citas.',
-        actions: [
-          'Listar todas las citas (GET /citas)',
-          'Crear cita para cualquier médico (POST /citas)',
-          'Editar, cancelar o reprogramar (PATCH /citas/:id/...)',
-        ],
-      ),
-    ),
   ),
 ];
 
@@ -893,26 +989,6 @@ class _TrayBlueprint {
 
 _TrayBlueprint _resolveTrayBlueprint(SubModulo subModule) {
   final knownTrays = <String, _TrayBlueprint>{
-    '/admin/home': _TrayBlueprint(
-      title: 'Inicio',
-      description:
-          'Pantalla de bienvenida para navegación rápida según tu rol activo.',
-      actions: const [
-        'Consultar accesos rápidos visibles para el rol',
-        'Revisar notificaciones o recordatorios de la sesión',
-      ],
-      icon: _moduleIconData('home'),
-    ),
-    'inicio': _TrayBlueprint(
-      title: 'Inicio',
-      description:
-          'Pantalla de bienvenida para navegación rápida según tu rol activo.',
-      actions: const [
-        'Consultar accesos rápidos visibles para el rol',
-        'Revisar notificaciones o recordatorios de la sesión',
-      ],
-      icon: _moduleIconData('home'),
-    ),
     '/admin/perfil': _TrayBlueprint(
       title: 'Perfil',
       description: 'Gestiona tu información personal y credenciales.',
@@ -941,6 +1017,37 @@ _TrayBlueprint _resolveTrayBlueprint(SubModulo subModule) {
         'Listar usuarios y filtrar por estado o rol',
         'Crear y editar información de usuario',
         'Asignar o revocar roles disponibles',
+      ],
+      icon: _moduleIconData('manage_accounts'),
+    ),
+    '/admin/citas': _TrayBlueprint(
+      title: 'Citas',
+      description:
+          'Agenda y administra las citas médicas disponibles en el sistema.',
+      actions: const [
+        'Revisar agenda diaria o semanal',
+        'Crear, editar o cancelar citas médicas',
+        'Aplicar filtros por médico o estado',
+      ],
+      icon: _moduleIconData('calendar'),
+    ),
+    '/admin/pacientes': _TrayBlueprint(
+      title: 'Pacientes',
+      description:
+          'Gestiona el listado de pacientes registrados en la plataforma.',
+      actions: const [
+        'Listar pacientes registrados',
+        'Crear o editar información de pacientes',
+      ],
+      icon: _moduleIconData('user'),
+    ),
+    '/admin/personal_medico': _TrayBlueprint(
+      title: 'Personal médico',
+      description:
+          'Gestiona el catálogo de médicos y personal de salud disponibles.',
+      actions: const [
+        'Listar personal médico activo',
+        'Registrar o actualizar perfiles médicos',
       ],
       icon: _moduleIconData('manage_accounts'),
     ),
