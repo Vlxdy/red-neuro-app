@@ -246,10 +246,6 @@ class _AgendaWeekCalendar extends StatelessWidget {
               markerSize: 6,
               markersAlignment: Alignment.bottomCenter,
               markerMargin: EdgeInsets.zero,
-              markerDecoration: BoxDecoration(
-                color: theme.primary,
-                shape: BoxShape.circle,
-              ),
               todayDecoration: BoxDecoration(
                 color: theme.primary.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
@@ -258,6 +254,35 @@ class _AgendaWeekCalendar extends StatelessWidget {
                 color: theme.primary,
                 shape: BoxShape.circle,
               ),
+            ),
+            calendarBuilders: CalendarBuilders(
+              markerBuilder: (context, day, events) {
+                if (events.isEmpty) {
+                  return null;
+                }
+
+                final markerColor =
+                    events.length > 4 ? theme.error : theme.warning;
+                final markerCount = events.length > 4 ? 4 : events.length;
+
+                return Align(
+                  alignment: Alignment.bottomCenter,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: List.generate(
+                      markerCount,
+                      (index) => Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: markerColor,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ),
