@@ -433,12 +433,13 @@ class _AgendaCitaCard extends StatelessWidget {
     final titulo = tituloCita(cita);
     final medico = nombreMedico(cita);
     final paciente = nombrePaciente(cita);
+    final especialidad = (cita.especialidadNombre ?? '').trim();
 
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(10),
       child: Container(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
           color: theme.bgCard,
           borderRadius: BorderRadius.circular(10),
@@ -479,20 +480,58 @@ class _AgendaCitaCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Row(
               children: [
-                Icon(PhosphorIconsRegular.clock, size: 16, color: theme.grey),
-                const SizedBox(width: 6),
-                Text(
-                  horario,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                Expanded(
+                  child: Row(
+                    children: [
+                      Icon(
+                        PhosphorIconsRegular.clock,
+                        size: 16,
                         color: theme.grey,
                       ),
+                      const SizedBox(width: 6),
+                      Text(
+                        horario,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: theme.grey,
+                            ),
+                      ),
+                    ],
+                  ),
                 ),
+                if (especialidad.isNotEmpty)
+                  Flexible(
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: especialidadColor.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          especialidad,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context)
+                              .textTheme
+                              .labelSmall
+                              ?.copyWith(
+                                color: especialidadColor,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 4),
             Wrap(
               spacing: 12,
               runSpacing: 6,
@@ -508,12 +547,6 @@ class _AgendaCitaCard extends StatelessWidget {
                     icon: PhosphorIconsRegular.stethoscope,
                     label: medico,
                     color: theme.grey,
-                  ),
-                if ((cita.especialidadNombre ?? '').trim().isNotEmpty)
-                  InfoPill(
-                    icon: PhosphorIconsRegular.tag,
-                    label: cita.especialidadNombre!.trim(),
-                    color: especialidadColor,
                   ),
               ],
             ),
