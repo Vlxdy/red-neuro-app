@@ -14,11 +14,13 @@ class CitasAgendaSection extends StatelessWidget {
   final DateFormat dateFormat;
   final DateTime agendaDay;
   final DateTime agendaFocusedDay;
+  final CalendarFormat agendaCalendarFormat;
   final bool agendaCalendarCollapsed;
   final Map<DateTime, List<CitaMedica>> citasAgendaPorDia;
   final void Function(DateTime selectedDay, DateTime focusedDay)
       onAgendaDaySelected;
   final ValueChanged<DateTime> onPageChanged;
+  final ValueChanged<CalendarFormat> onAgendaFormatChanged;
   final VoidCallback onExpandCalendar;
   final bool isLoading;
   final ScrollController? scrollController;
@@ -40,10 +42,12 @@ class CitasAgendaSection extends StatelessWidget {
     required this.dateFormat,
     required this.agendaDay,
     required this.agendaFocusedDay,
+    required this.agendaCalendarFormat,
     required this.agendaCalendarCollapsed,
     required this.citasAgendaPorDia,
     required this.onAgendaDaySelected,
     required this.onPageChanged,
+    required this.onAgendaFormatChanged,
     required this.onExpandCalendar,
     required this.isLoading,
     required this.scrollController,
@@ -87,10 +91,12 @@ class CitasAgendaSection extends StatelessWidget {
               theme: theme,
               agendaFocusedDay: agendaFocusedDay,
               agendaDay: agendaDay,
+              agendaCalendarFormat: agendaCalendarFormat,
               isCollapsed: agendaCalendarCollapsed,
               citasAgendaPorDia: citasAgendaPorDia,
               onAgendaDaySelected: onAgendaDaySelected,
               onPageChanged: onPageChanged,
+              onAgendaFormatChanged: onAgendaFormatChanged,
             ),
           ),
           InfoPill(
@@ -150,20 +156,24 @@ class _AgendaWeekCalendar extends StatelessWidget {
   final ThemeController theme;
   final DateTime agendaFocusedDay;
   final DateTime agendaDay;
+  final CalendarFormat agendaCalendarFormat;
   final bool isCollapsed;
   final Map<DateTime, List<CitaMedica>> citasAgendaPorDia;
   final void Function(DateTime selectedDay, DateTime focusedDay)
       onAgendaDaySelected;
   final ValueChanged<DateTime> onPageChanged;
+  final ValueChanged<CalendarFormat> onAgendaFormatChanged;
 
   const _AgendaWeekCalendar({
     required this.theme,
     required this.agendaFocusedDay,
     required this.agendaDay,
+    required this.agendaCalendarFormat,
     required this.isCollapsed,
     required this.citasAgendaPorDia,
     required this.onAgendaDaySelected,
     required this.onPageChanged,
+    required this.onAgendaFormatChanged,
   });
 
   @override
@@ -180,8 +190,9 @@ class _AgendaWeekCalendar extends StatelessWidget {
             firstDay: DateTime.utc(2020, 1, 1),
             lastDay: DateTime.utc(2100, 12, 31),
             focusedDay: agendaFocusedDay,
-            calendarFormat: CalendarFormat.week,
+            calendarFormat: agendaCalendarFormat,
             availableCalendarFormats: const {
+              CalendarFormat.month: 'Mes',
               CalendarFormat.week: 'Semana',
             },
             startingDayOfWeek: StartingDayOfWeek.monday,
@@ -197,7 +208,15 @@ class _AgendaWeekCalendar extends StatelessWidget {
               titleTextStyle: Theme.of(context).textTheme.labelLarge ??
                   const TextStyle(fontWeight: FontWeight.w600),
               titleCentered: false,
-              formatButtonVisible: false,
+              formatButtonVisible: true,
+              formatButtonDecoration: BoxDecoration(
+                color: theme.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              formatButtonTextStyle: TextStyle(
+                color: theme.primary,
+                fontWeight: FontWeight.w600,
+              ),
               leftChevronIcon:
                   Icon(Icons.chevron_left, size: 18, color: theme.primary),
               rightChevronIcon:
@@ -206,6 +225,7 @@ class _AgendaWeekCalendar extends StatelessWidget {
               leftChevronMargin: EdgeInsets.zero,
               rightChevronMargin: EdgeInsets.zero,
             ),
+            onFormatChanged: onAgendaFormatChanged,
             onDaySelected: onAgendaDaySelected,
             onPageChanged: onPageChanged,
             daysOfWeekStyle: DaysOfWeekStyle(
@@ -223,11 +243,11 @@ class _AgendaWeekCalendar extends StatelessWidget {
               outsideDaysVisible: false,
               cellMargin: EdgeInsets.zero,
               cellPadding: EdgeInsets.zero,
-              markerSize: 5,
+              markerSize: 6,
               markersAlignment: Alignment.bottomCenter,
               markerMargin: EdgeInsets.zero,
               markerDecoration: BoxDecoration(
-                color: theme.secondary,
+                color: theme.primary,
                 shape: BoxShape.circle,
               ),
               todayDecoration: BoxDecoration(
