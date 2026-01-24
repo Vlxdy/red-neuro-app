@@ -5,6 +5,9 @@ class CitasHeader extends StatelessWidget {
   final String titulo;
   final String subtitulo;
   final bool isCompact;
+  final int currentViewIndex;
+  final ValueChanged<int> onViewSelected;
+  final VoidCallback onToggleFilters;
   final ThemeController theme;
 
   const CitasHeader({
@@ -12,38 +15,103 @@ class CitasHeader extends StatelessWidget {
     required this.titulo,
     required this.subtitulo,
     required this.isCompact,
+    required this.currentViewIndex,
+    required this.onViewSelected,
+    required this.onToggleFilters,
     required this.theme,
   });
 
+  List<PopupMenuEntry<int>> _buildViewItems(TextStyle? textStyle) {
+    const labels = ['Agenda diaria', 'Calendario', 'Listado'];
+    return List.generate(
+      labels.length,
+      (index) => CheckedPopupMenuItem(
+        value: index,
+        checked: index == currentViewIndex,
+        child: Text(labels[index], style: textStyle),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 16,
-      runSpacing: 12,
-      alignment: WrapAlignment.spaceBetween,
-      crossAxisAlignment: WrapCrossAlignment.center,
+    final textStyle = Theme.of(context).textTheme.bodySmall;
+    final borderColor = theme.grey.withValues(alpha: 0.4);
+    const iconSize = 18.0;
+    const buttonSize = 32.0;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(
-          width: isCompact ? double.infinity : 420,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Text(
                 titulo,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: theme.primary,
                     ),
               ),
-              Text(
+            ),
+            const SizedBox(width: 12),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                border: Border.all(color: borderColor),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: SizedBox(
+                width: buttonSize,
+                height: buttonSize,
+                child: PopupMenuButton<int>(
+                  tooltip: 'Vista',
+                  padding: EdgeInsets.zero,
+                  iconSize: iconSize,
+                  onSelected: (value) {
+                    if (value == currentViewIndex) return;
+                    onViewSelected(value);
+                  },
+                  itemBuilder: (context) => _buildViewItems(textStyle),
+                  icon: const Icon(Icons.view_list_rounded),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            IconButton(
+              onPressed: onToggleFilters,
+              icon: const Icon(Icons.filter_list_rounded, size: iconSize),
+              style: IconButton.styleFrom(
+                padding: const EdgeInsets.all(6),
+                minimumSize: const Size(buttonSize, buttonSize),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(color: borderColor),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 16,
+          runSpacing: 4,
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            SizedBox(
+              width: isCompact ? double.infinity : 420,
+              child: Text(
                 subtitulo,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
-            ],
-          ),
+            ),
+            if (!isCompact)
+              Text(
+                'Agenda médica',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+          ],
         ),
-        if (!isCompact)
-          Text('Agenda médica', style: Theme.of(context).textTheme.bodySmall),
       ],
     );
   }

@@ -17,6 +17,7 @@ import 'package:red_neuro_app/src/models/paciente.dart';
 import 'package:red_neuro_app/src/models/personal_medico.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
+import 'package:red_neuro_app/src/plugins/utils/preferences.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
@@ -29,7 +30,6 @@ import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_detalle_widgets.d
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_filters_fields.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_header.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_listado.dart';
-import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_tabs_row.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/fecha_selector.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
@@ -52,8 +52,8 @@ class CitasPage extends StatefulWidget {
   State<CitasPage> createState() => _CitasPageState();
 }
 
-class _CitasPageState extends State<CitasPage>
-    with SingleTickerProviderStateMixin {
+class _CitasPageState extends State<CitasPage> {
+  static const _viewPreferenceKey = 'citas_view_index';
   final ThemeController _theme = ThemeController.instance;
   late final CitasService _service;
   final DateFormat _dateFormat = DateFormat('dd/MM/yyyy');
@@ -77,7 +77,6 @@ class _CitasPageState extends State<CitasPage>
   late DateTime _agendaFocusedDay;
   CalendarFormat _calendarFormat = CalendarFormat.week;
   CalendarFormat _agendaCalendarFormat = CalendarFormat.week;
-  late final TabController _tabController;
   int _currentTabIndex = 0;
 
   String _buscarTexto = '';
@@ -112,8 +111,6 @@ class _CitasPageState extends State<CitasPage>
     _buscarController = TextEditingController();
     _medicoFiltroController = TextEditingController();
     _service = CitasService(context);
-    _tabController = TabController(length: 3, vsync: this);
-    _tabController.addListener(_handleTabChange);
     _listScrollController.addListener(_handleListScroll);
     _agendaScrollController.addListener(_handleAgendaScroll);
     _socketClient = _CitasSocketClient(
@@ -136,18 +133,26 @@ class _CitasPageState extends State<CitasPage>
     _agendaScrollController
       ..removeListener(_handleAgendaScroll)
       ..dispose();
-    _tabController
-      ..removeListener(_handleTabChange)
-      ..dispose();
     _socketClient.dispose();
     super.dispose();
   }
 
   Future<void> _cargarInicial() async {
+    final savedIndex =
+        await PreferencesService.instance.getInt(_viewPreferenceKey);
+    final resolvedIndex = savedIndex.clamp(0, 2).toInt();
+    if (resolvedIndex != _currentTabIndex) {
+      setState(() => _currentTabIndex = resolvedIndex);
+    }
     await _socketClient.connect();
-    await _cargarCitasCalendario();
-    await _cargarCitasAgendaSemana();
-    await _cargarCitasAgendaDay(day: _agendaDay);
+    if (resolvedIndex == 0) {
+      await _cargarCitasAgendaSemana();
+      await _cargarCitasAgendaDay(day: _agendaDay);
+    } else if (resolvedIndex == 1) {
+      await _cargarCitasCalendario();
+    } else {
+      await _cargarCitasListado(page: 1);
+    }
   }
 
   Future<void> _cargarCitasCalendario() async {
@@ -620,13 +625,14 @@ class _CitasPageState extends State<CitasPage>
     return _DateRange(start: firstDay, end: lastDay);
   }
 
-  void _handleTabChange() {
-    if (_currentTabIndex == _tabController.index) return;
-    setState(() => _currentTabIndex = _tabController.index);
-    if (_currentTabIndex == 0) {
+  Future<void> _setViewIndex(int index) async {
+    if (_currentTabIndex == index) return;
+    setState(() => _currentTabIndex = index);
+    await PreferencesService.instance.setInt(_viewPreferenceKey, index);
+    if (index == 0) {
       _cargarCitasAgendaSemana();
       _cargarCitasAgendaDay(day: _agendaDay);
-    } else if (_currentTabIndex == 1) {
+    } else if (index == 1) {
       _cargarCitasCalendario();
     } else {
       _cargarCitasListado();
@@ -2997,6 +3003,9 @@ class _CitasPageState extends State<CitasPage>
                                 ? 'Agenda personal en tiempo real'
                                 : 'Supervisa, crea y edita citas médicas en vivo',
                             isCompact: isCompact,
+                            currentViewIndex: _currentTabIndex,
+                            onViewSelected: _setViewIndex,
+                            onToggleFilters: _toggleFilters,
                             theme: _theme,
                           ),
                           CitasActiveFiltersRibbon(
@@ -3012,14 +3021,9 @@ class _CitasPageState extends State<CitasPage>
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                CitasTabsRow(
-                                  tabController: _tabController,
-                                  onToggleFilters: _toggleFilters,
-                                  theme: _theme,
-                                ),
                                 Expanded(
-                                  child: TabBarView(
-                                    controller: _tabController,
+                                  child: IndexedStack(
+                                    index: _currentTabIndex,
                                     children: [
                                       CitasAgendaSection(
                                         citas: _filtrarCitasLocal(_citasAgenda),
