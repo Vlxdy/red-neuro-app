@@ -3383,6 +3383,13 @@ class _CitasPageState extends State<CitasPage> {
           ),
           actions: [
             TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _abrirFormulario(cita: cita);
+              },
+              child: const Text('Editar'),
+            ),
+            TextButton(
               onPressed: () async {
                 await _mostrarHistorialCita(cita);
               },
