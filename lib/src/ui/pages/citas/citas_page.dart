@@ -145,6 +145,8 @@ class _CitasPageState extends State<CitasPage>
   Future<void> _cargarInicial() async {
     await _socketClient.connect();
     await _cargarCitasCalendario();
+    await _cargarCitasAgendaSemana();
+    await _cargarCitasAgendaDay(day: _agendaDay);
   }
 
   Future<void> _cargarCitasCalendario() async {
@@ -421,7 +423,7 @@ class _CitasPageState extends State<CitasPage>
       updated[index] = cita;
       return updated;
     }
-    if (_currentTabIndex == 1 && _listPage > 1) {
+    if (_currentTabIndex == 2 && _listPage > 1) {
       return lista;
     }
     return [cita, ...lista];
@@ -621,17 +623,17 @@ class _CitasPageState extends State<CitasPage>
     if (_currentTabIndex == _tabController.index) return;
     setState(() => _currentTabIndex = _tabController.index);
     if (_currentTabIndex == 0) {
-      _cargarCitasCalendario();
-    } else if (_currentTabIndex == 1) {
-      _cargarCitasListado();
-    } else {
       _cargarCitasAgendaSemana();
       _cargarCitasAgendaDay(day: _agendaDay);
+    } else if (_currentTabIndex == 1) {
+      _cargarCitasCalendario();
+    } else {
+      _cargarCitasListado();
     }
   }
 
   void _handleListScroll() {
-    if (_currentTabIndex != 1 || _listLoadingMore || !_listHasNext) return;
+    if (_currentTabIndex != 2 || _listLoadingMore || !_listHasNext) return;
     if (_listScrollController.position.pixels >=
         _listScrollController.position.maxScrollExtent - 240) {
       setState(() => _listLoadingMore = true);
@@ -640,7 +642,7 @@ class _CitasPageState extends State<CitasPage>
   }
 
   void _handleAgendaScroll() {
-    if (_currentTabIndex != 2 || !_agendaScrollController.hasClients) return;
+    if (_currentTabIndex != 0 || !_agendaScrollController.hasClients) return;
     final position = _agendaScrollController.position;
     final direction = position.userScrollDirection;
     if (direction == ScrollDirection.reverse && !_agendaCalendarCollapsed) {
@@ -695,26 +697,26 @@ class _CitasPageState extends State<CitasPage>
       _listLoadingMore = false;
     });
     if (_currentTabIndex == 0) {
-      _cargarCitasCalendario();
-    } else if (_currentTabIndex == 1) {
-      _cargarCitasListado(page: 1);
-    } else {
       _cargarCitasAgendaDay(day: _agendaDay);
+    } else if (_currentTabIndex == 1) {
+      _cargarCitasCalendario();
+    } else {
+      _cargarCitasListado(page: 1);
     }
   }
 
   void _aplicarFiltros() {
     if (_currentTabIndex == 0) {
-      _cargarCitasCalendario();
+      _cargarCitasAgendaDay(day: _agendaDay);
     } else if (_currentTabIndex == 1) {
+      _cargarCitasCalendario();
+    } else {
       _listPage = 1;
       _listLoadingMore = false;
       if (_listScrollController.hasClients) {
         _listScrollController.jumpTo(0);
       }
       _cargarCitasListado(page: 1);
-    } else {
-      _cargarCitasAgendaDay(day: _agendaDay);
     }
   }
 
@@ -766,10 +768,14 @@ class _CitasPageState extends State<CitasPage>
     );
     if (fecha == null) return;
     setState(() {
-      _agendaDay = DateTime(fecha.year, fecha.month, fecha.day);
-      _agendaFocusedDay = _agendaDay;
+      final selected = DateTime(fecha.year, fecha.month, fecha.day);
+      _agendaDay = selected;
+      _agendaFocusedDay = selected;
+      _selectedDay = selected;
+      _focusedDay = selected;
     });
     await _cargarCitasAgendaDay(day: _agendaDay);
+    await _cargarCitasDelDia(day: _selectedDay);
   }
 
   Future<void> _seleccionarAgendaDay(DateTime day) async {
@@ -778,8 +784,11 @@ class _CitasPageState extends State<CitasPage>
     setState(() {
       _agendaDay = fecha;
       _agendaFocusedDay = fecha;
+      _selectedDay = fecha;
+      _focusedDay = fecha;
     });
     await _cargarCitasAgendaDay(day: _agendaDay);
+    await _cargarCitasDelDia(day: _selectedDay);
   }
 
   Future<void> _abrirFormulario({CitaMedica? cita, DateTime? fechaBase}) async {
@@ -2281,7 +2290,7 @@ class _CitasPageState extends State<CitasPage>
         colorText: _theme.white,
       );
       await _cargarCitasCalendario();
-      if (_currentTabIndex == 1) {
+      if (_currentTabIndex == 2) {
         await _cargarCitasListado(page: 1);
       }
       return;
@@ -2346,7 +2355,7 @@ class _CitasPageState extends State<CitasPage>
     }
 
     await _cargarCitasCalendario();
-    if (_currentTabIndex == 1) {
+    if (_currentTabIndex == 2) {
       await _cargarCitasListado();
     }
   }
@@ -3011,6 +3020,45 @@ class _CitasPageState extends State<CitasPage>
                                   child: TabBarView(
                                     controller: _tabController,
                                     children: [
+                                      CitasAgendaSection(
+                                        citas: _filtrarCitasLocal(_citasAgenda),
+                                        isCompact: isCompact,
+                                        theme: _theme,
+                                        dateFormat: _dateFormat,
+                                        agendaDay: _agendaDay,
+                                        agendaFocusedDay: _agendaFocusedDay,
+                                        agendaCalendarCollapsed:
+                                            _agendaCalendarCollapsed,
+                                        citasAgendaPorDia: _citasAgendaPorDia,
+                                        onAgendaDaySelected:
+                                            (selectedDay, focusedDay) {
+                                          setState(
+                                            () => _agendaFocusedDay = focusedDay,
+                                          );
+                                          _seleccionarAgendaDay(selectedDay);
+                                        },
+                                        onPageChanged: (focusedDay) {
+                                          setState(
+                                            () => _agendaFocusedDay = focusedDay,
+                                          );
+                                          _cargarCitasAgendaSemana();
+                                        },
+                                        onExpandCalendar: () => setState(
+                                          () => _agendaCalendarCollapsed = false,
+                                        ),
+                                        isLoading: _agendaLoading,
+                                        scrollController: _agendaScrollController,
+                                        formatoHoraAgenda: _formatoHoraAgenda,
+                                        formatoHorarioCita: _formatoHorarioCita,
+                                        tituloCita: _tituloCita,
+                                        nombreMedico: _nombreMedico,
+                                        nombrePaciente: _nombrePaciente,
+                                        iconoTipoCita: _iconoTipoCita,
+                                        colorEspecialidad: _colorEspecialidad,
+                                        colorEstado: _colorEstado,
+                                        onTapCita: (cita) =>
+                                            () => _mostrarDetalleCita(cita),
+                                      ),
                                       CitasCalendarioPanel(
                                         theme: _theme,
                                         calendarFormat: _calendarFormat,
@@ -3030,6 +3078,12 @@ class _CitasPageState extends State<CitasPage>
                                           setState(() {
                                             _selectedDay = selectedDay;
                                             _focusedDay = focusedDay;
+                                            _agendaDay = DateTime(
+                                              selectedDay.year,
+                                              selectedDay.month,
+                                              selectedDay.day,
+                                            );
+                                            _agendaFocusedDay = _agendaDay;
                                           });
                                           _cargarCitasDelDia(
                                             day: selectedDay,
@@ -3037,7 +3091,7 @@ class _CitasPageState extends State<CitasPage>
                                         },
                                         onPageChanged: (focusedDay) {
                                           _focusedDay = focusedDay;
-                                          if (_currentTabIndex == 0) {
+                                          if (_currentTabIndex == 1) {
                                             _cargarCitasCalendario();
                                           }
                                         },
@@ -3083,45 +3137,6 @@ class _CitasPageState extends State<CitasPage>
                                             () => _mostrarDetalleCita(cita),
                                         onEditar: (cita) =>
                                             () => _abrirFormulario(cita: cita),
-                                      ),
-                                      CitasAgendaSection(
-                                        citas: _filtrarCitasLocal(_citasAgenda),
-                                        isCompact: isCompact,
-                                        theme: _theme,
-                                        dateFormat: _dateFormat,
-                                        agendaDay: _agendaDay,
-                                        agendaFocusedDay: _agendaFocusedDay,
-                                        agendaCalendarCollapsed:
-                                            _agendaCalendarCollapsed,
-                                        citasAgendaPorDia: _citasAgendaPorDia,
-                                        onAgendaDaySelected:
-                                            (selectedDay, focusedDay) {
-                                          setState(
-                                            () => _agendaFocusedDay = focusedDay,
-                                          );
-                                          _seleccionarAgendaDay(selectedDay);
-                                        },
-                                        onPageChanged: (focusedDay) {
-                                          setState(
-                                            () => _agendaFocusedDay = focusedDay,
-                                          );
-                                          _cargarCitasAgendaSemana();
-                                        },
-                                        onExpandCalendar: () => setState(
-                                          () => _agendaCalendarCollapsed = false,
-                                        ),
-                                        isLoading: _agendaLoading,
-                                        scrollController: _agendaScrollController,
-                                        formatoHoraAgenda: _formatoHoraAgenda,
-                                        formatoHorarioCita: _formatoHorarioCita,
-                                        tituloCita: _tituloCita,
-                                        nombreMedico: _nombreMedico,
-                                        nombrePaciente: _nombrePaciente,
-                                        iconoTipoCita: _iconoTipoCita,
-                                        colorEspecialidad: _colorEspecialidad,
-                                        colorEstado: _colorEstado,
-                                        onTapCita: (cita) =>
-                                            () => _mostrarDetalleCita(cita),
                                       ),
                                     ],
                                   ),
