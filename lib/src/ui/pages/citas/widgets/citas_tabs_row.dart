@@ -25,9 +25,9 @@ class CitasTabsRow extends StatelessWidget {
             labelColor: theme.primary,
             indicatorColor: theme.primary,
             tabs: const [
+              Tab(text: 'Agenda diaria'),
               Tab(text: 'Calendario'),
               Tab(text: 'Listado'),
-              Tab(text: 'Agenda diaria'),
             ],
           ),
         ),
