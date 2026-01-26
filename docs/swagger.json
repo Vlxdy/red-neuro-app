@@ -3538,6 +3538,289 @@
         ]
       }
     },
+    "/personal-salud": {
+      "get": {
+        "operationId": "PersonalSaludController_listar",
+        "parameters": [
+          {
+            "name": "limite",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 10,
+              "maximum": 50,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pagina",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "filtro",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ordenRaw",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "number"
+                            },
+                            "filas": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/PersonalResponseDto"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lista el personal de salud registrado",
+        "tags": [
+          "Personal Salud"
+        ]
+      },
+      "post": {
+        "operationId": "PersonalSaludController_crear",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearPersonalSaludDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/PersonalResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Crea un nuevo profesional de salud",
+        "tags": [
+          "Personal Salud"
+        ]
+      }
+    },
+    "/personal-salud/{id}": {
+      "get": {
+        "operationId": "PersonalSaludController_obtenerPorId",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/PersonalResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Obtiene el detalle de un profesional de salud",
+        "tags": [
+          "Personal Salud"
+        ]
+      },
+      "patch": {
+        "operationId": "PersonalSaludController_actualizar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ActualizarPersonalSaludDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/PersonalResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Actualiza la información del personal de salud",
+        "tags": [
+          "Personal Salud"
+        ]
+      },
+      "delete": {
+        "operationId": "PersonalSaludController_eliminar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/PersonalResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Elimina un profesional de salud",
+        "tags": [
+          "Personal Salud"
+        ]
+      }
+    },
     "/pacientes": {
       "get": {
         "operationId": "PacienteController_listar",
@@ -5752,6 +6035,86 @@
             "type": "string",
             "description": "Permite reactivar o desactivar la especialidad",
             "example": "ACTIVO"
+          }
+        }
+      },
+      "CrearPersonalSaludDto": {
+        "type": "object",
+        "properties": {
+          "contrasena": {
+            "type": "string",
+            "example": "AGEPIC.admin135"
+          },
+          "repetirContrasena": {
+            "type": "string",
+            "example": "AGEPIC.admin135"
+          },
+          "correoElectronico": {
+            "type": "string",
+            "example": "123456@gmail.com"
+          },
+          "persona": {
+            "description": "Datos personales del profesional de salud",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PersonaDto"
+              }
+            ]
+          },
+          "esSupervisor": {
+            "type": "boolean",
+            "example": false,
+            "description": "Habilita permisos de supervisión para el rol PERSONAL_SALUD."
+          },
+          "idEspecialidades": {
+            "description": "Especialidades asociadas al profesional de salud",
+            "example": [
+              "1",
+              "2"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "contrasena",
+          "repetirContrasena",
+          "correoElectronico",
+          "persona"
+        ]
+      },
+      "ActualizarPersonalSaludDto": {
+        "type": "object",
+        "properties": {
+          "correoElectronico": {
+            "type": "string",
+            "example": "123456@gmail.com"
+          },
+          "persona": {
+            "description": "Datos personales del profesional de salud",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PersonaDto"
+              }
+            ]
+          },
+          "esSupervisor": {
+            "type": "boolean",
+            "example": false,
+            "description": "Habilita permisos de supervisión para el rol PERSONAL_SALUD."
+          },
+          "idEspecialidades": {
+            "description": "Especialidades asociadas al profesional de salud",
+            "example": [
+              "1",
+              "2"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
