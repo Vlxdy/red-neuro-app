@@ -899,6 +899,15 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                   const SizedBox(height: 12),
                                   Autocomplete<Especialidad>(
                                     optionsBuilder: (textEditingValue) {
+                                      if (textEditingValue.text
+                                              .trim()
+                                              .isEmpty &&
+                                          especialidadesDisponibles.isEmpty &&
+                                          !especialidadesLoading) {
+                                        Future.microtask(
+                                          () => cargarEspecialidades(reset: true),
+                                        );
+                                      }
                                       return especialidadesDisponibles.where(
                                         (especialidad) =>
                                             !selectedIds
@@ -940,6 +949,11 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                         onChanged: (value) {
                                           especialidadesFiltro = value.trim();
                                           especialidadesDebounce?.cancel();
+                                          setStateDialog(() {
+                                            especialidadesDisponibles.clear();
+                                            especialidadesHasMore = true;
+                                            especialidadesPage = 1;
+                                          });
                                           if (especialidadesFiltro.isEmpty) {
                                             cargarEspecialidades(reset: true);
                                             return;
