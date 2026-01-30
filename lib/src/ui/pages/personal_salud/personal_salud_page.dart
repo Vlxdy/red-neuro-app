@@ -289,6 +289,17 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     return '';
   }
 
+  String _validarCelular(String? value, String alias) {
+    final trimmed = value?.trim() ?? '';
+    if (trimmed.isEmpty) {
+      return 'Campo requerido';
+    }
+    if (!RegExp(r'^[67]\d{7}$').hasMatch(trimmed)) {
+      return 'El celular debe tener 8 dígitos y empezar con 6 o 7';
+    }
+    return '';
+  }
+
   String _resolveAvatarUrl(String? urlFoto) {
     if (urlFoto == null || urlFoto.trim().isEmpty) {
       return '';
@@ -703,14 +714,11 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                               children: [
                                 Expanded(
                                   child: CustomTextInput(
-                                    title: 'Teléfono',
+                                    title: 'Celular',
                                     controller: telefono,
                                     onlyNumbers: true,
                                     requiredData: true,
-                                    validate: (value, alias) =>
-                                        (value?.isEmpty ?? true)
-                                            ? 'Campo requerido'
-                                            : '',
+                                    validate: _validarCelular,
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -728,14 +736,11 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                             Column(
                               children: [
                                 CustomTextInput(
-                                  title: 'Teléfono',
+                                  title: 'Celular',
                                   controller: telefono,
                                   onlyNumbers: true,
                                   requiredData: true,
-                                  validate: (value, alias) =>
-                                      (value?.isEmpty ?? true)
-                                          ? 'Campo requerido'
-                                          : '',
+                                  validate: _validarCelular,
                                 ),
                                 const SizedBox(height: 12),
                                 CustomTextInput(
