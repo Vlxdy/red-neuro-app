@@ -485,6 +485,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     TextEditingController? autocompleteController;
     bool esSupervisor = personal?.esSupervisor ?? false;
     String? generoSeleccionado = personal?.genero;
+    String apellidoErrorText = '';
 
     final seleccionInicial = personal?.especialidades ?? [];
     final selectedEspecialidades = seleccionInicial.isNotEmpty
@@ -612,13 +613,20 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                   child: CustomTextInput(
                                     title: 'Primer apellido',
                                     controller: primerApellido,
-                                    requiredData: false,
+                                    requiredData: true,
                                     validate: (value, alias) => _validarApellidos(
                                       value,
                                       alias,
                                       primerApellido: primerApellido,
                                       segundoApellido: segundoApellido,
                                     ),
+                                    onChange: (_) {
+                                      if (apellidoErrorText.isNotEmpty) {
+                                        setStateDialog(() {
+                                          apellidoErrorText = '';
+                                        });
+                                      }
+                                    },
                                   ),
                                 ),
                               ],
@@ -639,13 +647,20 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                 CustomTextInput(
                                   title: 'Primer apellido',
                                   controller: primerApellido,
-                                  requiredData: false,
+                                  requiredData: true,
                                   validate: (value, alias) => _validarApellidos(
                                     value,
                                     alias,
                                     primerApellido: primerApellido,
                                     segundoApellido: segundoApellido,
                                   ),
+                                  onChange: (_) {
+                                    if (apellidoErrorText.isNotEmpty) {
+                                      setStateDialog(() {
+                                        apellidoErrorText = '';
+                                      });
+                                    }
+                                  },
                                 ),
                               ],
                             ),
@@ -657,13 +672,20 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                   child: CustomTextInput(
                                     title: 'Segundo apellido',
                                     controller: segundoApellido,
-                                    requiredData: false,
+                                    requiredData: true,
                                     validate: (value, alias) => _validarApellidos(
                                       value,
                                       alias,
                                       primerApellido: primerApellido,
                                       segundoApellido: segundoApellido,
                                     ),
+                                    onChange: (_) {
+                                      if (apellidoErrorText.isNotEmpty) {
+                                        setStateDialog(() {
+                                          apellidoErrorText = '';
+                                        });
+                                      }
+                                    },
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -687,15 +709,21 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                 CustomTextInput(
                                   title: 'Segundo apellido',
                                   controller: segundoApellido,
-                                  requiredData: false,
+                                  requiredData: true,
                                   validate: (value, alias) => _validarApellidos(
                                     value,
                                     alias,
                                     primerApellido: primerApellido,
                                     segundoApellido: segundoApellido,
                                   ),
+                                  onChange: (_) {
+                                    if (apellidoErrorText.isNotEmpty) {
+                                      setStateDialog(() {
+                                        apellidoErrorText = '';
+                                      });
+                                    }
+                                  },
                                 ),
-                                const SizedBox(height: 12),
                                 CustomTextInput(
                                   title: 'Número de documento',
                                   controller: nroDocumento,
@@ -707,6 +735,15 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                           : '',
                                 ),
                               ],
+                            ),
+                          const SizedBox(height: 4),
+                          if (apellidoErrorText.isNotEmpty)
+                            Text(
+                              apellidoErrorText,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                                fontSize: 12,
+                              ),
                             ),
                           const SizedBox(height: 12),
                           if (isWide)
@@ -1214,6 +1251,9 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                   segundoApellido: segundoApellido,
                                 );
                                 if (apellidoError.isNotEmpty) {
+                                  setStateDialog(() {
+                                    apellidoErrorText = apellidoError;
+                                  });
                                   showSnackBar(
                                     personalSaludMessenger,
                                     apellidoError,
