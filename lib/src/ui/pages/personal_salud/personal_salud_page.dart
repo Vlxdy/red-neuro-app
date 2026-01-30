@@ -1493,86 +1493,94 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (_personal.isEmpty) {
-      return Center(
-        child: Text(
-          'No hay personal de salud registrado.',
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-      );
-    }
-
-    return ListView.separated(
-      controller: _scrollController,
-      itemCount: _personal.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final persona = _personal[index];
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return RefreshIndicator(
+      onRefresh: () => _cargarPersonalSalud(page: 1),
+      child: _personal.isEmpty
+          ? ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
               children: [
-                Row(
-                  children: [
-                    _buildAvatar(persona, radius: 20),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        persona.nombreCompleto,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                    ),
-                    if (persona.esSupervisor)
-                      Chip(
-                        label: const Text('Admin'),
-                        backgroundColor:
-                            _theme.primary.withValues(alpha: .15),
-                        labelStyle: TextStyle(
-                          color: _theme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                  ],
+                const SizedBox(height: 80),
+                Center(
+                  child: Text(
+                    'No hay personal de salud registrado.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  persona.nroDocumento ?? 'Sin documento',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(height: 8),
-                _buildEspecialidadesCell(persona),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    TextButton.icon(
-                      onPressed: () => _abrirFormulario(personal: persona),
-                      icon: const Icon(Icons.edit_outlined),
-                      label: const Text('Editar'),
-                    ),
-                    TextButton.icon(
-                      onPressed: () => _mostrarDetallesPersonal(persona),
-                      icon: const Icon(Icons.visibility_outlined),
-                      label: const Text('Detalles'),
-                    ),
-                    TextButton.icon(
-                      onPressed: () => _confirmarEliminacion(persona),
-                      icon: const Icon(Icons.delete_outline),
-                      label: const Text('Dar de baja'),
-                    ),
-                  ],
-                ),
-                if (_loadingMore && index == _personal.length - 1) ...[
-                  const SizedBox(height: 12),
-                  const Center(child: CircularProgressIndicator()),
-                ],
               ],
+            )
+          : ListView.separated(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              itemCount: _personal.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final persona = _personal[index];
+                return Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            _buildAvatar(persona, radius: 20),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                persona.nombreCompleto,
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                            ),
+                            if (persona.esSupervisor)
+                              Chip(
+                                label: const Text('Admin'),
+                                backgroundColor:
+                                    _theme.primary.withValues(alpha: .15),
+                                labelStyle: TextStyle(
+                                  color: _theme.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          persona.nroDocumento ?? 'Sin documento',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                        const SizedBox(height: 8),
+                        _buildEspecialidadesCell(persona),
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 8,
+                          children: [
+                            TextButton.icon(
+                              onPressed: () => _abrirFormulario(personal: persona),
+                              icon: const Icon(Icons.edit_outlined),
+                              label: const Text('Editar'),
+                            ),
+                            TextButton.icon(
+                              onPressed: () => _mostrarDetallesPersonal(persona),
+                              icon: const Icon(Icons.visibility_outlined),
+                              label: const Text('Detalles'),
+                            ),
+                            TextButton.icon(
+                              onPressed: () => _confirmarEliminacion(persona),
+                              icon: const Icon(Icons.delete_outline),
+                              label: const Text('Dar de baja'),
+                            ),
+                          ],
+                        ),
+                        if (_loadingMore && index == _personal.length - 1) ...[
+                          const SizedBox(height: 12),
+                          const Center(child: CircularProgressIndicator()),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
-          ),
-        );
-      },
     );
   }
 
