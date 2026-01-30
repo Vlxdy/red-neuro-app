@@ -1187,6 +1187,21 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                               onTap: () async {
                                 final isValid = validateForm(formKey);
                                 if (!isValid) return;
+                                final apellidoError = _validarApellidos(
+                                  null,
+                                  '',
+                                  primerApellido: primerApellido,
+                                  segundoApellido: segundoApellido,
+                                );
+                                if (apellidoError.isNotEmpty) {
+                                  showSnackBar(
+                                    personalSaludMessenger,
+                                    apellidoError,
+                                    state: StatusSnackBar.error,
+                                    colorText: _theme.white,
+                                  );
+                                  return;
+                                }
                                 if ((contrasena.text.isNotEmpty ||
                                         repetirContrasena.text.isNotEmpty) &&
                                     contrasena.text !=
