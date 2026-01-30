@@ -246,6 +246,21 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     }
   }
 
+  String _formatearFechaBackend(String value) {
+    final limpio = value.trim();
+    if (limpio.isEmpty) return '';
+    try {
+      if (limpio.contains('/')) {
+        final parsed = _dateFormatter.parseStrict(limpio);
+        return DateFormat('yyyy-MM-dd').format(parsed);
+      }
+      final parsed = DateTime.parse(limpio);
+      return DateFormat('yyyy-MM-dd').format(parsed);
+    } catch (_) {
+      return limpio;
+    }
+  }
+
   String _validarFechaNacimiento(String? value, String alias) {
     if (value == null || value.trim().isEmpty) {
       return 'Campo requerido';
@@ -1289,7 +1304,9 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                   'nombres': nombres.text.trim(),
                                   'primerApellido': primerApellido.text.trim(),
                                   'segundoApellido': segundoApellido.text.trim(),
-                                  'fechaNacimiento': fechaNacimiento.text.trim(),
+                                  'fechaNacimiento': _formatearFechaBackend(
+                                    fechaNacimiento.text,
+                                  ),
                                   'nroDocumento': nroDocumento.text.trim(),
                                   'telefono': telefono.text.trim(),
                                   'genero': generoSeleccionado,
