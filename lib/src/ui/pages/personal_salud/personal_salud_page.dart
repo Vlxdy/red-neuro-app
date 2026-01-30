@@ -863,6 +863,40 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
+                                  if (selectedEspecialidades.isEmpty)
+                                    Text(
+                                      'No has seleccionado especialidades.',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall,
+                                    )
+                                  else
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 8,
+                                      children:
+                                          selectedEspecialidades.map((item) {
+                                        return Chip(
+                                          label: Text(item.nombre),
+                                          backgroundColor:
+                                              HexColor.fromHex(item.colorHex)
+                                                  .withValues(alpha: .15),
+                                          deleteIcon: const Icon(Icons.close),
+                                          onDeleted: () {
+                                            setStateDialog(() {
+                                              selectedEspecialidades.removeWhere(
+                                                (especialidad) =>
+                                                    especialidad.id == item.id,
+                                              );
+                                            });
+                                            state.didChange(
+                                              selectedEspecialidades,
+                                            );
+                                          },
+                                        );
+                                      }).toList(),
+                                    ),
+                                  const SizedBox(height: 12),
                                   Autocomplete<Especialidad>(
                                     optionsBuilder: (textEditingValue) {
                                       return especialidadesDisponibles.where(
@@ -874,6 +908,10 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                     displayStringForOption: (option) =>
                                         option.nombre,
                                     onSelected: (selection) {
+                                      if (selectedIds
+                                          .contains(selection.id)) {
+                                        return;
+                                      }
                                       setStateDialog(() {
                                         selectedEspecialidades.add(selection);
                                         autocompleteController?.clear();
@@ -979,40 +1017,6 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                       ),
                                     ),
                                   ],
-                                  const SizedBox(height: 12),
-                                  if (selectedEspecialidades.isEmpty)
-                                    Text(
-                                      'No has seleccionado especialidades.',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall,
-                                    )
-                                  else
-                                    Wrap(
-                                      spacing: 8,
-                                      runSpacing: 8,
-                                      children:
-                                          selectedEspecialidades.map((item) {
-                                        return Chip(
-                                          label: Text(item.nombre),
-                                          backgroundColor:
-                                              HexColor.fromHex(item.colorHex)
-                                                  .withValues(alpha: .15),
-                                          deleteIcon: const Icon(Icons.close),
-                                          onDeleted: () {
-                                            setStateDialog(() {
-                                              selectedEspecialidades.removeWhere(
-                                                (especialidad) =>
-                                                    especialidad.id == item.id,
-                                              );
-                                            });
-                                            state.didChange(
-                                              selectedEspecialidades,
-                                            );
-                                          },
-                                        );
-                                      }).toList(),
-                                    ),
                                 ],
                               );
                             },
