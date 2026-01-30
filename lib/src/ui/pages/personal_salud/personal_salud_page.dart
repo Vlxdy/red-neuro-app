@@ -999,21 +999,63 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                               BorderRadius.circular(12),
                                           child: ConstrainedBox(
                                             constraints:
-                                                const BoxConstraints(maxHeight: 220),
-                                            child: ListView.builder(
-                                              controller:
-                                                  especialidadesScrollController,
-                                              padding: EdgeInsets.zero,
-                                              itemCount: options.length,
-                                              itemBuilder: (context, index) {
-                                                final option =
-                                                    options.elementAt(index);
-                                                return ListTile(
-                                                  title: Text(option.nombre),
-                                                  onTap: () =>
-                                                      onSelected(option),
-                                                );
-                                              },
+                                                const BoxConstraints(maxHeight: 260),
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                    horizontal: 12,
+                                                    vertical: 8,
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
+                                                    children: [
+                                                      Text(
+                                                        'Especialidades',
+                                                        style: Theme.of(context)
+                                                            .textTheme
+                                                            .labelMedium,
+                                                      ),
+                                                      IconButton(
+                                                        tooltip: 'Cerrar',
+                                                        icon: const Icon(
+                                                          Icons.close,
+                                                          size: 18,
+                                                        ),
+                                                        onPressed: () =>
+                                                            FocusScope.of(context)
+                                                                .unfocus(),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const Divider(height: 1),
+                                                Expanded(
+                                                  child: ListView.builder(
+                                                    controller:
+                                                        especialidadesScrollController,
+                                                    padding: EdgeInsets.zero,
+                                                    itemCount: options.length,
+                                                    itemBuilder:
+                                                        (context, index) {
+                                                      final option =
+                                                          options.elementAt(
+                                                        index,
+                                                      );
+                                                      return ListTile(
+                                                        title:
+                                                            Text(option.nombre),
+                                                        onTap: () =>
+                                                            onSelected(option),
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
                                         ),
