@@ -908,24 +908,25 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                           () => cargarEspecialidades(reset: true),
                                         );
                                       }
-                                      return especialidadesDisponibles.where(
-                                        (especialidad) =>
-                                            !selectedIds
-                                                .contains(especialidad.id),
-                                      );
+                                      return especialidadesDisponibles;
                                     },
                                     displayStringForOption: (option) =>
                                         option.nombre,
                                     onSelected: (selection) {
-                                      if (selectedIds
-                                          .contains(selection.id)) {
+                                      if (selectedIds.contains(selection.id)) {
                                         return;
                                       }
                                       setStateDialog(() {
                                         selectedEspecialidades.add(selection);
                                         autocompleteController?.clear();
+                                        especialidadesFiltro = '';
+                                        especialidadesDisponibles.clear();
+                                        especialidadesHasMore = true;
+                                        especialidadesPage = 1;
                                       });
                                       state.didChange(selectedEspecialidades);
+                                      FocusScope.of(context).unfocus();
+                                      cargarEspecialidades(reset: true);
                                     },
                                     fieldViewBuilder:
                                         (context, controller, focusNode, _) {
@@ -1046,11 +1047,25 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                                           options.elementAt(
                                                         index,
                                                       );
+                                                      final isSelected =
+                                                          selectedIds
+                                                              .contains(option.id);
                                                       return ListTile(
                                                         title:
                                                             Text(option.nombre),
-                                                        onTap: () =>
-                                                            onSelected(option),
+                                                        trailing: isSelected
+                                                            ? Icon(
+                                                                Icons.check,
+                                                                color:
+                                                                    _theme.primary,
+                                                              )
+                                                            : null,
+                                                        enabled: !isSelected,
+                                                        onTap: isSelected
+                                                            ? null
+                                                            : () => onSelected(
+                                                                  option,
+                                                                ),
                                                       );
                                                     },
                                                   ),
