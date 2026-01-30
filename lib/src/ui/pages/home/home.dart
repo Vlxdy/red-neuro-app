@@ -12,6 +12,7 @@ import 'package:red_neuro_app/src/ui/pages/usuarios/usuarios_page.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_page.dart';
 import 'package:red_neuro_app/src/ui/pages/especialidades/especialidades_page.dart';
 import 'package:red_neuro_app/src/ui/pages/estudios/estudios_page.dart';
+import 'package:red_neuro_app/src/ui/pages/personal_salud/personal_salud_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:solar_icons/solar_icons.dart';
@@ -686,6 +687,8 @@ ChildrenItem _submoduleToItem(
               titulo: 'Citas',
               mostrarFiltroMedico: true,
             )
+          : isPersonalMedicoModule
+          ? const PersonalSaludPage()
           : RoleTrayPlaceholder(
               title: blueprint.title,
               description: blueprint.description,
