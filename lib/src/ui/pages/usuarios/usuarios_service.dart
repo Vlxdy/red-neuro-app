@@ -101,16 +101,36 @@ class UsuariosService extends ServiceConfig {
       final message = response.message;
 
       final data = response.data;
-      final meta = data['meta'] ?? data['paginacion'] ?? {};
-      final total = meta['totalRegistros'] ?? meta['total'] ?? data['total'] ?? 0;
+      final datos = data['datos'] ?? data['data'] ?? data;
+      final meta = (datos is Map<String, dynamic>
+              ? datos['meta'] ?? datos['paginacion']
+              : null) ??
+          data['meta'] ??
+          data['paginacion'] ??
+          {};
+
+      final total =
+          (meta is Map<String, dynamic>
+              ? meta['totalRegistros'] ?? meta['total']
+              : null) ??
+          (datos is Map<String, dynamic> ? datos['total'] : null) ??
+          data['total'] ??
+          0;
       final resolvedPage = meta['pagina'] ?? page;
       final resolvedLimit = meta['limite'] ?? limit;
 
-      final listRaw = data['list'] ??
+      final listRaw = (datos is Map<String, dynamic>
+              ? datos['filas'] ??
+                  datos['items'] ??
+                  datos['usuarios'] ??
+                  datos['list'] ??
+                  datos['resultado']
+              : null) ??
+          data['list'] ??
           data['data'] ??
           data['usuarios'] ??
           data['result'] ??
-          meta['data'];
+          (meta is Map<String, dynamic> ? meta['data'] : null);
 
       final usuarios = (listRaw is List)
           ? listRaw
