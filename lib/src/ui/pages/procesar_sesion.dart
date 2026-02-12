@@ -36,35 +36,60 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
 
   void inicializar() async {
     Logger.info('Verificar sesión (solo huella)');
-    final BuildContext context = navigatorKey.currentContext!;
 
-    // tengo huella y esa habilitado
-    // tengo huella y no habilitado
-    // no tengo huella
+    BuildContext? ctx = navigatorKey.currentContext;
+    if (ctx == null || !ctx.mounted) return;
 
     try {
-      final bool hasFingerprint = await seguridad.hasFingeprintEnabled;
-      if (await seguridad.hasBiometrics) {
-        if (hasFingerprint && context.mounted) {
-          final bool autenticado = await verificarHuella(context);
-          if (autenticado && context.mounted) {
-            final String? idUsuario = await Auth.instance.idUsuario;
-            if (idUsuario != null) {
-              await socketProvider.init(idUsuario, context);
-            }
-            Logger.info('Autenticación por huella exitosa');
-            Auth.instance.isLocked = false;
-            GoRouter.of(context).goNamed(RouteNames.home);
-          }
-          return;
-        }
+      final bool hasFingerprintEnabled = await seguridad.hasFingeprintEnabled;
+
+      ctx = navigatorKey.currentContext;
+      if (ctx == null || !ctx.mounted) return;
+
+      final bool hasBiometrics = await seguridad.hasBiometrics;
+
+      ctx = navigatorKey.currentContext;
+      if (ctx == null || !ctx.mounted) return;
+
+      // Si NO hay biometría, entra directo
+      if (!hasBiometrics) {
+        Auth.instance.isLocked = false;
+        GoRouter.of(ctx).goNamed(RouteNames.home);
         return;
       }
-      if (!context.mounted) return;
+
+      // Si hay biometría, pero NO está habilitada en app, entra directo
+      if (!hasFingerprintEnabled) {
+        Auth.instance.isLocked = false;
+        GoRouter.of(ctx).goNamed(RouteNames.home);
+        return;
+      }
+
+      // Hay biometría y está habilitada -> pedir huella
+      final bool autenticado = await verificarHuella(ctx);
+
+      ctx = navigatorKey.currentContext;
+      if (ctx == null || !ctx.mounted) return;
+
+      if (!autenticado) return;
+
+      final String? idUsuario = await Auth.instance.idUsuario;
+
+      ctx = navigatorKey.currentContext;
+      if (ctx == null || !ctx.mounted) return;
+
+      if (idUsuario != null) {
+        await socketProvider.init(idUsuario, ctx);
+
+        ctx = navigatorKey.currentContext;
+        if (ctx == null || !ctx.mounted) return;
+      }
+
+      Logger.info('Autenticación por huella exitosa');
       Auth.instance.isLocked = false;
-      GoRouter.of(context).goNamed(RouteNames.home);
-    } catch (e) {
-      Logger.error('Error en autenticación biométrica: $e');
+      GoRouter.of(ctx).goNamed(RouteNames.home);
+    } catch (e, st) {
+      Logger.error('Error en autenticación biométrica: $e\n$st');
     }
   }
 

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:red_neuro_app/src/config/form_controller.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
@@ -136,10 +135,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Filtros',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
+                Text('Filtros', style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 16),
                 TextField(
                   controller: controller,
@@ -234,8 +230,9 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
   Future<void> _abrirFormulario({Estudio? estudio}) async {
     final formKey = GlobalKey<FormState>();
     final nombreController = TextEditingController(text: estudio?.nombre ?? '');
-    final descripcionController =
-        TextEditingController(text: estudio?.descripcion ?? '');
+    final descripcionController = TextEditingController(
+      text: estudio?.descripcion ?? '',
+    );
     final duracionController = TextEditingController(
       text: estudio?.duracionMinutos.toString() ?? '30',
     );
@@ -417,10 +414,12 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
   Future<void> _abrirAsignacion(Estudio estudio) async {
     if (_especialidadesDisponibles.isEmpty && !_loadingEspecialidades) {
       await _cargarEspecialidadesDisponibles();
+      if (!mounted) return;
     }
 
-    final asignadasIds =
-        estudio.especialidades.map((especialidad) => especialidad.id).toSet();
+    final asignadasIds = estudio.especialidades
+        .map((especialidad) => especialidad.id)
+        .toSet();
     final disponibles = _especialidadesDisponibles
         .where((especialidad) => !asignadasIds.contains(especialidad.id))
         .toList();
@@ -478,8 +477,9 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                           itemCount: disponibles.length,
                           itemBuilder: (context, index) {
                             final especialidad = disponibles[index];
-                            final selected =
-                                seleccionadas.contains(especialidad.id);
+                            final selected = seleccionadas.contains(
+                              especialidad.id,
+                            );
                             return CheckboxListTile(
                               value: selected,
                               title: Text(especialidad.nombre),
@@ -697,10 +697,11 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                               label: Text(estudio.estado.toUpperCase()),
                               backgroundColor:
                                   (estudio.estado).toUpperCase() == 'ACTIVO'
-                                      ? _theme.success.withValues(alpha: .15)
-                                      : _theme.error.withValues(alpha: .15),
+                                  ? _theme.success.withValues(alpha: .15)
+                                  : _theme.error.withValues(alpha: .15),
                               labelStyle: TextStyle(
-                                color: (estudio.estado).toUpperCase() == 'ACTIVO'
+                                color:
+                                    (estudio.estado).toUpperCase() == 'ACTIVO'
                                     ? _theme.success
                                     : _theme.error,
                                 fontWeight: FontWeight.w600,
@@ -724,8 +725,8 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                                 IconButton(
                                   tooltip:
                                       estudio.estado.toUpperCase() == 'ACTIVO'
-                                          ? 'Desactivar'
-                                          : 'Activar',
+                                      ? 'Desactivar'
+                                      : 'Activar',
                                   icon: Icon(
                                     estudio.estado.toUpperCase() == 'ACTIVO'
                                         ? Icons.toggle_off
@@ -806,7 +807,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
     return ListView.separated(
       controller: _scrollController,
       itemCount: _estudios.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final estudio = _estudios[index];
         return Card(
@@ -827,8 +828,8 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                       label: Text(estudio.estado.toUpperCase()),
                       backgroundColor:
                           (estudio.estado).toUpperCase() == 'ACTIVO'
-                              ? _theme.success.withValues(alpha: .15)
-                              : _theme.error.withValues(alpha: .15),
+                          ? _theme.success.withValues(alpha: .15)
+                          : _theme.error.withValues(alpha: .15),
                       labelStyle: TextStyle(
                         color: (estudio.estado).toUpperCase() == 'ACTIVO'
                             ? _theme.success

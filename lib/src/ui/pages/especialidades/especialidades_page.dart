@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:red_neuro_app/src/config/form_controller.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
@@ -124,10 +123,7 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Filtros',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
+                Text('Filtros', style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 16),
                 TextField(
                   controller: controller,
@@ -214,8 +210,10 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
   }
 
   String _colorToHex(Color color) {
-    final value = color.value.toRadixString(16).padLeft(8, '0');
-    return '#${value.substring(2)}';
+    return '#'
+        '${color.r.toInt().toRadixString(16).padLeft(2, '0')}'
+        '${color.g.toInt().toRadixString(16).padLeft(2, '0')}'
+        '${color.b.toInt().toRadixString(16).padLeft(2, '0')}';
   }
 
   Future<void> _abrirFormulario({Especialidad? especialidad}) async {
@@ -339,10 +337,10 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
                               return GestureDetector(
                                 onTap: () {
                                   setColorState(() {
-                                    selectedColor =
-                                        HexColor.fromHex(colorHex);
-                                    hsvColor =
-                                        HSVColor.fromColor(selectedColor);
+                                    selectedColor = HexColor.fromHex(colorHex);
+                                    hsvColor = HSVColor.fromColor(
+                                      selectedColor,
+                                    );
                                   });
                                 },
                                 child: Container(
@@ -352,9 +350,7 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
                                     shape: BoxShape.circle,
                                     color: HexColor.fromHex(colorHex),
                                     border: Border.all(
-                                      color: _theme.grey.withValues(
-                                        alpha: .4,
-                                      ),
+                                      color: _theme.grey.withValues(alpha: .4),
                                     ),
                                   ),
                                 ),
@@ -654,13 +650,14 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
                             Text('${especialidad.estudios.length} asociados'),
                             Chip(
                               label: Text(especialidad.estado.toUpperCase()),
-                              backgroundColor: (especialidad.estado)
-                                          .toUpperCase() ==
+                              backgroundColor:
+                                  (especialidad.estado).toUpperCase() ==
                                       'ACTIVO'
                                   ? _theme.success.withValues(alpha: .15)
                                   : _theme.error.withValues(alpha: .15),
                               labelStyle: TextStyle(
-                                color: (especialidad.estado).toUpperCase() ==
+                                color:
+                                    (especialidad.estado).toUpperCase() ==
                                         'ACTIVO'
                                     ? _theme.success
                                     : _theme.error,
@@ -683,7 +680,8 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
                                       _confirmarEliminacion(especialidad),
                                 ),
                                 IconButton(
-                                  tooltip: especialidad.estado.toUpperCase() ==
+                                  tooltip:
+                                      especialidad.estado.toUpperCase() ==
                                           'ACTIVO'
                                       ? 'Desactivar'
                                       : 'Activar',
@@ -706,9 +704,7 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
                   )
                 else ...[
                   const SizedBox(height: 12),
-                  Expanded(
-                    child: _buildCompactList(),
-                  ),
+                  Expanded(child: _buildCompactList()),
                 ],
               ],
             ),
@@ -765,7 +761,7 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
     return ListView.separated(
       controller: _scrollController,
       itemCount: _especialidades.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final especialidad = _especialidades[index];
         return Card(
@@ -795,8 +791,8 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
                       label: Text(especialidad.estado.toUpperCase()),
                       backgroundColor:
                           (especialidad.estado).toUpperCase() == 'ACTIVO'
-                              ? _theme.success.withValues(alpha: .15)
-                              : _theme.error.withValues(alpha: .15),
+                          ? _theme.success.withValues(alpha: .15)
+                          : _theme.error.withValues(alpha: .15),
                       labelStyle: TextStyle(
                         color: (especialidad.estado).toUpperCase() == 'ACTIVO'
                             ? _theme.success
@@ -831,8 +827,7 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
                       label: const Text('Editar'),
                     ),
                     TextButton.icon(
-                      onPressed: () =>
-                          _confirmarEliminacion(especialidad),
+                      onPressed: () => _confirmarEliminacion(especialidad),
                       icon: const Icon(Icons.delete_outline),
                       label: const Text('Eliminar'),
                     ),

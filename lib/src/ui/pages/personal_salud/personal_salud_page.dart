@@ -140,10 +140,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Filtros',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
+                Text('Filtros', style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 16),
                 TextField(
                   controller: controller,
@@ -365,7 +362,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
           width: radius * 2,
           height: radius * 2,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Center(child: initials),
+          errorBuilder: (_, _, _) => Center(child: initials),
         ),
       ),
     );
@@ -408,9 +405,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 12),
-                Center(
-                  child: _buildAvatar(persona, radius: 36),
-                ),
+                Center(child: _buildAvatar(persona, radius: 36)),
                 const SizedBox(height: 12),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
@@ -432,14 +427,14 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: const Text('Teléfono'),
-                  subtitle:
-                      Text(persona.telefono ?? 'Sin teléfono registrado'),
+                  subtitle: Text(persona.telefono ?? 'Sin teléfono registrado'),
                 ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: const Text('Fecha de nacimiento'),
-                  subtitle:
-                      Text(_formatearFechaInicial(persona.fechaNacimiento)),
+                  subtitle: Text(
+                    _formatearFechaInicial(persona.fechaNacimiento),
+                  ),
                 ),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
@@ -449,9 +444,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                 ListTile(
                   contentPadding: EdgeInsets.zero,
                   title: const Text('Permisos administrativos'),
-                  subtitle: Text(
-                    persona.esSupervisor ? 'Sí' : 'No',
-                  ),
+                  subtitle: Text(persona.esSupervisor ? 'Sí' : 'No'),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -505,17 +498,17 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     final seleccionInicial = personal?.especialidades ?? [];
     final selectedEspecialidades = seleccionInicial.isNotEmpty
         ? seleccionInicial
-            .map(
-              (especialidad) => Especialidad(
-                id: especialidad.id,
-                nombre: especialidad.nombre,
-                descripcion: null,
-                estado: 'ACTIVO',
-                colorHex: especialidad.colorHex,
-                estudios: const [],
-              ),
-            )
-            .toList()
+              .map(
+                (especialidad) => Especialidad(
+                  id: especialidad.id,
+                  nombre: especialidad.nombre,
+                  descripcion: null,
+                  estado: 'ACTIVO',
+                  colorHex: especialidad.colorHex,
+                  estudios: const [],
+                ),
+              )
+              .toList()
         : <Especialidad>[];
 
     final List<Especialidad> especialidadesDisponibles = [];
@@ -565,7 +558,9 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
               scrollListenerAttached = true;
               especialidadesScrollController.addListener(() {
                 if (especialidadesScrollController.position.pixels >=
-                        especialidadesScrollController.position.maxScrollExtent -
+                        especialidadesScrollController
+                                .position
+                                .maxScrollExtent -
                             120 &&
                     !especialidadesLoading &&
                     especialidadesHasMore) {
@@ -619,8 +614,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                     requiredData: true,
                                     validate: (value, alias) =>
                                         (value?.isEmpty ?? true)
-                                            ? 'Campo requerido'
-                                            : '',
+                                        ? 'Campo requerido'
+                                        : '',
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -629,12 +624,13 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                     title: 'Primer apellido',
                                     controller: primerApellido,
                                     requiredData: true,
-                                    validate: (value, alias) => _validarApellidos(
-                                      value,
-                                      alias,
-                                      primerApellido: primerApellido,
-                                      segundoApellido: segundoApellido,
-                                    ),
+                                    validate: (value, alias) =>
+                                        _validarApellidos(
+                                          value,
+                                          alias,
+                                          primerApellido: primerApellido,
+                                          segundoApellido: segundoApellido,
+                                        ),
                                     onChange: (_) {
                                       if (apellidoErrorText.isNotEmpty) {
                                         setStateDialog(() {
@@ -655,8 +651,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                   requiredData: true,
                                   validate: (value, alias) =>
                                       (value?.isEmpty ?? true)
-                                          ? 'Campo requerido'
-                                          : '',
+                                      ? 'Campo requerido'
+                                      : '',
                                 ),
                                 const SizedBox(height: 12),
                                 CustomTextInput(
@@ -688,12 +684,13 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                     title: 'Segundo apellido',
                                     controller: segundoApellido,
                                     requiredData: true,
-                                    validate: (value, alias) => _validarApellidos(
-                                      value,
-                                      alias,
-                                      primerApellido: primerApellido,
-                                      segundoApellido: segundoApellido,
-                                    ),
+                                    validate: (value, alias) =>
+                                        _validarApellidos(
+                                          value,
+                                          alias,
+                                          primerApellido: primerApellido,
+                                          segundoApellido: segundoApellido,
+                                        ),
                                     onChange: (_) {
                                       if (apellidoErrorText.isNotEmpty) {
                                         setStateDialog(() {
@@ -712,8 +709,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                     onlyNumbers: true,
                                     validate: (value, alias) =>
                                         (value?.isEmpty ?? true)
-                                            ? 'Campo requerido'
-                                            : '',
+                                        ? 'Campo requerido'
+                                        : '',
                                   ),
                                 ),
                               ],
@@ -746,8 +743,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                   onlyNumbers: true,
                                   validate: (value, alias) =>
                                       (value?.isEmpty ?? true)
-                                          ? 'Campo requerido'
-                                          : '',
+                                      ? 'Campo requerido'
+                                      : '',
                                 ),
                               ],
                             ),
@@ -827,7 +824,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                       labelText: 'Género',
                                       isDense: true,
                                     ),
-                                    value: generoSeleccionado,
+                                    initialValue: generoSeleccionado,
                                     items: const [
                                       DropdownMenuItem(
                                         value: 'F',
@@ -849,8 +846,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                     },
                                     validator: (value) =>
                                         (value == null || value.isEmpty)
-                                            ? 'Campo requerido'
-                                            : null,
+                                        ? 'Campo requerido'
+                                        : null,
                                   ),
                                 ),
                               ],
@@ -875,7 +872,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                     labelText: 'Género',
                                     isDense: true,
                                   ),
-                                  value: generoSeleccionado,
+                                  initialValue: generoSeleccionado,
                                   items: const [
                                     DropdownMenuItem(
                                       value: 'F',
@@ -897,8 +894,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                   },
                                   validator: (value) =>
                                       (value == null || value.isEmpty)
-                                          ? 'Campo requerido'
-                                          : null,
+                                      ? 'Campo requerido'
+                                      : null,
                                 ),
                               ],
                             ),
@@ -912,39 +909,43 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                             initialValue: selectedEspecialidades,
                             validator: (value) =>
                                 (value == null || value.isEmpty)
-                                    ? 'Selecciona al menos una especialidad'
-                                    : null,
+                                ? 'Selecciona al menos una especialidad'
+                                : null,
                             builder: (state) {
-                              final selectedIds =
-                                  selectedEspecialidades.map((e) => e.id).toSet();
+                              final selectedIds = selectedEspecialidades
+                                  .map((e) => e.id)
+                                  .toSet();
                               return Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   if (selectedEspecialidades.isEmpty)
                                     Text(
                                       'No has seleccionado especialidades.',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
                                     )
                                   else
                                     Wrap(
                                       spacing: 8,
                                       runSpacing: 8,
-                                      children:
-                                          selectedEspecialidades.map((item) {
+                                      children: selectedEspecialidades.map((
+                                        item,
+                                      ) {
                                         return Chip(
                                           label: Text(item.nombre),
-                                          backgroundColor:
-                                              HexColor.fromHex(item.colorHex)
-                                                  .withValues(alpha: .15),
+                                          backgroundColor: HexColor.fromHex(
+                                            item.colorHex,
+                                          ).withValues(alpha: .15),
                                           deleteIcon: const Icon(Icons.close),
                                           onDeleted: () {
                                             setStateDialog(() {
-                                              selectedEspecialidades.removeWhere(
-                                                (especialidad) =>
-                                                    especialidad.id == item.id,
-                                              );
+                                              selectedEspecialidades
+                                                  .removeWhere(
+                                                    (especialidad) =>
+                                                        especialidad.id ==
+                                                        item.id,
+                                                  );
                                             });
                                             state.didChange(
                                               selectedEspecialidades,
@@ -962,7 +963,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                           especialidadesDisponibles.isEmpty &&
                                           !especialidadesLoading) {
                                         Future.microtask(
-                                          () => cargarEspecialidades(reset: true),
+                                          () =>
+                                              cargarEspecialidades(reset: true),
                                         );
                                       }
                                       return especialidadesDisponibles;
@@ -987,63 +989,75 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                     },
                                     fieldViewBuilder:
                                         (context, controller, focusNode, _) {
-                                      autocompleteController ??= controller;
-                                      return TextFormField(
-                                        controller: controller,
-                                        focusNode: focusNode,
-                                        decoration: InputDecoration(
-                                          labelText:
-                                              'Agregar especialidad (autocomplete)',
-                                          suffixIcon: especialidadesLoading
-                                              ? const Padding(
-                                                  padding: EdgeInsets.all(12),
-                                                  child:
-                                                      CircularProgressIndicator(
-                                                    strokeWidth: 2,
-                                                  ),
-                                                )
-                                              : const Icon(Icons.expand_more),
-                                        ),
-                                        onChanged: (value) {
-                                          especialidadesFiltro = value.trim();
-                                          especialidadesDebounce?.cancel();
-                                          setStateDialog(() {
-                                            especialidadesDisponibles.clear();
-                                            especialidadesHasMore = true;
-                                            especialidadesPage = 1;
-                                          });
-                                          if (especialidadesFiltro.isEmpty) {
-                                            cargarEspecialidades(reset: true);
-                                            return;
-                                          }
-                                          especialidadesDebounce = Timer(
-                                            const Duration(milliseconds: 400),
-                                            () => cargarEspecialidades(
-                                              reset: true,
+                                          autocompleteController ??= controller;
+                                          return TextFormField(
+                                            controller: controller,
+                                            focusNode: focusNode,
+                                            decoration: InputDecoration(
+                                              labelText:
+                                                  'Agregar especialidad (autocomplete)',
+                                              suffixIcon: especialidadesLoading
+                                                  ? const Padding(
+                                                      padding: EdgeInsets.all(
+                                                        12,
+                                                      ),
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                            strokeWidth: 2,
+                                                          ),
+                                                    )
+                                                  : const Icon(
+                                                      Icons.expand_more,
+                                                    ),
                                             ),
+                                            onChanged: (value) {
+                                              especialidadesFiltro = value
+                                                  .trim();
+                                              especialidadesDebounce?.cancel();
+                                              setStateDialog(() {
+                                                especialidadesDisponibles
+                                                    .clear();
+                                                especialidadesHasMore = true;
+                                                especialidadesPage = 1;
+                                              });
+                                              if (especialidadesFiltro
+                                                  .isEmpty) {
+                                                cargarEspecialidades(
+                                                  reset: true,
+                                                );
+                                                return;
+                                              }
+                                              especialidadesDebounce = Timer(
+                                                const Duration(
+                                                  milliseconds: 400,
+                                                ),
+                                                () => cargarEspecialidades(
+                                                  reset: true,
+                                                ),
+                                              );
+                                            },
                                           );
                                         },
-                                      );
-                                    },
-                                    optionsViewBuilder: (context, onSelected,
-                                        options) {
+                                    optionsViewBuilder: (context, onSelected, options) {
                                       if (options.isEmpty) {
                                         return Align(
                                           alignment: Alignment.topLeft,
                                           child: Material(
                                             elevation: 4,
-                                            borderRadius:
-                                                BorderRadius.circular(12),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
                                             child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(12.0),
+                                              padding: const EdgeInsets.all(
+                                                12.0,
+                                              ),
                                               child: Text(
                                                 especialidadesLoading
                                                     ? 'Cargando especialidades...'
                                                     : 'No hay especialidades disponibles.',
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .bodySmall,
+                                                style: Theme.of(
+                                                  context,
+                                                ).textTheme.bodySmall,
                                               ),
                                             ),
                                           ),
@@ -1053,20 +1067,22 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                         alignment: Alignment.topLeft,
                                         child: Material(
                                           elevation: 4,
-                                          borderRadius:
-                                              BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                           child: ConstrainedBox(
-                                            constraints:
-                                                const BoxConstraints(maxHeight: 260),
+                                            constraints: const BoxConstraints(
+                                              maxHeight: 260,
+                                            ),
                                             child: Column(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
                                                 Padding(
                                                   padding:
                                                       const EdgeInsets.symmetric(
-                                                    horizontal: 12,
-                                                    vertical: 8,
-                                                  ),
+                                                        horizontal: 12,
+                                                        vertical: 8,
+                                                      ),
                                                   child: Row(
                                                     mainAxisAlignment:
                                                         MainAxisAlignment
@@ -1074,9 +1090,9 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                                     children: [
                                                       Text(
                                                         'Especialidades',
-                                                        style: Theme.of(context)
-                                                            .textTheme
-                                                            .labelMedium,
+                                                        style: Theme.of(
+                                                          context,
+                                                        ).textTheme.labelMedium,
                                                       ),
                                                       IconButton(
                                                         tooltip: 'Cerrar',
@@ -1085,8 +1101,9 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                                           size: 18,
                                                         ),
                                                         onPressed: () =>
-                                                            FocusScope.of(context)
-                                                                .unfocus(),
+                                                            FocusScope.of(
+                                                              context,
+                                                            ).unfocus(),
                                                       ),
                                                     ],
                                                   ),
@@ -1098,31 +1115,30 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                                         especialidadesScrollController,
                                                     padding: EdgeInsets.zero,
                                                     itemCount: options.length,
-                                                    itemBuilder:
-                                                        (context, index) {
-                                                      final option =
-                                                          options.elementAt(
-                                                        index,
-                                                      );
+                                                    itemBuilder: (context, index) {
+                                                      final option = options
+                                                          .elementAt(index);
                                                       final isSelected =
-                                                          selectedIds
-                                                              .contains(option.id);
+                                                          selectedIds.contains(
+                                                            option.id,
+                                                          );
                                                       return ListTile(
-                                                        title:
-                                                            Text(option.nombre),
+                                                        title: Text(
+                                                          option.nombre,
+                                                        ),
                                                         trailing: isSelected
                                                             ? Icon(
                                                                 Icons.check,
-                                                                color:
-                                                                    _theme.primary,
+                                                                color: _theme
+                                                                    .primary,
                                                               )
                                                             : null,
                                                         enabled: !isSelected,
                                                         onTap: isSelected
                                                             ? null
                                                             : () => onSelected(
-                                                                  option,
-                                                                ),
+                                                                option,
+                                                              ),
                                                       );
                                                     },
                                                   ),
@@ -1139,9 +1155,9 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                     Text(
                                       state.errorText ?? '',
                                       style: TextStyle(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .error,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.error,
                                       ),
                                     ),
                                   ],
@@ -1279,8 +1295,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                 }
                                 if ((contrasena.text.isNotEmpty ||
                                         repetirContrasena.text.isNotEmpty) &&
-                                    contrasena.text !=
-                                        repetirContrasena.text) {
+                                    contrasena.text != repetirContrasena.text) {
                                   showSnackBar(
                                     personalSaludMessenger,
                                     'Las contraseñas no coinciden',
@@ -1303,7 +1318,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                 final persona = {
                                   'nombres': nombres.text.trim(),
                                   'primerApellido': primerApellido.text.trim(),
-                                  'segundoApellido': segundoApellido.text.trim(),
+                                  'segundoApellido': segundoApellido.text
+                                      .trim(),
                                   'fechaNacimiento': _formatearFechaBackend(
                                     fechaNacimiento.text,
                                   ),
@@ -1481,8 +1497,9 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
           .map(
             (especialidad) => Chip(
               label: Text(especialidad.nombre),
-              backgroundColor:
-                  HexColor.fromHex(especialidad.colorHex).withValues(alpha: .15),
+              backgroundColor: HexColor.fromHex(
+                especialidad.colorHex,
+              ).withValues(alpha: .15),
             ),
           )
           .toList(),
@@ -1512,7 +1529,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
               controller: _scrollController,
               physics: const AlwaysScrollableScrollPhysics(),
               itemCount: _personal.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final persona = _personal[index];
                 return Card(
@@ -1534,8 +1551,9 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                             if (persona.esSupervisor)
                               Chip(
                                 label: const Text('Admin'),
-                                backgroundColor:
-                                    _theme.primary.withValues(alpha: .15),
+                                backgroundColor: _theme.primary.withValues(
+                                  alpha: .15,
+                                ),
                                 labelStyle: TextStyle(
                                   color: _theme.primary,
                                   fontWeight: FontWeight.w600,
@@ -1555,12 +1573,14 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                           spacing: 8,
                           children: [
                             TextButton.icon(
-                              onPressed: () => _abrirFormulario(personal: persona),
+                              onPressed: () =>
+                                  _abrirFormulario(personal: persona),
                               icon: const Icon(Icons.edit_outlined),
                               label: const Text('Editar'),
                             ),
                             TextButton.icon(
-                              onPressed: () => _mostrarDetallesPersonal(persona),
+                              onPressed: () =>
+                                  _mostrarDetallesPersonal(persona),
                               icon: const Icon(Icons.visibility_outlined),
                               label: const Text('Detalles'),
                             ),
@@ -1684,9 +1704,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                               children: [
                                 _buildAvatar(persona, radius: 16),
                                 const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(persona.nombreCompleto),
-                                ),
+                                Expanded(child: Text(persona.nombreCompleto)),
                               ],
                             ),
                             Text(persona.nroDocumento ?? '-'),
@@ -1694,8 +1712,9 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                             persona.esSupervisor
                                 ? Chip(
                                     label: const Text('Admin'),
-                                    backgroundColor:
-                                        _theme.primary.withValues(alpha: .15),
+                                    backgroundColor: _theme.primary.withValues(
+                                      alpha: .15,
+                                    ),
                                     labelStyle: TextStyle(
                                       color: _theme.primary,
                                       fontWeight: FontWeight.w600,
@@ -1707,9 +1726,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                 IconButton(
                                   tooltip: 'Editar',
                                   icon: const Icon(Icons.edit_outlined),
-                                  onPressed: () => _abrirFormulario(
-                                    personal: persona,
-                                  ),
+                                  onPressed: () =>
+                                      _abrirFormulario(personal: persona),
                                 ),
                                 IconButton(
                                   tooltip: 'Ver detalles',
@@ -1720,7 +1738,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                 IconButton(
                                   tooltip: 'Dar de baja',
                                   icon: const Icon(Icons.delete_outline),
-                                  onPressed: () => _confirmarEliminacion(persona),
+                                  onPressed: () =>
+                                      _confirmarEliminacion(persona),
                                 ),
                               ],
                             ),
@@ -1732,9 +1751,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                   )
                 else ...[
                   const SizedBox(height: 12),
-                  Expanded(
-                    child: _buildCompactList(),
-                  ),
+                  Expanded(child: _buildCompactList()),
                 ],
               ],
             ),

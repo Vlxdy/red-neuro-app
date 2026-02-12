@@ -159,7 +159,7 @@ class AppTheme {
     required AppColorPalette palette,
     required Brightness brightness,
   }) {
-    final ColorScheme scheme = ColorScheme(
+    final scheme = ColorScheme(
       brightness: brightness,
       primary: palette.primary,
       onPrimary: palette.fontColorBrightness,
@@ -167,10 +167,8 @@ class AppTheme {
       onSecondary: palette.fontColorBrightness,
       error: palette.error,
       onError: palette.white,
-      surface: palette.bgCard,
+      surface: palette.background,
       onSurface: palette.fontColor,
-      background: palette.background,
-      onBackground: palette.fontColor,
     );
 
     return ThemeData(

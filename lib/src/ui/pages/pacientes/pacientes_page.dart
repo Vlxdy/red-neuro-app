@@ -454,7 +454,7 @@ class _PacientesPageState extends State<PacientesPage> with FormController {
                               labelText: 'Género',
                               isDense: true,
                             ),
-                            value: generoSeleccionado,
+                            initialValue: generoSeleccionado,
                             items: const [
                               DropdownMenuItem(
                                 value: 'F',
@@ -494,7 +494,7 @@ class _PacientesPageState extends State<PacientesPage> with FormController {
                             labelText: 'Género',
                             isDense: true,
                           ),
-                          value: generoSeleccionado,
+                          initialValue: generoSeleccionado,
                           items: const [
                             DropdownMenuItem(
                               value: 'F',
@@ -668,7 +668,7 @@ class _PacientesPageState extends State<PacientesPage> with FormController {
       builder: (context) {
         final theme = Theme.of(context);
         return AlertDialog(
-          title: Text('Detalle del paciente'),
+          title: const Text('Detalle del paciente'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -968,7 +968,7 @@ class _PacientesPageState extends State<PacientesPage> with FormController {
         controller: _scrollController,
         physics: const AlwaysScrollableScrollPhysics(),
         itemCount: _pacientes.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        separatorBuilder: (_, _) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
           final paciente = _pacientes[index];
           return Card(

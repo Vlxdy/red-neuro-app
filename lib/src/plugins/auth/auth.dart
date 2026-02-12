@@ -2,9 +2,7 @@ import 'dart:convert';
 import 'package:red_neuro_app/src/constants/constants.dart';
 import 'package:red_neuro_app/src/plugins/seguridad/seguridad.dart';
 import 'package:red_neuro_app/src/plugins/utils/connection.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:red_neuro_app/src/constants/keys.dart';
 import 'package:red_neuro_app/src/models/user.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
@@ -12,7 +10,6 @@ import 'package:red_neuro_app/src/plugins/utils/preferences.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 
 class AuthStore with ChangeNotifier {
   AuthStore._();
@@ -57,7 +54,7 @@ class Auth {
   );
 
   bool _firstTime = false;
-  bool _localAuth = false;
+  bool localAuth = false;
   bool isLocked = true;
 
   final PreferencesService _preferencesService = PreferencesService.instance;
@@ -226,12 +223,6 @@ class Auth {
   }
 
   bool get firstTime => _firstTime;
-
-  // -------------------------------
-  bool get localAuth => _localAuth;
-  set localAuth(bool value) {
-    _localAuth = value;
-  }
 
   Future<void> registrarTokenFCM() async {
     try {

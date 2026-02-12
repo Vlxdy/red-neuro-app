@@ -161,7 +161,7 @@ class _MicuentaState extends State<Micuenta> {
                                   fingerprintEnabled != null &&
                                       hasFingerprint != null
                                   ? Switch.adaptive(
-                                      activeColor: theme.primary,
+                                      activeThumbColor: theme.primary,
                                       activeTrackColor: theme.primary
                                           .withValues(alpha: 0.3),
                                       inactiveThumbColor: theme.grey,

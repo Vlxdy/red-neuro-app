@@ -17,7 +17,7 @@ class Persona {
     this.telefono,
   ]);
 
-  static empty() => Persona('', '', '', '', '', '');
+  static Persona empty() => Persona('', '', '', '', '', '');
 
   Persona.fromJson(Map<String, dynamic> json) {
     fechaNacimiento = json['fechaNacimiento'] ?? '';

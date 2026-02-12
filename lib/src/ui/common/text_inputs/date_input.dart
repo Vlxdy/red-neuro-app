@@ -21,7 +21,7 @@ class CustomTimePicker extends StatefulWidget {
   const CustomTimePicker({
     super.key,
     this.title = "",
-    @required this.controller,
+    required this.controller,
     this.requiredData = false,
     this.validate,
     this.onTap,

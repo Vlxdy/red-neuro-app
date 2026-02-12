@@ -164,7 +164,9 @@ class _PerfilState extends State<Perfil> {
         if (_loading && _profile == null) {
           return Scaffold(
             backgroundColor: theme.background,
-            body: Center(child: CircularProgressIndicator(color: theme.primary)),
+            body: Center(
+              child: CircularProgressIndicator(color: theme.primary),
+            ),
           );
         }
 
@@ -221,22 +223,21 @@ class _PerfilState extends State<Perfil> {
                         child: ClipOval(
                           child:
                               profile.urlFoto != null &&
-                                      profile.urlFoto!.isNotEmpty &&
-                                      Uri.tryParse(profile.urlFoto!) != null
-                                  ? Image.network(
-                                      profile.urlFoto!.startsWith('http')
-                                          ? profile.urlFoto!
-                                          : '${Constantes.apiUrl}${profile.urlFoto!}',
-                                      fit: BoxFit.cover,
-                                      errorBuilder:
-                                          (
-                                            BuildContext context,
-                                            Object error,
-                                            StackTrace? stackTrace,
-                                          ) =>
-                                              _buildAvatarFallback(theme, profile),
-                                    )
-                                  : _buildAvatarFallback(theme, profile),
+                                  profile.urlFoto!.isNotEmpty &&
+                                  Uri.tryParse(profile.urlFoto!) != null
+                              ? Image.network(
+                                  profile.urlFoto!.startsWith('http')
+                                      ? profile.urlFoto!
+                                      : '${Constantes.apiUrl}${profile.urlFoto!}',
+                                  fit: BoxFit.cover,
+                                  errorBuilder:
+                                      (
+                                        BuildContext context,
+                                        Object error,
+                                        StackTrace? stackTrace,
+                                      ) => _buildAvatarFallback(theme, profile),
+                                )
+                              : _buildAvatarFallback(theme, profile),
                         ),
                       ),
                     ),
@@ -558,7 +559,7 @@ class _RoleCard extends StatelessWidget {
                     (Rol rol) => ChoiceChip(
                       label: Text(rol.rol.isEmpty ? 'Rol' : rol.rol),
                       selected: rol.idRol == activeRoleId,
-                      selectedColor: theme.primary.withOpacity(0.15),
+                      selectedColor: theme.primary.withValues(alpha: 0.15),
                       labelStyle: TextStyle(
                         color: rol.idRol == activeRoleId
                             ? theme.primary
@@ -589,7 +590,9 @@ class _RoleCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     'Cambiando rol...',
-                    style: TextStyle(color: theme.fontColor.withValues(alpha: 0.7)),
+                    style: TextStyle(
+                      color: theme.fontColor.withValues(alpha: 0.7),
+                    ),
                   ),
                 ],
               ),

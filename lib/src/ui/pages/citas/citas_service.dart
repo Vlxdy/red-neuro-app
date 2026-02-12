@@ -22,6 +22,7 @@ class CitasService extends ServiceConfig {
         soloMisCitas ? '/citas/mis-citas' : '/citas',
         params: filtros,
       );
+      if (!context.mounted) return [];
 
       if (response.status != StatusNetwork.connected) {
         if (response.status != StatusNetwork.noContent) {
@@ -33,7 +34,8 @@ class CitasService extends ServiceConfig {
         return [];
       }
 
-      final raw = response.data['datos'] ??
+      final raw =
+          response.data['datos'] ??
           response.data['data'] ??
           response.data['list'] ??
           response.data['items'] ??
@@ -66,10 +68,11 @@ class CitasService extends ServiceConfig {
         if (filtros != null) ...filtros,
       };
 
-      final response = await fetch(
-        '/citas/paginado',
-        params: params,
-      );
+      final response = await fetch('/citas/paginado', params: params);
+
+      if (!context.mounted) {
+        return CitasPageResult.empty('Operación cancelada');
+      }
 
       if (response.status != StatusNetwork.connected) {
         final message = response.message.isNotEmpty
@@ -86,11 +89,13 @@ class CitasService extends ServiceConfig {
 
       final data = response.data;
       final meta = data['meta'] ?? data['paginacion'] ?? {};
-      final total = meta['totalRegistros'] ?? meta['total'] ?? data['total'] ?? 0;
+      final total =
+          meta['totalRegistros'] ?? meta['total'] ?? data['total'] ?? 0;
       final resolvedPage = meta['pagina'] ?? page;
       final resolvedLimit = meta['limite'] ?? limit;
 
-      final listRaw = data['datos'] ??
+      final listRaw =
+          data['datos'] ??
           data['filas'] ??
           data['list'] ??
           data['data'] ??
@@ -101,13 +106,14 @@ class CitasService extends ServiceConfig {
 
       final citas = (listRaw is List)
           ? listRaw
-              .whereType<Map<String, dynamic>>()
-              .map(CitaMedica.fromJson)
-              .toList()
+                .whereType<Map<String, dynamic>>()
+                .map(CitaMedica.fromJson)
+                .toList()
           : <CitaMedica>[];
 
-      final resolvedTotal =
-          total is int ? total : int.tryParse('$total') ?? citas.length;
+      final resolvedTotal = total is int
+          ? total
+          : int.tryParse('$total') ?? citas.length;
 
       return CitasPageResult(
         citas: citas,
@@ -144,10 +150,11 @@ class CitasService extends ServiceConfig {
         'limite': '$limit',
         if (filtros != null) ...filtros,
       };
-      final response = await fetch(
-        '/citas/$id/historial',
-        params: params,
-      );
+      final response = await fetch('/citas/$id/historial', params: params);
+
+      if (!context.mounted) {
+        return HistorialCitasPageResult.empty('Operación cancelada');
+      }
 
       if (response.status != StatusNetwork.connected) {
         final message = response.message.isNotEmpty
@@ -162,13 +169,12 @@ class CitasService extends ServiceConfig {
       final data = response.data;
       final datos = data['datos'] ?? data['data'] ?? data;
       final totalRaw = datos['total'] ?? data['total'] ?? 0;
-      final filasRaw =
-          datos['filas'] ?? data['filas'] ?? data['datos'] ?? [];
+      final filasRaw = datos['filas'] ?? data['filas'] ?? data['datos'] ?? [];
       final historial = (filasRaw is List)
           ? filasRaw
-              .whereType<Map<String, dynamic>>()
-              .map(HistorialCita.fromJson)
-              .toList()
+                .whereType<Map<String, dynamic>>()
+                .map(HistorialCita.fromJson)
+                .toList()
           : <HistorialCita>[];
 
       final total = totalRaw is int
@@ -186,7 +192,9 @@ class CitasService extends ServiceConfig {
     } catch (e, stacktrace) {
       Logger.error('Error al obtener historial $e');
       Logger.error('stacktrace $stacktrace');
-      await showErrorDialog(context, 'No se pudo cargar el historial.');
+      if (context.mounted) {
+        await showErrorDialog(context, 'No se pudo cargar el historial.');
+      }
       return HistorialCitasPageResult.empty('No se pudo cargar el historial.');
     }
   }
@@ -195,19 +203,11 @@ class CitasService extends ServiceConfig {
     String id,
     Map<String, dynamic> body,
   ) async {
-    return fetch(
-      '/citas/$id',
-      type: HttpProtocol.patch,
-      body: body,
-    );
+    return fetch('/citas/$id', type: HttpProtocol.patch, body: body);
   }
 
   Future<ResponseApi> crearCita(Map<String, dynamic> body) async {
-    return fetch(
-      '/citas',
-      type: HttpProtocol.post,
-      body: body,
-    );
+    return fetch('/citas', type: HttpProtocol.post, body: body);
   }
 
   Future<CatalogoPageResult<Especialidad>> obtenerEspecialidades({
@@ -232,7 +232,8 @@ class CitasService extends ServiceConfig {
       final data = response.data;
       final datos = data['datos'] ?? data['data'] ?? data;
       final totalRaw = datos['total'] ?? data['total'] ?? 0;
-      final filasRaw = datos['filas'] ??
+      final filasRaw =
+          datos['filas'] ??
           datos['items'] ??
           data['filas'] ??
           data['items'] ??
@@ -240,9 +241,9 @@ class CitasService extends ServiceConfig {
           [];
       final especialidades = (filasRaw is List)
           ? filasRaw
-              .whereType<Map<String, dynamic>>()
-              .map(Especialidad.fromJson)
-              .toList()
+                .whereType<Map<String, dynamic>>()
+                .map(Especialidad.fromJson)
+                .toList()
           : <Especialidad>[];
       final total = totalRaw is int
           ? totalRaw
@@ -290,7 +291,8 @@ class CitasService extends ServiceConfig {
       final data = response.data;
       final datos = data['datos'] ?? data['data'] ?? data;
       final totalRaw = datos['total'] ?? data['total'] ?? 0;
-      final filasRaw = datos['filas'] ??
+      final filasRaw =
+          datos['filas'] ??
           datos['items'] ??
           data['filas'] ??
           data['items'] ??
@@ -298,9 +300,9 @@ class CitasService extends ServiceConfig {
           [];
       final estudios = (filasRaw is List)
           ? filasRaw
-              .whereType<Map<String, dynamic>>()
-              .map(Estudio.fromJson)
-              .toList()
+                .whereType<Map<String, dynamic>>()
+                .map(Estudio.fromJson)
+                .toList()
           : <Estudio>[];
       final total = totalRaw is int
           ? totalRaw
@@ -316,9 +318,7 @@ class CitasService extends ServiceConfig {
     } catch (e, stacktrace) {
       Logger.error('Error al obtener estudios por especialidad $e');
       Logger.error('stacktrace $stacktrace');
-      return CatalogoPageResult.empty(
-        'No se pudieron cargar los estudios.',
-      );
+      return CatalogoPageResult.empty('No se pudieron cargar los estudios.');
     }
   }
 
@@ -344,7 +344,8 @@ class CitasService extends ServiceConfig {
       final data = response.data;
       final datos = data['datos'] ?? data['data'] ?? data;
       final totalRaw = datos['total'] ?? data['total'] ?? 0;
-      final filasRaw = datos['filas'] ??
+      final filasRaw =
+          datos['filas'] ??
           datos['items'] ??
           data['filas'] ??
           data['items'] ??
@@ -352,9 +353,9 @@ class CitasService extends ServiceConfig {
           [];
       final pacientes = (filasRaw is List)
           ? filasRaw
-              .whereType<Map<String, dynamic>>()
-              .map(Paciente.fromJson)
-              .toList()
+                .whereType<Map<String, dynamic>>()
+                .map(Paciente.fromJson)
+                .toList()
           : <Paciente>[];
       final total = totalRaw is int
           ? totalRaw
@@ -396,7 +397,8 @@ class CitasService extends ServiceConfig {
       final data = response.data;
       final datos = data['datos'] ?? data['data'] ?? data;
       final totalRaw = datos['total'] ?? data['total'] ?? 0;
-      final filasRaw = datos['filas'] ??
+      final filasRaw =
+          datos['filas'] ??
           datos['items'] ??
           data['filas'] ??
           data['items'] ??
@@ -404,9 +406,9 @@ class CitasService extends ServiceConfig {
           [];
       final medicos = (filasRaw is List)
           ? filasRaw
-              .whereType<Map<String, dynamic>>()
-              .map(PersonalMedico.fromJson)
-              .toList()
+                .whereType<Map<String, dynamic>>()
+                .map(PersonalMedico.fromJson)
+                .toList()
           : <PersonalMedico>[];
       final total = totalRaw is int
           ? totalRaw
@@ -422,18 +424,12 @@ class CitasService extends ServiceConfig {
     } catch (e, stacktrace) {
       Logger.error('Error al obtener personal medico $e');
       Logger.error('stacktrace $stacktrace');
-      return CatalogoPageResult.empty(
-        'No se pudo cargar el personal médico.',
-      );
+      return CatalogoPageResult.empty('No se pudo cargar el personal médico.');
     }
   }
 
   Future<ResponseApi> crearPaciente(Map<String, dynamic> body) async {
-    return fetch(
-      '/pacientes',
-      type: HttpProtocol.post,
-      body: body,
-    );
+    return fetch('/pacientes', type: HttpProtocol.post, body: body);
   }
 }
 
@@ -455,13 +451,13 @@ class CitasPageResult {
   });
 
   factory CitasPageResult.empty(String message) => CitasPageResult(
-        citas: const [],
-        total: 0,
-        page: 1,
-        limit: 10,
-        message: message,
-        status: StatusNetwork.noContent,
-      );
+    citas: const [],
+    total: 0,
+    page: 1,
+    limit: 10,
+    message: message,
+    status: StatusNetwork.noContent,
+  );
 }
 
 class HistorialCitasPageResult {
@@ -511,11 +507,11 @@ class CatalogoPageResult<T> {
   });
 
   factory CatalogoPageResult.empty(String message) => CatalogoPageResult(
-        items: const [],
-        total: 0,
-        page: 1,
-        limit: 10,
-        message: message,
-        status: StatusNetwork.noContent,
-      );
+    items: const [],
+    total: 0,
+    page: 1,
+    limit: 10,
+    message: message,
+    status: StatusNetwork.noContent,
+  );
 }

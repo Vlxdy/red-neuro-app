@@ -10,7 +10,7 @@ class ThemeRebuild extends StatelessWidget {
   Widget build(BuildContext context) {
     return ValueListenableBuilder<bool>(
       valueListenable: ThemeController.instance.brightness,
-      builder: (BuildContext context, bool _, Widget? __) {
+      builder: (BuildContext context, bool _, Widget? _) {
         return KeyedSubtree(
           key: ValueKey(ThemeController.instance.isLight),
           child: child,

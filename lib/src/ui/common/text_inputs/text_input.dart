@@ -26,7 +26,7 @@ class CustomTextInput extends StatefulWidget {
   const CustomTextInput({
     super.key,
     this.title = "",
-    @required this.controller,
+    required this.controller,
     this.requiredData = false,
     this.obscure = false,
     this.validate,

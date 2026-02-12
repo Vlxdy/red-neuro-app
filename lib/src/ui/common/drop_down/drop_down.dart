@@ -70,7 +70,7 @@ class _DropDownState extends State<DropDown> {
         .toList();
   }
 
-  _onChanged(String? newValue) {
+  void _onChanged(String? newValue) {
     setState(() => value = newValue);
     if (widget.onChange != null) {
       widget.onChange!(newValue);

@@ -127,10 +127,9 @@ class CitasListado extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'No hay citas registradas',
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: theme.grey),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: theme.grey),
           ),
         ],
       );
@@ -160,12 +159,12 @@ class CitasListado extends StatelessWidget {
       physics: embedInScroll
           ? const NeverScrollableScrollPhysics()
           : onRefresh != null
-              ? const AlwaysScrollableScrollPhysics()
-              : null,
+          ? const AlwaysScrollableScrollPhysics()
+          : null,
       padding: const EdgeInsets.only(top: 8),
       shrinkWrap: embedInScroll,
       itemCount: citas.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
+      separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final cita = citas[index];
         final estadoColor = colorEstado(cita.estado);
@@ -188,7 +187,9 @@ class CitasListado extends StatelessWidget {
             ),
             boxShadow: [
               BoxShadow(
-                color: theme.black.withValues(alpha: theme.isLight ? 0.04 : 0.2),
+                color: theme.black.withValues(
+                  alpha: theme.isLight ? 0.04 : 0.2,
+                ),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
@@ -215,11 +216,7 @@ class CitasListado extends StatelessWidget {
                           Expanded(
                             child: Row(
                               children: [
-                                Icon(
-                                  tipoIcono,
-                                  size: 20,
-                                  color: theme.primary,
-                                ),
+                                Icon(tipoIcono, size: 20, color: theme.primary),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
@@ -227,9 +224,7 @@ class CitasListado extends StatelessWidget {
                                     style: Theme.of(context)
                                         .textTheme
                                         .titleMedium
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                        ?.copyWith(fontWeight: FontWeight.bold),
                                   ),
                                 ),
                               ],
@@ -277,7 +272,8 @@ class CitasListado extends StatelessWidget {
                               false)
                             CitasEspecialidadTag(
                               label:
-                                  cita.especialidadNombre ?? cita.especialidadId!,
+                                  cita.especialidadNombre ??
+                                  cita.especialidadId!,
                               color: especialidadColor,
                             ),
                           const Spacer(),

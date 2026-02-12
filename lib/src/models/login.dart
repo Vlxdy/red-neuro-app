@@ -4,7 +4,7 @@ class Login {
 
   Login(this.password, this.username);
 
-  static empty() => Login('', '');
+  static Login empty() => Login('', '');
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {};

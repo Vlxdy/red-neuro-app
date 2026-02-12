@@ -16,4 +16,4 @@ List<SingleChildWidget> proveedores(BuildContext context) => [
   // ChangeNotifierProvider(create: (context) => CameraScreenStore.instance),
 ];
 
-resetProviders() {}
+void resetProviders() {}

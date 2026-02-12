@@ -67,7 +67,6 @@ class _HomePageState extends State<HomePage> {
     final roleId = profile.idRol ?? (roles.isNotEmpty ? roles.first.idRol : '');
     final selectedRole = _findRole(roles, roleId, profile.rol);
     final roleName = (selectedRole?.rol ?? profile.rol ?? '');
-    final resolvedRoleName = _normalizarRol(roleName);
     final esSupervisorActivo =
         selectedRole?.esSupervisor ?? profile.esSupervisor;
     final roleLabel = _formatearRolActivo(

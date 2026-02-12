@@ -56,7 +56,7 @@ class Utils {
     return await devicePlugin.androidInfo;
   }
 
-  static armarNombre(
+  static String armarNombre(
     Map<String, dynamic> data, {
     bool noSegundoApellido = true,
     bool iniciales = false,

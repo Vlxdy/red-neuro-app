@@ -61,7 +61,7 @@ class RoleTrayPlaceholder extends StatelessWidget {
           Expanded(
             child: ListView.separated(
               itemCount: actions.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
+              separatorBuilder: (_, _) => const Divider(height: 1),
               itemBuilder: (BuildContext context, int index) {
                 return ListTile(
                   leading: Icon(

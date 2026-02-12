@@ -19,7 +19,6 @@ import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:red_neuro_app/src/plugins/utils/preferences.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
-import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_service.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_active_filters.dart';
@@ -138,8 +137,9 @@ class _CitasPageState extends State<CitasPage> {
   }
 
   Future<void> _cargarInicial() async {
-    final savedIndex =
-        await PreferencesService.instance.getInt(_viewPreferenceKey);
+    final savedIndex = await PreferencesService.instance.getInt(
+      _viewPreferenceKey,
+    );
     final resolvedIndex = savedIndex.clamp(0, 2).toInt();
     if (resolvedIndex != _currentTabIndex) {
       setState(() => _currentTabIndex = resolvedIndex);
@@ -231,7 +231,8 @@ class _CitasPageState extends State<CitasPage> {
     final filtros = _buildBaseFiltersQuery();
     if (widget.soloMisCitas) {
       final medicoId = Auth.instance.profile.id ?? '';
-      if (medicoId.isNotEmpty && (_medicoFiltro?.isNotEmpty ?? false) == false) {
+      if (medicoId.isNotEmpty &&
+          (_medicoFiltro?.isNotEmpty ?? false) == false) {
         filtros['idMedico'] = medicoId;
       }
     }
@@ -292,8 +293,9 @@ class _CitasPageState extends State<CitasPage> {
     String fallbackMessage,
   ) async {
     if (response.status == StatusNetwork.connected) return true;
-    final message =
-        response.message.isNotEmpty ? response.message : fallbackMessage;
+    final message = response.message.isNotEmpty
+        ? response.message
+        : fallbackMessage;
     await showErrorDialog(context, message);
     return false;
   }
@@ -311,9 +313,8 @@ class _CitasPageState extends State<CitasPage> {
       if (id.isEmpty) return;
       _actualizarCitaLocal(
         id,
-        (cita) => cita.copyWith(
-          estado: estado.isNotEmpty ? estado : cita.estado,
-        ),
+        (cita) =>
+            cita.copyWith(estado: estado.isNotEmpty ? estado : cita.estado),
       );
       return;
     }
@@ -346,12 +347,7 @@ class _CitasPageState extends State<CitasPage> {
     if (data is Map<String, dynamic>) {
       final id = (data['id'] ?? '').toString();
       if (id.isEmpty) return;
-      _actualizarCitaLocal(
-        id,
-        (cita) => cita.copyWith(
-          estado: 'CANCELADA',
-        ),
-      );
+      _actualizarCitaLocal(id, (cita) => cita.copyWith(estado: 'CANCELADA'));
       return;
     }
     final cita = _parseSocketCita(data);
@@ -386,10 +382,7 @@ class _CitasPageState extends State<CitasPage> {
     });
   }
 
-  List<CitaMedica> _upsertAgendaList(
-    List<CitaMedica> lista,
-    CitaMedica cita,
-  ) {
+  List<CitaMedica> _upsertAgendaList(List<CitaMedica> lista, CitaMedica cita) {
     final fecha = cita.fechaInicio;
     final index = lista.indexWhere((item) => item.id == cita.id);
     final mismaFecha = fecha != null && isSameDay(fecha, _agendaDay);
@@ -490,13 +483,7 @@ class _CitasPageState extends State<CitasPage> {
       }
     }
     if (ultimaHora != null) return ultimaHora;
-    return DateTime(
-      baseDay.year,
-      baseDay.month,
-      baseDay.day,
-      8,
-      0,
-    );
+    return DateTime(baseDay.year, baseDay.month, baseDay.day, 8, 0);
   }
 
   void _toggleFilters() {
@@ -766,25 +753,6 @@ class _CitasPageState extends State<CitasPage> {
     });
   }
 
-  Future<void> _seleccionarFechaAgenda() async {
-    final fecha = await showDatePicker(
-      context: context,
-      initialDate: _agendaDay,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2100),
-    );
-    if (fecha == null) return;
-    setState(() {
-      final selected = DateTime(fecha.year, fecha.month, fecha.day);
-      _agendaDay = selected;
-      _agendaFocusedDay = selected;
-      _selectedDay = selected;
-      _focusedDay = selected;
-    });
-    await _cargarCitasAgendaDay(day: _agendaDay);
-    await _cargarCitasDelDia(day: _selectedDay);
-  }
-
   Future<void> _seleccionarAgendaDay(DateTime day) async {
     final fecha = DateTime(day.year, day.month, day.day);
     if (isSameDay(fecha, _agendaDay)) return;
@@ -806,8 +774,9 @@ class _CitasPageState extends State<CitasPage> {
           ? cita!.medicoNombre!
           : cita?.medicoId ?? '',
     );
-    String? medicoIdSeleccionado =
-        (cita?.medicoId.isNotEmpty ?? false) ? cita?.medicoId : null;
+    String? medicoIdSeleccionado = (cita?.medicoId.isNotEmpty ?? false)
+        ? cita?.medicoId
+        : null;
     PersonalMedico? medicoSeleccionado;
     Paciente? pacienteSeleccionado;
     final pacienteFieldKey = GlobalKey<FormFieldState<Paciente>>();
@@ -820,14 +789,16 @@ class _CitasPageState extends State<CitasPage> {
       fechaInicio ??= _resolveDefaultStartTime(baseSeleccionada);
     }
     String? estado = cita?.estado;
-    String tipoCita =
-        (cita?.tipoCita?.isNotEmpty ?? false) ? cita!.tipoCita! : 'CONSULTA';
+    String tipoCita = (cita?.tipoCita?.isNotEmpty ?? false)
+        ? cita!.tipoCita!
+        : 'CONSULTA';
     Especialidad? especialidadSeleccionada;
     Estudio? estudioSeleccionado;
     if (cita?.especialidadId != null && cita!.especialidadId!.isNotEmpty) {
       especialidadSeleccionada = Especialidad(
         id: cita.especialidadId!,
-        nombre: cita.especialidadNombre ?? 'Especialidad ${cita.especialidadId}',
+        nombre:
+            cita.especialidadNombre ?? 'Especialidad ${cita.especialidadId}',
         descripcion: null,
         estado: 'ACTIVO',
         colorHex: cita.especialidadColorHex ?? '#64748b',
@@ -1034,8 +1005,7 @@ class _CitasPageState extends State<CitasPage> {
             if (!inicializado) {
               inicializado = true;
               unawaited(cargarEspecialidades(reset: true));
-              if (tipoCita == 'ESTUDIO' &&
-                  especialidadSeleccionada != null) {
+              if (tipoCita == 'ESTUDIO' && especialidadSeleccionada != null) {
                 unawaited(cargarEstudios(reset: true));
               }
             }
@@ -1049,8 +1019,7 @@ class _CitasPageState extends State<CitasPage> {
                 lastDate: DateTime(2100),
               );
               if (picked == null) return;
-              final horaActual =
-                  TimeOfDay.fromDateTime(fechaInicio ?? base);
+              final horaActual = TimeOfDay.fromDateTime(fechaInicio ?? base);
               setStateDialog(() {
                 fechaInicio = DateTime(
                   picked.year,
@@ -1084,6 +1053,7 @@ class _CitasPageState extends State<CitasPage> {
             Future<void> abrirSelectorPaciente() async {
               if (pacientesDisponibles.isEmpty && !pacientesLoading) {
                 await cargarPacientes(reset: true);
+                if (!context.mounted) return;
               }
               final seleccion = await showModalBottomSheet<Paciente>(
                 context: context,
@@ -1094,9 +1064,7 @@ class _CitasPageState extends State<CitasPage> {
                   );
                   return StatefulBuilder(
                     builder: (context, setStateSheet) {
-                      Future<void> cargar({
-                        required bool reset,
-                      }) async {
+                      Future<void> cargar({required bool reset}) async {
                         await cargarPacientes(
                           reset: reset,
                           onUpdated: () => setStateSheet(() {}),
@@ -1121,12 +1089,15 @@ class _CitasPageState extends State<CitasPage> {
                                 ),
                                 child: Text(
                                   'Selecciona un paciente',
-                                  style: Theme.of(context).textTheme.titleMedium,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium,
                                 ),
                               ),
                               Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 20),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                ),
                                 child: TextField(
                                   controller: searchController,
                                   decoration: const InputDecoration(
@@ -1160,7 +1131,8 @@ class _CitasPageState extends State<CitasPage> {
                                     }
                                     return ListView.builder(
                                       shrinkWrap: true,
-                                      itemCount: pacientesDisponibles.length +
+                                      itemCount:
+                                          pacientesDisponibles.length +
                                           (pacientesHasMore ? 1 : 0),
                                       itemBuilder: (context, index) {
                                         if (index ==
@@ -1174,14 +1146,12 @@ class _CitasPageState extends State<CitasPage> {
                                               child: TextButton.icon(
                                                 onPressed: pacientesLoading
                                                     ? null
-                                                    : () => cargar(
-                                                          reset: false,
-                                                        ),
+                                                    : () =>
+                                                          cargar(reset: false),
                                                 icon: const Icon(
                                                   Icons.expand_more,
                                                 ),
-                                                label:
-                                                    const Text('Cargar más'),
+                                                label: const Text('Cargar más'),
                                               ),
                                             ),
                                           );
@@ -1190,7 +1160,9 @@ class _CitasPageState extends State<CitasPage> {
                                             pacientesDisponibles[index];
                                         return ListTile(
                                           title: Text(option.nombreCompleto),
-                                          subtitle: (option.nroDocumento
+                                          subtitle:
+                                              (option
+                                                      .nroDocumento
                                                       ?.isNotEmpty ??
                                                   false)
                                               ? Text(
@@ -1225,6 +1197,7 @@ class _CitasPageState extends State<CitasPage> {
             Future<void> abrirSelectorMedico() async {
               if (medicosDisponibles.isEmpty && !medicosLoading) {
                 await cargarMedicos(reset: true);
+                if (!context.mounted) return;
               }
               final seleccion = await showModalBottomSheet<PersonalMedico>(
                 context: context,
@@ -1235,9 +1208,7 @@ class _CitasPageState extends State<CitasPage> {
                   );
                   return StatefulBuilder(
                     builder: (context, setStateSheet) {
-                      Future<void> cargar({
-                        required bool reset,
-                      }) async {
+                      Future<void> cargar({required bool reset}) async {
                         await cargarMedicos(
                           reset: reset,
                           onUpdated: () => setStateSheet(() {}),
@@ -1262,12 +1233,15 @@ class _CitasPageState extends State<CitasPage> {
                                 ),
                                 child: Text(
                                   'Selecciona un médico',
-                                  style: Theme.of(context).textTheme.titleMedium,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium,
                                 ),
                               ),
                               Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 20),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                ),
                                 child: TextField(
                                   controller: searchController,
                                   decoration: const InputDecoration(
@@ -1301,7 +1275,8 @@ class _CitasPageState extends State<CitasPage> {
                                     }
                                     return ListView.builder(
                                       shrinkWrap: true,
-                                      itemCount: medicosDisponibles.length +
+                                      itemCount:
+                                          medicosDisponibles.length +
                                           (medicosHasMore ? 1 : 0),
                                       itemBuilder: (context, index) {
                                         if (index ==
@@ -1315,22 +1290,23 @@ class _CitasPageState extends State<CitasPage> {
                                               child: TextButton.icon(
                                                 onPressed: medicosLoading
                                                     ? null
-                                                    : () => cargar(
-                                                          reset: false,
-                                                        ),
+                                                    : () =>
+                                                          cargar(reset: false),
                                                 icon: const Icon(
                                                   Icons.expand_more,
                                                 ),
-                                                label:
-                                                    const Text('Cargar más'),
+                                                label: const Text('Cargar más'),
                                               ),
                                             ),
                                           );
                                         }
-                                        final option = medicosDisponibles[index];
+                                        final option =
+                                            medicosDisponibles[index];
                                         return ListTile(
                                           title: Text(option.nombreCompleto),
-                                          subtitle: (option.nroDocumento
+                                          subtitle:
+                                              (option
+                                                      .nroDocumento
                                                       ?.isNotEmpty ??
                                                   false)
                                               ? Text(
@@ -1365,6 +1341,7 @@ class _CitasPageState extends State<CitasPage> {
             Future<void> abrirSelectorEspecialidad() async {
               if (especialidadesDisponibles.isEmpty && !especialidadesLoading) {
                 await cargarEspecialidades(reset: true);
+                if (!context.mounted) return;
               }
               final seleccion = await showModalBottomSheet<Especialidad>(
                 context: context,
@@ -1375,9 +1352,7 @@ class _CitasPageState extends State<CitasPage> {
                   );
                   return StatefulBuilder(
                     builder: (context, setStateSheet) {
-                      Future<void> cargar({
-                        required bool reset,
-                      }) async {
+                      Future<void> cargar({required bool reset}) async {
                         await cargarEspecialidades(
                           reset: reset,
                           onUpdated: () => setStateSheet(() {}),
@@ -1402,12 +1377,15 @@ class _CitasPageState extends State<CitasPage> {
                                 ),
                                 child: Text(
                                   'Selecciona una especialidad',
-                                  style: Theme.of(context).textTheme.titleMedium,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium,
                                 ),
                               ),
                               Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 20),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                ),
                                 child: TextField(
                                   controller: searchController,
                                   decoration: const InputDecoration(
@@ -1443,7 +1421,7 @@ class _CitasPageState extends State<CitasPage> {
                                       shrinkWrap: true,
                                       itemCount:
                                           especialidadesDisponibles.length +
-                                              (especialidadesHasMore ? 1 : 0),
+                                          (especialidadesHasMore ? 1 : 0),
                                       itemBuilder: (context, index) {
                                         if (index ==
                                                 especialidadesDisponibles
@@ -1457,14 +1435,12 @@ class _CitasPageState extends State<CitasPage> {
                                               child: TextButton.icon(
                                                 onPressed: especialidadesLoading
                                                     ? null
-                                                    : () => cargar(
-                                                          reset: false,
-                                                        ),
+                                                    : () =>
+                                                          cargar(reset: false),
                                                 icon: const Icon(
                                                   Icons.expand_more,
                                                 ),
-                                                label:
-                                                    const Text('Cargar más'),
+                                                label: const Text('Cargar más'),
                                               ),
                                             ),
                                           );
@@ -1514,6 +1490,7 @@ class _CitasPageState extends State<CitasPage> {
               if (especialidadSeleccionada == null) return;
               if (estudiosDisponibles.isEmpty && !estudiosLoading) {
                 await cargarEstudios(reset: true);
+                if (!context.mounted) return;
               }
               final seleccion = await showModalBottomSheet<Estudio>(
                 context: context,
@@ -1524,9 +1501,7 @@ class _CitasPageState extends State<CitasPage> {
                   );
                   return StatefulBuilder(
                     builder: (context, setStateSheet) {
-                      Future<void> cargar({
-                        required bool reset,
-                      }) async {
+                      Future<void> cargar({required bool reset}) async {
                         await cargarEstudios(
                           reset: reset,
                           onUpdated: () => setStateSheet(() {}),
@@ -1551,12 +1526,15 @@ class _CitasPageState extends State<CitasPage> {
                                 ),
                                 child: Text(
                                   'Selecciona un estudio',
-                                  style: Theme.of(context).textTheme.titleMedium,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium,
                                 ),
                               ),
                               Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 20),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                ),
                                 child: TextField(
                                   controller: searchController,
                                   decoration: const InputDecoration(
@@ -1590,7 +1568,8 @@ class _CitasPageState extends State<CitasPage> {
                                     }
                                     return ListView.builder(
                                       shrinkWrap: true,
-                                      itemCount: estudiosDisponibles.length +
+                                      itemCount:
+                                          estudiosDisponibles.length +
                                           (estudiosHasMore ? 1 : 0),
                                       itemBuilder: (context, index) {
                                         if (index ==
@@ -1604,22 +1583,22 @@ class _CitasPageState extends State<CitasPage> {
                                               child: TextButton.icon(
                                                 onPressed: estudiosLoading
                                                     ? null
-                                                    : () => cargar(
-                                                          reset: false,
-                                                        ),
+                                                    : () =>
+                                                          cargar(reset: false),
                                                 icon: const Icon(
                                                   Icons.expand_more,
                                                 ),
-                                                label:
-                                                    const Text('Cargar más'),
+                                                label: const Text('Cargar más'),
                                               ),
                                             ),
                                           );
                                         }
-                                        final option = estudiosDisponibles[index];
+                                        final option =
+                                            estudiosDisponibles[index];
                                         return ListTile(
                                           title: Text(option.nombre),
-                                          subtitle: option.descripcion.isNotEmpty
+                                          subtitle:
+                                              option.descripcion.isNotEmpty
                                               ? Text(option.descripcion)
                                               : null,
                                           onTap: () =>
@@ -1674,8 +1653,9 @@ class _CitasPageState extends State<CitasPage> {
                         if (picked == null) return;
                         setStatePaciente(() {
                           fechaNacimiento = picked;
-                          fechaNacimientoController.text =
-                              DateFormat('yyyy-MM-dd').format(picked);
+                          fechaNacimientoController.text = DateFormat(
+                            'yyyy-MM-dd',
+                          ).format(picked);
                         });
                       }
 
@@ -1685,16 +1665,17 @@ class _CitasPageState extends State<CitasPage> {
                         final body = <String, dynamic>{
                           'nombres': nombresController.text.trim(),
                           if (primerApellidoController.text.trim().isNotEmpty)
-                            'primerApellido':
-                                primerApellidoController.text.trim(),
+                            'primerApellido': primerApellidoController.text
+                                .trim(),
                           if (segundoApellidoController.text.trim().isNotEmpty)
-                            'segundoApellido':
-                                segundoApellidoController.text.trim(),
+                            'segundoApellido': segundoApellidoController.text
+                                .trim(),
                           if (nroDocumentoController.text.trim().isNotEmpty)
                             'nroDocumento': nroDocumentoController.text.trim(),
                           if (fechaNacimiento != null)
-                            'fechaNacimiento': DateFormat('yyyy-MM-dd')
-                                .format(fechaNacimiento!),
+                            'fechaNacimiento': DateFormat(
+                              'yyyy-MM-dd',
+                            ).format(fechaNacimiento!),
                           if (telefonoController.text.trim().isNotEmpty)
                             'telefono': telefonoController.text.trim(),
                           if (generoSeleccionado?.trim().isNotEmpty ?? false)
@@ -1703,15 +1684,18 @@ class _CitasPageState extends State<CitasPage> {
                             'observacion': observacionController.text.trim(),
                         };
                         final response = await _service.crearPaciente(body);
+                        if (!context.mounted) return;
                         final ok = await _handleResponseError(
                           response,
                           'No se pudo registrar el paciente.',
                         );
+                        if (!context.mounted) return;
                         if (!ok) {
                           setStatePaciente(() => guardando = false);
                           return;
                         }
-                        final raw = response.data['datos'] ??
+                        final raw =
+                            response.data['datos'] ??
                             response.data['data'] ??
                             response.data;
                         if (raw is Map<String, dynamic>) {
@@ -1799,7 +1783,7 @@ class _CitasPageState extends State<CitasPage> {
                                 ),
                                 const SizedBox(height: 12),
                                 DropdownButtonFormField<String>(
-                                  value: generoSeleccionado,
+                                  initialValue: generoSeleccionado,
                                   decoration: const InputDecoration(
                                     labelText: 'Género',
                                     border: OutlineInputBorder(),
@@ -1839,8 +1823,9 @@ class _CitasPageState extends State<CitasPage> {
                         ),
                         actions: [
                           TextButton(
-                            onPressed:
-                                guardando ? null : () => Navigator.pop(context),
+                            onPressed: guardando
+                                ? null
+                                : () => Navigator.pop(context),
                             child: const Text('Cancelar'),
                           ),
                           ElevatedButton(
@@ -1909,25 +1894,20 @@ class _CitasPageState extends State<CitasPage> {
                                         hintText: 'Selecciona un paciente',
                                         border: const OutlineInputBorder(),
                                         errorText: state.errorText,
-                                        suffixIcon:
-                                            pacienteSeleccionado == null
-                                                ? const Icon(
-                                                    Icons.expand_more,
-                                                  )
-                                                : IconButton(
-                                                    tooltip: 'Quitar',
-                                                    icon:
-                                                        const Icon(Icons.close),
-                                                    onPressed: () {
-                                                      setStateDialog(() {
-                                                        pacienteSeleccionado =
-                                                            null;
-                                                        pacienteAutocompleteController
-                                                            .clear();
-                                                      });
-                                                      state.didChange(null);
-                                                    },
-                                                  ),
+                                        suffixIcon: pacienteSeleccionado == null
+                                            ? const Icon(Icons.expand_more)
+                                            : IconButton(
+                                                tooltip: 'Quitar',
+                                                icon: const Icon(Icons.close),
+                                                onPressed: () {
+                                                  setStateDialog(() {
+                                                    pacienteSeleccionado = null;
+                                                    pacienteAutocompleteController
+                                                        .clear();
+                                                  });
+                                                  state.didChange(null);
+                                                },
+                                              ),
                                       ),
                                       onTap: abrirSelectorPaciente,
                                     );
@@ -1944,8 +1924,9 @@ class _CitasPageState extends State<CitasPage> {
                                           nuevo.nombreCompleto;
                                       pacientesDisponibles.insert(0, nuevo);
                                     });
-                                    pacienteFieldKey.currentState
-                                        ?.didChange(nuevo);
+                                    pacienteFieldKey.currentState?.didChange(
+                                      nuevo,
+                                    );
                                   },
                                   icon: const Icon(Icons.person_add),
                                   label: const Text('Registrar paciente'),
@@ -1986,8 +1967,9 @@ class _CitasPageState extends State<CitasPage> {
                                         hintText: 'Selecciona una especialidad',
                                         border: const OutlineInputBorder(),
                                         errorText: state.errorText,
-                                        suffixIcon:
-                                            const Icon(Icons.expand_more),
+                                        suffixIcon: const Icon(
+                                          Icons.expand_more,
+                                        ),
                                       ),
                                       onTap: () async {
                                         await abrirSelectorEspecialidad();
@@ -2000,7 +1982,7 @@ class _CitasPageState extends State<CitasPage> {
                                 ),
                                 const SizedBox(height: 16),
                                 DropdownButtonFormField<String>(
-                                  value: tipoCita,
+                                  initialValue: tipoCita,
                                   decoration: const InputDecoration(
                                     labelText: 'Tipo de cita *',
                                     border: OutlineInputBorder(),
@@ -2023,7 +2005,7 @@ class _CitasPageState extends State<CitasPage> {
                                             tipoCita = value;
                                             if (tipoCita != 'ESTUDIO') {
                                               estudioSeleccionado = null;
-                                              estudioController?.clear();
+                                              estudioController.clear();
                                             } else if (especialidadSeleccionada !=
                                                 null) {
                                               estudiosDisponibles.clear();
@@ -2066,12 +2048,12 @@ class _CitasPageState extends State<CitasPage> {
                                         readOnly: true,
                                         decoration: InputDecoration(
                                           labelText: 'Estudio *',
-                                          hintText:
-                                              'Selecciona un estudio',
+                                          hintText: 'Selecciona un estudio',
                                           border: const OutlineInputBorder(),
                                           errorText: state.errorText,
-                                          suffixIcon:
-                                              const Icon(Icons.expand_more),
+                                          suffixIcon: const Icon(
+                                            Icons.expand_more,
+                                          ),
                                         ),
                                         onTap: () async {
                                           await abrirSelectorEstudio();
@@ -2121,28 +2103,20 @@ class _CitasPageState extends State<CitasPage> {
                                             'Selecciona un médico (opcional)',
                                         border: const OutlineInputBorder(),
                                         errorText: state.errorText,
-                                        suffixIcon:
-                                            medicoIdSeleccionado == null
-                                                ? const Icon(
-                                                    Icons.expand_more,
-                                                  )
-                                                : IconButton(
-                                                    tooltip: 'Quitar',
-                                                    icon: const Icon(
-                                                      Icons.close,
-                                                    ),
-                                                    onPressed: () {
-                                                      setStateDialog(() {
-                                                        medicoSeleccionado =
-                                                            null;
-                                                        medicoIdSeleccionado =
-                                                            null;
-                                                        medicoController
-                                                            .clear();
-                                                      });
-                                                      state.didChange(null);
-                                                    },
-                                                  ),
+                                        suffixIcon: medicoIdSeleccionado == null
+                                            ? const Icon(Icons.expand_more)
+                                            : IconButton(
+                                                tooltip: 'Quitar',
+                                                icon: const Icon(Icons.close),
+                                                onPressed: () {
+                                                  setStateDialog(() {
+                                                    medicoSeleccionado = null;
+                                                    medicoIdSeleccionado = null;
+                                                    medicoController.clear();
+                                                  });
+                                                  state.didChange(null);
+                                                },
+                                              ),
                                       ),
                                       onTap: () async {
                                         await abrirSelectorMedico();
@@ -2182,22 +2156,20 @@ class _CitasPageState extends State<CitasPage> {
                                       labelText: 'Estado',
                                       border: OutlineInputBorder(),
                                     ),
-                                    items: CitaEstado.values
-                                        .map(
-                                      (estadoItem) {
-                                        final restringido =
-                                            estadoItem == 'CONFIRMADA' ||
-                                                estadoItem == 'RECHAZADA';
-                                        final habilitado = !restringido ||
-                                            _puedeAprobarRechazar(cita) ||
-                                            estadoItem == cita.estado;
-                                        return DropdownMenuItem(
-                                          value: estadoItem,
-                                          enabled: habilitado,
-                                          child: Text(estadoItem),
-                                        );
-                                      },
-                                    ).toList(),
+                                    items: CitaEstado.values.map((estadoItem) {
+                                      final restringido =
+                                          estadoItem == 'CONFIRMADA' ||
+                                          estadoItem == 'RECHAZADA';
+                                      final habilitado =
+                                          !restringido ||
+                                          _puedeAprobarRechazar(cita) ||
+                                          estadoItem == cita.estado;
+                                      return DropdownMenuItem(
+                                        value: estadoItem,
+                                        enabled: habilitado,
+                                        child: Text(estadoItem),
+                                      );
+                                    }).toList(),
                                     onChanged: (value) {
                                       setStateDialog(() => estado = value);
                                     },
@@ -2245,7 +2217,9 @@ class _CitasPageState extends State<CitasPage> {
                                   Navigator.pop(context, true);
                                 },
                                 child: Text(
-                                  cita == null ? 'Crear cita' : 'Guardar cambios',
+                                  cita == null
+                                      ? 'Crear cita'
+                                      : 'Guardar cambios',
                                 ),
                               ),
                             ),
@@ -2279,7 +2253,8 @@ class _CitasPageState extends State<CitasPage> {
         'detalle': detalle,
         'fechaInicio': fechaInicio!.toUtc().toIso8601String(),
         if (medicoId.isNotEmpty) 'idMedico': medicoId,
-        if (pacienteSeleccionado != null) 'idPaciente': pacienteSeleccionado?.id,
+        if (pacienteSeleccionado != null)
+          'idPaciente': pacienteSeleccionado?.id,
         'idEspecialidad': especialidadId,
         'tipoCita': tipoCita,
         if (tipoCita == 'ESTUDIO' && estudioSeleccionado != null)
@@ -2338,9 +2313,8 @@ class _CitasPageState extends State<CitasPage> {
     }
 
     if (estado != null && estado != cita.estado) {
-      final requierePermiso =
-          estado == 'CONFIRMADA' || estado == 'RECHAZADA';
-        if (requierePermiso && !_puedeAprobarRechazar(cita)) {
+      final requierePermiso = estado == 'CONFIRMADA' || estado == 'RECHAZADA';
+      if (requierePermiso && !_puedeAprobarRechazar(cita)) {
         showSnackBar(
           citasMessenger,
           'Solo el médico asignado, el administrador o el personal de salud con permisos administrativos pueden aprobar o rechazar.',
@@ -2350,14 +2324,9 @@ class _CitasPageState extends State<CitasPage> {
         return;
       }
       if (estado == 'CANCELADA') {
-        _socketClient.emitCancelar({
-          'id': cita.id,
-        });
+        _socketClient.emitCancelar({'id': cita.id});
       } else {
-        _socketClient.emitEstado({
-          'id': cita.id,
-          'estado': estado,
-        });
+        _socketClient.emitEstado({'id': cita.id, 'estado': estado});
       }
     }
 
@@ -2497,8 +2466,7 @@ class _CitasPageState extends State<CitasPage> {
       if (nombre.trim().isNotEmpty) nombre,
       if ((detalle.nroDocumento ?? '').trim().isNotEmpty)
         detalle.nroDocumento!.trim(),
-      if (detalle.especialidades.isNotEmpty)
-        detalle.especialidades.join(', '),
+      if (detalle.especialidades.isNotEmpty) detalle.especialidades.join(', '),
     ];
     return parts.isEmpty ? '--' : parts.join(' · ');
   }
@@ -2591,13 +2559,14 @@ class _CitasPageState extends State<CitasPage> {
     };
 
     final label = labels[field] ?? field;
-    final beforeMatch =
-        RegExp(r'before:\s*([^,}]+)').firstMatch(trimmed);
+    final beforeMatch = RegExp(r'before:\s*([^,}]+)').firstMatch(trimmed);
     final afterMatch = RegExp(r'after:\s*([^,}]+)').firstMatch(trimmed);
-    final beforeValue =
-        beforeMatch != null ? _normalizarValorHistorial(beforeMatch.group(1)!) : '';
-    final afterValue =
-        afterMatch != null ? _normalizarValorHistorial(afterMatch.group(1)!) : '';
+    final beforeValue = beforeMatch != null
+        ? _normalizarValorHistorial(beforeMatch.group(1)!)
+        : '';
+    final afterValue = afterMatch != null
+        ? _normalizarValorHistorial(afterMatch.group(1)!)
+        : '';
 
     if (esIdRelacionado) {
       return _formatearCambioId(
@@ -2788,8 +2757,8 @@ class _CitasPageState extends State<CitasPage> {
                                   if (picked == null) return;
                                   setStateDialog(() {
                                     fechaInicio = picked;
-                                    fechaInicioController.text =
-                                        _dateFormat.format(picked);
+                                    fechaInicioController.text = _dateFormat
+                                        .format(picked);
                                   });
                                 },
                               ),
@@ -2813,8 +2782,8 @@ class _CitasPageState extends State<CitasPage> {
                                   if (picked == null) return;
                                   setStateDialog(() {
                                     fechaFin = picked;
-                                    fechaFinController.text =
-                                        _dateFormat.format(picked);
+                                    fechaFinController.text = _dateFormat
+                                        .format(picked);
                                   });
                                 },
                               ),
@@ -2823,7 +2792,7 @@ class _CitasPageState extends State<CitasPage> {
                         ),
                         const SizedBox(height: 12),
                         DropdownButtonFormField<String?>(
-                          value: estadoAnterior,
+                          initialValue: estadoAnterior,
                           decoration: const InputDecoration(
                             labelText: 'Estado anterior',
                             border: OutlineInputBorder(),
@@ -2862,10 +2831,7 @@ class _CitasPageState extends State<CitasPage> {
                                   fechaFinController.clear();
                                 });
                                 unawaited(
-                                  cargarHistorial(
-                                    setStateDialog,
-                                    reset: true,
-                                  ),
+                                  cargarHistorial(setStateDialog, reset: true),
                                 );
                               },
                               child: const Text('Limpiar'),
@@ -2874,10 +2840,7 @@ class _CitasPageState extends State<CitasPage> {
                             ElevatedButton(
                               onPressed: () {
                                 unawaited(
-                                  cargarHistorial(
-                                    setStateDialog,
-                                    reset: true,
-                                  ),
+                                  cargarHistorial(setStateDialog, reset: true),
                                 );
                               },
                               child: const Text('Aplicar filtros'),
@@ -2905,8 +2868,9 @@ class _CitasPageState extends State<CitasPage> {
                           itemBuilder: (context, index) {
                             if (index == historial.length) {
                               return Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 8),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                ),
                                 child: Center(
                                   child: loadingMore
                                       ? const CircularProgressIndicator()
@@ -3039,31 +3003,37 @@ class _CitasPageState extends State<CitasPage> {
                                         citasAgendaPorDia: _citasAgendaPorDia,
                                         onAgendaDaySelected:
                                             (selectedDay, focusedDay) {
-                                          setState(
-                                            () => _agendaFocusedDay = focusedDay,
-                                          );
-                                          _seleccionarAgendaDay(selectedDay);
-                                        },
+                                              setState(
+                                                () => _agendaFocusedDay =
+                                                    focusedDay,
+                                              );
+                                              _seleccionarAgendaDay(
+                                                selectedDay,
+                                              );
+                                            },
                                         onPageChanged: (focusedDay) {
                                           setState(
-                                            () => _agendaFocusedDay = focusedDay,
+                                            () =>
+                                                _agendaFocusedDay = focusedDay,
                                           );
                                           _cargarCitasAgendaSemana();
                                         },
                                         onAgendaFormatChanged: (format) {
                                           if (_agendaCalendarFormat != format) {
                                             setState(
-                                              () =>
-                                                  _agendaCalendarFormat = format,
+                                              () => _agendaCalendarFormat =
+                                                  format,
                                             );
                                             _cargarCitasAgendaSemana();
                                           }
                                         },
                                         onExpandCalendar: () => setState(
-                                          () => _agendaCalendarCollapsed = false,
+                                          () =>
+                                              _agendaCalendarCollapsed = false,
                                         ),
                                         isLoading: _agendaLoading,
-                                        scrollController: _agendaScrollController,
+                                        scrollController:
+                                            _agendaScrollController,
                                         formatoHoraAgenda: _formatoHoraAgenda,
                                         formatoHorarioCita: _formatoHorarioCita,
                                         tituloCita: _tituloCita,
@@ -3091,20 +3061,20 @@ class _CitasPageState extends State<CitasPage> {
                                         },
                                         onDaySelected:
                                             (selectedDay, focusedDay) {
-                                          setState(() {
-                                            _selectedDay = selectedDay;
-                                            _focusedDay = focusedDay;
-                                            _agendaDay = DateTime(
-                                              selectedDay.year,
-                                              selectedDay.month,
-                                              selectedDay.day,
-                                            );
-                                            _agendaFocusedDay = _agendaDay;
-                                          });
-                                          _cargarCitasDelDia(
-                                            day: selectedDay,
-                                          );
-                                        },
+                                              setState(() {
+                                                _selectedDay = selectedDay;
+                                                _focusedDay = focusedDay;
+                                                _agendaDay = DateTime(
+                                                  selectedDay.year,
+                                                  selectedDay.month,
+                                                  selectedDay.day,
+                                                );
+                                                _agendaFocusedDay = _agendaDay;
+                                              });
+                                              _cargarCitasDelDia(
+                                                day: selectedDay,
+                                              );
+                                            },
                                         onPageChanged: (focusedDay) {
                                           _focusedDay = focusedDay;
                                           if (_currentTabIndex == 1) {
@@ -3117,8 +3087,9 @@ class _CitasPageState extends State<CitasPage> {
                                           citas: citasSeleccionadas,
                                           theme: _theme,
                                           controller: null,
-                                          onRefresh:
-                                              isCompact ? null : _refreshCalendario,
+                                          onRefresh: isCompact
+                                              ? null
+                                              : _refreshCalendario,
                                           embedInScroll: isCompact,
                                           colorEstado: _colorEstado,
                                           colorEspecialidad: _colorEspecialidad,
@@ -3131,7 +3102,8 @@ class _CitasPageState extends State<CitasPage> {
                                           onVerDetalle: (cita) =>
                                               () => _mostrarDetalleCita(cita),
                                           onEditar: (cita) =>
-                                              () => _abrirFormulario(cita: cita),
+                                              () =>
+                                                  _abrirFormulario(cita: cita),
                                         ),
                                         onRefresh: _refreshCalendario,
                                       ),
@@ -3189,11 +3161,6 @@ class _CitasPageState extends State<CitasPage> {
     return _timeFormat.format(inicio);
   }
 
-  String _formatoFecha(DateTime? fecha) {
-    if (fecha == null) return '--';
-    return _dateTimeFormat.format(fecha);
-  }
-
   String _formatoFechaCita(DateTime? fecha) {
     if (fecha == null) return '--';
     return _dateFormat.format(fecha);
@@ -3234,8 +3201,7 @@ class _CitasPageState extends State<CitasPage> {
 
   IconData _iconoTipoCita(CitaMedica cita) {
     final tipo = (cita.tipoCita ?? '').trim().toUpperCase();
-    if (tipo == 'ESTUDIO' ||
-        (cita.estudioNombre ?? '').trim().isNotEmpty) {
+    if (tipo == 'ESTUDIO' || (cita.estudioNombre ?? '').trim().isNotEmpty) {
       return PhosphorIconsRegular.testTube;
     }
     if (tipo == 'CONSULTA' ||
@@ -3247,8 +3213,8 @@ class _CitasPageState extends State<CitasPage> {
 
   String _subtituloCita(CitaMedica cita) {
     final estudio = (cita.estudioNombre ?? cita.estudioId ?? '').trim();
-    final especialidad =
-        (cita.especialidadNombre ?? cita.especialidadId ?? '').trim();
+    final especialidad = (cita.especialidadNombre ?? cita.especialidadId ?? '')
+        .trim();
     final detalle = cita.detalle.trim();
     final parts = <String>[
       if (estudio.isNotEmpty) estudio,
@@ -3259,8 +3225,8 @@ class _CitasPageState extends State<CitasPage> {
   }
 
   Future<void> _mostrarDetalleCita(CitaMedica cita) async {
-    final especialidadNombre =
-        (cita.especialidadNombre ?? cita.especialidadId)?.trim();
+    final especialidadNombre = (cita.especialidadNombre ?? cita.especialidadId)
+        ?.trim();
     final estudioNombre = (cita.estudioNombre ?? cita.estudioId)?.trim();
     final especialidadColor = _colorEspecialidad(cita);
 
@@ -3276,9 +3242,9 @@ class _CitasPageState extends State<CitasPage> {
                 const SizedBox(height: 4),
                 Text(
                   _subtituloCita(cita),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: _theme.grey,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: _theme.grey),
                 ),
               ],
               const SizedBox(height: 12),
@@ -3404,9 +3370,7 @@ class _CitasPageState extends State<CitasPage> {
       },
     );
   }
-
 }
-
 
 class _CitasSocketClient {
   io.Socket? _socket;

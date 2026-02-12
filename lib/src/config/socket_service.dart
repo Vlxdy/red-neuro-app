@@ -1,13 +1,13 @@
 // lib/src/services/socket_service.dart
 import 'package:red_neuro_app/src/constants/constants.dart';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:flutter/foundation.dart';
 
 class SocketService {
   SocketService._();
   static final SocketService instance = SocketService._();
 
-  IO.Socket? _socket;
+  io.Socket? _socket;
 
   bool get isConnected => _socket?.connected == true;
 
@@ -15,9 +15,9 @@ class SocketService {
   void connect(String userId) {
     if (_socket != null) return;
 
-    _socket = IO.io(
+    _socket = io.io(
       Constantes.sockets,
-      IO.OptionBuilder()
+      io.OptionBuilder()
           .setTransports(['websocket']) // Forzar websocket
           .setQuery({'userId': userId}) // params si necesitas
           .setReconnectionAttempts(0)

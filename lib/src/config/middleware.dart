@@ -4,7 +4,7 @@ import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 
 mixin Middleware {
-  validateResponse(StatusNetwork status) {
+  void validateResponse(StatusNetwork status) {
     switch (status) {
       case StatusNetwork.unauthorized:
         Logger.error('401 - no authorizado');

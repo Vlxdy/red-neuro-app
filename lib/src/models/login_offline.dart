@@ -4,7 +4,7 @@ class LoginOffline {
 
   LoginOffline(this.nroDocumento, this.placa);
 
-  static empty() => LoginOffline('', '');
+  static LoginOffline empty() => LoginOffline('', '');
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = {};

@@ -18,7 +18,7 @@ class CitasAgendaSection extends StatelessWidget {
   final bool agendaCalendarCollapsed;
   final Map<DateTime, List<CitaMedica>> citasAgendaPorDia;
   final void Function(DateTime selectedDay, DateTime focusedDay)
-      onAgendaDaySelected;
+  onAgendaDaySelected;
   final ValueChanged<DateTime> onPageChanged;
   final ValueChanged<CalendarFormat> onAgendaFormatChanged;
   final VoidCallback onExpandCalendar;
@@ -66,9 +66,9 @@ class CitasAgendaSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final ordenadas = [...citas]
       ..sort(
-        (a, b) =>
-            (a.fechaInicio ?? DateTime(1970))
-                .compareTo(b.fechaInicio ?? DateTime(1970)),
+        (a, b) => (a.fechaInicio ?? DateTime(1970)).compareTo(
+          b.fechaInicio ?? DateTime(1970),
+        ),
       );
     final citasPorHora = <int, List<CitaMedica>>{};
     for (final cita in ordenadas) {
@@ -160,7 +160,7 @@ class _AgendaWeekCalendar extends StatelessWidget {
   final bool isCollapsed;
   final Map<DateTime, List<CitaMedica>> citasAgendaPorDia;
   final void Function(DateTime selectedDay, DateTime focusedDay)
-      onAgendaDaySelected;
+  onAgendaDaySelected;
   final ValueChanged<DateTime> onPageChanged;
   final ValueChanged<CalendarFormat> onAgendaFormatChanged;
 
@@ -205,7 +205,8 @@ class _AgendaWeekCalendar extends StatelessWidget {
               return citasAgendaPorDia[key] ?? [];
             },
             headerStyle: HeaderStyle(
-              titleTextStyle: Theme.of(context).textTheme.labelLarge ??
+              titleTextStyle:
+                  Theme.of(context).textTheme.labelLarge ??
                   const TextStyle(fontWeight: FontWeight.w600),
               titleCentered: false,
               formatButtonVisible: true,
@@ -217,10 +218,16 @@ class _AgendaWeekCalendar extends StatelessWidget {
                 color: theme.primary,
                 fontWeight: FontWeight.w600,
               ),
-              leftChevronIcon:
-                  Icon(Icons.chevron_left, size: 18, color: theme.primary),
-              rightChevronIcon:
-                  Icon(Icons.chevron_right, size: 18, color: theme.primary),
+              leftChevronIcon: Icon(
+                Icons.chevron_left,
+                size: 18,
+                color: theme.primary,
+              ),
+              rightChevronIcon: Icon(
+                Icons.chevron_right,
+                size: 18,
+                color: theme.primary,
+              ),
               headerPadding: EdgeInsets.zero,
               leftChevronMargin: EdgeInsets.zero,
               rightChevronMargin: EdgeInsets.zero,
@@ -261,8 +268,9 @@ class _AgendaWeekCalendar extends StatelessWidget {
                   return null;
                 }
 
-                final markerColor =
-                    events.length > 4 ? theme.error : theme.warning;
+                final markerColor = events.length > 4
+                    ? theme.error
+                    : theme.warning;
                 final markerCount = events.length > 4 ? 4 : events.length;
 
                 return Align(
@@ -331,7 +339,7 @@ class _AgendaTimeline extends StatelessWidget {
       controller: scrollController,
       padding: const EdgeInsets.only(bottom: 16),
       itemCount: horas.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 2),
+      separatorBuilder: (_, _) => const SizedBox(height: 2),
       itemBuilder: (context, index) {
         final hour = horas[index];
         final hourLabel = '${hour.toString().padLeft(2, '0')}:00';
@@ -343,8 +351,8 @@ class _AgendaTimeline extends StatelessWidget {
             child: Text(
               'Sin citas',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: theme.grey.withValues(alpha: 0.7),
-                  ),
+                color: theme.grey.withValues(alpha: 0.7),
+              ),
             ),
           );
         }
@@ -358,7 +366,9 @@ class _AgendaTimeline extends StatelessWidget {
                     : formatoHoraAgenda(citas[i].fechaInicio, hour),
                 theme: theme,
                 child: Padding(
-                  padding: EdgeInsets.only(bottom: i == citas.length - 1 ? 0 : 2),
+                  padding: EdgeInsets.only(
+                    bottom: i == citas.length - 1 ? 0 : 2,
+                  ),
                   child: _AgendaCitaCard(
                     cita: citas[i],
                     theme: theme,
@@ -406,15 +416,12 @@ class _AgendaRow extends StatelessWidget {
                 Text(
                   label,
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: theme.primary,
-                      ),
+                    fontWeight: FontWeight.w600,
+                    color: theme.primary,
+                  ),
                 ),
                 const SizedBox(height: 6),
-                Container(
-                  height: 1,
-                  color: theme.grey.withValues(alpha: 0.2),
-                ),
+                Container(height: 1, color: theme.grey.withValues(alpha: 0.2)),
               ],
             ),
           ),
@@ -485,18 +492,14 @@ class _AgendaCitaCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(
-                  iconoTipoCita(cita),
-                  size: 18,
-                  color: theme.primary,
-                ),
+                Icon(iconoTipoCita(cita), size: 18, color: theme.primary),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     titulo,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 CitasEstadoBadge(
@@ -519,9 +522,9 @@ class _AgendaCitaCard extends StatelessWidget {
                       const SizedBox(width: 6),
                       Text(
                         horario,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: theme.grey,
-                            ),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodySmall?.copyWith(color: theme.grey),
                       ),
                     ],
                   ),
@@ -543,9 +546,7 @@ class _AgendaCitaCard extends StatelessWidget {
                           especialidad,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context)
-                              .textTheme
-                              .labelSmall
+                          style: Theme.of(context).textTheme.labelSmall
                               ?.copyWith(
                                 color: especialidadColor,
                                 fontWeight: FontWeight.w600,

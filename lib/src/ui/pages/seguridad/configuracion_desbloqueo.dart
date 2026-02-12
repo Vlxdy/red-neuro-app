@@ -95,7 +95,7 @@ class _ConfiguracionDesbloqueoState extends State<ConfiguracionDesbloqueo> {
                         Transform.scale(
                           scale: 0.7,
                           child: Switch.adaptive(
-                            activeColor: theme.primary,
+                            activeThumbColor: theme.primary,
                             activeTrackColor: theme.primary.withValues(
                               alpha: 0.3,
                             ),

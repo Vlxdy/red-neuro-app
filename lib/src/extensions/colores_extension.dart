@@ -10,6 +10,6 @@ extension HexColor on Color {
   }
 
   static String toHex(Color color) {
-    return '#${color.value.toRadixString(16)}';
+    return '#${color.toARGB32().toRadixString(16).padLeft(8, '0')}';
   }
 }

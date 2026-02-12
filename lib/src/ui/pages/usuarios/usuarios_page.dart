@@ -41,8 +41,7 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
   final TextEditingController _searchController = TextEditingController();
   final DateFormat _dateFormatter = DateFormat('dd/MM/yyyy');
 
-  String get _currentRole =>
-      _normalizarRol(Auth.instance.profile.rol ?? '');
+  String get _currentRole => _normalizarRol(Auth.instance.profile.rol ?? '');
 
   @override
   void initState() {
@@ -218,8 +217,7 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
     bool esSupervisor = usuario?.esSupervisor ?? false;
 
     final selectedRoles = <String>{
-      if (usuario != null)
-        ...usuario.roles.map((rol) => rol.rol.toUpperCase()).toList(),
+      if (usuario != null) ...usuario.roles.map((rol) => rol.rol.toUpperCase()),
       if (usuario?.rol != null) usuario!.rol!.toUpperCase(),
     };
     String? rolSeleccionado = selectedRoles.isNotEmpty
@@ -741,10 +739,7 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
   String _rolesTexto(Usuario usuario) {
     if (usuario.roles.isNotEmpty) {
       return usuario.roles
-          .map(
-            (rol) =>
-                _formatearRol(rol.rol, esSupervisor: rol.esSupervisor),
-          )
+          .map((rol) => _formatearRol(rol.rol, esSupervisor: rol.esSupervisor))
           .join(', ');
     }
     final rolActivo = usuario.rol ?? '';
@@ -856,7 +851,7 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
                             labelText: 'Filtrar por rol',
                             isDense: true,
                           ),
-                          value: _rolFiltro,
+                          initialValue: _rolFiltro,
                           items: [
                             const DropdownMenuItem<String?>(
                               value: null,
