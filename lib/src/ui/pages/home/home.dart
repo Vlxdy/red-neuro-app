@@ -12,6 +12,7 @@ import 'package:red_neuro_app/src/ui/pages/usuarios/usuarios_page.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_page.dart';
 import 'package:red_neuro_app/src/ui/pages/especialidades/especialidades_page.dart';
 import 'package:red_neuro_app/src/ui/pages/estudios/estudios_page.dart';
+import 'package:red_neuro_app/src/ui/pages/pacientes/pacientes_page.dart';
 import 'package:red_neuro_app/src/ui/pages/personal_salud/personal_salud_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -687,6 +688,8 @@ ChildrenItem _submoduleToItem(
               titulo: 'Citas',
               mostrarFiltroMedico: true,
             )
+          : isPacientesModule
+          ? const PacientesPage()
           : isPersonalMedicoModule
           ? const PersonalSaludPage()
           : RoleTrayPlaceholder(
@@ -761,16 +764,7 @@ List<ChildrenItem> _adminMenu(ThemeController theme) => [
     iconoImagenSeleccionada: PhosphorIconsFill.userCircle,
     titulo: 'Pacientes',
     children: const KeepAlivePage(
-      child: RoleTrayPlaceholder(
-        title: 'Pacientes',
-        description:
-            'Administra el listado de pacientes registrados en la plataforma.',
-        actions: [
-          'Listar pacientes disponibles',
-          'Crear y editar información de pacientes',
-        ],
-        leadingIcon: PhosphorIconsRegular.userCircle,
-      ),
+      child: PacientesPage(),
     ),
   ),
   ChildrenItem(
