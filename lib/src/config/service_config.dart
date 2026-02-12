@@ -106,7 +106,7 @@ class ServiceConfig with Middleware, FormController {
           response = await patch(
             uri,
             headers: headers,
-            body: jsonEncode(body),
+            body: body == null ? null : jsonEncode(body),
           ).timeout(const Duration(seconds: Constantes.timeout));
           break;
         case HttpProtocol.put:
@@ -120,7 +120,7 @@ class ServiceConfig with Middleware, FormController {
           response = await delete(
             uri,
             headers: headers,
-            body: jsonEncode(body),
+            body: body == null ? null : jsonEncode(body),
           ).timeout(const Duration(seconds: Constantes.timeout));
           break;
         default:
