@@ -1410,13 +1410,16 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     _cargarPersonalSalud(page: 1);
   }
 
-  Future<void> _confirmarEliminacion(PersonalSalud personal) async {
+  Future<void> _confirmarCambioEstado(PersonalSalud personal) async {
+    final estaActivo = personal.estaActivo;
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Dar de baja'),
+        title: Text(estaActivo ? 'Inactivar personal' : 'Activar personal'),
         content: Text(
-          '¿Seguro que deseas dar de baja a ${personal.nombreCompleto}?',
+          estaActivo
+              ? '¿Seguro que deseas inactivar a ${personal.nombreCompleto}?'
+              : '¿Seguro que deseas activar a ${personal.nombreCompleto}?',
         ),
         actions: [
           TextButton(
@@ -1433,7 +1436,9 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
 
     if (result != true) return;
 
-    final response = await _service.eliminarPersonalSalud(personal.id);
+    final response = estaActivo
+        ? await _service.inactivarPersonalSalud(personal.id)
+        : await _service.activarPersonalSalud(personal.id);
     if (response.status != StatusNetwork.connected) {
       showSnackBar(
         personalSaludMessenger,
@@ -1448,7 +1453,9 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
 
     showSnackBar(
       personalSaludMessenger,
-      'Personal de salud dado de baja correctamente.',
+      estaActivo
+          ? 'Personal de salud inactivado correctamente.'
+          : 'Personal de salud activado correctamente.',
       state: StatusSnackBar.success,
       colorText: _theme.white,
     );
@@ -1562,6 +1569,22 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                           ],
                         ),
                         const SizedBox(height: 8),
+                        Chip(
+                          label: Text(
+                            persona.estaActivo ? 'Activo' : 'Inactivo',
+                          ),
+                          backgroundColor: (persona.estaActivo
+                                  ? Colors.green
+                                  : Colors.grey)
+                              .withValues(alpha: .15),
+                          labelStyle: TextStyle(
+                            color: persona.estaActivo
+                                ? Colors.green.shade700
+                                : Colors.grey.shade700,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
                         Text(
                           persona.nroDocumento ?? 'Sin documento',
                           style: Theme.of(context).textTheme.bodySmall,
@@ -1585,9 +1608,15 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                               label: const Text('Detalles'),
                             ),
                             TextButton.icon(
-                              onPressed: () => _confirmarEliminacion(persona),
-                              icon: const Icon(Icons.delete_outline),
-                              label: const Text('Dar de baja'),
+                              onPressed: () => _confirmarCambioEstado(persona),
+                              icon: Icon(
+                                persona.estaActivo
+                                    ? Icons.person_off_outlined
+                                    : Icons.person_add_alt_1_outlined,
+                              ),
+                              label: Text(
+                                persona.estaActivo ? 'Inactivar' : 'Activar',
+                              ),
                             ),
                           ],
                         ),
@@ -1693,6 +1722,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                     columnas: [
                       CriterioOrdenType(nombre: 'Nombre'),
                       CriterioOrdenType(nombre: 'Documento'),
+                      CriterioOrdenType(nombre: 'Estado'),
                       CriterioOrdenType(nombre: 'Especialidades'),
                       CriterioOrdenType(nombre: 'Admin'),
                       CriterioOrdenType(nombre: 'Acciones'),
@@ -1708,6 +1738,21 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                               ],
                             ),
                             Text(persona.nroDocumento ?? '-'),
+                            Chip(
+                              label: Text(
+                                persona.estaActivo ? 'Activo' : 'Inactivo',
+                              ),
+                              backgroundColor: (persona.estaActivo
+                                      ? Colors.green
+                                      : Colors.grey)
+                                  .withValues(alpha: .15),
+                              labelStyle: TextStyle(
+                                color: persona.estaActivo
+                                    ? Colors.green.shade700
+                                    : Colors.grey.shade700,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                             _buildEspecialidadesCell(persona),
                             persona.esSupervisor
                                 ? Chip(
@@ -1736,10 +1781,16 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                       _mostrarDetallesPersonal(persona),
                                 ),
                                 IconButton(
-                                  tooltip: 'Dar de baja',
-                                  icon: const Icon(Icons.delete_outline),
+                                  tooltip: persona.estaActivo
+                                      ? 'Inactivar'
+                                      : 'Activar',
+                                  icon: Icon(
+                                    persona.estaActivo
+                                        ? Icons.person_off_outlined
+                                        : Icons.person_add_alt_1_outlined,
+                                  ),
                                   onPressed: () =>
-                                      _confirmarEliminacion(persona),
+                                      _confirmarCambioEstado(persona),
                                 ),
                               ],
                             ),

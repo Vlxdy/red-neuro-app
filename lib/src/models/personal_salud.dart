@@ -2,6 +2,7 @@ import 'package:red_neuro_app/src/models/estudio.dart';
 
 class PersonalSalud {
   final String id;
+  final String estado;
   final bool esSupervisor;
   final String nombres;
   final String? primerApellido;
@@ -16,6 +17,7 @@ class PersonalSalud {
 
   const PersonalSalud({
     required this.id,
+    required this.estado,
     required this.esSupervisor,
     required this.nombres,
     required this.primerApellido,
@@ -42,6 +44,7 @@ class PersonalSalud {
 
     return PersonalSalud(
       id: (json['id'] ?? '').toString(),
+      estado: (json['estado'] ?? 'ACTIVO').toString(),
       esSupervisor: json['esSupervisor'] == true ||
           json['es_supervisor'] == true,
       nroDocumento: resolveString('nroDocumento').trim().isEmpty
@@ -92,4 +95,6 @@ class PersonalSalud {
     if ((nroDocumento ?? '').trim().isEmpty) return nombre;
     return '$nombre · ${nroDocumento!.trim()}';
   }
+
+  bool get estaActivo => estado.toUpperCase() == 'ACTIVO';
 }
