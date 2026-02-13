@@ -44,10 +44,11 @@ class PersonalSaludService extends ServiceConfig {
   }) async {
     try {
       final response = await fetch(
-        '/personal-medico',
+        '/personal-salud',
         params: {
           'pagina': '$page',
           'limite': '$limit',
+          'incluirInactivos': 'true',
           if (filtro != null && filtro.isNotEmpty) 'filtro': filtro,
         },
       );
@@ -193,9 +194,16 @@ class PersonalSaludService extends ServiceConfig {
     );
   }
 
-  Future<ResponseApi> eliminarPersonalSalud(String id) async {
+  Future<ResponseApi> inactivarPersonalSalud(String id) async {
     return fetch(
-      '/usuarios/$id/inactivacion',
+      '/personal-salud/$id/inactivacion',
+      type: HttpProtocol.patch,
+    );
+  }
+
+  Future<ResponseApi> activarPersonalSalud(String id) async {
+    return fetch(
+      '/personal-salud/$id/activacion',
       type: HttpProtocol.patch,
     );
   }
