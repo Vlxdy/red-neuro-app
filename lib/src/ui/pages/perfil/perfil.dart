@@ -1,3 +1,10 @@
+import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:red_neuro_app/src/config/service_config.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/constants.dart';
@@ -10,8 +17,7 @@ import 'package:red_neuro_app/src/plugins/auth/auth_service.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
 import 'package:red_neuro_app/src/ui/pages/perfil/componentes/perfil_info_card.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:red_neuro_app/src/ui/pages/perfil/perfil_service.dart';
 
 GlobalKey<ScaffoldMessengerState> perfilMessenger =
     GlobalKey<ScaffoldMessengerState>();
@@ -24,10 +30,22 @@ class Perfil extends StatefulWidget {
 }
 
 class _PerfilState extends State<Perfil> {
+  static const int _maxAvatarSizeBytes = 5 * 1024 * 1024;
+  static const List<String> _allowedAvatarExtensions = <String>[
+    'jpg',
+    'jpeg',
+    'png',
+    'webp',
+  ];
+
   Usuario? _profile;
   List<Rol> _roles = <Rol>[];
   String? _activeRoleId;
   bool _changingRole = false;
+  bool _updatingPhoto = false;
+  int _avatarVersion = DateTime.now().millisecondsSinceEpoch;
+  String? _avatarFailedUrl;
+  final Map<String, Uint8List?> _avatarCache = <String, Uint8List?>{};
   bool _loading = true;
   bool _loggingOut = false;
 
@@ -111,6 +129,238 @@ class _PerfilState extends State<Perfil> {
     }
   }
 
+  Future<void> _pickAndUploadPhoto() async {
+    if (_updatingPhoto) return;
+
+    final ThemeController theme = ThemeController.instance;
+    final FilePickerResult? selected = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: _allowedAvatarExtensions,
+      allowMultiple: false,
+    );
+
+    if (selected == null || selected.files.isEmpty) {
+      return;
+    }
+
+    final PlatformFile platformFile = selected.files.first;
+    final String extension = (platformFile.extension ?? '').toLowerCase();
+
+    if (!_allowedAvatarExtensions.contains(extension)) {
+      showSnackBar(
+        perfilMessenger,
+        'Formato no permitido. Usa JPG, JPEG, PNG o WEBP.',
+        state: StatusSnackBar.error,
+        colorText: theme.white,
+      );
+      return;
+    }
+
+    if (platformFile.path == null || platformFile.path!.trim().isEmpty) {
+      showSnackBar(
+        perfilMessenger,
+        'No se pudo leer el archivo seleccionado.',
+        state: StatusSnackBar.error,
+        colorText: theme.white,
+      );
+      return;
+    }
+
+    final File foto = File(platformFile.path!);
+    if (!foto.existsSync()) {
+      showSnackBar(
+        perfilMessenger,
+        'El archivo no existe o no está disponible.',
+        state: StatusSnackBar.error,
+        colorText: theme.white,
+      );
+      return;
+    }
+
+    final int fileSize = foto.lengthSync();
+    if (fileSize <= 0 || fileSize > _maxAvatarSizeBytes) {
+      showSnackBar(
+        perfilMessenger,
+        'La imagen debe pesar máximo 5 MB.',
+        state: StatusSnackBar.error,
+        colorText: theme.white,
+      );
+      return;
+    }
+
+    setState(() => _updatingPhoto = true);
+
+    try {
+      final PerfilService service = PerfilService('', context);
+      final ResponseApi response = await service.actualizarFotoPerfil(foto);
+
+      if (!mounted) return;
+
+      final bool synced = await _refreshProfileAfterPhotoChange(service);
+      if (synced) {
+        showSnackBar(
+          perfilMessenger,
+          response.status == StatusNetwork.connected
+              ? response.message
+              : 'Foto actualizada y perfil refrescado.',
+          state: StatusSnackBar.success,
+          colorText: theme.white,
+        );
+      } else {
+        showSnackBar(
+          perfilMessenger,
+          response.status == StatusNetwork.connected
+              ? 'La foto se actualizó, pero no se pudo refrescar el perfil.'
+              : response.message,
+          state: StatusSnackBar.error,
+          colorText: theme.white,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      showSnackBar(
+        perfilMessenger,
+        'No se pudo actualizar la foto: $e',
+        state: StatusSnackBar.error,
+        colorText: theme.white,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _updatingPhoto = false);
+      }
+    }
+  }
+
+  Future<void> _deletePhoto() async {
+    if (_updatingPhoto) return;
+
+    final ThemeController theme = ThemeController.instance;
+    setState(() => _updatingPhoto = true);
+
+    try {
+      final PerfilService service = PerfilService('', context);
+      final ResponseApi response = await service.eliminarFotoPerfil();
+
+      if (!mounted) return;
+
+      final bool synced = await _refreshProfileAfterPhotoChange(service);
+      if (synced) {
+        showSnackBar(
+          perfilMessenger,
+          response.status == StatusNetwork.connected
+              ? response.message
+              : 'Foto eliminada y perfil refrescado.',
+          state: StatusSnackBar.success,
+          colorText: theme.white,
+        );
+      } else {
+        showSnackBar(
+          perfilMessenger,
+          response.status == StatusNetwork.connected
+              ? 'La foto se eliminó, pero no se pudo refrescar el perfil.'
+              : response.message,
+          state: StatusSnackBar.error,
+          colorText: theme.white,
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      showSnackBar(
+        perfilMessenger,
+        'No se pudo eliminar la foto: $e',
+        state: StatusSnackBar.error,
+        colorText: theme.white,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _updatingPhoto = false);
+      }
+    }
+  }
+
+
+  Future<void> _applyProfileUpdate(Usuario refreshed) async {
+    await Auth.instance.updateUser(refreshed);
+    if (!mounted) return;
+
+    setState(() {
+      _profile = refreshed;
+      _roles = refreshed.roles;
+      _activeRoleId =
+          refreshed.idRol ?? (_roles.isNotEmpty ? _roles.first.idRol : '');
+      _avatarVersion = DateTime.now().millisecondsSinceEpoch;
+      _avatarFailedUrl = null;
+      _avatarCache.clear();
+    });
+  }
+
+
+  Future<bool> _refreshProfileAfterPhotoChange(PerfilService service) async {
+    for (int intentos = 0; intentos < 2; intentos++) {
+      final Usuario? refreshed = await service.refrescarPerfilDesdeApi();
+      if (refreshed != null && mounted) {
+        await _applyProfileUpdate(refreshed);
+        return true;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+    }
+    return false;
+  }
+
+  String? _avatarUrl(String? rawUrl) {
+    if (rawUrl == null || rawUrl.trim().isEmpty) return null;
+
+    final String normalized = rawUrl.startsWith('http')
+        ? rawUrl
+        : '${Constantes.apiUrl}$rawUrl';
+
+    final Uri? uri = Uri.tryParse(normalized);
+    if (uri == null) return null;
+
+    final Map<String, String> params = <String, String>{
+      ...uri.queryParameters,
+      'v': '$_avatarVersion',
+    };
+
+    return uri.replace(queryParameters: params).toString();
+  }
+
+  Future<Uint8List?> _fetchAvatarBytes(String url) async {
+    if (_avatarCache.containsKey(url)) {
+      return _avatarCache[url];
+    }
+
+    final HttpClient client = HttpClient();
+    try {
+      final Uri? uri = Uri.tryParse(url);
+      if (uri == null) {
+        _avatarCache[url] = null;
+        return null;
+      }
+
+      final HttpClientRequest request = await client.getUrl(uri);
+      final HttpClientResponse response = await request.close();
+
+      if (response.statusCode != HttpStatus.ok) {
+        _avatarCache[url] = null;
+        await response.drain<void>();
+        return null;
+      }
+
+      final Uint8List bytes = await consolidateHttpClientResponseBytes(
+        response,
+      );
+      _avatarCache[url] = bytes;
+      return bytes;
+    } catch (_) {
+      _avatarCache[url] = null;
+      return null;
+    } finally {
+      client.close(force: true);
+    }
+  }
+
+
   Future<void> _logout() async {
     if (_loggingOut) return;
 
@@ -171,6 +421,9 @@ class _PerfilState extends State<Perfil> {
         }
 
         final bool hasMultipleRoles = _roles.length > 1;
+        final String? avatarUrl = _avatarUrl(profile.urlFoto);
+        final bool showRemoteAvatar =
+            avatarUrl != null && avatarUrl != _avatarFailedUrl;
 
         return ScaffoldMessenger(
           key: perfilMessenger,
@@ -201,44 +454,116 @@ class _PerfilState extends State<Perfil> {
                   children: <Widget>[
                     const SizedBox(height: 20),
                     Center(
-                      child: Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          boxShadow: <BoxShadow>[
-                            BoxShadow(
-                              color: theme.black.withValues(
-                                alpha: theme.isLight ? 0.1 : 0.4,
+                      child: Column(
+                        children: <Widget>[
+                          Container(
+                            width: 120,
+                            height: 120,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              boxShadow: <BoxShadow>[
+                                BoxShadow(
+                                  color: theme.black.withValues(
+                                    alpha: theme.isLight ? 0.1 : 0.4,
+                                  ),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                              border: Border.all(
+                                color: theme.primary.withValues(alpha: 0.6),
+                                width: 2,
                               ),
-                              blurRadius: 6,
-                              offset: const Offset(0, 3),
                             ),
-                          ],
-                          border: Border.all(
-                            color: theme.primary.withValues(alpha: 0.6),
-                            width: 2,
+                            child: Stack(
+                              children: <Widget>[
+                                Positioned.fill(
+                                  child: ClipOval(
+                                    child: showRemoteAvatar
+                                        ? FutureBuilder<Uint8List?>(
+                                            future: _fetchAvatarBytes(avatarUrl),
+                                            builder: (
+                                              BuildContext context,
+                                              AsyncSnapshot<Uint8List?> snapshot,
+                                            ) {
+                                              final Uint8List? bytes =
+                                                  snapshot.data;
+                                              if (snapshot.connectionState ==
+                                                      ConnectionState.done &&
+                                                  bytes == null &&
+                                                  mounted &&
+                                                  _avatarFailedUrl != avatarUrl) {
+                                                WidgetsBinding.instance
+                                                    .addPostFrameCallback((_) {
+                                                      if (!mounted) return;
+                                                      setState(() {
+                                                        _avatarFailedUrl =
+                                                            avatarUrl;
+                                                      });
+                                                    });
+                                              }
+
+                                              if (bytes != null) {
+                                                return Image.memory(
+                                                  bytes,
+                                                  fit: BoxFit.cover,
+                                                  gaplessPlayback: true,
+                                                );
+                                              }
+
+                                              return _buildAvatarFallback(
+                                                theme,
+                                                profile,
+                                              );
+                                            },
+                                          )
+                                        : _buildAvatarFallback(theme, profile),
+                                  ),
+                                ),
+                                if (_updatingPhoto)
+                                  Positioned.fill(
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: theme.black.withValues(
+                                          alpha: 0.35,
+                                        ),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Center(
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.5,
+                                          color: theme.white,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
                           ),
-                        ),
-                        child: ClipOval(
-                          child:
-                              profile.urlFoto != null &&
-                                  profile.urlFoto!.isNotEmpty &&
-                                  Uri.tryParse(profile.urlFoto!) != null
-                              ? Image.network(
-                                  profile.urlFoto!.startsWith('http')
-                                      ? profile.urlFoto!
-                                      : '${Constantes.apiUrl}${profile.urlFoto!}',
-                                  fit: BoxFit.cover,
-                                  errorBuilder:
-                                      (
-                                        BuildContext context,
-                                        Object error,
-                                        StackTrace? stackTrace,
-                                      ) => _buildAvatarFallback(theme, profile),
-                                )
-                              : _buildAvatarFallback(theme, profile),
-                        ),
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 8,
+                            children: <Widget>[
+                              OutlinedButton.icon(
+                                onPressed: _updatingPhoto
+                                    ? null
+                                    : _pickAndUploadPhoto,
+                                icon: const Icon(Icons.photo_camera_outlined),
+                                label: const Text('Cambiar foto'),
+                              ),
+                              if (profile.urlFoto != null &&
+                                  profile.urlFoto!.trim().isNotEmpty)
+                                TextButton.icon(
+                                  onPressed: _updatingPhoto ? null : _deletePhoto,
+                                  icon: const Icon(Icons.delete_outline),
+                                  label: const Text('Quitar'),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: theme.error,
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -604,7 +929,7 @@ class _RoleCard extends StatelessWidget {
   }
 }
 
-Widget _buildAvatarFallback(ThemeController theme, dynamic profile) {
+Widget _buildAvatarFallback(ThemeController theme, Usuario profile) {
   return Container(
     color: theme.primary,
     alignment: Alignment.center,
