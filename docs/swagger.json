@@ -3451,93 +3451,6 @@
         ]
       }
     },
-    "/personal-medico": {
-      "get": {
-        "operationId": "PersonalMedicoController_listar",
-        "parameters": [
-          {
-            "name": "limite",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "minimum": 10,
-              "maximum": 50,
-              "default": 10,
-              "type": "number"
-            }
-          },
-          {
-            "name": "pagina",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "minimum": 1,
-              "default": 1,
-              "type": "number"
-            }
-          },
-          {
-            "name": "filtro",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "ordenRaw",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/BaseResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "datos": {
-                          "type": "object",
-                          "properties": {
-                            "total": {
-                              "type": "number"
-                            },
-                            "filas": {
-                              "type": "array",
-                              "items": {
-                                "$ref": "#/components/schemas/PersonalResponseDto"
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Lista el personal de salud registrado",
-        "tags": [
-          "Personal Médico"
-        ]
-      }
-    },
     "/personal-salud": {
       "get": {
         "operationId": "PersonalSaludController_listar",
@@ -3577,6 +3490,16 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "incluirInactivos",
+            "required": false,
+            "in": "query",
+            "description": "Si es true, incluye personal de salud activo e inactivo. Requiere permisos administrativos.",
+            "schema": {
+              "default": false,
+              "type": "boolean"
             }
           }
         ],
@@ -5138,6 +5061,11 @@
             "description": "Identificador único del personal de salud",
             "example": "a8f4c1d2-32a1-4c2b-bff1-87fa92c1a223"
           },
+          "estado": {
+            "type": "string",
+            "description": "Estado del personal de salud en su rol",
+            "example": "ACTIVO"
+          },
           "esSupervisor": {
             "type": "boolean",
             "description": "Indica si el personal de salud tiene habilitadas funciones de supervisión",
@@ -5205,6 +5133,7 @@
         },
         "required": [
           "id",
+          "estado",
           "nombres"
         ]
       },
