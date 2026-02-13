@@ -3696,9 +3696,11 @@
         "tags": [
           "Personal Salud"
         ]
-      },
-      "delete": {
-        "operationId": "PersonalSaludController_eliminar",
+      }
+    },
+    "/personal-salud/{id}/activacion": {
+      "patch": {
+        "operationId": "PersonalSaludController_activar",
         "parameters": [
           {
             "name": "id",
@@ -3738,7 +3740,55 @@
             "bearer": []
           }
         ],
-        "summary": "Elimina un profesional de salud",
+        "summary": "Activa un profesional de salud",
+        "tags": [
+          "Personal Salud"
+        ]
+      }
+    },
+    "/personal-salud/{id}/inactivacion": {
+      "patch": {
+        "operationId": "PersonalSaludController_inactivar",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/PersonalResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Inactiva un profesional de salud",
         "tags": [
           "Personal Salud"
         ]
