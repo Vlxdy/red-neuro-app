@@ -13,6 +13,7 @@ import 'package:red_neuro_app/src/models/personal_salud.dart';
 import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
 import 'package:red_neuro_app/src/ui/common/customdatatable/custom_datatable.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
+import 'package:red_neuro_app/src/ui/common/text_inputs/autocomplete_field.dart';
 import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
 import 'package:red_neuro_app/src/ui/pages/personal_salud/personal_salud_service.dart';
 
@@ -529,7 +530,10 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
-            Future<void> cargarEspecialidades({bool reset = false}) async {
+            Future<void> cargarEspecialidades({
+              bool reset = false,
+              bool clearBeforeLoad = true,
+            }) async {
               if (especialidadesLoading || (!especialidadesHasMore && !reset)) {
                 return;
               }
@@ -537,7 +541,9 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
               if (reset) {
                 especialidadesPage = 1;
                 especialidadesHasMore = true;
-                especialidadesDisponibles.clear();
+                if (clearBeforeLoad) {
+                  especialidadesDisponibles.clear();
+                }
               }
               final result = await _service.obtenerEspecialidadesPaginadas(
                 page: especialidadesPage,
@@ -546,7 +552,13 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
               );
               if (!mounted) return;
               setStateDialog(() {
-                especialidadesDisponibles.addAll(result.items);
+                if (reset) {
+                  especialidadesDisponibles
+                    ..clear()
+                    ..addAll(result.items);
+                } else {
+                  especialidadesDisponibles.addAll(result.items);
+                }
                 especialidadesHasMore =
                     especialidadesDisponibles.length < result.total;
                 especialidadesPage += 1;
@@ -955,11 +967,12 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                       }).toList(),
                                     ),
                                   const SizedBox(height: 12),
-                                  Autocomplete<Especialidad>(
+                                  AutocompleteField<Especialidad>(
                                     optionsBuilder: (textEditingValue) {
-                                      if (textEditingValue.text
-                                              .trim()
-                                              .isEmpty &&
+                                      final query = textEditingValue.text
+                                          .trim()
+                                          .toLowerCase();
+                                      if (query.isEmpty &&
                                           especialidadesDisponibles.isEmpty &&
                                           !especialidadesLoading) {
                                         Future.microtask(
@@ -967,7 +980,14 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                               cargarEspecialidades(reset: true),
                                         );
                                       }
-                                      return especialidadesDisponibles;
+                                      if (query.isEmpty) {
+                                        return especialidadesDisponibles;
+                                      }
+                                      return especialidadesDisponibles.where(
+                                        (option) => option.nombre
+                                            .toLowerCase()
+                                            .contains(query),
+                                      );
                                     },
                                     displayStringForOption: (option) =>
                                         option.nombre,
@@ -987,166 +1007,35 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                       FocusScope.of(context).unfocus();
                                       cargarEspecialidades(reset: true);
                                     },
-                                    fieldViewBuilder:
-                                        (context, controller, focusNode, _) {
-                                          autocompleteController ??= controller;
-                                          return TextFormField(
-                                            controller: controller,
-                                            focusNode: focusNode,
-                                            decoration: InputDecoration(
-                                              labelText:
-                                                  'Agregar especialidad (autocomplete)',
-                                              suffixIcon: especialidadesLoading
-                                                  ? const Padding(
-                                                      padding: EdgeInsets.all(
-                                                        12,
-                                                      ),
-                                                      child:
-                                                          CircularProgressIndicator(
-                                                            strokeWidth: 2,
-                                                          ),
-                                                    )
-                                                  : const Icon(
-                                                      Icons.expand_more,
-                                                    ),
-                                            ),
-                                            onChanged: (value) {
-                                              especialidadesFiltro = value
-                                                  .trim();
-                                              especialidadesDebounce?.cancel();
-                                              setStateDialog(() {
-                                                especialidadesDisponibles
-                                                    .clear();
-                                                especialidadesHasMore = true;
-                                                especialidadesPage = 1;
-                                              });
-                                              if (especialidadesFiltro
-                                                  .isEmpty) {
-                                                cargarEspecialidades(
-                                                  reset: true,
-                                                );
-                                                return;
-                                              }
-                                              especialidadesDebounce = Timer(
-                                                const Duration(
-                                                  milliseconds: 400,
-                                                ),
-                                                () => cargarEspecialidades(
-                                                  reset: true,
-                                                ),
-                                              );
-                                            },
-                                          );
-                                        },
-                                    optionsViewBuilder: (context, onSelected, options) {
-                                      if (options.isEmpty) {
-                                        return Align(
-                                          alignment: Alignment.topLeft,
-                                          child: Material(
-                                            elevation: 4,
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                            child: Padding(
-                                              padding: const EdgeInsets.all(
-                                                12.0,
-                                              ),
-                                              child: Text(
-                                                especialidadesLoading
-                                                    ? 'Cargando especialidades...'
-                                                    : 'No hay especialidades disponibles.',
-                                                style: Theme.of(
-                                                  context,
-                                                ).textTheme.bodySmall,
-                                              ),
-                                            ),
-                                          ),
+                                    labelText:
+                                        'Agregar especialidad (autocomplete)',
+                                    loading: especialidadesLoading,
+                                    loadingText: 'Cargando especialidades...',
+                                    emptyText:
+                                        'No hay especialidades disponibles.',
+                                    optionsHeaderText: 'Especialidades',
+                                    optionsScrollController:
+                                        especialidadesScrollController,
+                                    selectedIconColor: _theme.primary,
+                                    isOptionSelected: (option) =>
+                                        selectedIds.contains(option.id),
+                                    onControllerReady: (controller) {
+                                      autocompleteController ??= controller;
+                                    },
+                                    onChanged: (value) {
+                                      especialidadesFiltro = value.trim();
+                                      especialidadesDebounce?.cancel();
+                                      if (especialidadesFiltro.isEmpty) {
+                                        cargarEspecialidades(
+                                          reset: true,
+                                          clearBeforeLoad: false,
                                         );
+                                        return;
                                       }
-                                      return Align(
-                                        alignment: Alignment.topLeft,
-                                        child: Material(
-                                          elevation: 4,
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                          child: ConstrainedBox(
-                                            constraints: const BoxConstraints(
-                                              maxHeight: 260,
-                                            ),
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 12,
-                                                        vertical: 8,
-                                                      ),
-                                                  child: Row(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .spaceBetween,
-                                                    children: [
-                                                      Text(
-                                                        'Especialidades',
-                                                        style: Theme.of(
-                                                          context,
-                                                        ).textTheme.labelMedium,
-                                                      ),
-                                                      IconButton(
-                                                        tooltip: 'Cerrar',
-                                                        icon: const Icon(
-                                                          Icons.close,
-                                                          size: 18,
-                                                        ),
-                                                        onPressed: () =>
-                                                            FocusScope.of(
-                                                              context,
-                                                            ).unfocus(),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                const Divider(height: 1),
-                                                Expanded(
-                                                  child: ListView.builder(
-                                                    controller:
-                                                        especialidadesScrollController,
-                                                    padding: EdgeInsets.zero,
-                                                    itemCount: options.length,
-                                                    itemBuilder: (context, index) {
-                                                      final option = options
-                                                          .elementAt(index);
-                                                      final isSelected =
-                                                          selectedIds.contains(
-                                                            option.id,
-                                                          );
-                                                      return ListTile(
-                                                        title: Text(
-                                                          option.nombre,
-                                                        ),
-                                                        trailing: isSelected
-                                                            ? Icon(
-                                                                Icons.check,
-                                                                color: _theme
-                                                                    .primary,
-                                                              )
-                                                            : null,
-                                                        enabled: !isSelected,
-                                                        onTap: isSelected
-                                                            ? null
-                                                            : () => onSelected(
-                                                                option,
-                                                              ),
-                                                      );
-                                                    },
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ),
+                                      especialidadesDebounce = Timer(
+                                        const Duration(milliseconds: 400),
+                                        () =>
+                                            cargarEspecialidades(reset: true),
                                       );
                                     },
                                   ),
