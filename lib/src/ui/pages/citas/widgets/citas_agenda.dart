@@ -71,10 +71,23 @@ class CitasAgendaSection extends StatelessWidget {
         ),
       );
     final citasPorHora = <int, List<CitaMedica>>{};
+    final citasAntesDeLasOcho = <CitaMedica>[];
+    final citasDespuesDeLasVeinte = <CitaMedica>[];
+
     for (final cita in ordenadas) {
       final inicio = cita.fechaInicio;
       if (inicio == null) continue;
-      if (inicio.hour < 8 || inicio.hour > 20) continue;
+
+      if (inicio.hour < 8) {
+        citasAntesDeLasOcho.add(cita);
+        continue;
+      }
+
+      if (inicio.hour > 20) {
+        citasDespuesDeLasVeinte.add(cita);
+        continue;
+      }
+
       citasPorHora.putIfAbsent(inicio.hour, () => []).add(cita);
     }
 
@@ -106,7 +119,7 @@ class CitasAgendaSection extends StatelessWidget {
           ),
           InfoPill(
             icon: PhosphorIconsRegular.clock,
-            label: '08:00 - 20:00',
+            label: '08:00 - 20:00 + fuera de rango',
             color: theme.grey,
           ),
           InfoPill(
@@ -134,6 +147,8 @@ class CitasAgendaSection extends StatelessWidget {
                 )
               : _AgendaTimeline(
                   citasPorHora: citasPorHora,
+                  citasAntesDeLasOcho: citasAntesDeLasOcho,
+                  citasDespuesDeLasVeinte: citasDespuesDeLasVeinte,
                   theme: theme,
                   scrollController: scrollController,
                   formatoHoraAgenda: formatoHoraAgenda,
@@ -301,6 +316,8 @@ class _AgendaWeekCalendar extends StatelessWidget {
 
 class _AgendaTimeline extends StatelessWidget {
   final Map<int, List<CitaMedica>> citasPorHora;
+  final List<CitaMedica> citasAntesDeLasOcho;
+  final List<CitaMedica> citasDespuesDeLasVeinte;
   final ThemeController theme;
   final ScrollController? scrollController;
   final String Function(DateTime? inicio, int hour) formatoHoraAgenda;
@@ -315,6 +332,8 @@ class _AgendaTimeline extends StatelessWidget {
 
   const _AgendaTimeline({
     required this.citasPorHora,
+    required this.citasAntesDeLasOcho,
+    required this.citasDespuesDeLasVeinte,
     required this.theme,
     required this.scrollController,
     required this.formatoHoraAgenda,
@@ -331,22 +350,47 @@ class _AgendaTimeline extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final horas = List.generate(13, (index) => index + 8);
-    if (horas.isEmpty) {
+    final filas = <({String label, List<CitaMedica> citas, int? hour})>[];
+
+    if (citasAntesDeLasOcho.isNotEmpty) {
+      filas.add((
+        label: '< 08:00',
+        citas: citasAntesDeLasOcho,
+        hour: null,
+      ));
+    }
+
+    for (final hour in horas) {
+      filas.add((
+        label: '${hour.toString().padLeft(2, '0')}:00',
+        citas: citasPorHora[hour] ?? [],
+        hour: hour,
+      ));
+    }
+
+    if (citasDespuesDeLasVeinte.isNotEmpty) {
+      filas.add((
+        label: '> 20:00',
+        citas: citasDespuesDeLasVeinte,
+        hour: null,
+      ));
+    }
+
+    if (filas.isEmpty) {
       return const SizedBox.shrink();
     }
 
     return ListView.separated(
       controller: scrollController,
       padding: const EdgeInsets.only(bottom: 16),
-      itemCount: horas.length,
+      itemCount: filas.length,
       separatorBuilder: (_, _) => const SizedBox(height: 2),
       itemBuilder: (context, index) {
-        final hour = horas[index];
-        final hourLabel = '${hour.toString().padLeft(2, '0')}:00';
-        final citas = citasPorHora[hour] ?? [];
+        final fila = filas[index];
+        final citas = fila.citas;
         if (citas.isEmpty) {
           return _AgendaRow(
-            label: hourLabel,
+            label: fila.label,
             theme: theme,
             child: Text(
               'Sin citas',
@@ -362,8 +406,10 @@ class _AgendaTimeline extends StatelessWidget {
             for (var i = 0; i < citas.length; i++)
               _AgendaRow(
                 label: i == 0
-                    ? hourLabel
-                    : formatoHoraAgenda(citas[i].fechaInicio, hour),
+                    ? fila.label
+                    : (fila.hour == null
+                          ? formatoHorarioCita(citas[i].fechaInicio, citas[i].fechaFin)
+                          : formatoHoraAgenda(citas[i].fechaInicio, fila.hour!)),
                 theme: theme,
                 child: Padding(
                   padding: EdgeInsets.only(
