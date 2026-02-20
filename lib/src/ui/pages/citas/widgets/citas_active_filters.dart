@@ -8,26 +8,36 @@ class CitasActiveFiltersRibbon extends StatelessWidget {
   final ThemeController theme;
   final String buscarTexto;
   final String? estadoFiltro;
-  final String? medicoFiltro;
+  final String? medicoFiltroNombre;
   final DateTime? fechaInicioFiltro;
   final DateTime? fechaFinFiltro;
   final DateFormat formatter;
+  final VoidCallback onClearBuscar;
+  final VoidCallback onClearEstado;
+  final VoidCallback onClearMedico;
+  final VoidCallback onClearRango;
+  final VoidCallback onClearAll;
 
   const CitasActiveFiltersRibbon({
     super.key,
     required this.theme,
     required this.buscarTexto,
     required this.estadoFiltro,
-    required this.medicoFiltro,
+    required this.medicoFiltroNombre,
     required this.fechaInicioFiltro,
     required this.fechaFinFiltro,
     required this.formatter,
+    required this.onClearBuscar,
+    required this.onClearEstado,
+    required this.onClearMedico,
+    required this.onClearRango,
+    required this.onClearAll,
   });
 
   bool get _hasActiveFilters {
     return buscarTexto.trim().isNotEmpty ||
         (estadoFiltro?.isNotEmpty ?? false) ||
-        (medicoFiltro?.isNotEmpty ?? false) ||
+        (medicoFiltroNombre?.isNotEmpty ?? false) ||
         fechaInicioFiltro != null ||
         fechaFinFiltro != null;
   }
@@ -38,13 +48,25 @@ class CitasActiveFiltersRibbon extends StatelessWidget {
 
     final chips = <Widget>[];
     if (buscarTexto.trim().isNotEmpty) {
-      chips.add(ActiveFilterChip(label: 'Buscar: ${buscarTexto.trim()}'));
+      chips.add(
+        ActiveFilterChip(
+          label: 'Buscar: ${buscarTexto.trim()}',
+          onRemove: onClearBuscar,
+        ),
+      );
     }
     if (estadoFiltro?.isNotEmpty ?? false) {
-      chips.add(ActiveFilterChip(label: 'Estado: $estadoFiltro'));
+      chips.add(
+        ActiveFilterChip(label: 'Estado: $estadoFiltro', onRemove: onClearEstado),
+      );
     }
-    if (medicoFiltro?.isNotEmpty ?? false) {
-      chips.add(ActiveFilterChip(label: 'Médico: $medicoFiltro'));
+    if (medicoFiltroNombre?.isNotEmpty ?? false) {
+      chips.add(
+        ActiveFilterChip(
+          label: 'Médico: $medicoFiltroNombre',
+          onRemove: onClearMedico,
+        ),
+      );
     }
     if (fechaInicioFiltro != null || fechaFinFiltro != null) {
       final inicio = fechaInicioFiltro != null
@@ -52,7 +74,9 @@ class CitasActiveFiltersRibbon extends StatelessWidget {
           : '--';
       final fin =
           fechaFinFiltro != null ? formatter.format(fechaFinFiltro!) : '--';
-      chips.add(ActiveFilterChip(label: 'Rango: $inicio → $fin'));
+      chips.add(
+        ActiveFilterChip(label: 'Rango: $inicio → $fin', onRemove: onClearRango),
+      );
     }
 
     return SingleChildScrollView(
@@ -74,6 +98,11 @@ class CitasActiveFiltersRibbon extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Wrap(spacing: 8, children: chips),
+                const SizedBox(width: 8),
+                TextButton(
+                  onPressed: onClearAll,
+                  child: const Text('Limpiar filtros'),
+                ),
               ],
             ),
           ),
