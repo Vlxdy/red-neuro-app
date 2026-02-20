@@ -386,7 +386,7 @@ class CitasService extends ServiceConfig {
         'limite': '$limit',
         if (filtro != null && filtro.trim().isNotEmpty) 'filtro': filtro.trim(),
       };
-      final response = await fetch('/personal-medico', params: params);
+      final response = await fetch('/personal-salud', params: params);
       if (response.status != StatusNetwork.connected) {
         return CatalogoPageResult.empty(
           response.message.isNotEmpty
