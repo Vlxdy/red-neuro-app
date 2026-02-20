@@ -12,7 +12,9 @@ class CitasFiltersFields extends StatelessWidget {
   final ValueChanged<String?> onEstadoChanged;
   final bool mostrarFiltroMedico;
   final TextEditingController medicoController;
-  final ValueChanged<String> onMedicoChanged;
+  final VoidCallback onTapMedico;
+  final VoidCallback onClearMedico;
+  final String? medicoIdSeleccionado;
   final DateTime? fechaInicio;
   final DateTime? fechaFin;
   final DateFormat formatter;
@@ -28,7 +30,9 @@ class CitasFiltersFields extends StatelessWidget {
     required this.onEstadoChanged,
     required this.mostrarFiltroMedico,
     required this.medicoController,
-    required this.onMedicoChanged,
+    required this.onTapMedico,
+    required this.onClearMedico,
+    required this.medicoIdSeleccionado,
     required this.fechaInicio,
     required this.fechaFin,
     required this.formatter,
@@ -70,10 +74,22 @@ class CitasFiltersFields extends StatelessWidget {
         if (mostrarFiltroMedico)
           SizedBox(
             width: isCompact ? double.infinity : 160,
-            child: CustomTextInput(
-              title: 'Médico ID',
+            child: TextFormField(
               controller: medicoController,
-              onChange: onMedicoChanged,
+              readOnly: true,
+              decoration: InputDecoration(
+                labelText: 'Médico',
+                hintText: 'Selecciona un médico',
+                border: const OutlineInputBorder(),
+                suffixIcon: medicoIdSeleccionado == null
+                    ? const Icon(Icons.expand_more)
+                    : IconButton(
+                        tooltip: 'Quitar',
+                        icon: const Icon(Icons.close),
+                        onPressed: onClearMedico,
+                      ),
+              ),
+              onTap: onTapMedico,
             ),
           ),
         FiltroFecha(
