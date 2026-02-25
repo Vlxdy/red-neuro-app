@@ -29,6 +29,7 @@ import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_detalle_widgets.d
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_filters_fields.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_header.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_listado.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_autocomplete_selector_field.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/fecha_selector.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
@@ -2089,30 +2090,22 @@ class _CitasPageState extends State<CitasPage> {
                                 FormField<Paciente>(
                                   key: pacienteFieldKey,
                                   builder: (state) {
-                                    return TextFormField(
+                                    return CitasAutocompleteSelectorField(
                                       controller:
                                           pacienteAutocompleteController,
-                                      readOnly: true,
-                                      decoration: InputDecoration(
-                                        labelText: 'Paciente',
-                                        hintText: 'Selecciona un paciente',
-                                        border: const OutlineInputBorder(),
-                                        errorText: state.errorText,
-                                        suffixIcon: pacienteSeleccionado == null
-                                            ? const Icon(Icons.expand_more)
-                                            : IconButton(
-                                                tooltip: 'Quitar',
-                                                icon: const Icon(Icons.close),
-                                                onPressed: () {
-                                                  setStateDialog(() {
-                                                    pacienteSeleccionado = null;
-                                                    pacienteAutocompleteController
-                                                        .clear();
-                                                  });
-                                                  state.didChange(null);
-                                                },
-                                              ),
-                                      ),
+                                      labelText: 'Paciente',
+                                      hintText: 'Selecciona un paciente',
+                                      errorText: state.errorText,
+                                      onClear: pacienteSeleccionado == null
+                                          ? null
+                                          : () {
+                                              setStateDialog(() {
+                                                pacienteSeleccionado = null;
+                                                pacienteAutocompleteController
+                                                    .clear();
+                                              });
+                                              state.didChange(null);
+                                            },
                                       onTap: abrirSelectorPaciente,
                                     );
                                   },
@@ -2163,18 +2156,11 @@ class _CitasPageState extends State<CitasPage> {
                                     return null;
                                   },
                                   builder: (state) {
-                                    return TextFormField(
+                                    return CitasAutocompleteSelectorField(
                                       controller: especialidadController,
-                                      readOnly: true,
-                                      decoration: InputDecoration(
-                                        labelText: 'Especialidad *',
-                                        hintText: 'Selecciona una especialidad',
-                                        border: const OutlineInputBorder(),
-                                        errorText: state.errorText,
-                                        suffixIcon: const Icon(
-                                          Icons.expand_more,
-                                        ),
-                                      ),
+                                      labelText: 'Especialidad *',
+                                      hintText: 'Selecciona una especialidad',
+                                      errorText: state.errorText,
                                       onTap: () async {
                                         await abrirSelectorEspecialidad();
                                         state.didChange(
@@ -2247,18 +2233,11 @@ class _CitasPageState extends State<CitasPage> {
                                       return null;
                                     },
                                     builder: (state) {
-                                      return TextFormField(
+                                      return CitasAutocompleteSelectorField(
                                         controller: estudioController,
-                                        readOnly: true,
-                                        decoration: InputDecoration(
-                                          labelText: 'Estudio *',
-                                          hintText: 'Selecciona un estudio',
-                                          border: const OutlineInputBorder(),
-                                          errorText: state.errorText,
-                                          suffixIcon: const Icon(
-                                            Icons.expand_more,
-                                          ),
-                                        ),
+                                        labelText: 'Estudio *',
+                                        hintText: 'Selecciona un estudio',
+                                        errorText: state.errorText,
                                         onTap: () async {
                                           await abrirSelectorEstudio();
                                           state.didChange(estudioSeleccionado);
@@ -2298,30 +2277,22 @@ class _CitasPageState extends State<CitasPage> {
                                 const SizedBox(height: 12),
                                 FormField<PersonalMedico>(
                                   builder: (state) {
-                                    return TextFormField(
+                                    return CitasAutocompleteSelectorField(
                                       controller: medicoController,
-                                      readOnly: true,
-                                      decoration: InputDecoration(
-                                        labelText: 'Médico',
-                                        hintText:
-                                            'Selecciona un médico (opcional)',
-                                        border: const OutlineInputBorder(),
-                                        errorText: state.errorText,
-                                        suffixIcon: medicoIdSeleccionado == null
-                                            ? const Icon(Icons.expand_more)
-                                            : IconButton(
-                                                tooltip: 'Quitar',
-                                                icon: const Icon(Icons.close),
-                                                onPressed: () {
-                                                  setStateDialog(() {
-                                                    medicoSeleccionado = null;
-                                                    medicoIdSeleccionado = null;
-                                                    medicoController.clear();
-                                                  });
-                                                  state.didChange(null);
-                                                },
-                                              ),
-                                      ),
+                                      labelText: 'Médico',
+                                      hintText:
+                                          'Selecciona un médico (opcional)',
+                                      errorText: state.errorText,
+                                      onClear: medicoIdSeleccionado == null
+                                          ? null
+                                          : () {
+                                              setStateDialog(() {
+                                                medicoSeleccionado = null;
+                                                medicoIdSeleccionado = null;
+                                                medicoController.clear();
+                                              });
+                                              state.didChange(null);
+                                            },
                                       onTap: () async {
                                         await abrirSelectorMedico();
                                         state.didChange(medicoSeleccionado);
