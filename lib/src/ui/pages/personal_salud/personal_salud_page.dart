@@ -15,6 +15,7 @@ import 'package:red_neuro_app/src/models/user.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
 import 'package:red_neuro_app/src/ui/common/customdatatable/custom_datatable.dart';
+import 'package:red_neuro_app/src/ui/common/form_stepper/form_stepper.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/common/text_inputs/autocomplete_field.dart';
 import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
@@ -351,12 +352,33 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
   String _validarCelular(String? value, String alias) {
     final trimmed = value?.trim() ?? '';
     if (trimmed.isEmpty) {
-      return 'Campo requerido';
+      return '';
     }
-    if (!RegExp(r'^[67]\d{7}$').hasMatch(trimmed)) {
-      return 'El celular debe tener 8 dígitos y empezar con 6 o 7';
+    if (!RegExp(r'^\d{8}$').hasMatch(trimmed)) {
+      return 'El celular debe tener exactamente 8 dígitos';
+    }
+    final numero = int.tryParse(trimmed);
+    if (numero == null || numero < 60000000 || numero > 79999999) {
+      return 'El celular debe estar entre 60000000 y 79999999';
     }
     return '';
+  }
+
+  String _textoMayusculasSoloLetras(String value) {
+    final mayusculas = value.toUpperCase();
+    return mayusculas.replaceAll(RegExp(r'[^A-ZÁÉÍÓÚÑ\s]'), '');
+  }
+
+  void _normalizarTextoMayusculas(
+    TextEditingController controller,
+    String value,
+  ) {
+    final normalizado = _textoMayusculasSoloLetras(value);
+    if (controller.text == normalizado) return;
+    controller.value = TextEditingValue(
+      text: normalizado,
+      selection: TextSelection.collapsed(offset: normalizado.length),
+    );
   }
 
   String _resolveAvatarUrl(String? urlFoto) {
@@ -537,10 +559,13 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     );
     final contrasena = TextEditingController();
     final repetirContrasena = TextEditingController();
-    TextEditingController? autocompleteController;
     bool esSupervisor = personal?.esSupervisor ?? false;
     String? generoSeleccionado = personal?.genero;
     String apellidoErrorText = '';
+    String? modalErrorText;
+    String? submitErrorText;
+    bool submitting = false;
+    int currentStep = 0;
 
     final seleccionInicial = personal?.especialidades ?? [];
     final selectedEspecialidades = seleccionInicial.isNotEmpty
@@ -570,6 +595,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      isDismissible: false,
+      enableDrag: false,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -627,667 +654,734 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
               });
               cargarEspecialidades(reset: true);
             }
-            return Padding(
-              padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom,
-              ),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Form(
-                  key: formKey,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      final isWide = constraints.maxWidth >= 720;
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+
+            Widget stepContent() {
+              final isWide = MediaQuery.of(context).size.width >= 720;
+
+              if (currentStep == 0) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Datos personales',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 12),
+                    if (isWide)
+                      Row(
                         children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                personal == null
-                                    ? 'Registrar personal de salud'
-                                    : 'Editar personal de salud',
-                                style: Theme.of(context).textTheme.titleMedium,
+                          Expanded(
+                            child: CustomTextInput(
+                              title: 'Nombres',
+                              controller: nombres,
+                              requiredData: true,
+                              validate: (value, alias) =>
+                                  (value?.isEmpty ?? true)
+                                  ? 'Campo requerido'
+                                  : '',
+                              onChange: (value) {
+                                _normalizarTextoMayusculas(nombres, value);
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: CustomTextInput(
+                              title: 'Primer apellido',
+                              controller: primerApellido,
+                              requiredData: true,
+                              validate: (value, alias) => _validarApellidos(
+                                value,
+                                alias,
+                                primerApellido: primerApellido,
+                                segundoApellido: segundoApellido,
                               ),
-                              IconButton(
-                                onPressed: () => Navigator.pop(context),
-                                icon: const Icon(Icons.close),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Datos personales',
-                            style: Theme.of(context).textTheme.titleSmall,
-                          ),
-                          const SizedBox(height: 12),
-                          if (isWide)
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: CustomTextInput(
-                                    title: 'Nombres',
-                                    controller: nombres,
-                                    requiredData: true,
-                                    validate: (value, alias) =>
-                                        (value?.isEmpty ?? true)
-                                        ? 'Campo requerido'
-                                        : '',
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: CustomTextInput(
-                                    title: 'Primer apellido',
-                                    controller: primerApellido,
-                                    requiredData: true,
-                                    validate: (value, alias) =>
-                                        _validarApellidos(
-                                          value,
-                                          alias,
-                                          primerApellido: primerApellido,
-                                          segundoApellido: segundoApellido,
-                                        ),
-                                    onChange: (_) {
-                                      if (apellidoErrorText.isNotEmpty) {
-                                        setStateDialog(() {
-                                          apellidoErrorText = '';
-                                        });
-                                      }
-                                    },
-                                  ),
-                                ),
-                              ],
-                            )
-                          else
-                            Column(
-                              children: [
-                                CustomTextInput(
-                                  title: 'Nombres',
-                                  controller: nombres,
-                                  requiredData: true,
-                                  validate: (value, alias) =>
-                                      (value?.isEmpty ?? true)
-                                      ? 'Campo requerido'
-                                      : '',
-                                ),
-                                const SizedBox(height: 12),
-                                CustomTextInput(
-                                  title: 'Primer apellido',
-                                  controller: primerApellido,
-                                  requiredData: true,
-                                  validate: (value, alias) => _validarApellidos(
-                                    value,
-                                    alias,
-                                    primerApellido: primerApellido,
-                                    segundoApellido: segundoApellido,
-                                  ),
-                                  onChange: (_) {
-                                    if (apellidoErrorText.isNotEmpty) {
-                                      setStateDialog(() {
-                                        apellidoErrorText = '';
-                                      });
-                                    }
-                                  },
-                                ),
-                              ],
-                            ),
-                          const SizedBox(height: 12),
-                          if (isWide)
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: CustomTextInput(
-                                    title: 'Segundo apellido',
-                                    controller: segundoApellido,
-                                    requiredData: true,
-                                    validate: (value, alias) =>
-                                        _validarApellidos(
-                                          value,
-                                          alias,
-                                          primerApellido: primerApellido,
-                                          segundoApellido: segundoApellido,
-                                        ),
-                                    onChange: (_) {
-                                      if (apellidoErrorText.isNotEmpty) {
-                                        setStateDialog(() {
-                                          apellidoErrorText = '';
-                                        });
-                                      }
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: CustomTextInput(
-                                    title: 'Número de documento',
-                                    controller: nroDocumento,
-                                    requiredData: true,
-                                    onlyNumbers: true,
-                                    validate: (value, alias) =>
-                                        (value?.isEmpty ?? true)
-                                        ? 'Campo requerido'
-                                        : '',
-                                  ),
-                                ),
-                              ],
-                            )
-                          else
-                            Column(
-                              children: [
-                                CustomTextInput(
-                                  title: 'Segundo apellido',
-                                  controller: segundoApellido,
-                                  requiredData: true,
-                                  validate: (value, alias) => _validarApellidos(
-                                    value,
-                                    alias,
-                                    primerApellido: primerApellido,
-                                    segundoApellido: segundoApellido,
-                                  ),
-                                  onChange: (_) {
-                                    if (apellidoErrorText.isNotEmpty) {
-                                      setStateDialog(() {
-                                        apellidoErrorText = '';
-                                      });
-                                    }
-                                  },
-                                ),
-                                CustomTextInput(
-                                  title: 'Número de documento',
-                                  controller: nroDocumento,
-                                  requiredData: true,
-                                  onlyNumbers: true,
-                                  validate: (value, alias) =>
-                                      (value?.isEmpty ?? true)
-                                      ? 'Campo requerido'
-                                      : '',
-                                ),
-                              ],
-                            ),
-                          const SizedBox(height: 4),
-                          if (apellidoErrorText.isNotEmpty)
-                            Text(
-                              apellidoErrorText,
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.error,
-                                fontSize: 12,
-                              ),
-                            ),
-                          const SizedBox(height: 12),
-                          if (isWide)
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: CustomTextInput(
-                                    title: 'Celular',
-                                    controller: telefono,
-                                    onlyNumbers: true,
-                                    requiredData: true,
-                                    validate: _validarCelular,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: CustomTextInput(
-                                    title: 'Correo electrónico',
-                                    controller: correo,
-                                    requiredData: true,
-                                    validate: _validarCorreo,
-                                  ),
-                                ),
-                              ],
-                            )
-                          else
-                            Column(
-                              children: [
-                                CustomTextInput(
-                                  title: 'Celular',
-                                  controller: telefono,
-                                  onlyNumbers: true,
-                                  requiredData: true,
-                                  validate: _validarCelular,
-                                ),
-                                const SizedBox(height: 12),
-                                CustomTextInput(
-                                  title: 'Correo electrónico',
-                                  controller: correo,
-                                  requiredData: true,
-                                  validate: _validarCorreo,
-                                ),
-                              ],
-                            ),
-                          const SizedBox(height: 12),
-                          if (isWide)
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: CustomTextInput(
-                                    title: 'Fecha de nacimiento (DD/MM/AAAA)',
-                                    controller: fechaNacimiento,
-                                    requiredData: true,
-                                    placeholder: 'DD/MM/AAAA',
-                                    maxLength: 10,
-                                    textFiltering: RegExp(r'[0-9/]'),
-                                    onTap: () =>
-                                        _seleccionarFecha(fechaNacimiento),
-                                    validate: _validarFechaNacimiento,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: DropdownButtonFormField<String>(
-                                    decoration: CustomTextInputStyles.decoration(
-                                                        label: 'Género',
-                                                        requiredData: true,
-                                    ),
-                                    initialValue: generoSeleccionado,
-                                    items: const [
-                                      DropdownMenuItem(
-                                        value: 'F',
-                                        child: Text('Femenino'),
-                                      ),
-                                      DropdownMenuItem(
-                                        value: 'M',
-                                        child: Text('Masculino'),
-                                      ),
-                                      DropdownMenuItem(
-                                        value: 'O',
-                                        child: Text('Otro'),
-                                      ),
-                                    ],
-                                    onChanged: (value) {
-                                      setStateDialog(() {
-                                        generoSeleccionado = value;
-                                      });
-                                    },
-                                    validator: (value) =>
-                                        (value == null || value.isEmpty)
-                                        ? 'Campo requerido'
-                                        : null,
-                                  ),
-                                ),
-                              ],
-                            )
-                          else
-                            Column(
-                              children: [
-                                CustomTextInput(
-                                  title: 'Fecha de nacimiento (DD/MM/AAAA)',
-                                  controller: fechaNacimiento,
-                                  requiredData: true,
-                                  placeholder: 'DD/MM/AAAA',
-                                  maxLength: 10,
-                                  textFiltering: RegExp(r'[0-9/]'),
-                                  onTap: () =>
-                                      _seleccionarFecha(fechaNacimiento),
-                                  validate: _validarFechaNacimiento,
-                                ),
-                                const SizedBox(height: 12),
-                                DropdownButtonFormField<String>(
-                                  decoration: CustomTextInputStyles.decoration(
-                                                    label: 'Género',
-                                                    requiredData: true,
-                                  ),
-                                  initialValue: generoSeleccionado,
-                                  items: const [
-                                    DropdownMenuItem(
-                                      value: 'F',
-                                      child: Text('Femenino'),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: 'M',
-                                      child: Text('Masculino'),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: 'O',
-                                      child: Text('Otro'),
-                                    ),
-                                  ],
-                                  onChanged: (value) {
-                                    setStateDialog(() {
-                                      generoSeleccionado = value;
-                                    });
-                                  },
-                                  validator: (value) =>
-                                      (value == null || value.isEmpty)
-                                      ? 'Campo requerido'
-                                      : null,
-                                ),
-                              ],
-                            ),
-                          const SizedBox(height: 20),
-                          Text(
-                            'Especialidades',
-                            style: Theme.of(context).textTheme.titleSmall,
-                          ),
-                          const SizedBox(height: 12),
-                          FormField<List<Especialidad>>(
-                            initialValue: selectedEspecialidades,
-                            validator: (value) =>
-                                (value == null || value.isEmpty)
-                                ? 'Selecciona al menos una especialidad'
-                                : null,
-                            builder: (state) {
-                              final selectedIds = selectedEspecialidades
-                                  .map((e) => e.id)
-                                  .toSet();
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  if (selectedEspecialidades.isEmpty)
-                                    Text(
-                                      'No has seleccionado especialidades.',
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodySmall,
-                                    )
-                                  else
-                                    Wrap(
-                                      spacing: 8,
-                                      runSpacing: 8,
-                                      children: selectedEspecialidades.map((
-                                        item,
-                                      ) {
-                                        return Chip(
-                                          label: Text(item.nombre),
-                                          backgroundColor: HexColor.fromHex(
-                                            item.colorHex,
-                                          ).withValues(alpha: .15),
-                                          deleteIcon: const Icon(Icons.close),
-                                          onDeleted: () {
-                                            setStateDialog(() {
-                                              selectedEspecialidades
-                                                  .removeWhere(
-                                                    (especialidad) =>
-                                                        especialidad.id ==
-                                                        item.id,
-                                                  );
-                                            });
-                                            state.didChange(
-                                              selectedEspecialidades,
-                                            );
-                                          },
-                                        );
-                                      }).toList(),
-                                    ),
-                                  const SizedBox(height: 12),
-                                  AutocompleteField<Especialidad>(
-                                    optionsBuilder: (textEditingValue) {
-                                      final query = textEditingValue.text
-                                          .trim()
-                                          .toLowerCase();
-                                      if (query.isEmpty &&
-                                          especialidadesDisponibles.isEmpty &&
-                                          !especialidadesLoading) {
-                                        Future.microtask(
-                                          () =>
-                                              cargarEspecialidades(reset: true),
-                                        );
-                                      }
-                                      if (query.isEmpty) {
-                                        return especialidadesDisponibles;
-                                      }
-                                      return especialidadesDisponibles.where(
-                                        (option) => option.nombre
-                                            .toLowerCase()
-                                            .contains(query),
-                                      );
-                                    },
-                                    displayStringForOption: (option) =>
-                                        option.nombre,
-                                    onSelected: (selection) {
-                                      if (selectedIds.contains(selection.id)) {
-                                        return;
-                                      }
-                                      setStateDialog(() {
-                                        selectedEspecialidades.add(selection);
-                                        autocompleteController?.clear();
-                                        especialidadesFiltro = '';
-                                        especialidadesDisponibles.clear();
-                                        especialidadesHasMore = true;
-                                        especialidadesPage = 1;
-                                      });
-                                      state.didChange(selectedEspecialidades);
-                                      FocusScope.of(context).unfocus();
-                                      cargarEspecialidades(reset: true);
-                                    },
-                                    labelText:
-                                        'Agregar especialidad (autocomplete)',
-                                    loading: especialidadesLoading,
-                                    loadingText: 'Cargando especialidades...',
-                                    emptyText:
-                                        'No hay especialidades disponibles.',
-                                    optionsHeaderText: 'Especialidades',
-                                    optionsScrollController:
-                                        especialidadesScrollController,
-                                    selectedIconColor: _theme.primary,
-                                    isOptionSelected: (option) =>
-                                        selectedIds.contains(option.id),
-                                    onControllerReady: (controller) {
-                                      autocompleteController ??= controller;
-                                    },
-                                    onChanged: (value) {
-                                      especialidadesFiltro = value.trim();
-                                      especialidadesDebounce?.cancel();
-                                      if (especialidadesFiltro.isEmpty) {
-                                        cargarEspecialidades(
-                                          reset: true,
-                                          clearBeforeLoad: false,
-                                        );
-                                        return;
-                                      }
-                                      especialidadesDebounce = Timer(
-                                        const Duration(milliseconds: 400),
-                                        () =>
-                                            cargarEspecialidades(reset: true),
-                                      );
-                                    },
-                                  ),
-                                  if (state.hasError) ...[
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      state.errorText ?? '',
-                                      style: TextStyle(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.error,
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              );
-                            },
-                          ),
-                          const SizedBox(height: 20),
-                          Text(
-                            'Credenciales',
-                            style: Theme.of(context).textTheme.titleSmall,
-                          ),
-                          const SizedBox(height: 12),
-                          if (isWide)
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: CustomTextInput(
-                                    title: 'Contraseña',
-                                    controller: contrasena,
-                                    obscure: true,
-                                    requiredData: personal == null,
-                                    validate: (value, alias) {
-                                      if (personal != null &&
-                                          (value?.isEmpty ?? true)) {
-                                        return '';
-                                      }
-                                      return (value?.isEmpty ?? true)
-                                          ? 'Campo requerido'
-                                          : '';
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: CustomTextInput(
-                                    title: 'Repetir contraseña',
-                                    controller: repetirContrasena,
-                                    obscure: true,
-                                    requiredData: personal == null,
-                                    validate: (value, alias) {
-                                      if (personal != null &&
-                                          (value?.isEmpty ?? true)) {
-                                        return '';
-                                      }
-                                      return (value?.isEmpty ?? true)
-                                          ? 'Campo requerido'
-                                          : '';
-                                    },
-                                  ),
-                                ),
-                              ],
-                            )
-                          else
-                            Column(
-                              children: [
-                                CustomTextInput(
-                                  title: 'Contraseña',
-                                  controller: contrasena,
-                                  obscure: true,
-                                  requiredData: personal == null,
-                                  validate: (value, alias) {
-                                    if (personal != null &&
-                                        (value?.isEmpty ?? true)) {
-                                      return '';
-                                    }
-                                    return (value?.isEmpty ?? true)
-                                        ? 'Campo requerido'
-                                        : '';
-                                  },
-                                ),
-                                const SizedBox(height: 12),
-                                CustomTextInput(
-                                  title: 'Repetir contraseña',
-                                  controller: repetirContrasena,
-                                  obscure: true,
-                                  requiredData: personal == null,
-                                  validate: (value, alias) {
-                                    if (personal != null &&
-                                        (value?.isEmpty ?? true)) {
-                                      return '';
-                                    }
-                                    return (value?.isEmpty ?? true)
-                                        ? 'Campo requerido'
-                                        : '';
-                                  },
-                                ),
-                              ],
-                            ),
-                          const SizedBox(height: 12),
-                          SwitchListTile(
-                            contentPadding: EdgeInsets.zero,
-                            title: const Text('Permisos administrativos'),
-                            subtitle: const Text(
-                              'Habilita acciones de supervisión para personal de salud.',
-                            ),
-                            value: esSupervisor,
-                            onChanged: (value) {
-                              setStateDialog(() {
-                                esSupervisor = value;
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: SimpleButton(
-                              title: personal == null
-                                  ? 'Crear personal'
-                                  : 'Guardar cambios',
-                              preffixicon: personal == null
-                                  ? PhosphorIconsFill.userPlus
-                                  : PhosphorIconsFill.floppyDisk,
-                              fullWidth: false,
-                              onTap: () async {
-                                final isValid = validateForm(formKey);
-                                if (!isValid) return;
-                                final apellidoError = _validarApellidos(
-                                  null,
-                                  '',
-                                  primerApellido: primerApellido,
-                                  segundoApellido: segundoApellido,
-                                );
-                                if (apellidoError.isNotEmpty) {
+                              onChange: (value) {
+                                _normalizarTextoMayusculas(primerApellido, value);
+                                if (apellidoErrorText.isNotEmpty) {
                                   setStateDialog(() {
-                                    apellidoErrorText = apellidoError;
+                                    apellidoErrorText = '';
                                   });
-                                  showSnackBar(
-                                    personalSaludMessenger,
-                                    apellidoError,
-                                    state: StatusSnackBar.error,
-                                    colorText: _theme.white,
-                                  );
-                                  return;
                                 }
-                                if ((contrasena.text.isNotEmpty ||
-                                        repetirContrasena.text.isNotEmpty) &&
-                                    contrasena.text != repetirContrasena.text) {
-                                  showSnackBar(
-                                    personalSaludMessenger,
-                                    'Las contraseñas no coinciden',
-                                    state: StatusSnackBar.error,
-                                    colorText: _theme.white,
-                                  );
-                                  return;
-                                }
-                                final persona = {
-                                  'nombres': nombres.text.trim(),
-                                  'primerApellido': primerApellido.text.trim(),
-                                  'segundoApellido': segundoApellido.text
-                                      .trim(),
-                                  'fechaNacimiento': _formatearFechaBackend(
-                                    fechaNacimiento.text,
-                                  ),
-                                  'nroDocumento': nroDocumento.text.trim(),
-                                  'telefono': telefono.text.trim(),
-                                  'genero': generoSeleccionado,
-                                };
-
-                                Map<String, dynamic> body;
-                                if (personal == null) {
-                                  body = {
-                                    'persona': persona,
-                                    'correoElectronico': correo.text.trim(),
-                                    'contrasena': contrasena.text,
-                                    'repetirContrasena': repetirContrasena.text,
-                                    'esSupervisor': esSupervisor,
-                                    'idEspecialidades': selectedEspecialidades
-                                        .map((especialidad) => especialidad.id)
-                                        .toList(),
-                                  };
-                                } else {
-                                  body = {
-                                    'persona': persona,
-                                    'correoElectronico': correo.text.trim(),
-                                    if (contrasena.text.isNotEmpty)
-                                      'contrasena': contrasena.text,
-                                    if (repetirContrasena.text.isNotEmpty)
-                                      'repetirContrasena':
-                                          repetirContrasena.text,
-                                    'esSupervisor': esSupervisor,
-                                    'idEspecialidades': selectedEspecialidades
-                                        .map((especialidad) => especialidad.id)
-                                        .toList(),
-                                  };
-                                }
-
-                                Navigator.pop(context);
-                                await _guardarPersonal(body, personal);
                               },
                             ),
                           ),
                         ],
-                      );
-                    },
+                      )
+                    else
+                      Column(
+                        children: [
+                          CustomTextInput(
+                            title: 'Nombres',
+                            controller: nombres,
+                            requiredData: true,
+                            validate: (value, alias) =>
+                                (value?.isEmpty ?? true) ? 'Campo requerido' : '',
+                            onChange: (value) {
+                              _normalizarTextoMayusculas(nombres, value);
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          CustomTextInput(
+                            title: 'Primer apellido',
+                            controller: primerApellido,
+                            requiredData: true,
+                            validate: (value, alias) => _validarApellidos(
+                              value,
+                              alias,
+                              primerApellido: primerApellido,
+                              segundoApellido: segundoApellido,
+                            ),
+                            onChange: (value) {
+                              _normalizarTextoMayusculas(primerApellido, value);
+                              if (apellidoErrorText.isNotEmpty) {
+                                setStateDialog(() {
+                                  apellidoErrorText = '';
+                                });
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    const SizedBox(height: 12),
+                    if (isWide)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: CustomTextInput(
+                              title: 'Segundo apellido',
+                              controller: segundoApellido,
+                              requiredData: true,
+                              validate: (value, alias) => _validarApellidos(
+                                value,
+                                alias,
+                                primerApellido: primerApellido,
+                                segundoApellido: segundoApellido,
+                              ),
+                              onChange: (value) {
+                                _normalizarTextoMayusculas(segundoApellido, value);
+                                if (apellidoErrorText.isNotEmpty) {
+                                  setStateDialog(() {
+                                    apellidoErrorText = '';
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: CustomTextInput(
+                              title: 'Número de documento',
+                              controller: nroDocumento,
+                              requiredData: true,
+                              onlyNumbers: true,
+                              validate: (value, alias) =>
+                                  (value?.isEmpty ?? true)
+                                  ? 'Campo requerido'
+                                  : '',
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      Column(
+                        children: [
+                          CustomTextInput(
+                            title: 'Segundo apellido',
+                            controller: segundoApellido,
+                            requiredData: true,
+                            validate: (value, alias) => _validarApellidos(
+                              value,
+                              alias,
+                              primerApellido: primerApellido,
+                              segundoApellido: segundoApellido,
+                            ),
+                            onChange: (value) {
+                              _normalizarTextoMayusculas(segundoApellido, value);
+                              if (apellidoErrorText.isNotEmpty) {
+                                setStateDialog(() {
+                                  apellidoErrorText = '';
+                                });
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          CustomTextInput(
+                            title: 'Número de documento',
+                            controller: nroDocumento,
+                            requiredData: true,
+                            onlyNumbers: true,
+                            validate: (value, alias) =>
+                                (value?.isEmpty ?? true) ? 'Campo requerido' : '',
+                          ),
+                        ],
+                      ),
+                    const SizedBox(height: 4),
+                    if (apellidoErrorText.isNotEmpty)
+                      Text(
+                        apellidoErrorText,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                          fontSize: 12,
+                        ),
+                      ),
+                    const SizedBox(height: 12),
+                    CustomTextInput(
+                      title: 'Fecha de nacimiento',
+                      controller: fechaNacimiento,
+                      requiredData: true,
+                      onTap: () async {
+                        FocusScope.of(context).unfocus();
+                        await _seleccionarFecha(fechaNacimiento);
+                      },
+                      validate: (value, alias) =>
+                          _validarFechaNacimiento(value, alias),
+                    ),
+                  ],
+                );
+              }
+
+              if (currentStep == 1) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Contacto y género',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 12),
+                    if (isWide)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: CustomTextInput(
+                              title: 'Celular (opcional)',
+                              controller: telefono,
+                              onlyNumbers: true,
+                              validate: _validarCelular,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: CustomTextInput(
+                              title: 'Correo electrónico',
+                              controller: correo,
+                              requiredData: true,
+                              validate: _validarCorreo,
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      Column(
+                        children: [
+                          CustomTextInput(
+                            title: 'Celular (opcional)',
+                            controller: telefono,
+                            onlyNumbers: true,
+                            validate: _validarCelular,
+                          ),
+                          const SizedBox(height: 12),
+                          CustomTextInput(
+                            title: 'Correo electrónico',
+                            controller: correo,
+                            requiredData: true,
+                            validate: _validarCorreo,
+                          ),
+                        ],
+                      ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      decoration: CustomTextInputStyles.decoration(
+                        label: 'Género (opcional)',
+                      ),
+                      initialValue: generoSeleccionado,
+                      items: const [
+                        DropdownMenuItem(
+                          value: 'F',
+                          child: Text('Femenino'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'M',
+                          child: Text('Masculino'),
+                        ),
+                        DropdownMenuItem(
+                          value: 'O',
+                          child: Text('Otro'),
+                        ),
+                      ],
+                      onChanged: (value) {
+                        setStateDialog(() {
+                          generoSeleccionado = value;
+                        });
+                      },
+                    ),
+                  ],
+                );
+              }
+
+              if (currentStep == 2) {
+                final selectedIds = selectedEspecialidades.map((e) => e.id).toSet();
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Especialidades (opcional)',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 12),
+                    FormField<List<Especialidad>>(
+                      initialValue: selectedEspecialidades,
+                      builder: (state) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (selectedEspecialidades.isEmpty)
+                              Text(
+                                'Puedes continuar sin especialidades y agregarlas después.',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              )
+                            else
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: selectedEspecialidades.map((item) {
+                                  return Chip(
+                                    label: Text(item.nombre),
+                                    backgroundColor: HexColor.fromHex(
+                                      item.colorHex,
+                                    ).withValues(alpha: .15),
+                                    deleteIcon: const Icon(Icons.close),
+                                    onDeleted: () {
+                                      setStateDialog(() {
+                                        selectedEspecialidades.removeWhere(
+                                          (especialidad) =>
+                                              especialidad.id == item.id,
+                                        );
+                                      });
+                                      state.didChange(selectedEspecialidades);
+                                    },
+                                  );
+                                }).toList(),
+                              ),
+                            const SizedBox(height: 12),
+                            AutocompleteField<Especialidad>(
+                              optionsBuilder: (textEditingValue) {
+                                final query = textEditingValue.text
+                                    .trim()
+                                    .toLowerCase();
+                                if (query.isEmpty &&
+                                    especialidadesDisponibles.isEmpty &&
+                                    !especialidadesLoading) {
+                                  Future.microtask(
+                                    () => cargarEspecialidades(reset: true),
+                                  );
+                                }
+                                if (query.isEmpty) {
+                                  return especialidadesDisponibles;
+                                }
+                                return especialidadesDisponibles.where(
+                                  (option) => option.nombre
+                                      .toLowerCase()
+                                      .contains(query),
+                                );
+                              },
+                              displayStringForOption: (option) => option.nombre,
+                              onSelected: (selection) {
+                                if (selectedIds.contains(selection.id)) {
+                                  return;
+                                }
+                                setStateDialog(() {
+                                  selectedEspecialidades.add(selection);
+                                  especialidadesFiltro = '';
+                                  especialidadesDisponibles.clear();
+                                  especialidadesHasMore = true;
+                                  especialidadesPage = 1;
+                                });
+                                state.didChange(selectedEspecialidades);
+                                FocusScope.of(context).unfocus();
+                                cargarEspecialidades(reset: true);
+                              },
+                              labelText: 'Agregar especialidad (opcional)',
+                              loading: especialidadesLoading,
+                              loadingText: 'Cargando especialidades...',
+                              emptyText: 'No hay especialidades disponibles.',
+                              optionsHeaderText: 'Especialidades',
+                              optionsScrollController:
+                                  especialidadesScrollController,
+                              selectedIconColor: _theme.primary,
+                              isOptionSelected: (option) =>
+                                  selectedIds.contains(option.id),
+                              onChanged: (value) {
+                                especialidadesFiltro = value.trim();
+                                especialidadesDebounce?.cancel();
+                                if (especialidadesFiltro.isEmpty) {
+                                  cargarEspecialidades(
+                                    reset: true,
+                                    clearBeforeLoad: false,
+                                  );
+                                  return;
+                                }
+                                especialidadesDebounce = Timer(
+                                  const Duration(milliseconds: 400),
+                                  () => cargarEspecialidades(reset: true),
+                                );
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Permisos administrativos'),
+                      subtitle: const Text(
+                        'Habilita acciones de supervisión para personal de salud.',
+                      ),
+                      value: esSupervisor,
+                      onChanged: (value) {
+                        setStateDialog(() {
+                          esSupervisor = value;
+                        });
+                      },
+                    ),
+                  ],
+                );
+              }
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Credenciales',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 12),
+                  if (isWide)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: CustomTextInput(
+                            title: 'Contraseña',
+                            controller: contrasena,
+                            obscure: true,
+                            requiredData: personal == null,
+                            validate: (value, alias) {
+                              if (personal != null && (value?.isEmpty ?? true)) {
+                                return '';
+                              }
+                              return (value?.isEmpty ?? true)
+                                  ? 'Campo requerido'
+                                  : '';
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: CustomTextInput(
+                            title: 'Repetir contraseña',
+                            controller: repetirContrasena,
+                            obscure: true,
+                            requiredData: personal == null,
+                            validate: (value, alias) {
+                              if (personal != null && (value?.isEmpty ?? true)) {
+                                return '';
+                              }
+                              return (value?.isEmpty ?? true)
+                                  ? 'Campo requerido'
+                                  : '';
+                            },
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    Column(
+                      children: [
+                        CustomTextInput(
+                          title: 'Contraseña',
+                          controller: contrasena,
+                          obscure: true,
+                          requiredData: personal == null,
+                          validate: (value, alias) {
+                            if (personal != null && (value?.isEmpty ?? true)) {
+                              return '';
+                            }
+                            return (value?.isEmpty ?? true)
+                                ? 'Campo requerido'
+                                : '';
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        CustomTextInput(
+                          title: 'Repetir contraseña',
+                          controller: repetirContrasena,
+                          obscure: true,
+                          requiredData: personal == null,
+                          validate: (value, alias) {
+                            if (personal != null && (value?.isEmpty ?? true)) {
+                              return '';
+                            }
+                            return (value?.isEmpty ?? true)
+                                ? 'Campo requerido'
+                                : '';
+                          },
+                        ),
+                      ],
+                    ),
+                ],
+              );
+            }
+
+            return WillPopScope(
+              onWillPop: () async => !submitting,
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                ),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * .9,
+                  ),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Form(
+                      key: formKey,
+                      child: AbsorbPointer(
+                        absorbing: submitting,
+                        child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              personal == null
+                                  ? 'Registrar personal de salud'
+                                  : 'Editar personal de salud',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            IconButton(
+                              onPressed: submitting
+                                  ? null
+                                  : () => Navigator.pop(context),
+                              icon: const Icon(Icons.close),
+                            ),
+                          ],
+                        ),
+                        FormStepper(longitud: 4, currentStep: currentStep),
+                        const SizedBox(height: 16),
+                        if (modalErrorText != null && modalErrorText!.isNotEmpty)
+                          Container(
+                            width: double.infinity,
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: _theme.error.withValues(alpha: .1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: _theme.error.withValues(alpha: .4),
+                              ),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Icon(
+                                  Icons.error_outline,
+                                  color: _theme.error,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    modalErrorText!,
+                                    style: TextStyle(color: _theme.error),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        stepContent(),
+                        const SizedBox(height: 16),
+                        if (submitErrorText != null &&
+                            submitErrorText!.isNotEmpty)
+                          Container(
+                            width: double.infinity,
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: _theme.error.withValues(alpha: .1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: _theme.error.withValues(alpha: .4),
+                              ),
+                            ),
+                            child: Text(
+                              submitErrorText!,
+                              style: TextStyle(color: _theme.error),
+                            ),
+                          ),
+                        if (submitting)
+                          const Padding(
+                            padding: EdgeInsets.only(bottom: 12),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                                SizedBox(width: 8),
+                                Text('Guardando...'),
+                              ],
+                            ),
+                          ),
+                        Row(
+                          children: [
+                            if (currentStep > 0)
+                              Expanded(
+                                child: SimpleButton(
+                                  title: 'Atrás',
+                                  outlined: true,
+                                  background: _theme.primary,
+                                  onTap: () {
+                                    setStateDialog(() {
+                                      currentStep -= 1;
+                                      modalErrorText = null;
+                                      submitErrorText = null;
+                                    });
+                                  },
+                                ),
+                              ),
+                            if (currentStep > 0) const SizedBox(width: 12),
+                            Expanded(
+                              child: SimpleButton(
+                                title: currentStep == 3
+                                    ? (personal == null
+                                          ? 'Crear'
+                                          : 'Guardar cambios')
+                                    : 'Siguiente',
+                                preffixicon: currentStep == 3
+                                    ? (personal == null
+                                          ? PhosphorIconsFill.userPlus
+                                          : PhosphorIconsFill.floppyDisk)
+                                    : null,
+                                disabled: submitting,
+                                onTap: () async {
+                                  if (currentStep < 3) {
+                                    final isValid = validateForm(formKey);
+                                    if (!isValid) return;
+                                    final apellidoError = _validarApellidos(
+                                      null,
+                                      '',
+                                      primerApellido: primerApellido,
+                                      segundoApellido: segundoApellido,
+                                    );
+                                    if (apellidoError.isNotEmpty) {
+                                      setStateDialog(() {
+                                        apellidoErrorText = apellidoError;
+                                        modalErrorText = apellidoError;
+                                      });
+                                      return;
+                                    }
+                                    setStateDialog(() {
+                                      currentStep += 1;
+                                      modalErrorText = null;
+                                      submitErrorText = null;
+                                    });
+                                    return;
+                                  }
+
+                                  final isValid = validateForm(formKey);
+                                  if (!isValid) return;
+                                  setStateDialog(() {
+                                    modalErrorText = null;
+                                  });
+                                  if ((contrasena.text.isNotEmpty ||
+                                          repetirContrasena.text.isNotEmpty) &&
+                                      contrasena.text != repetirContrasena.text) {
+                                    setStateDialog(() {
+                                      modalErrorText =
+                                          'Las contraseñas no coinciden';
+                                    });
+                                    return;
+                                  }
+
+                                  final persona = {
+                                    'nombres': nombres.text.trim(),
+                                    'primerApellido': primerApellido.text.trim(),
+                                    if (segundoApellido.text.trim().isNotEmpty)
+                                      'segundoApellido':
+                                          segundoApellido.text.trim(),
+                                    'fechaNacimiento': _formatearFechaBackend(
+                                      fechaNacimiento.text,
+                                    ),
+                                    'nroDocumento': nroDocumento.text.trim(),
+                                    if (telefono.text.trim().isNotEmpty)
+                                      'telefono': telefono.text.trim(),
+                                    if ((generoSeleccionado ?? '').trim().isNotEmpty)
+                                      'genero': generoSeleccionado,
+                                  };
+                                  final idsEspecialidades = selectedEspecialidades
+                                      .map((especialidad) => especialidad.id)
+                                      .toList();
+
+                                  Map<String, dynamic> body;
+                                  if (personal == null) {
+                                    body = {
+                                      'persona': persona,
+                                      'correoElectronico': correo.text.trim(),
+                                      'contrasena': contrasena.text,
+                                      'repetirContrasena': repetirContrasena.text,
+                                      'esSupervisor': esSupervisor,
+                                      if (idsEspecialidades.isNotEmpty)
+                                        'idEspecialidades': idsEspecialidades,
+                                    };
+                                  } else {
+                                    body = {
+                                      'persona': persona,
+                                      'correoElectronico': correo.text.trim(),
+                                      if (contrasena.text.isNotEmpty)
+                                        'contrasena': contrasena.text,
+                                      if (repetirContrasena.text.isNotEmpty)
+                                        'repetirContrasena':
+                                            repetirContrasena.text,
+                                      'esSupervisor': esSupervisor,
+                                      if (idsEspecialidades.isNotEmpty)
+                                        'idEspecialidades': idsEspecialidades,
+                                    };
+                                  }
+
+                                  setStateDialog(() {
+                                    submitting = true;
+                                    submitErrorText = null;
+                                  });
+                                  final error = await _guardarPersonal(
+                                    body,
+                                    personal,
+                                  );
+                                  if (!mounted) return;
+                                  if (error == null) {
+                                    Navigator.pop(context);
+                                    return;
+                                  }
+                                  setStateDialog(() {
+                                    submitting = false;
+                                    submitErrorText = error;
+                                  });
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -1301,30 +1395,24 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     });
   }
 
-  Future<void> _guardarPersonal(
+  Future<String?> _guardarPersonal(
     Map<String, dynamic> body,
     PersonalSalud? personal,
   ) async {
-    if (_processingAction) return;
+    if (_processingAction) return 'Ya existe una operación en curso';
     setState(() => _processingAction = true);
 
     final response = personal == null
         ? await _service.crearPersonalSalud(body)
         : await _service.actualizarPersonalSalud(personal.id, body);
 
-    if (!mounted) return;
+    if (!mounted) return null;
 
     if (response.status != StatusNetwork.connected) {
       setState(() => _processingAction = false);
-      showSnackBar(
-        personalSaludMessenger,
-        response.message.isEmpty
-            ? 'No se pudo guardar el personal de salud.'
-            : response.message,
-        state: StatusSnackBar.error,
-        colorText: _theme.white,
-      );
-      return;
+      return response.message.isEmpty
+          ? 'No se pudo guardar el personal de salud.'
+          : response.message;
     }
 
     showSnackBar(
@@ -1336,8 +1424,9 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
       colorText: _theme.white,
     );
     await _cargarPersonalSalud(page: 1);
-    if (!mounted) return;
+    if (!mounted) return null;
     setState(() => _processingAction = false);
+    return null;
   }
 
   Future<void> _confirmarCambioEstado(PersonalSalud personal) async {
