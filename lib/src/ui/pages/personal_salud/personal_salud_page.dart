@@ -15,7 +15,7 @@ import 'package:red_neuro_app/src/models/user.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
 import 'package:red_neuro_app/src/ui/common/customdatatable/custom_datatable.dart';
-import 'package:red_neuro_app/src/ui/common/form_stepper/form_stepper.dart';
+import 'package:red_neuro_app/src/ui/common/form_stepper/step_form_dialog_layout.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/common/text_inputs/autocomplete_field.dart';
 import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
@@ -1150,236 +1150,134 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                       key: formKey,
                       child: AbsorbPointer(
                         absorbing: submitting,
-                        child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              personal == null
-                                  ? 'Registrar personal de salud'
-                                  : 'Editar personal de salud',
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            IconButton(
-                              onPressed: submitting
-                                  ? null
-                                  : () => Navigator.pop(context),
-                              icon: const Icon(Icons.close),
-                            ),
-                          ],
-                        ),
-                        FormStepper(longitud: 4, currentStep: currentStep),
-                        const SizedBox(height: 16),
-                        if (modalErrorText != null && modalErrorText!.isNotEmpty)
-                          Container(
-                            width: double.infinity,
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: _theme.error.withValues(alpha: .1),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: _theme.error.withValues(alpha: .4),
-                              ),
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Icon(
-                                  Icons.error_outline,
-                                  color: _theme.error,
-                                  size: 18,
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    modalErrorText!,
-                                    style: TextStyle(color: _theme.error),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        stepContent(),
-                        const SizedBox(height: 16),
-                        if (submitErrorText != null &&
-                            submitErrorText!.isNotEmpty)
-                          Container(
-                            width: double.infinity,
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: _theme.error.withValues(alpha: .1),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: _theme.error.withValues(alpha: .4),
-                              ),
-                            ),
-                            child: Text(
-                              submitErrorText!,
-                              style: TextStyle(color: _theme.error),
-                            ),
-                          ),
-                        if (submitting)
-                          const Padding(
-                            padding: EdgeInsets.only(bottom: 12),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                                SizedBox(width: 8),
-                                Text('Guardando...'),
-                              ],
-                            ),
-                          ),
-                        Row(
-                          children: [
-                            if (currentStep > 0)
-                              Expanded(
-                                child: SimpleButton(
-                                  title: 'Atrás',
-                                  outlined: true,
-                                  background: _theme.primary,
-                                  onTap: () {
-                                    setStateDialog(() {
-                                      currentStep -= 1;
-                                      modalErrorText = null;
-                                      submitErrorText = null;
-                                    });
-                                  },
-                                ),
-                              ),
-                            if (currentStep > 0) const SizedBox(width: 12),
-                            Expanded(
-                              child: SimpleButton(
-                                title: currentStep == 3
-                                    ? (personal == null
-                                          ? 'Crear'
-                                          : 'Guardar cambios')
-                                    : 'Siguiente',
-                                preffixicon: currentStep == 3
-                                    ? (personal == null
-                                          ? PhosphorIconsFill.userPlus
-                                          : PhosphorIconsFill.floppyDisk)
-                                    : null,
-                                disabled: submitting,
-                                onTap: () async {
-                                  if (currentStep < 3) {
-                                    final isValid = validateForm(formKey);
-                                    if (!isValid) return;
-                                    final apellidoError = _validarApellidos(
-                                      null,
-                                      '',
-                                      primerApellido: primerApellido,
-                                      segundoApellido: segundoApellido,
-                                    );
-                                    if (apellidoError.isNotEmpty) {
-                                      setStateDialog(() {
-                                        apellidoErrorText = apellidoError;
-                                        modalErrorText = apellidoError;
-                                      });
-                                      return;
-                                    }
-                                    setStateDialog(() {
-                                      currentStep += 1;
-                                      modalErrorText = null;
-                                      submitErrorText = null;
-                                    });
-                                    return;
-                                  }
-
-                                  final isValid = validateForm(formKey);
-                                  if (!isValid) return;
+                        child: StepFormDialogLayout(
+                          title: personal == null
+                              ? 'Registrar personal de salud'
+                              : 'Editar personal de salud',
+                          totalSteps: 4,
+                          currentStep: currentStep,
+                          stepErrorText: modalErrorText,
+                          submitErrorText: submitErrorText,
+                          isSubmitting: submitting,
+                          onClose: submitting
+                              ? null
+                              : () => Navigator.pop(context),
+                          onBack: currentStep > 0
+                              ? () {
                                   setStateDialog(() {
+                                    currentStep -= 1;
                                     modalErrorText = null;
-                                  });
-                                  if ((contrasena.text.isNotEmpty ||
-                                          repetirContrasena.text.isNotEmpty) &&
-                                      contrasena.text != repetirContrasena.text) {
-                                    setStateDialog(() {
-                                      modalErrorText =
-                                          'Las contraseñas no coinciden';
-                                    });
-                                    return;
-                                  }
-
-                                  final persona = {
-                                    'nombres': nombres.text.trim(),
-                                    'primerApellido': primerApellido.text.trim(),
-                                    if (segundoApellido.text.trim().isNotEmpty)
-                                      'segundoApellido':
-                                          segundoApellido.text.trim(),
-                                    'fechaNacimiento': _formatearFechaBackend(
-                                      fechaNacimiento.text,
-                                    ),
-                                    'nroDocumento': nroDocumento.text.trim(),
-                                    if (telefono.text.trim().isNotEmpty)
-                                      'telefono': telefono.text.trim(),
-                                    if ((generoSeleccionado ?? '').trim().isNotEmpty)
-                                      'genero': generoSeleccionado,
-                                  };
-                                  final idsEspecialidades = selectedEspecialidades
-                                      .map((especialidad) => especialidad.id)
-                                      .toList();
-
-                                  Map<String, dynamic> body;
-                                  if (personal == null) {
-                                    body = {
-                                      'persona': persona,
-                                      'correoElectronico': correo.text.trim(),
-                                      'contrasena': contrasena.text,
-                                      'repetirContrasena': repetirContrasena.text,
-                                      'esSupervisor': esSupervisor,
-                                      if (idsEspecialidades.isNotEmpty)
-                                        'idEspecialidades': idsEspecialidades,
-                                    };
-                                  } else {
-                                    body = {
-                                      'persona': persona,
-                                      'correoElectronico': correo.text.trim(),
-                                      if (contrasena.text.isNotEmpty)
-                                        'contrasena': contrasena.text,
-                                      if (repetirContrasena.text.isNotEmpty)
-                                        'repetirContrasena':
-                                            repetirContrasena.text,
-                                      'esSupervisor': esSupervisor,
-                                      if (idsEspecialidades.isNotEmpty)
-                                        'idEspecialidades': idsEspecialidades,
-                                    };
-                                  }
-
-                                  setStateDialog(() {
-                                    submitting = true;
                                     submitErrorText = null;
                                   });
-                                  final error = await _guardarPersonal(
-                                    body,
-                                    personal,
-                                  );
-                                  if (!mounted) return;
-                                  if (error == null) {
-                                    Navigator.pop(context);
-                                    return;
-                                  }
-                                  setStateDialog(() {
-                                    submitting = false;
-                                    submitErrorText = error;
-                                  });
-                                },
+                                }
+                              : null,
+                          nextLabel: currentStep == 3
+                              ? (personal == null ? 'Crear' : 'Guardar cambios')
+                              : 'Siguiente',
+                          nextIcon: currentStep == 3
+                              ? (personal == null
+                                    ? PhosphorIconsFill.userPlus
+                                    : PhosphorIconsFill.floppyDisk)
+                              : null,
+                          stepContent: stepContent(),
+                          onNext: () async {
+                            if (currentStep < 3) {
+                              final isValid = validateForm(formKey);
+                              if (!isValid) return;
+                              final apellidoError = _validarApellidos(
+                                null,
+                                '',
+                                primerApellido: primerApellido,
+                                segundoApellido: segundoApellido,
+                              );
+                              if (apellidoError.isNotEmpty) {
+                                setStateDialog(() {
+                                  apellidoErrorText = apellidoError;
+                                  modalErrorText = apellidoError;
+                                });
+                                return;
+                              }
+                              setStateDialog(() {
+                                currentStep += 1;
+                                modalErrorText = null;
+                                submitErrorText = null;
+                              });
+                              return;
+                            }
+
+                            final isValid = validateForm(formKey);
+                            if (!isValid) return;
+                            setStateDialog(() {
+                              modalErrorText = null;
+                            });
+                            if ((contrasena.text.isNotEmpty ||
+                                    repetirContrasena.text.isNotEmpty) &&
+                                contrasena.text != repetirContrasena.text) {
+                              setStateDialog(() {
+                                modalErrorText = 'Las contraseñas no coinciden';
+                              });
+                              return;
+                            }
+
+                            final persona = {
+                              'nombres': nombres.text.trim(),
+                              'primerApellido': primerApellido.text.trim(),
+                              if (segundoApellido.text.trim().isNotEmpty)
+                                'segundoApellido': segundoApellido.text.trim(),
+                              'fechaNacimiento': _formatearFechaBackend(
+                                fechaNacimiento.text,
                               ),
-                            ),
-                          ],
+                              'nroDocumento': nroDocumento.text.trim(),
+                              if (telefono.text.trim().isNotEmpty)
+                                'telefono': telefono.text.trim(),
+                              if ((generoSeleccionado ?? '').trim().isNotEmpty)
+                                'genero': generoSeleccionado,
+                            };
+                            final idsEspecialidades = selectedEspecialidades
+                                .map((especialidad) => especialidad.id)
+                                .toList();
+
+                            Map<String, dynamic> body;
+                            if (personal == null) {
+                              body = {
+                                'persona': persona,
+                                'correoElectronico': correo.text.trim(),
+                                'contrasena': contrasena.text,
+                                'repetirContrasena': repetirContrasena.text,
+                                'esSupervisor': esSupervisor,
+                                if (idsEspecialidades.isNotEmpty)
+                                  'idEspecialidades': idsEspecialidades,
+                              };
+                            } else {
+                              body = {
+                                'persona': persona,
+                                'correoElectronico': correo.text.trim(),
+                                if (contrasena.text.isNotEmpty)
+                                  'contrasena': contrasena.text,
+                                if (repetirContrasena.text.isNotEmpty)
+                                  'repetirContrasena': repetirContrasena.text,
+                                'esSupervisor': esSupervisor,
+                                if (idsEspecialidades.isNotEmpty)
+                                  'idEspecialidades': idsEspecialidades,
+                              };
+                            }
+
+                            setStateDialog(() {
+                              submitting = true;
+                              submitErrorText = null;
+                            });
+                            final error = await _guardarPersonal(body, personal);
+                            if (!mounted) return;
+                            if (error == null) {
+                              Navigator.pop(context);
+                              return;
+                            }
+                            setStateDialog(() {
+                              submitting = false;
+                              submitErrorText = error;
+                            });
+                          },
                         ),
-                      ],
-                    ),
                       ),
                     ),
                   ),
