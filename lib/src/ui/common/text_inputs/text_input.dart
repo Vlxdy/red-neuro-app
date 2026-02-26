@@ -1,7 +1,65 @@
-import 'package:red_neuro_app/src/config/theme_controller.dart';
-import 'package:red_neuro_app/src/extensions/colores_extension.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/extensions/colores_extension.dart';
+
+class CustomTextInputStyles {
+  CustomTextInputStyles._();
+
+  static InputDecoration decoration({
+    required String label,
+    String? hint,
+    Widget? prefixIcon,
+    Widget? suffixIcon,
+    bool isDense = true,
+    bool enabled = true,
+    bool requiredData = false,
+    Color? labelColor,
+  }) {
+    final theme = ThemeController.instance;
+
+    OutlineInputBorder border(Color color, [double width = 1.2]) {
+      return OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: color, width: width),
+      );
+    }
+
+    return InputDecoration(
+      hintText: hint,
+      isDense: isDense,
+      filled: true,
+      fillColor: enabled ? theme.bgCard2 : theme.monochromatic50,
+      label: RichText(
+        text: TextSpan(
+          text: label,
+          style: TextStyle(
+            color: labelColor ?? theme.fontColor,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
+          children: [
+            if (requiredData)
+              TextSpan(
+                text: ' *',
+                style: TextStyle(color: theme.error, fontWeight: FontWeight.w700),
+              ),
+          ],
+        ),
+      ),
+      floatingLabelBehavior: FloatingLabelBehavior.auto,
+      hintStyle: TextStyle(color: theme.grey, fontSize: 12),
+      prefixIcon: prefixIcon,
+      suffixIcon: suffixIcon,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      enabledBorder: border(theme.monochromatic200),
+      focusedBorder: border(theme.primary, 1.4),
+      errorBorder: border(theme.error),
+      focusedErrorBorder: border(theme.error, 1.4),
+      disabledBorder: border(theme.monochromatic200),
+    );
+  }
+}
 
 class CustomTextInput extends StatefulWidget {
   final String title;
@@ -25,7 +83,7 @@ class CustomTextInput extends StatefulWidget {
 
   const CustomTextInput({
     super.key,
-    this.title = "",
+    this.title = '',
     required this.controller,
     this.requiredData = false,
     this.obscure = false,
@@ -50,169 +108,73 @@ class CustomTextInput extends StatefulWidget {
 }
 
 class _CustomTextInputState extends State<CustomTextInput> {
-  bool _error = false;
-  late bool _visibleText;
-  late FocusNode _focusNode;
-
-  @override
-  void initState() {
-    _visibleText = false;
-    _focusNode = FocusNode();
-    super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = ThemeController.instance;
-    return GestureDetector(
-      onTap: () {
-        if (!_focusNode.hasFocus) {
-          _focusNode.requestFocus();
-        }
-      },
-      child: Container(
-        height:
-            (widget.obscure ? 68 : 60) +
-            ((widget.linesLabel! - 1) * 10) +
-            ((widget.lines! - 1) * 24 + (_error ? 16 : 0)),
-        width: double.infinity,
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: !widget.withBorder
-                ? theme.transparent
-                : _error
-                ? theme.error
-                : widget.borderColor != null
-                ? HexColor.fromHex(widget.borderColor)
-                : theme.grey.withValues(alpha: .9),
-          ),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              RichText(
-                text: TextSpan(
-                  text: widget.title,
-                  style: TextStyle(
-                    color: _error
-                        ? theme.error
-                        : widget.disable
-                        ? theme.grey
-                        : widget.labelColor != null
-                        ? HexColor.fromHex(widget.labelColor)
-                        : theme.fontColor,
-                    fontSize: 12,
-                  ),
-                  children: [
-                    TextSpan(
-                      text: widget.requiredData ? ' (*)' : '',
-                      style: TextStyle(
-                        color: widget.disable
-                            ? theme.grey
-                            : widget.labelColor != null
-                            ? HexColor.fromHex(widget.labelColor)
-                            : theme.error,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 4),
-              TextFormField(
-                focusNode: _focusNode,
-                enabled: !(widget.disable || widget.disablePointer),
-                maxLines: widget.lines,
-                keyboardType: widget.onlyNumbers
-                    ? TextInputType.number
-                    : TextInputType.text,
-                inputFormatters: [
-                  ...widget.maxLength != null
-                      ? [LengthLimitingTextInputFormatter(widget.maxLength)]
-                      : [],
-                  widget.textFiltering != null
-                      ? FilteringTextInputFormatter.allow(widget.textFiltering!)
-                      : FilteringTextInputFormatter.singleLineFormatter,
-                  ...widget.onlyNumbers
-                      ? [FilteringTextInputFormatter.digitsOnly]
-                      : [],
-                ],
-                obscureText: widget.obscure ? !_visibleText : false,
-                validator: (value) {
-                  String? result;
-                  setState(() {
-                    _error = false;
-                    if (widget.requiredData) {
-                      if (widget.validate != null) {
-                        result = widget.validate!(value, widget.title);
-                        if (result != '') {
-                          _error = true;
-                        } else {
-                          result = null;
-                        }
-                      }
-                    }
-                  });
-                  return result;
-                },
-                controller: widget.controller,
-                onTap: () {
-                  if (widget.onTap != null) widget.onTap!();
-                },
-                onChanged: (String value) {
-                  if (widget.onChange != null) widget.onChange!(value);
-                },
-                cursorColor: widget.labelColor != null
-                    ? HexColor.fromHex(widget.labelColor)
-                    : theme.primary,
-                style: TextStyle(
-                  color: widget.disable
-                      ? theme.grey
-                      : widget.labelColor != null
-                      ? HexColor.fromHex(widget.labelColor)
-                      : theme.fontColor,
-                ),
-                decoration: InputDecoration(
-                  hintText: widget.placeholder,
-                  hintMaxLines: 1,
-                  hintStyle: const TextStyle(fontSize: 12),
-                  suffix: widget.obscure
-                      ? GestureDetector(
-                          onTap: () =>
-                              setState(() => _visibleText = !_visibleText),
-                          child: Icon(
-                            _visibleText
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                            color: widget.labelColor != null
-                                ? HexColor.fromHex(widget.labelColor)
-                                : theme.fontColor,
-                          ),
-                        )
-                      : const SizedBox(),
-                  isDense: true,
-                  contentPadding: EdgeInsets.zero,
-                  errorBorder: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                  disabledBorder: InputBorder.none,
-                  focusedErrorBorder: InputBorder.none,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  bool _visibleText = false;
+  final FocusNode _focusNode = FocusNode();
 
   @override
   void dispose() {
     _focusNode.dispose();
     super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = ThemeController.instance;
+
+    return TextFormField(
+      focusNode: _focusNode,
+      enabled: !(widget.disable || widget.disablePointer),
+      maxLines: widget.lines,
+      keyboardType:
+          widget.onlyNumbers ? TextInputType.number : TextInputType.text,
+      inputFormatters: [
+        if (widget.maxLength != null)
+          LengthLimitingTextInputFormatter(widget.maxLength),
+        if (widget.textFiltering != null)
+          FilteringTextInputFormatter.allow(widget.textFiltering!),
+        if (widget.onlyNumbers) FilteringTextInputFormatter.digitsOnly,
+      ],
+      obscureText: widget.obscure ? !_visibleText : false,
+      validator: (value) {
+        if (!widget.requiredData || widget.validate == null) return null;
+        final result = widget.validate!(value, widget.title);
+        return (result == null || result.isEmpty) ? null : result;
+      },
+      controller: widget.controller,
+      onTap: widget.onTap,
+      onChanged: (value) {
+        if (widget.onChange != null) widget.onChange!(value);
+      },
+      cursorColor: widget.labelColor != null
+          ? HexColor.fromHex(widget.labelColor)
+          : theme.primary,
+      style: TextStyle(
+        color: widget.disable
+            ? theme.grey
+            : widget.labelColor != null
+            ? HexColor.fromHex(widget.labelColor)
+            : theme.fontColor,
+      ),
+      decoration: CustomTextInputStyles.decoration(
+        label: widget.title,
+        hint: widget.placeholder,
+        enabled: !(widget.disable || widget.disablePointer),
+        requiredData: widget.requiredData,
+        labelColor: widget.labelColor != null
+            ? HexColor.fromHex(widget.labelColor)
+            : null,
+        suffixIcon: widget.obscure
+            ? IconButton(
+                onPressed: () => setState(() => _visibleText = !_visibleText),
+                icon: Icon(
+                  _visibleText ? Icons.visibility_off : Icons.visibility,
+                  color: widget.labelColor != null
+                      ? HexColor.fromHex(widget.labelColor)
+                      : theme.fontColor,
+                ),
+              )
+            : null,
+      ),
+    );
   }
 }

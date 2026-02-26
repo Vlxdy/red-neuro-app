@@ -188,9 +188,9 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                 const SizedBox(height: 16),
                 TextField(
                   controller: controller,
-                  decoration: const InputDecoration(
-                    labelText: 'Buscar por nombre',
-                    prefixIcon: Icon(Icons.search),
+                  decoration: CustomTextInputStyles.decoration(
+                    label: 'Buscar por nombre',
+                    prefixIcon: const Icon(Icons.search),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -227,6 +227,9 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     });
     _cargarPersonalSalud(page: 1);
   }
+
+
+
 
   Widget _buildFilterSummary() {
     if (_filtro.isEmpty) return const SizedBox.shrink();
@@ -875,9 +878,9 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: DropdownButtonFormField<String>(
-                                    decoration: const InputDecoration(
-                                      labelText: 'Género',
-                                      isDense: true,
+                                    decoration: CustomTextInputStyles.decoration(
+                                                        label: 'Género',
+                                                        requiredData: true,
                                     ),
                                     initialValue: generoSeleccionado,
                                     items: const [
@@ -923,9 +926,9 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                 ),
                                 const SizedBox(height: 12),
                                 DropdownButtonFormField<String>(
-                                  decoration: const InputDecoration(
-                                    labelText: 'Género',
-                                    isDense: true,
+                                  decoration: CustomTextInputStyles.decoration(
+                                                    label: 'Género',
+                                                    requiredData: true,
                                   ),
                                   initialValue: generoSeleccionado,
                                   items: const [
