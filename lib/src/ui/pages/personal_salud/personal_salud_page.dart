@@ -10,6 +10,9 @@ import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/extensions/colores_extension.dart';
 import 'package:red_neuro_app/src/models/especialidad.dart';
 import 'package:red_neuro_app/src/models/personal_salud.dart';
+import 'package:red_neuro_app/src/models/rol.dart';
+import 'package:red_neuro_app/src/models/user.dart';
+import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
 import 'package:red_neuro_app/src/ui/common/customdatatable/custom_datatable.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
@@ -41,7 +44,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
   int _limit = 10;
   int _total = 0;
   String _filtro = '';
-  String? _rolPersonalSalud;
+  bool _processingAction = false;
+  String? _currentUsuarioRolId;
 
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
@@ -50,13 +54,60 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
   void initState() {
     super.initState();
     _service = PersonalSaludService(context);
-    _cargarRolPersonalSalud();
+    Auth.instance.profileListenable.addListener(_onProfileChanged);
+    _cargarUsuarioActual();
     _cargarPersonalSalud();
     _scrollController.addListener(_handleScroll);
   }
 
+  void _onProfileChanged() {
+    _cargarUsuarioActual();
+  }
+
+  String _resolverIdUsuarioRol(Usuario profile) {
+    final directo = (profile.idUsuarioRol ?? '').trim();
+    if (directo.isNotEmpty) return directo;
+
+    final roles = profile.roles;
+    final roleId = (profile.idRol ?? '').trim();
+    if (roles.isEmpty) return '';
+
+    Rol? activeRole;
+    if (roleId.isNotEmpty) {
+      try {
+        activeRole = roles.firstWhere((rol) => rol.idRol == roleId);
+      } catch (_) {
+        activeRole = null;
+      }
+    }
+    activeRole ??= roles.first;
+    return activeRole.idUsuarioRol.trim();
+  }
+
+  Future<void> _cargarUsuarioActual() async {
+    final profile = Auth.instance.profile;
+    String id = _resolverIdUsuarioRol(profile);
+
+    if (id.isEmpty) {
+      final profileAsync = await Auth.instance.profileAsync();
+      id = _resolverIdUsuarioRol(profileAsync);
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _currentUsuarioRolId = id.isEmpty ? null : id;
+    });
+  }
+
+  bool _esUsuarioActual(PersonalSalud personal) {
+    final currentId = _currentUsuarioRolId?.trim();
+    if (currentId == null || currentId.isEmpty) return false;
+    return personal.id.trim() == currentId;
+  }
+
   @override
   void dispose() {
+    Auth.instance.profileListenable.removeListener(_onProfileChanged);
     _searchController.dispose();
     _scrollController
       ..removeListener(_handleScroll)
@@ -73,14 +124,6 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     if (current >= maxScroll - 200 && _personal.length < _total) {
       _cargarPersonalSalud(page: _page + 1, append: true);
     }
-  }
-
-  Future<void> _cargarRolPersonalSalud() async {
-    final rol = await _service.obtenerRolPersonalSalud();
-    if (!mounted) return;
-    setState(() {
-      _rolPersonalSalud = rol;
-    });
   }
 
   Future<void> _cargarPersonalSalud({int? page, bool append = false}) async {
@@ -1193,17 +1236,6 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                   );
                                   return;
                                 }
-                                if (_rolPersonalSalud == null ||
-                                    _rolPersonalSalud!.isEmpty) {
-                                  showSnackBar(
-                                    personalSaludMessenger,
-                                    'No se pudo resolver el rol de personal de salud',
-                                    state: StatusSnackBar.error,
-                                    colorText: _theme.white,
-                                  );
-                                  return;
-                                }
-
                                 final persona = {
                                   'nombres': nombres.text.trim(),
                                   'primerApellido': primerApellido.text.trim(),
@@ -1224,9 +1256,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                     'correoElectronico': correo.text.trim(),
                                     'contrasena': contrasena.text,
                                     'repetirContrasena': repetirContrasena.text,
-                                    'roles': [_rolPersonalSalud],
                                     'esSupervisor': esSupervisor,
-                                    'especialidades': selectedEspecialidades
+                                    'idEspecialidades': selectedEspecialidades
                                         .map((especialidad) => especialidad.id)
                                         .toList(),
                                   };
@@ -1239,9 +1270,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                     if (repetirContrasena.text.isNotEmpty)
                                       'repetirContrasena':
                                           repetirContrasena.text,
-                                    'roles': [_rolPersonalSalud],
                                     'esSupervisor': esSupervisor,
-                                    'especialidades': selectedEspecialidades
+                                    'idEspecialidades': selectedEspecialidades
                                         .map((especialidad) => especialidad.id)
                                         .toList(),
                                   };
@@ -1272,11 +1302,17 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     Map<String, dynamic> body,
     PersonalSalud? personal,
   ) async {
+    if (_processingAction) return;
+    setState(() => _processingAction = true);
+
     final response = personal == null
         ? await _service.crearPersonalSalud(body)
         : await _service.actualizarPersonalSalud(personal.id, body);
 
+    if (!mounted) return;
+
     if (response.status != StatusNetwork.connected) {
+      setState(() => _processingAction = false);
       showSnackBar(
         personalSaludMessenger,
         response.message.isEmpty
@@ -1296,10 +1332,13 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
       state: StatusSnackBar.success,
       colorText: _theme.white,
     );
-    _cargarPersonalSalud(page: 1);
+    await _cargarPersonalSalud(page: 1);
+    if (!mounted) return;
+    setState(() => _processingAction = false);
   }
 
   Future<void> _confirmarCambioEstado(PersonalSalud personal) async {
+    if (_processingAction) return;
     final estaActivo = personal.estaActivo;
     final result = await showDialog<bool>(
       context: context,
@@ -1324,11 +1363,18 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     );
 
     if (result != true) return;
+    if (!mounted) return;
+
+    setState(() => _processingAction = true);
 
     final response = estaActivo
         ? await _service.inactivarPersonalSalud(personal.id)
         : await _service.activarPersonalSalud(personal.id);
+
+    if (!mounted) return;
+
     if (response.status != StatusNetwork.connected) {
+      setState(() => _processingAction = false);
       showSnackBar(
         personalSaludMessenger,
         response.message.isEmpty
@@ -1348,7 +1394,9 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
       state: StatusSnackBar.success,
       colorText: _theme.white,
     );
-    _cargarPersonalSalud(page: 1);
+    await _cargarPersonalSalud(page: 1);
+    if (!mounted) return;
+    setState(() => _processingAction = false);
   }
 
   Widget _buildPagination() {
@@ -1428,6 +1476,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
               separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final persona = _personal[index];
+                final esUsuarioActual = _esUsuarioActual(persona);
                 return Card(
                   child: Padding(
                     padding: const EdgeInsets.all(12),
@@ -1484,29 +1533,34 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                         Wrap(
                           spacing: 8,
                           children: [
-                            TextButton.icon(
-                              onPressed: () =>
-                                  _abrirFormulario(personal: persona),
-                              icon: const Icon(Icons.edit_outlined),
-                              label: const Text('Editar'),
-                            ),
+                            if (!esUsuarioActual)
+                              TextButton.icon(
+                                onPressed: _processingAction
+                                    ? null
+                                    : () => _abrirFormulario(personal: persona),
+                                icon: const Icon(Icons.edit_outlined),
+                                label: const Text('Editar'),
+                              ),
                             TextButton.icon(
                               onPressed: () =>
                                   _mostrarDetallesPersonal(persona),
                               icon: const Icon(Icons.visibility_outlined),
                               label: const Text('Detalles'),
                             ),
-                            TextButton.icon(
-                              onPressed: () => _confirmarCambioEstado(persona),
-                              icon: Icon(
-                                persona.estaActivo
-                                    ? Icons.person_off_outlined
-                                    : Icons.person_add_alt_1_outlined,
+                            if (!esUsuarioActual)
+                              TextButton.icon(
+                                onPressed: _processingAction
+                                    ? null
+                                    : () => _confirmarCambioEstado(persona),
+                                icon: Icon(
+                                  persona.estaActivo
+                                      ? Icons.person_off_outlined
+                                      : Icons.person_add_alt_1_outlined,
+                                ),
+                                label: Text(
+                                  persona.estaActivo ? 'Inactivar' : 'Activar',
+                                ),
                               ),
-                              label: Text(
-                                persona.estaActivo ? 'Inactivar' : 'Activar',
-                              ),
-                            ),
                           ],
                         ),
                         if (_loadingMore && index == _personal.length - 1) ...[
@@ -1530,11 +1584,13 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
       child: Scaffold(
         backgroundColor: _theme.background,
         body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+          child: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                 if (!isCompact)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 16),
@@ -1559,12 +1615,13 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                           spacing: 8,
                           children: [
                             TextButton.icon(
-                              onPressed: _abrirFiltros,
+                              onPressed: _processingAction ? null : _abrirFiltros,
                               icon: const Icon(Icons.filter_list),
                               label: const Text('Filtros'),
                             ),
                             TextButton.icon(
-                              onPressed: () => _abrirFormulario(),
+                              onPressed:
+                                  _processingAction ? null : () => _abrirFormulario(),
                               icon: const Icon(Icons.add),
                               label: const Text('Nuevo'),
                             ),
@@ -1585,11 +1642,12 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                           ),
                         ),
                         IconButton(
-                          onPressed: _abrirFiltros,
+                          onPressed: _processingAction ? null : _abrirFiltros,
                           icon: const Icon(Icons.filter_list),
                         ),
                         IconButton(
-                          onPressed: () => _abrirFormulario(),
+                          onPressed:
+                              _processingAction ? null : () => _abrirFormulario(),
                           icon: const Icon(Icons.add),
                         ),
                       ],
@@ -1604,7 +1662,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                         'Consulta, filtra y administra el personal de salud.',
                     acciones: [
                       IconButton(
-                        onPressed: _cargarPersonalSalud,
+                        onPressed: _processingAction ? null : _cargarPersonalSalud,
                         icon: const Icon(Icons.refresh),
                       ),
                     ],
@@ -1657,30 +1715,35 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                 : const Text('—'),
                             Row(
                               children: [
-                                IconButton(
-                                  tooltip: 'Editar',
-                                  icon: const Icon(Icons.edit_outlined),
-                                  onPressed: () =>
-                                      _abrirFormulario(personal: persona),
-                                ),
+                                if (!_esUsuarioActual(persona))
+                                  IconButton(
+                                    tooltip: 'Editar',
+                                    icon: const Icon(Icons.edit_outlined),
+                                    onPressed: _processingAction
+                                        ? null
+                                        : () =>
+                                              _abrirFormulario(personal: persona),
+                                  ),
                                 IconButton(
                                   tooltip: 'Ver detalles',
                                   icon: const Icon(Icons.visibility_outlined),
                                   onPressed: () =>
                                       _mostrarDetallesPersonal(persona),
                                 ),
-                                IconButton(
-                                  tooltip: persona.estaActivo
-                                      ? 'Inactivar'
-                                      : 'Activar',
-                                  icon: Icon(
-                                    persona.estaActivo
-                                        ? Icons.person_off_outlined
-                                        : Icons.person_add_alt_1_outlined,
+                                if (!_esUsuarioActual(persona))
+                                  IconButton(
+                                    tooltip: persona.estaActivo
+                                        ? 'Inactivar'
+                                        : 'Activar',
+                                    icon: Icon(
+                                      persona.estaActivo
+                                          ? Icons.person_off_outlined
+                                          : Icons.person_add_alt_1_outlined,
+                                    ),
+                                    onPressed: _processingAction
+                                        ? null
+                                        : () => _confirmarCambioEstado(persona),
                                   ),
-                                  onPressed: () =>
-                                      _confirmarCambioEstado(persona),
-                                ),
                               ],
                             ),
                           ],
@@ -1693,8 +1756,17 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                   const SizedBox(height: 12),
                   Expanded(child: _buildCompactList()),
                 ],
-              ],
-            ),
+                  ],
+                ),
+              ),
+              if (_processingAction)
+                const Positioned.fill(
+                  child: ColoredBox(
+                    color: Colors.black26,
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                ),
+            ],
           ),
         ),
       ),

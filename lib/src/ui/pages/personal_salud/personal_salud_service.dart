@@ -4,7 +4,6 @@ import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/models/especialidad.dart';
 import 'package:red_neuro_app/src/models/personal_salud.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
-import 'package:red_neuro_app/src/ui/pages/usuarios/usuarios_service.dart';
 
 class PersonalSaludPageResult {
   final List<PersonalSalud> personal;
@@ -145,39 +144,9 @@ class PersonalSaludService extends ServiceConfig {
     }
   }
 
-  Future<String?> obtenerRolPersonalSalud() async {
-    try {
-      final response = await fetch('/autorizacion/roles');
-      if (response.status != StatusNetwork.connected) {
-        return null;
-      }
-
-      final raw = response.data['list'] ??
-          response.data['data'] ??
-          response.data['roles'] ??
-          response.data['items'] ??
-          [];
-
-      if (raw is List) {
-        final roles = raw
-            .whereType<Map<String, dynamic>>()
-            .map(RolOption.fromJson);
-        final match = roles.firstWhere(
-          (rol) => rol.codigo == 'PERSONAL_SALUD',
-          orElse: () => const RolOption(id: '', codigo: '', nombre: ''),
-        );
-        return match.codigo.isEmpty ? null : match.codigo;
-      }
-    } catch (e, stacktrace) {
-      Logger.error('Error al obtener rol de personal de salud $e');
-      Logger.error('stacktrace $stacktrace');
-    }
-    return null;
-  }
-
   Future<ResponseApi> crearPersonalSalud(Map<String, dynamic> body) async {
     return fetch(
-      '/usuarios',
+      '/personal-salud',
       type: HttpProtocol.post,
       body: body,
     );
@@ -188,7 +157,7 @@ class PersonalSaludService extends ServiceConfig {
     Map<String, dynamic> body,
   ) async {
     return fetch(
-      '/usuarios/$id',
+      '/personal-salud/$id',
       type: HttpProtocol.patch,
       body: body,
     );
