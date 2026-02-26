@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
 
 class AutocompleteField<T extends Object> extends StatelessWidget {
   const AutocompleteField({
@@ -8,7 +9,6 @@ class AutocompleteField<T extends Object> extends StatelessWidget {
     required this.labelText,
     super.key,
     this.onChanged,
-    this.onControllerReady,
     this.loading = false,
     this.loadingText = 'Cargando...',
     this.emptyText = 'Sin resultados.',
@@ -17,13 +17,13 @@ class AutocompleteField<T extends Object> extends StatelessWidget {
     this.isOptionSelected,
     this.selectedIconColor,
     this.maxOptionsHeight = 260,
+    this.requiredData = false,
   });
 
   final Iterable<T> Function(TextEditingValue textEditingValue) optionsBuilder;
   final String Function(T option) displayStringForOption;
   final ValueChanged<T> onSelected;
   final ValueChanged<String>? onChanged;
-  final ValueChanged<TextEditingController>? onControllerReady;
   final bool loading;
   final String labelText;
   final String loadingText;
@@ -33,6 +33,7 @@ class AutocompleteField<T extends Object> extends StatelessWidget {
   final bool Function(T option)? isOptionSelected;
   final Color? selectedIconColor;
   final double maxOptionsHeight;
+  final bool requiredData;
 
   @override
   Widget build(BuildContext context) {
@@ -41,12 +42,12 @@ class AutocompleteField<T extends Object> extends StatelessWidget {
       displayStringForOption: displayStringForOption,
       onSelected: onSelected,
       fieldViewBuilder: (context, controller, focusNode, _) {
-        onControllerReady?.call(controller);
         return TextFormField(
           controller: controller,
           focusNode: focusNode,
-          decoration: InputDecoration(
-            labelText: labelText,
+          decoration: CustomTextInputStyles.decoration(
+            label: labelText,
+            requiredData: requiredData,
             suffixIcon: loading
                 ? const Padding(
                     padding: EdgeInsets.all(12),
