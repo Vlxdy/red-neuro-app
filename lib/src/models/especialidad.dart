@@ -39,7 +39,8 @@ class Especialidad {
   });
 
   factory Especialidad.fromJson(Map<String, dynamic> json) {
-    final estudiosRaw = json['estudios'] ?? json['study'] ?? [];
+    final estudiosRaw =
+        json['servicios'] ?? json['estudios'] ?? json['study'] ?? [];
     return Especialidad(
       id: (json['id'] ?? '').toString(),
       nombre: (json['nombre'] ?? '').toString(),

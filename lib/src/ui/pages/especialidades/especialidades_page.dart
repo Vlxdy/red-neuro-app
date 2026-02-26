@@ -622,7 +622,7 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
                       CriterioOrdenType(nombre: 'Nombre'),
                       CriterioOrdenType(nombre: 'Descripción'),
                       CriterioOrdenType(nombre: 'Color'),
-                      CriterioOrdenType(nombre: 'Estudios'),
+                      CriterioOrdenType(nombre: 'Servicios'),
                       CriterioOrdenType(nombre: 'Estado'),
                       CriterioOrdenType(nombre: 'Acciones'),
                     ],
@@ -813,7 +813,7 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Estudios asociados: ${especialidad.estudios.length}',
+                  'Servicios asociados: ${especialidad.estudios.length}',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 12),

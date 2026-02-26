@@ -42,10 +42,11 @@ class EstudiosService extends ServiceConfig {
   }) async {
     try {
       final response = await fetch(
-        '/estudios',
+        '/servicios',
         params: {
           'pagina': '$page',
           'limite': '$limit',
+          'tipo': 'ESTUDIO',
           if (filtro != null && filtro.isNotEmpty) 'filtro': filtro,
         },
       );
@@ -124,9 +125,12 @@ class EstudiosService extends ServiceConfig {
 
   Future<ResponseApi> crearEstudio(Map<String, dynamic> body) async {
     return fetch(
-      '/estudios',
+      '/servicios',
       type: HttpProtocol.post,
-      body: body,
+      body: {
+        ...body,
+        'tipo': 'ESTUDIO',
+      },
     );
   }
 
@@ -135,7 +139,7 @@ class EstudiosService extends ServiceConfig {
     Map<String, dynamic> body,
   ) async {
     return fetch(
-      '/estudios/$id',
+      '/servicios/$id',
       type: HttpProtocol.patch,
       body: body,
     );
@@ -143,14 +147,14 @@ class EstudiosService extends ServiceConfig {
 
   Future<ResponseApi> eliminarEstudio(String id) async {
     return fetch(
-      '/estudios/$id',
+      '/servicios/$id',
       type: HttpProtocol.delete,
     );
   }
 
   Future<ResponseApi> cambiarEstadoEstudio(String id) async {
     return fetch(
-      '/estudios/$id/cambiar-estado',
+      '/servicios/$id/cambiar-estado',
       type: HttpProtocol.patch,
     );
   }
@@ -160,7 +164,7 @@ class EstudiosService extends ServiceConfig {
     required String especialidadId,
   }) async {
     return fetch(
-      '/estudios/$estudioId/especialidades',
+      '/servicios/$estudioId/especialidades',
       type: HttpProtocol.post,
       body: {
         'especialidadId': especialidadId,
