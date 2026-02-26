@@ -80,6 +80,7 @@ class CustomTextInput extends StatefulWidget {
   final String? borderColor;
   final String? labelColor;
   final int? linesLabel;
+  final AutovalidateMode autovalidateMode;
 
   const CustomTextInput({
     super.key,
@@ -101,6 +102,7 @@ class CustomTextInput extends StatefulWidget {
     this.borderColor,
     this.labelColor,
     this.withBorder = true,
+    this.autovalidateMode = AutovalidateMode.onUserInteraction,
   });
 
   @override
@@ -135,8 +137,9 @@ class _CustomTextInputState extends State<CustomTextInput> {
         if (widget.onlyNumbers) FilteringTextInputFormatter.digitsOnly,
       ],
       obscureText: widget.obscure ? !_visibleText : false,
+      autovalidateMode: widget.autovalidateMode,
       validator: (value) {
-        if (!widget.requiredData || widget.validate == null) return null;
+        if (widget.validate == null) return null;
         final result = widget.validate!(value, widget.title);
         return (result == null || result.isEmpty) ? null : result;
       },
