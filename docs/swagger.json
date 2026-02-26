@@ -2635,9 +2635,9 @@
         ]
       }
     },
-    "/estudios": {
+    "/servicios": {
       "get": {
-        "operationId": "EstudioController_listar",
+        "operationId": "ServicioController_listar",
         "parameters": [
           {
             "name": "limite",
@@ -2675,6 +2675,20 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "tipo",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por tipo de servicio: CONSULTA o ESTUDIO",
+            "schema": {
+              "example": "CONSULTA",
+              "type": "string",
+              "enum": [
+                "CONSULTA",
+                "ESTUDIO"
+              ]
+            }
           }
         ],
         "responses": {
@@ -2698,7 +2712,7 @@
                             "filas": {
                               "type": "array",
                               "items": {
-                                "$ref": "#/components/schemas/EstudioResponseDto"
+                                "$ref": "#/components/schemas/ServicioResponseDto"
                               }
                             }
                           }
@@ -2716,20 +2730,20 @@
             "bearer": []
           }
         ],
-        "summary": "Lista los estudios médicos configurados",
+        "summary": "Lista los servicios configurados",
         "tags": [
-          "Estudios"
+          "Servicios"
         ]
       },
       "post": {
-        "operationId": "EstudioController_crear",
+        "operationId": "ServicioController_crear",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CrearEstudioDto"
+                "$ref": "#/components/schemas/CrearServicioDto"
               }
             }
           }
@@ -2747,7 +2761,7 @@
                     {
                       "properties": {
                         "datos": {
-                          "$ref": "#/components/schemas/EstudioResponseDto"
+                          "$ref": "#/components/schemas/ServicioResponseDto"
                         }
                       }
                     }
@@ -2762,15 +2776,15 @@
             "bearer": []
           }
         ],
-        "summary": "Crea un nuevo estudio médico",
+        "summary": "Crea un nuevo servicio",
         "tags": [
-          "Estudios"
+          "Servicios"
         ]
       }
     },
-    "/estudios/especialidades/{id}": {
+    "/servicios/especialidades/{id}": {
       "get": {
-        "operationId": "EstudioController_listarPorEspecialidad",
+        "operationId": "ServicioController_listarPorEspecialidad",
         "parameters": [
           {
             "name": "id",
@@ -2817,6 +2831,20 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "tipo",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por tipo de servicio: CONSULTA o ESTUDIO",
+            "schema": {
+              "example": "CONSULTA",
+              "type": "string",
+              "enum": [
+                "CONSULTA",
+                "ESTUDIO"
+              ]
+            }
           }
         ],
         "responses": {
@@ -2840,7 +2868,7 @@
                             "filas": {
                               "type": "array",
                               "items": {
-                                "$ref": "#/components/schemas/EstudioResponseDto"
+                                "$ref": "#/components/schemas/ServicioResponseDto"
                               }
                             }
                           }
@@ -2858,15 +2886,15 @@
             "bearer": []
           }
         ],
-        "summary": "Lista los estudios médicos paginados por especialidad",
+        "summary": "Lista los servicios paginados por especialidad",
         "tags": [
-          "Estudios"
+          "Servicios"
         ]
       }
     },
-    "/estudios/{id}": {
+    "/servicios/{id}": {
       "get": {
-        "operationId": "EstudioController_obtenerPorId",
+        "operationId": "ServicioController_obtenerPorId",
         "parameters": [
           {
             "name": "id",
@@ -2891,7 +2919,7 @@
                     {
                       "properties": {
                         "datos": {
-                          "$ref": "#/components/schemas/EstudioResponseDto"
+                          "$ref": "#/components/schemas/ServicioResponseDto"
                         }
                       }
                     }
@@ -2906,13 +2934,13 @@
             "bearer": []
           }
         ],
-        "summary": "Obtiene el detalle de un estudio médico",
+        "summary": "Obtiene el detalle de un servicio",
         "tags": [
-          "Estudios"
+          "Servicios"
         ]
       },
       "patch": {
-        "operationId": "EstudioController_actualizar",
+        "operationId": "ServicioController_actualizar",
         "parameters": [
           {
             "name": "id",
@@ -2929,7 +2957,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ActualizarEstudioDto"
+                "$ref": "#/components/schemas/ActualizarServicioDto"
               }
             }
           }
@@ -2947,7 +2975,7 @@
                     {
                       "properties": {
                         "datos": {
-                          "$ref": "#/components/schemas/EstudioResponseDto"
+                          "$ref": "#/components/schemas/ServicioResponseDto"
                         }
                       }
                     }
@@ -2962,13 +2990,13 @@
             "bearer": []
           }
         ],
-        "summary": "Actualiza la información de un estudio médico",
+        "summary": "Actualiza la información de un servicio",
         "tags": [
-          "Estudios"
+          "Servicios"
         ]
       },
       "delete": {
-        "operationId": "EstudioController_eliminar",
+        "operationId": "ServicioController_eliminar",
         "parameters": [
           {
             "name": "id",
@@ -2993,7 +3021,7 @@
                     {
                       "properties": {
                         "datos": {
-                          "$ref": "#/components/schemas/EstudioResponseDto"
+                          "$ref": "#/components/schemas/ServicioResponseDto"
                         }
                       }
                     }
@@ -3008,15 +3036,15 @@
             "bearer": []
           }
         ],
-        "summary": "Elimina un estudio médico",
+        "summary": "Elimina un servicio",
         "tags": [
-          "Estudios"
+          "Servicios"
         ]
       }
     },
-    "/estudios/{id}/cambiar-estado": {
+    "/servicios/{id}/cambiar-estado": {
       "patch": {
-        "operationId": "EstudioController_cambiarEstado",
+        "operationId": "ServicioController_cambiarEstado",
         "parameters": [
           {
             "name": "id",
@@ -3041,7 +3069,7 @@
                     {
                       "properties": {
                         "datos": {
-                          "$ref": "#/components/schemas/EstudioResponseDto"
+                          "$ref": "#/components/schemas/ServicioResponseDto"
                         }
                       }
                     }
@@ -3056,15 +3084,15 @@
             "bearer": []
           }
         ],
-        "summary": "Cambiar estado del estudio médico",
+        "summary": "Cambiar estado del servicio",
         "tags": [
-          "Estudios"
+          "Servicios"
         ]
       }
     },
-    "/estudios/{id}/especialidades": {
+    "/servicios/{id}/especialidades": {
       "post": {
-        "operationId": "EstudioController_asignarEspecialidad",
+        "operationId": "ServicioController_asignarEspecialidad",
         "parameters": [
           {
             "name": "id",
@@ -3099,7 +3127,7 @@
                     {
                       "properties": {
                         "datos": {
-                          "$ref": "#/components/schemas/EstudioResponseDto"
+                          "$ref": "#/components/schemas/ServicioResponseDto"
                         }
                       }
                     }
@@ -3114,9 +3142,9 @@
             "bearer": []
           }
         ],
-        "summary": "Asocia una especialidad a un estudio médico",
+        "summary": "Asocia una especialidad a un servicio",
         "tags": [
-          "Estudios"
+          "Servicios"
         ]
       }
     },
@@ -5283,32 +5311,46 @@
           "estado"
         ]
       },
-      "EstudioCitaDto": {
+      "ServicioCitaDto": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Identificador del estudio",
+            "description": "Identificador del servicio",
             "example": "10"
           },
           "nombre": {
             "type": "string",
-            "description": "Nombre del estudio",
+            "description": "Nombre del servicio de cita",
             "example": "Ecografía abdominal"
           },
           "descripcion": {
             "type": "string",
-            "description": "Descripción del estudio",
+            "description": "Descripción del servicio",
             "example": "Evaluación ecográfica de órganos abdominales"
           },
           "duracionMinutos": {
             "type": "number",
-            "description": "Duración estimada del estudio en minutos",
+            "description": "Duración estimada del servicio en minutos",
             "example": 30
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "CONSULTA",
+              "ESTUDIO"
+            ],
+            "description": "Categoría del servicio: CONSULTA o ESTUDIO",
+            "example": "CONSULTA"
+          },
+          "costo": {
+            "type": "number",
+            "description": "Costo referencial del servicio",
+            "example": 120
           },
           "estado": {
             "type": "string",
-            "description": "Estado actual del estudio",
+            "description": "Estado actual del servicio",
             "example": "ACTIVO"
           }
         },
@@ -5317,6 +5359,8 @@
           "nombre",
           "descripcion",
           "duracionMinutos",
+          "tipo",
+          "costo",
           "estado"
         ]
       },
@@ -5421,9 +5465,9 @@
             "description": "Identificador de la especialidad asociada",
             "example": "12"
           },
-          "estudioId": {
+          "servicioId": {
             "type": "string",
-            "description": "Identificador del estudio asociado (solo si es estudio)",
+            "description": "Identificador del servicio asociado",
             "example": "5"
           },
           "medico": {
@@ -5450,11 +5494,11 @@
               }
             ]
           },
-          "estudio": {
-            "description": "Estudio asociado a la cita",
+          "servicio": {
+            "description": "Servicio asociado a la cita",
             "allOf": [
               {
-                "$ref": "#/components/schemas/EstudioCitaDto"
+                "$ref": "#/components/schemas/ServicioCitaDto"
               }
             ]
           },
@@ -5508,7 +5552,7 @@
           },
           "idEspecialidad": {
             "type": "string",
-            "description": "Identificador de la especialidad asociada",
+            "description": "Identificador de la especialidad asociada (opcional)",
             "example": "12"
           },
           "tipoCita": {
@@ -5520,9 +5564,9 @@
             "description": "Tipo de cita: CONSULTA o ESTUDIO",
             "example": "CONSULTA"
           },
-          "idEstudio": {
+          "idServicio": {
             "type": "string",
-            "description": "Identificador del estudio a realizar (requerido cuando el tipo es ESTUDIO)",
+            "description": "Identificador del servicio a realizar",
             "example": "5"
           }
         },
@@ -5530,8 +5574,8 @@
           "detalle",
           "fechaInicio",
           "idMedico",
-          "idEspecialidad",
-          "tipoCita"
+          "tipoCita",
+          "idServicio"
         ]
       },
       "ActualizarCitaDto": {
@@ -5564,7 +5608,7 @@
           },
           "idEspecialidad": {
             "type": "string",
-            "description": "Identificador de la especialidad asociada",
+            "description": "Identificador de la especialidad asociada (opcional)",
             "example": "12"
           },
           "tipoCita": {
@@ -5576,9 +5620,9 @@
             "description": "Tipo de cita: CONSULTA o ESTUDIO",
             "example": "CONSULTA"
           },
-          "idEstudio": {
+          "idServicio": {
             "type": "string",
-            "description": "Identificador del estudio a realizar (requerido cuando el tipo es ESTUDIO)",
+            "description": "Identificador del servicio a realizar",
             "example": "5"
           }
         }
@@ -5622,15 +5666,16 @@
             "description": "Tipo de cita: CONSULTA o ESTUDIO",
             "example": "CONSULTA"
           },
-          "idEstudio": {
+          "idServicio": {
             "type": "string",
-            "description": "Identificador del estudio a realizar (requerido cuando el tipo es ESTUDIO)",
+            "description": "Identificador del servicio a realizar",
             "example": "5"
           }
         },
         "required": [
           "fechaInicio",
-          "tipoCita"
+          "tipoCita",
+          "idServicio"
         ]
       },
       "CancelarCitaDto": {
@@ -5660,11 +5705,11 @@
           },
           "beforeDetalle": {
             "type": "object",
-            "description": "Detalle del valor anterior si corresponde a un médico, paciente o estudio"
+            "description": "Detalle del valor anterior si corresponde a un médico, paciente o servicio"
           },
           "afterDetalle": {
             "type": "object",
-            "description": "Detalle del valor posterior si corresponde a un médico, paciente o estudio"
+            "description": "Detalle del valor posterior si corresponde a un médico, paciente o servicio"
           }
         },
         "required": [
@@ -5791,27 +5836,27 @@
           "colorHex"
         ]
       },
-      "EstudioResponseDto": {
+      "ServicioResponseDto": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Identificador único del estudio médico",
+            "description": "Identificador único del servicio",
             "example": "8"
           },
           "nombre": {
             "type": "string",
-            "description": "Nombre identificador del estudio médico",
+            "description": "Nombre identificador del servicio",
             "example": "Ecografía abdominal"
           },
           "descripcion": {
             "type": "string",
-            "description": "Descripción funcional del estudio",
+            "description": "Descripción funcional del servicio",
             "example": "Evaluación ecográfica de órganos abdominales"
           },
           "duracionMinutos": {
             "type": "number",
-            "description": "Duración estimada del estudio en minutos",
+            "description": "Duración estimada del servicio en minutos",
             "example": 30
           },
           "estado": {
@@ -5819,8 +5864,22 @@
             "description": "Estado del registro",
             "example": "ACTIVO"
           },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "CONSULTA",
+              "ESTUDIO"
+            ],
+            "description": "Tipo de servicio: CONSULTA o ESTUDIO",
+            "example": "CONSULTA"
+          },
+          "costo": {
+            "type": "number",
+            "description": "Costo referencial del servicio",
+            "example": 120
+          },
           "especialidades": {
-            "description": "Especialidades asociadas al estudio",
+            "description": "Especialidades asociadas al servicio",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/EspecialidadResumenDto"
@@ -5833,55 +5892,109 @@
           "descripcion",
           "duracionMinutos",
           "estado",
+          "tipo",
+          "costo",
           "especialidades"
         ]
       },
-      "CrearEstudioDto": {
+      "CrearServicioDto": {
         "type": "object",
         "properties": {
           "nombre": {
             "type": "string",
-            "description": "Nombre identificador del estudio médico",
+            "description": "Nombre identificador del servicio",
             "example": "Ecografía abdominal"
           },
           "descripcion": {
             "type": "string",
-            "description": "Descripción funcional del estudio",
+            "description": "Descripción funcional del servicio",
             "example": "Evaluación ecográfica de órganos abdominales"
           },
           "duracionMinutos": {
             "type": "number",
-            "description": "Duración estimada del estudio en minutos",
+            "description": "Duración estimada del servicio en minutos",
             "example": 30
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "CONSULTA",
+              "ESTUDIO"
+            ],
+            "description": "Tipo de servicio: CONSULTA o ESTUDIO",
+            "example": "CONSULTA"
+          },
+          "costo": {
+            "type": "number",
+            "description": "Costo referencial del servicio",
+            "example": 120
+          },
+          "especialidadIds": {
+            "description": "Identificadores de especialidades asociadas (opcional)",
+            "example": [
+              "2",
+              "5"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
           "nombre",
           "descripcion",
-          "duracionMinutos"
+          "duracionMinutos",
+          "tipo",
+          "costo"
         ]
       },
-      "ActualizarEstudioDto": {
+      "ActualizarServicioDto": {
         "type": "object",
         "properties": {
           "nombre": {
             "type": "string",
-            "description": "Nombre identificador del estudio médico",
+            "description": "Nombre identificador del servicio",
             "example": "Ecografía abdominal"
           },
           "descripcion": {
             "type": "string",
-            "description": "Descripción funcional del estudio",
+            "description": "Descripción funcional del servicio",
             "example": "Evaluación ecográfica de órganos abdominales"
           },
           "duracionMinutos": {
             "type": "number",
-            "description": "Duración estimada del estudio en minutos",
+            "description": "Duración estimada del servicio en minutos",
             "example": 30
+          },
+          "tipo": {
+            "type": "string",
+            "enum": [
+              "CONSULTA",
+              "ESTUDIO"
+            ],
+            "description": "Tipo de servicio: CONSULTA o ESTUDIO",
+            "example": "CONSULTA"
+          },
+          "costo": {
+            "type": "number",
+            "description": "Costo referencial del servicio",
+            "example": 120
+          },
+          "especialidadIds": {
+            "description": "Identificadores de especialidades asociadas (opcional)",
+            "example": [
+              "2",
+              "5"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "estado": {
             "type": "string",
-            "description": "Permite reactivar o desactivar el estudio",
+            "description": "Permite reactivar o desactivar el servicio",
             "example": "ACTIVO"
           }
         }
@@ -5891,7 +6004,7 @@
         "properties": {
           "especialidadId": {
             "type": "string",
-            "description": "Identificador de la especialidad a asociar al estudio",
+            "description": "Identificador de la especialidad a asociar al servicio",
             "example": "2"
           }
         },
@@ -5899,22 +6012,22 @@
           "especialidadId"
         ]
       },
-      "EstudioResumenDto": {
+      "ServicioResumenDto": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Identificador único del estudio médico",
+            "description": "Identificador único del servicio",
             "example": "5"
           },
           "nombre": {
             "type": "string",
-            "description": "Nombre identificador del estudio médico",
+            "description": "Nombre identificador del servicio",
             "example": "Radiografía de tórax"
           },
           "duracionMinutos": {
             "type": "number",
-            "description": "Duración estimada del estudio en minutos",
+            "description": "Duración estimada del servicio en minutos",
             "example": 20
           }
         },
@@ -5929,7 +6042,7 @@
         "properties": {
           "id": {
             "type": "string",
-            "description": "Identificador único de la especialidad médica",
+            "description": "Identificador único de la especialidad",
             "example": "12"
           },
           "nombre": {
@@ -5944,7 +6057,7 @@
           },
           "estado": {
             "type": "string",
-            "description": "Estado del registro",
+            "description": "Estado actual del registro de especialidad",
             "example": "ACTIVO"
           },
           "colorHex": {
@@ -5952,11 +6065,11 @@
             "description": "Color principal de la especialidad en formato hexadecimal",
             "example": "#0ea5e9"
           },
-          "estudios": {
-            "description": "Estudios asociados a la especialidad",
+          "servicios": {
+            "description": "Servicios asociados a la especialidad",
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/EstudioResumenDto"
+              "$ref": "#/components/schemas/ServicioResumenDto"
             }
           }
         },
@@ -5965,7 +6078,7 @@
           "nombre",
           "estado",
           "colorHex",
-          "estudios"
+          "servicios"
         ]
       },
       "CrearEspecialidadDto": {

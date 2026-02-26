@@ -16,9 +16,9 @@ POST /citas
 **Payload mínimo recomendado:**
 - `detalle`
 - `fechaInicio`
-- `idEspecialidad`
 - `tipoCita`
-- (opcional) `idMedico`, `idConsultorio`, `idPaciente`, `idEstudio`
+- `idServicio`
+- (opcional) `idEspecialidad`, `idMedico`, `idConsultorio`, `idPaciente`
 
 ### 1.2 Confirmación
 - El médico asignado puede confirmar la cita (cambiar estado a **CONFIRMADA**).
