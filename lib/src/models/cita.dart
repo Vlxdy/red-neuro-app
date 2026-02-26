@@ -12,8 +12,8 @@ class CitaMedica {
   final String? especialidadNombre;
   final String? especialidadColorHex;
   final String? tipoCita;
-  final String? estudioId;
-  final String? estudioNombre;
+  final String? servicioId;
+  final String? servicioNombre;
 
   const CitaMedica({
     required this.id,
@@ -29,8 +29,8 @@ class CitaMedica {
     required this.especialidadNombre,
     required this.especialidadColorHex,
     required this.tipoCita,
-    required this.estudioId,
-    required this.estudioNombre,
+    required this.servicioId,
+    required this.servicioNombre,
   });
 
   factory CitaMedica.fromJson(Map<String, dynamic> jsonRaw) {
@@ -38,7 +38,7 @@ class CitaMedica {
         ? (jsonRaw['datos'] as Map<String, dynamic>)
         : jsonRaw;
     final especialidadRaw = json['especialidad'];
-    final estudioRaw = json['estudio'];
+    final servicioRaw = json['servicio'] ?? json['estudio'];
     final medicoRaw = json['medico'];
     final pacienteRaw = json['paciente'];
     final especialidadColor = especialidadRaw is Map<String, dynamic>
@@ -97,15 +97,15 @@ class CitaMedica {
               especialidadColor)
           ?.toString(),
       tipoCita: (json['tipoCita'] ?? json['tipo'] ?? '').toString(),
-      estudioId:
-          (json['estudioId'] ?? json['idEstudio'] ?? '').toString().isNotEmpty
-              ? (json['estudioId'] ?? json['idEstudio']).toString()
-              : (estudioRaw is Map<String, dynamic>
-                  ? estudioRaw['id']?.toString()
+      servicioId:
+          (json['servicioId'] ?? json['idServicio'] ?? json['estudioId'] ?? json['idEstudio'] ?? '').toString().isNotEmpty
+              ? (json['servicioId'] ?? json['idServicio'] ?? json['estudioId'] ?? json['idEstudio']).toString()
+              : (servicioRaw is Map<String, dynamic>
+                  ? servicioRaw['id']?.toString()
                   : null),
-      estudioNombre: estudioRaw is Map<String, dynamic>
-          ? estudioRaw['nombre']?.toString()
-          : json['estudioNombre']?.toString(),
+      servicioNombre: servicioRaw is Map<String, dynamic>
+          ? servicioRaw['nombre']?.toString()
+          : (json['servicioNombre'] ?? json['estudioNombre'])?.toString(),
     );
   }
 
@@ -123,8 +123,8 @@ class CitaMedica {
     String? especialidadNombre,
     String? especialidadColorHex,
     String? tipoCita,
-    String? estudioId,
-    String? estudioNombre,
+    String? servicioId,
+    String? servicioNombre,
   }) {
     return CitaMedica(
       id: id ?? this.id,
@@ -141,8 +141,8 @@ class CitaMedica {
       especialidadColorHex:
           especialidadColorHex ?? this.especialidadColorHex,
       tipoCita: tipoCita ?? this.tipoCita,
-      estudioId: estudioId ?? this.estudioId,
-      estudioNombre: estudioNombre ?? this.estudioNombre,
+      servicioId: servicioId ?? this.servicioId,
+      servicioNombre: servicioNombre ?? this.servicioNombre,
     );
   }
 

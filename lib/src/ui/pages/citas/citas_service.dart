@@ -267,6 +267,7 @@ class CitasService extends ServiceConfig {
 
   Future<CatalogoPageResult<Estudio>> obtenerEstudiosPorEspecialidad({
     required String especialidadId,
+    required String tipo,
     int page = 1,
     int limit = 10,
     String? filtro,
@@ -275,17 +276,18 @@ class CitasService extends ServiceConfig {
       final params = <String, String>{
         'pagina': '$page',
         'limite': '$limit',
+        'tipo': tipo,
         if (filtro != null && filtro.trim().isNotEmpty) 'filtro': filtro.trim(),
       };
       final response = await fetch(
-        '/estudios/especialidades/$especialidadId',
+        '/servicios/especialidades/$especialidadId',
         params: params,
       );
       if (response.status != StatusNetwork.connected) {
         return CatalogoPageResult.empty(
           response.message.isNotEmpty
               ? response.message
-              : 'No se pudieron cargar los estudios.',
+              : 'No se pudieron cargar los servicios.',
         );
       }
       final data = response.data;
@@ -316,9 +318,67 @@ class CitasService extends ServiceConfig {
         status: response.status,
       );
     } catch (e, stacktrace) {
-      Logger.error('Error al obtener estudios por especialidad $e');
+      Logger.error('Error al obtener servicios por especialidad $e');
       Logger.error('stacktrace $stacktrace');
-      return CatalogoPageResult.empty('No se pudieron cargar los estudios.');
+      return CatalogoPageResult.empty('No se pudieron cargar los servicios.');
+    }
+  }
+
+  Future<CatalogoPageResult<Estudio>> obtenerServicios({
+    required String tipo,
+    int page = 1,
+    int limit = 10,
+    String? filtro,
+  }) async {
+    try {
+      final params = <String, String>{
+        'pagina': '$page',
+        'limite': '$limit',
+        'tipo': tipo,
+        if (filtro != null && filtro.trim().isNotEmpty) 'filtro': filtro.trim(),
+      };
+      final response = await fetch(
+        '/servicios',
+        params: params,
+      );
+      if (response.status != StatusNetwork.connected) {
+        return CatalogoPageResult.empty(
+          response.message.isNotEmpty
+              ? response.message
+              : 'No se pudieron cargar los servicios.',
+        );
+      }
+      final data = response.data;
+      final datos = data['datos'] ?? data['data'] ?? data;
+      final totalRaw = datos['total'] ?? data['total'] ?? 0;
+      final filasRaw =
+          datos['filas'] ??
+          datos['items'] ??
+          data['filas'] ??
+          data['items'] ??
+          data['datos'] ??
+          [];
+      final estudios = (filasRaw is List)
+          ? filasRaw
+                .whereType<Map<String, dynamic>>()
+                .map(Estudio.fromJson)
+                .toList()
+          : <Estudio>[];
+      final total = totalRaw is int
+          ? totalRaw
+          : int.tryParse('$totalRaw') ?? estudios.length;
+      return CatalogoPageResult(
+        items: estudios,
+        total: total,
+        page: page,
+        limit: limit,
+        message: response.message,
+        status: response.status,
+      );
+    } catch (e, stacktrace) {
+      Logger.error('Error al obtener servicios $e');
+      Logger.error('stacktrace $stacktrace');
+      return CatalogoPageResult.empty('No se pudieron cargar los servicios.');
     }
   }
 

@@ -1010,10 +1010,10 @@ class _CitasPageState extends State<CitasPage> {
         estudios: const [],
       );
     }
-    if (cita?.estudioId != null && cita!.estudioId!.isNotEmpty) {
+    if (cita?.servicioId != null && cita!.servicioId!.isNotEmpty) {
       estudioSeleccionado = Estudio(
-        id: cita.estudioId!,
-        nombre: cita.estudioNombre ?? 'Estudio ${cita.estudioId}',
+        id: cita.servicioId!,
+        nombre: cita.servicioNombre ?? 'Estudio ${cita.servicioId}',
         descripcion: '',
         duracionMinutos: Constantes.citasDuracionDefectoMinutos,
         estado: 'ACTIVO',
@@ -1111,19 +1111,26 @@ class _CitasPageState extends State<CitasPage> {
             }) async {
               if (estudiosLoading) return;
               final especialidadId = especialidadSeleccionada?.id ?? '';
-              if (especialidadId.isEmpty) return;
               setStateDialog(() => estudiosLoading = true);
               if (reset) {
                 estudiosPage = 1;
                 estudiosHasMore = true;
                 estudiosDisponibles.clear();
               }
-              final result = await _service.obtenerEstudiosPorEspecialidad(
-                especialidadId: especialidadId,
-                page: estudiosPage,
-                limit: 10,
-                filtro: estudiosFiltro,
-              );
+              final result = especialidadId.isNotEmpty
+                  ? await _service.obtenerEstudiosPorEspecialidad(
+                      especialidadId: especialidadId,
+                      tipo: tipoCita,
+                      page: estudiosPage,
+                      limit: 10,
+                      filtro: estudiosFiltro,
+                    )
+                  : await _service.obtenerServicios(
+                      tipo: tipoCita,
+                      page: estudiosPage,
+                      limit: 10,
+                      filtro: estudiosFiltro,
+                    );
               if (!mounted) return;
               setStateDialog(() {
                 if (reset) {
@@ -1210,9 +1217,7 @@ class _CitasPageState extends State<CitasPage> {
             if (!inicializado) {
               inicializado = true;
               unawaited(cargarEspecialidades(reset: true));
-              if (tipoCita == 'ESTUDIO' && especialidadSeleccionada != null) {
-                unawaited(cargarEstudios(reset: true));
-              }
+              unawaited(cargarEstudios(reset: true));
             }
 
             void updateFechaInicioFecha() async {
@@ -1686,13 +1691,10 @@ class _CitasPageState extends State<CitasPage> {
                 estudiosHasMore = true;
                 estudiosPage = 1;
               });
-              if (tipoCita == 'ESTUDIO') {
-                unawaited(cargarEstudios(reset: true));
-              }
+              unawaited(cargarEstudios(reset: true));
             }
 
             Future<void> abrirSelectorEstudio() async {
-              if (especialidadSeleccionada == null) return;
               if (estudiosDisponibles.isEmpty && !estudiosLoading) {
                 await cargarEstudios(reset: true);
                 if (!context.mounted) return;
@@ -1730,7 +1732,7 @@ class _CitasPageState extends State<CitasPage> {
                                   8,
                                 ),
                                 child: Text(
-                                  'Selecciona un estudio',
+                                  'Selecciona un servicio',
                                   style: Theme.of(
                                     context,
                                   ).textTheme.titleMedium,
@@ -1743,7 +1745,7 @@ class _CitasPageState extends State<CitasPage> {
                                 child: TextField(
                                   controller: searchController,
                                   decoration: const InputDecoration(
-                                    labelText: 'Buscar estudio',
+                                    labelText: 'Buscar servicio',
                                     border: OutlineInputBorder(),
                                   ),
                                   onChanged: (value) {
@@ -2149,16 +2151,10 @@ class _CitasPageState extends State<CitasPage> {
                             child: Column(
                               children: [
                                 FormField<Especialidad>(
-                                  validator: (_) {
-                                    if (especialidadSeleccionada == null) {
-                                      return 'Selecciona una especialidad';
-                                    }
-                                    return null;
-                                  },
                                   builder: (state) {
                                     return CitasAutocompleteSelectorField(
                                       controller: especialidadController,
-                                      labelText: 'Especialidad *',
+                                      labelText: 'Especialidad (opcional)',
                                       hintText: 'Selecciona una especialidad',
                                       errorText: state.errorText,
                                       onTap: () async {
@@ -2171,81 +2167,70 @@ class _CitasPageState extends State<CitasPage> {
                                   },
                                 ),
                                 const SizedBox(height: 16),
-                                DropdownButtonFormField<String>(
-                                  initialValue: tipoCita,
-                                  decoration: const InputDecoration(
-                                    labelText: 'Tipo de cita *',
-                                    border: OutlineInputBorder(),
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    'Tipo de cita *',
+                                    style: Theme.of(context).textTheme.bodyMedium,
                                   ),
-                                  items: const [
-                                    DropdownMenuItem(
-                                      value: 'CONSULTA',
-                                      child: Text('Consulta'),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: 'ESTUDIO',
-                                      child: Text('Estudio'),
-                                    ),
-                                  ],
-                                  onChanged: especialidadSeleccionada == null
-                                      ? null
-                                      : (value) {
-                                          if (value == null) return;
-                                          setStateDialog(() {
-                                            tipoCita = value;
-                                            if (tipoCita != 'ESTUDIO') {
-                                              estudioSeleccionado = null;
-                                              estudioController.clear();
-                                            } else if (especialidadSeleccionada !=
-                                                null) {
-                                              estudiosDisponibles.clear();
-                                              estudiosHasMore = true;
-                                              estudiosPage = 1;
-                                              unawaited(
-                                                cargarEstudios(reset: true),
-                                              );
-                                            }
-                                          });
-                                        },
                                 ),
-                                if (especialidadSeleccionada == null)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 8),
-                                    child: Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: Text(
-                                        'Selecciona una especialidad para habilitar el tipo de cita.',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall
-                                            ?.copyWith(color: _theme.grey),
-                                      ),
-                                    ),
-                                  ),
-                                if (tipoCita == 'ESTUDIO') ...[
-                                  const SizedBox(height: 16),
-                                  FormField<Estudio>(
-                                    validator: (_) {
-                                      if (tipoCita == 'ESTUDIO' &&
-                                          estudioSeleccionado == null) {
-                                        return 'Selecciona un estudio';
-                                      }
-                                      return null;
-                                    },
-                                    builder: (state) {
-                                      return CitasAutocompleteSelectorField(
-                                        controller: estudioController,
-                                        labelText: 'Estudio *',
-                                        hintText: 'Selecciona un estudio',
-                                        errorText: state.errorText,
-                                        onTap: () async {
-                                          await abrirSelectorEstudio();
-                                          state.didChange(estudioSeleccionado);
-                                        },
-                                      );
-                                    },
-                                  ),
-                                ],
+                                RadioListTile<String>(
+                                  contentPadding: EdgeInsets.zero,
+                                  title: const Text('Consulta'),
+                                  value: 'CONSULTA',
+                                  groupValue: tipoCita,
+                                  onChanged: (value) {
+                                    if (value == null) return;
+                                    setStateDialog(() {
+                                      tipoCita = value;
+                                      estudioSeleccionado = null;
+                                      estudioController.clear();
+                                      estudiosDisponibles.clear();
+                                      estudiosHasMore = true;
+                                      estudiosPage = 1;
+                                      unawaited(cargarEstudios(reset: true));
+                                    });
+                                  },
+                                ),
+                                RadioListTile<String>(
+                                  contentPadding: EdgeInsets.zero,
+                                  title: const Text('Estudio'),
+                                  value: 'ESTUDIO',
+                                  groupValue: tipoCita,
+                                  onChanged: (value) {
+                                    if (value == null) return;
+                                    setStateDialog(() {
+                                      tipoCita = value;
+                                      estudioSeleccionado = null;
+                                      estudioController.clear();
+                                      estudiosDisponibles.clear();
+                                      estudiosHasMore = true;
+                                      estudiosPage = 1;
+                                      unawaited(cargarEstudios(reset: true));
+                                    });
+                                  },
+                                ),
+                                const SizedBox(height: 8),
+                                FormField<Estudio>(
+                                  validator: (_) {
+                                    if (estudioSeleccionado == null) {
+                                      return 'Selecciona un servicio';
+                                    }
+                                    return null;
+                                  },
+                                  builder: (state) {
+                                    return CitasAutocompleteSelectorField(
+                                      controller: estudioController,
+                                      labelText: 'Servicio *',
+                                      hintText: 'Selecciona un servicio',
+                                      errorText: state.errorText,
+                                      onTap: () async {
+                                        await abrirSelectorEstudio();
+                                        state.didChange(estudioSeleccionado);
+                                      },
+                                    );
+                                  },
+                                ),
                               ],
                             ),
                           ),
@@ -2370,20 +2355,10 @@ class _CitasPageState extends State<CitasPage> {
                                     );
                                     return;
                                   }
-                                  if (tipoCita == 'ESTUDIO' &&
-                                      estudioSeleccionado == null) {
+                                  if (estudioSeleccionado == null) {
                                     showSnackBar(
                                       citasMessenger,
-                                      'Selecciona un estudio',
-                                      state: StatusSnackBar.error,
-                                      colorText: _theme.white,
-                                    );
-                                    return;
-                                  }
-                                  if (especialidadSeleccionada == null) {
-                                    showSnackBar(
-                                      citasMessenger,
-                                      'Selecciona una especialidad',
+                                      'Selecciona un servicio',
                                       state: StatusSnackBar.error,
                                       colorText: _theme.white,
                                     );
@@ -2430,10 +2405,9 @@ class _CitasPageState extends State<CitasPage> {
         if (medicoId.isNotEmpty) 'idMedico': medicoId,
         if (pacienteSeleccionado != null)
           'idPaciente': pacienteSeleccionado?.id,
-        'idEspecialidad': especialidadId,
+        if (especialidadId.isNotEmpty) 'idEspecialidad': especialidadId,
         'tipoCita': tipoCita,
-        if (tipoCita == 'ESTUDIO' && estudioSeleccionado != null)
-          'idEstudio': estudioSeleccionado!.id,
+        if (estudioSeleccionado != null) 'idServicio': estudioSeleccionado!.id,
       });
       final ok = await _handleResponseError(
         response,
@@ -2463,9 +2437,8 @@ class _CitasPageState extends State<CitasPage> {
       updates['idEspecialidad'] = especialidadId;
     }
     if (tipoCita != (cita.tipoCita ?? '')) updates['tipoCita'] = tipoCita;
-    if (tipoCita == 'ESTUDIO' &&
-        estudioSeleccionado?.id != (cita.estudioId ?? '')) {
-      updates['idEstudio'] = estudioSeleccionado?.id;
+    if (estudioSeleccionado?.id != (cita.servicioId ?? '')) {
+      updates['idServicio'] = estudioSeleccionado?.id;
     }
 
     if (updates.isNotEmpty) {
@@ -2482,8 +2455,7 @@ class _CitasPageState extends State<CitasPage> {
         'id': cita.id,
         'fechaInicio': fechaInicio!.toUtc().toIso8601String(),
         'tipoCita': tipoCita,
-        if (tipoCita == 'ESTUDIO' && estudioSeleccionado != null)
-          'idEstudio': estudioSeleccionado!.id,
+        if (estudioSeleccionado != null) 'idServicio': estudioSeleccionado!.id,
       });
     }
 
@@ -2730,7 +2702,8 @@ class _CitasPageState extends State<CitasPage> {
       'idMedico': 'Médico',
       'idPaciente': 'Paciente',
       'idConsultorio': 'Consultorio',
-      'idEstudio': 'Estudio',
+      'idServicio': 'Servicio',
+      'idEstudio': 'Servicio',
     };
 
     final label = labels[field] ?? field;
@@ -2778,7 +2751,8 @@ class _CitasPageState extends State<CitasPage> {
       'idMedico': 'Médico',
       'idPaciente': 'Paciente',
       'idConsultorio': 'Consultorio',
-      'idEstudio': 'Estudio',
+      'idServicio': 'Servicio',
+      'idEstudio': 'Servicio',
     };
 
     final label = labels[field] ?? field;
@@ -2794,7 +2768,7 @@ class _CitasPageState extends State<CitasPage> {
         afterDetalle: cambio.afterDetalle,
       );
     }
-    if (field == 'idEstudio') {
+    if (field == 'idServicio' || field == 'idEstudio') {
       return _formatearCambioEstudio(
         label: label,
         beforeValue: beforeValue,
@@ -3369,7 +3343,7 @@ class _CitasPageState extends State<CitasPage> {
   }
 
   String _tituloCita(CitaMedica cita) {
-    final estudio = (cita.estudioNombre ?? '').trim();
+    final estudio = (cita.servicioNombre ?? '').trim();
     if (estudio.isNotEmpty) return estudio;
     final tipo = (cita.tipoCita ?? '').trim().toUpperCase();
     if (tipo == 'CONSULTA') return 'Consulta';
@@ -3381,7 +3355,7 @@ class _CitasPageState extends State<CitasPage> {
 
   IconData _iconoTipoCita(CitaMedica cita) {
     final tipo = (cita.tipoCita ?? '').trim().toUpperCase();
-    if (tipo == 'ESTUDIO' || (cita.estudioNombre ?? '').trim().isNotEmpty) {
+    if (tipo == 'ESTUDIO' || (cita.servicioNombre ?? '').trim().isNotEmpty) {
       return PhosphorIconsRegular.testTube;
     }
     if (tipo == 'CONSULTA' ||
@@ -3392,7 +3366,7 @@ class _CitasPageState extends State<CitasPage> {
   }
 
   String _subtituloCita(CitaMedica cita) {
-    final estudio = (cita.estudioNombre ?? cita.estudioId ?? '').trim();
+    final estudio = (cita.servicioNombre ?? cita.servicioId ?? '').trim();
     final especialidad = (cita.especialidadNombre ?? cita.especialidadId ?? '')
         .trim();
     final detalle = cita.detalle.trim();
@@ -3407,7 +3381,7 @@ class _CitasPageState extends State<CitasPage> {
   Future<void> _mostrarDetalleCita(CitaMedica cita) async {
     final especialidadNombre = (cita.especialidadNombre ?? cita.especialidadId)
         ?.trim();
-    final estudioNombre = (cita.estudioNombre ?? cita.estudioId)?.trim();
+    final estudioNombre = (cita.servicioNombre ?? cita.servicioId)?.trim();
     final especialidadColor = _colorEspecialidad(cita);
 
     await showDialog<void>(
@@ -3505,7 +3479,7 @@ class _CitasPageState extends State<CitasPage> {
                     if (estudioNombre?.isNotEmpty ?? false)
                       CitasDetalleRow(
                         icon: PhosphorIconsRegular.testTube,
-                        label: 'Estudio',
+                        label: 'Servicio',
                         value: estudioNombre!,
                         theme: _theme,
                       ),

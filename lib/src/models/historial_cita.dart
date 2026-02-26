@@ -104,7 +104,7 @@ class HistorialCambio {
     HistorialDetalleEstudio? afterDetalleEstudio;
 
     if (beforeDetalleRaw is Map<String, dynamic>) {
-      if (field == 'idEstudio') {
+      if (field == 'idServicio' || field == 'idEstudio') {
         beforeDetalleEstudio = HistorialDetalleEstudio.fromJson(
           beforeDetalleRaw,
         );
@@ -116,7 +116,7 @@ class HistorialCambio {
     }
 
     if (afterDetalleRaw is Map<String, dynamic>) {
-      if (field == 'idEstudio') {
+      if (field == 'idServicio' || field == 'idEstudio') {
         afterDetalleEstudio = HistorialDetalleEstudio.fromJson(
           afterDetalleRaw,
         );
