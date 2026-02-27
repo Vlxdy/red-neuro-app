@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
 
 class FechaSelector extends StatelessWidget {
   final String label;
@@ -7,6 +8,7 @@ class FechaSelector extends StatelessWidget {
   final DateFormat formatter;
   final VoidCallback onTap;
   final IconData icon;
+  final bool requiredData;
 
   const FechaSelector({
     super.key,
@@ -15,6 +17,7 @@ class FechaSelector extends StatelessWidget {
     required this.formatter,
     required this.onTap,
     this.icon = Icons.event,
+    this.requiredData = false,
   });
 
   @override
@@ -25,14 +28,10 @@ class FechaSelector extends StatelessWidget {
     return TextFormField(
       controller: controller,
       readOnly: true,
-      decoration: InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
+      decoration: CustomTextInputStyles.decoration(
+        label: label,
+        requiredData: requiredData,
         suffixIcon: Icon(icon),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 18,
-        ),
       ),
       onTap: onTap,
     );
