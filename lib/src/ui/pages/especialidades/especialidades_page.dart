@@ -6,6 +6,7 @@ import 'package:red_neuro_app/src/extensions/colores_extension.dart';
 import 'package:red_neuro_app/src/models/especialidad.dart';
 import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
 import 'package:red_neuro_app/src/ui/common/customdatatable/custom_datatable.dart';
+import 'package:red_neuro_app/src/ui/common/form_stepper/step_form_dialog_layout.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
@@ -210,10 +211,9 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
   }
 
   String _colorToHex(Color color) {
-    return '#'
-        '${color.r.toInt().toRadixString(16).padLeft(2, '0')}'
-        '${color.g.toInt().toRadixString(16).padLeft(2, '0')}'
-        '${color.b.toInt().toRadixString(16).padLeft(2, '0')}';
+    final rgbHex =
+        (color.toARGB32() & 0x00FFFFFF).toRadixString(16).padLeft(6, '0');
+    return '#${rgbHex.toUpperCase()}';
   }
 
   Future<void> _abrirFormulario({Especialidad? especialidad}) async {
@@ -237,221 +237,255 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
       '#1f2937',
     ];
 
-    final result = await showModalBottomSheet<bool>(
+    String? modalErrorText;
+    String? submitErrorText;
+    bool submitting = false;
+    int currentStep = 0;
+    const int lastStepIndex = 1;
+
+    await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      isDismissible: false,
+      enableDrag: false,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-          ),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            Widget stepContent() {
+              if (currentStep == 0) {
+                return Column(
+                  children: [
+                    CustomTextInput(
+                      title: 'Nombre',
+                      controller: nombreController,
+                      requiredData: true,
+                      validate: _validarRequerido,
+                    ),
+                    const SizedBox(height: 12),
+                    CustomTextInput(
+                      title: 'Descripción',
+                      controller: descripcionController,
+                      lines: 3,
+                    ),
+                  ],
+                );
+              }
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    especialidad == null
-                        ? 'Nueva especialidad'
-                        : 'Editar especialidad',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 16),
-                  CustomTextInput(
-                    title: 'Nombre',
-                    controller: nombreController,
-                    requiredData: true,
-                    validate: _validarRequerido,
+                    'Color de la especialidad',
+                    style: Theme.of(context).textTheme.titleSmall,
                   ),
                   const SizedBox(height: 12),
-                  CustomTextInput(
-                    title: 'Descripción',
-                    controller: descripcionController,
-                    lines: 3,
-                  ),
-                  const SizedBox(height: 12),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      'Color (rueda)',
-                      style: Theme.of(context).textTheme.labelMedium,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  StatefulBuilder(
-                    builder: (context, setColorState) {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                width: 36,
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: selectedColor,
-                                  border: Border.all(
-                                    color: _theme.grey.withValues(alpha: .4),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                _colorToHex(selectedColor),
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Tono',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                          Slider(
-                            min: 0,
-                            max: 360,
-                            value: hsvColor.hue,
-                            onChanged: (value) {
-                              setColorState(() {
-                                hsvColor = hsvColor.withHue(value);
-                                selectedColor = hsvColor.toColor();
-                              });
-                            },
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Colores básicos',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                          const SizedBox(height: 6),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: baseColors.map((colorHex) {
-                              return GestureDetector(
-                                onTap: () {
-                                  setColorState(() {
-                                    selectedColor = HexColor.fromHex(colorHex);
-                                    hsvColor = HSVColor.fromColor(
-                                      selectedColor,
-                                    );
-                                  });
-                                },
-                                child: Container(
-                                  width: 28,
-                                  height: 28,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: HexColor.fromHex(colorHex),
-                                    border: Border.all(
-                                      color: _theme.grey.withValues(alpha: .4),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                          ),
-                          Text(
-                            'Saturación',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                          Slider(
-                            min: 0,
-                            max: 1,
-                            value: hsvColor.saturation,
-                            onChanged: (value) {
-                              setColorState(() {
-                                hsvColor = hsvColor.withSaturation(value);
-                                selectedColor = hsvColor.toColor();
-                              });
-                            },
-                          ),
-                          Text(
-                            'Brillo',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                          Slider(
-                            min: 0,
-                            max: 1,
-                            value: hsvColor.value,
-                            onChanged: (value) {
-                              setColorState(() {
-                                hsvColor = hsvColor.withValue(value);
-                                selectedColor = hsvColor.toColor();
-                              });
-                            },
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 20),
                   Row(
                     children: [
-                      Expanded(
-                        child: SimpleButton(
-                          title: 'Cancelar',
-                          outlined: true,
-                          background: _theme.primary,
-                          onTap: () => Navigator.of(context).pop(false),
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: selectedColor,
+                          border: Border.all(
+                            color: _theme.grey.withValues(alpha: .4),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Expanded(
-                        child: SimpleButton(
-                          title: especialidad == null ? 'Crear' : 'Guardar',
-                          onTap: () =>
-                              Navigator.of(context).pop(validateForm(formKey)),
-                        ),
+                      Text(
+                        _colorToHex(selectedColor),
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
                   ),
+                  const SizedBox(height: 12),
+                  Text('Tono', style: Theme.of(context).textTheme.bodySmall),
+                  Slider(
+                    min: 0,
+                    max: 360,
+                    value: hsvColor.hue,
+                    onChanged: (value) {
+                      setStateDialog(() {
+                        hsvColor = hsvColor.withHue(value);
+                        selectedColor = hsvColor.toColor();
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Colores básicos',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: baseColors.map((colorHex) {
+                      return GestureDetector(
+                        onTap: () {
+                          setStateDialog(() {
+                            selectedColor = HexColor.fromHex(colorHex);
+                            hsvColor = HSVColor.fromColor(selectedColor);
+                          });
+                        },
+                        child: Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: HexColor.fromHex(colorHex),
+                            border: Border.all(
+                              color: _theme.grey.withValues(alpha: .4),
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Saturación',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  Slider(
+                    min: 0,
+                    max: 1,
+                    value: hsvColor.saturation,
+                    onChanged: (value) {
+                      setStateDialog(() {
+                        hsvColor = hsvColor.withSaturation(value);
+                        selectedColor = hsvColor.toColor();
+                      });
+                    },
+                  ),
+                  Text(
+                    'Brillo',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  Slider(
+                    min: 0,
+                    max: 1,
+                    value: hsvColor.value,
+                    onChanged: (value) {
+                      setStateDialog(() {
+                        hsvColor = hsvColor.withValue(value);
+                        selectedColor = hsvColor.toColor();
+                      });
+                    },
+                  ),
                 ],
+              );
+            }
+
+            return WillPopScope(
+              onWillPop: () async => !submitting,
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(context).viewInsets.bottom,
+                ),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * .9,
+                  ),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Form(
+                      key: formKey,
+                      child: AbsorbPointer(
+                        absorbing: submitting,
+                        child: StepFormDialogLayout(
+                          title: especialidad == null
+                              ? 'Nueva especialidad'
+                              : 'Editar especialidad',
+                          totalSteps: lastStepIndex + 1,
+                          currentStep: currentStep,
+                          stepErrorText: modalErrorText,
+                          submitErrorText: submitErrorText,
+                          isSubmitting: submitting,
+                          onClose: submitting
+                              ? null
+                              : () => Navigator.pop(context),
+                          onBack: currentStep > 0
+                              ? () {
+                                  setStateDialog(() {
+                                    currentStep -= 1;
+                                    modalErrorText = null;
+                                    submitErrorText = null;
+                                  });
+                                }
+                              : null,
+                          nextLabel: currentStep == lastStepIndex
+                              ? (especialidad == null ? 'Crear' : 'Guardar')
+                              : 'Siguiente',
+                          stepContent: stepContent(),
+                          onNext: () async {
+                            if (currentStep < lastStepIndex) {
+                              final isValid = validateForm(formKey);
+                              if (!isValid) return;
+                              setStateDialog(() {
+                                currentStep += 1;
+                                modalErrorText = null;
+                                submitErrorText = null;
+                              });
+                              return;
+                            }
+
+                            final isValid = validateForm(formKey);
+                            if (!isValid) return;
+
+                            final payload = {
+                              'nombre': nombreController.text.trim(),
+                              'descripcion': descripcionController.text.trim(),
+                              'colorHex': _colorToHex(selectedColor),
+                            };
+
+                            setStateDialog(() {
+                              submitting = true;
+                              modalErrorText = null;
+                              submitErrorText = null;
+                            });
+
+                            final response = especialidad == null
+                                ? await _service.crearEspecialidad(payload)
+                                : await _service.actualizarEspecialidad(
+                                    especialidad.id,
+                                    payload,
+                                  );
+
+                            if (!mounted) return;
+
+                            if (response.status == StatusNetwork.connected) {
+                              Navigator.pop(context);
+                              showSnackBar(
+                                especialidadesMessenger,
+                                response.message,
+                                state: StatusSnackBar.success,
+                                colorText: _theme.white,
+                              );
+                              _cargarEspecialidades();
+                              return;
+                            }
+
+                            setStateDialog(() {
+                              submitting = false;
+                              submitErrorText = response.message;
+                            });
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
-
-    if (result != true) {
-      return;
-    }
-
-    final payload = {
-      'nombre': nombreController.text.trim(),
-      'descripcion': descripcionController.text.trim(),
-      'colorHex': _colorToHex(selectedColor),
-    };
-
-    final response = especialidad == null
-        ? await _service.crearEspecialidad(payload)
-        : await _service.actualizarEspecialidad(especialidad.id, payload);
-
-    if (!mounted) return;
-
-    if (response.status == StatusNetwork.connected) {
-      showSnackBar(
-        especialidadesMessenger,
-        response.message,
-        state: StatusSnackBar.success,
-        colorText: _theme.white,
-      );
-      _cargarEspecialidades();
-    } else {
-      showSnackBar(
-        especialidadesMessenger,
-        response.message,
-        state: StatusSnackBar.error,
-        colorText: _theme.white,
-      );
-    }
   }
 
   Future<void> _confirmarEliminacion(Especialidad especialidad) async {
