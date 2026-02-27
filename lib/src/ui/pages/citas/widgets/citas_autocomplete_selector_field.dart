@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
 
 class CitasAutocompleteSelectorField extends StatelessWidget {
   const CitasAutocompleteSelectorField({
@@ -26,11 +27,10 @@ class CitasAutocompleteSelectorField extends StatelessWidget {
       controller: controller,
       readOnly: true,
       enabled: enabled,
-      decoration: InputDecoration(
-        labelText: labelText,
-        hintText: hintText,
-        border: const OutlineInputBorder(),
-        errorText: errorText,
+      decoration: CustomTextInputStyles.decoration(
+        label: labelText,
+        hint: hintText,
+        enabled: enabled,
         suffixIcon: onClear != null
             ? IconButton(
                 tooltip: 'Quitar',
@@ -38,7 +38,7 @@ class CitasAutocompleteSelectorField extends StatelessWidget {
                 onPressed: onClear,
               )
             : const Icon(Icons.expand_more),
-      ),
+      ).copyWith(errorText: errorText),
       onTap: enabled ? onTap : null,
     );
   }
