@@ -544,22 +544,21 @@ class _PerfilState extends State<Perfil> {
                           Wrap(
                             spacing: 8,
                             children: <Widget>[
-                              OutlinedButton.icon(
+                              FilledButton.icon(
                                 onPressed: _updatingPhoto
                                     ? null
                                     : _pickAndUploadPhoto,
                                 icon: const Icon(Icons.photo_camera_outlined),
                                 label: const Text('Cambiar foto'),
+                                style: _profilePrimaryButtonStyle(theme),
                               ),
                               if (profile.urlFoto != null &&
                                   profile.urlFoto!.trim().isNotEmpty)
-                                TextButton.icon(
+                                OutlinedButton.icon(
                                   onPressed: _updatingPhoto ? null : _deletePhoto,
                                   icon: const Icon(Icons.delete_outline),
                                   label: const Text('Quitar'),
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: theme.error,
-                                  ),
+                                  style: _profileDangerButtonStyle(theme),
                                 ),
                             ],
                           ),
@@ -650,23 +649,7 @@ class _ThemePreference extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeController theme = ThemeController.instance;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.bgCard,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: theme.grey.withValues(alpha: 0.3)),
-        boxShadow: <BoxShadow>[
-          BoxShadow(
-            color: theme.isLight
-                ? theme.black.withValues(alpha: 0.05)
-                : theme.black.withValues(alpha: 0.1),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
+    return _ProfileSectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -720,23 +703,7 @@ class _SessionActions extends StatelessWidget {
   Widget build(BuildContext context) {
     final ThemeController theme = ThemeController.instance;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.bgCard,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: theme.grey.withValues(alpha: 0.3)),
-        boxShadow: <BoxShadow>[
-          BoxShadow(
-            color: theme.isLight
-                ? theme.black.withValues(alpha: 0.05)
-                : theme.black.withValues(alpha: 0.1),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
+    return _ProfileSectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -811,23 +778,7 @@ class _RoleCard extends StatelessWidget {
             ),
     );
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.bgCard,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: theme.grey.withValues(alpha: 0.3)),
-        boxShadow: <BoxShadow>[
-          BoxShadow(
-            color: theme.isLight
-                ? theme.black.withValues(alpha: 0.05)
-                : theme.black.withValues(alpha: 0.1),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
+    return _ProfileSectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -881,22 +832,22 @@ class _RoleCard extends StatelessWidget {
               runSpacing: 8,
               children: roles
                   .map(
-                    (Rol rol) => ChoiceChip(
-                      label: Text(rol.rol.isEmpty ? 'Rol' : rol.rol),
-                      selected: rol.idRol == activeRoleId,
-                      selectedColor: theme.primary.withValues(alpha: 0.15),
-                      labelStyle: TextStyle(
-                        color: rol.idRol == activeRoleId
-                            ? theme.primary
-                            : theme.secondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      onSelected: (bool selected) {
-                        if (selected && !changing) {
-                          onRoleSelected?.call(rol.idRol);
-                        }
-                      },
-                    ),
+                    (Rol rol) {
+                      final bool isSelected = rol.idRol == activeRoleId;
+                      return isSelected
+                          ? FilledButton(
+                              onPressed: null,
+                              style: _roleFilledButtonStyle(theme),
+                              child: Text(rol.rol.isEmpty ? 'Rol' : rol.rol),
+                            )
+                          : OutlinedButton(
+                              onPressed: changing
+                                  ? null
+                                  : () => onRoleSelected?.call(rol.idRol),
+                              style: _roleOutlinedButtonStyle(theme),
+                              child: Text(rol.rol.isEmpty ? 'Rol' : rol.rol),
+                            );
+                    },
                   )
                   .toList(),
             ),
@@ -927,6 +878,62 @@ class _RoleCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _ProfileSectionCard extends StatelessWidget {
+  const _ProfileSectionCard({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeController theme = ThemeController.instance;
+
+    return Card(
+      margin: EdgeInsets.zero,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: theme.grey.withValues(alpha: 0.3)),
+      ),
+      child: Padding(padding: const EdgeInsets.all(16), child: child),
+    );
+  }
+}
+
+
+ButtonStyle _roleFilledButtonStyle(ThemeController theme) {
+  return FilledButton.styleFrom(
+    disabledBackgroundColor: theme.primary,
+    disabledForegroundColor: theme.white,
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  );
+}
+
+ButtonStyle _roleOutlinedButtonStyle(ThemeController theme) {
+  return OutlinedButton.styleFrom(
+    foregroundColor: theme.secondary,
+    side: BorderSide(color: theme.grey.withValues(alpha: 0.4)),
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  );
+}
+
+ButtonStyle _profilePrimaryButtonStyle(ThemeController theme) {
+  return FilledButton.styleFrom(
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  );
+}
+
+ButtonStyle _profileDangerButtonStyle(ThemeController theme) {
+  return OutlinedButton.styleFrom(
+    foregroundColor: theme.error,
+    side: BorderSide(color: theme.error.withValues(alpha: 0.45)),
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+  );
 }
 
 Widget _buildAvatarFallback(ThemeController theme, Usuario profile) {
