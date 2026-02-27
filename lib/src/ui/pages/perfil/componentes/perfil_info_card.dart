@@ -19,16 +19,14 @@ class PerfilInfoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ThemeController theme = ThemeController.instance;
-    return Container(
-      decoration: BoxDecoration(
-        color: bgColor,
-        border: Border.all(
-          color: borderColor,
-          style: BorderStyle.solid,
-          width: 1,
-        ),
-        borderRadius: const BorderRadius.all(Radius.circular(12)),
+    return Card(
+      margin: EdgeInsets.zero,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: const BorderRadius.all(Radius.circular(14)),
+        side: BorderSide(color: borderColor),
       ),
+      color: bgColor,
       child: Column(
         children: <Widget>[
           Container(
@@ -45,9 +43,15 @@ class PerfilInfoCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
-                Icon(headerIcon, color: theme.grey),
+                Icon(headerIcon, color: theme.primary),
                 const SizedBox(width: 5),
-                Text(headerTitle, style: TextStyle(color: theme.grey)),
+                Text(
+                  headerTitle,
+                  style: TextStyle(
+                    color: theme.secondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
           ),
