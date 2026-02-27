@@ -147,6 +147,62 @@ class _PacientesPageState extends State<PacientesPage> with FormController {
     return '';
   }
 
+  String _validarCelular(String? value, String alias) {
+    final trimmed = value?.trim() ?? '';
+    if (trimmed.isEmpty) {
+      return '';
+    }
+    if (!RegExp(r'^\d{8}$').hasMatch(trimmed)) {
+      return 'El celular debe tener exactamente 8 dígitos';
+    }
+    final numero = int.tryParse(trimmed);
+    if (numero == null || numero < 60000000 || numero > 79999999) {
+      return 'El celular debe estar entre 60000000 y 79999999';
+    }
+    return '';
+  }
+
+  String _textoMayusculasSoloLetras(String value) {
+    final mayusculas = value.toUpperCase();
+    return mayusculas.replaceAll(RegExp(r'[^A-ZÁÉÍÓÚÑ\s]'), '');
+  }
+
+  void _normalizarTextoMayusculas(
+    TextEditingController controller,
+    String value,
+  ) {
+    final normalizado = _textoMayusculasSoloLetras(value);
+    if (controller.text == normalizado) return;
+    controller.value = TextEditingValue(
+      text: normalizado,
+      selection: TextSelection.collapsed(offset: normalizado.length),
+    );
+  }
+
+  Widget _buildResponsiveFields({
+    required bool isWide,
+    required Widget first,
+    required Widget second,
+  }) {
+    if (isWide) {
+      return Row(
+        children: [
+          Expanded(child: first),
+          const SizedBox(width: 12),
+          Expanded(child: second),
+        ],
+      );
+    }
+
+    return Column(
+      children: [
+        first,
+        const SizedBox(height: 12),
+        second,
+      ],
+    );
+  }
+
   String _formatearGenero(String? genero) {
     switch ((genero ?? '').toUpperCase()) {
       case 'F':
@@ -340,146 +396,142 @@ class _PacientesPageState extends State<PacientesPage> with FormController {
       ),
       builder: (context) {
         final isWide = MediaQuery.of(context).size.width > 700;
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-          ),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    paciente == null ? 'Nuevo paciente' : 'Editar paciente',
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 16),
-                  CustomTextInput(
-                    title: 'Nombres',
-                    controller: nombres,
-                    requiredData: true,
-                    validate: _validarRequerido,
-                  ),
-                  const SizedBox(height: 12),
-                  if (isWide)
-                    Row(
-                      children: [
-                        Expanded(
-                          child: CustomTextInput(
-                            title: 'Primer apellido',
-                            controller: primerApellido,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: CustomTextInput(
-                            title: 'Segundo apellido',
-                            controller: segundoApellido,
-                          ),
-                        ),
-                      ],
-                    )
-                  else
-                    Column(
-                      children: [
-                        CustomTextInput(
+        String errorGuardado = '';
+        bool guardando = false;
+
+        return StatefulBuilder(
+          builder: (context, setStateModal) {
+            Future<void> guardarPaciente() async {
+              setStateModal(() {
+                errorGuardado = '';
+              });
+
+              final isValid = validateForm(formKey);
+              if (!isValid) {
+                setStateModal(() {
+                  errorGuardado = 'Completa correctamente los campos requeridos.';
+                });
+                return;
+              }
+
+              final fechaBackend = _formatearFechaBackend(fechaNacimiento.text);
+              final payload = <String, dynamic>{
+                'nombres': nombres.text.trim().toUpperCase(),
+                if (primerApellido.text.trim().isNotEmpty)
+                  'primerApellido': primerApellido.text.trim().toUpperCase(),
+                if (segundoApellido.text.trim().isNotEmpty)
+                  'segundoApellido': segundoApellido.text.trim().toUpperCase(),
+                if (nroDocumento.text.trim().isNotEmpty)
+                  'nroDocumento': nroDocumento.text.trim(),
+                if (fechaBackend.isNotEmpty) 'fechaNacimiento': fechaBackend,
+                if (telefono.text.trim().isNotEmpty)
+                  'telefono': telefono.text.trim(),
+                if (generoSeleccionado?.trim().isNotEmpty ?? false)
+                  'genero': generoSeleccionado,
+                if (observacion.text.trim().isNotEmpty)
+                  'observacion': observacion.text.trim(),
+              };
+
+              setStateModal(() {
+                guardando = true;
+              });
+
+              final response = paciente == null
+                  ? await _service.crearPaciente(payload)
+                  : await _service.actualizarPaciente(paciente.id, payload);
+
+              if (!mounted) return;
+
+              setStateModal(() {
+                guardando = false;
+              });
+
+              if (response.status == StatusNetwork.connected) {
+                showSnackBar(
+                  pacientesMessenger,
+                  response.message,
+                  state: StatusSnackBar.success,
+                  colorText: _theme.white,
+                );
+                _cargarPacientes();
+                if (context.mounted) {
+                  Navigator.of(context).pop(true);
+                }
+              } else {
+                setStateModal(() {
+                  errorGuardado = response.message;
+                });
+                showSnackBar(
+                  pacientesMessenger,
+                  response.message,
+                  state: StatusSnackBar.error,
+                  colorText: _theme.white,
+                );
+              }
+            }
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        paciente == null ? 'Nuevo paciente' : 'Editar paciente',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      const SizedBox(height: 16),
+                      CustomTextInput(
+                        title: 'Nombres',
+                        controller: nombres,
+                        requiredData: true,
+                        validate: _validarRequerido,
+                        onChange: (value) {
+                          _normalizarTextoMayusculas(nombres, value);
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      _buildResponsiveFields(
+                        isWide: isWide,
+                        first: CustomTextInput(
                           title: 'Primer apellido',
                           controller: primerApellido,
+                          onChange: (value) {
+                            _normalizarTextoMayusculas(primerApellido, value);
+                          },
                         ),
-                        const SizedBox(height: 12),
-                        CustomTextInput(
+                        second: CustomTextInput(
                           title: 'Segundo apellido',
                           controller: segundoApellido,
+                          onChange: (value) {
+                            _normalizarTextoMayusculas(segundoApellido, value);
+                          },
                         ),
-                      ],
-                    ),
-                  const SizedBox(height: 12),
-                  if (isWide)
-                    Row(
-                      children: [
-                        Expanded(
-                          child: CustomTextInput(
-                            title: 'Número de documento',
-                            controller: nroDocumento,
-                            onlyNumbers: true,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: CustomTextInput(
-                            title: 'Teléfono',
-                            controller: telefono,
-                            onlyNumbers: true,
-                          ),
-                        ),
-                      ],
-                    )
-                  else
-                    Column(
-                      children: [
-                        CustomTextInput(
-                          title: 'Número de documento',
+                      ),
+                      const SizedBox(height: 12),
+                      _buildResponsiveFields(
+                        isWide: isWide,
+                        first: CustomTextInput(
+                          title: 'Número de documento (opcional)',
                           controller: nroDocumento,
                           onlyNumbers: true,
                         ),
-                        const SizedBox(height: 12),
-                        CustomTextInput(
-                          title: 'Teléfono',
+                        second: CustomTextInput(
+                          title: 'Celular (opcional)',
                           controller: telefono,
                           onlyNumbers: true,
+                          validate: _validarCelular,
                         ),
-                      ],
-                    ),
-                  const SizedBox(height: 12),
-                  if (isWide)
-                    Row(
-                      children: [
-                        Expanded(
-                          child: CustomTextInput(
-                            title: 'Fecha de nacimiento (DD/MM/AAAA)',
-                            controller: fechaNacimiento,
-                            placeholder: 'DD/MM/AAAA',
-                            maxLength: 10,
-                            textFiltering: RegExp(r'[0-9/]'),
-                            onTap: () => _seleccionarFecha(fechaNacimiento),
-                            validate: _validarFechaOpcional,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: DropdownButtonFormField<String>(
-                            decoration: const InputDecoration(
-                              labelText: 'Género',
-                              isDense: true,
-                            ),
-                            initialValue: generoSeleccionado,
-                            items: const [
-                              DropdownMenuItem(
-                                value: 'F',
-                                child: Text('Femenino'),
-                              ),
-                              DropdownMenuItem(
-                                value: 'M',
-                                child: Text('Masculino'),
-                              ),
-                              DropdownMenuItem(
-                                value: 'O',
-                                child: Text('Otro'),
-                              ),
-                            ],
-                            onChanged: (value) {
-                              setState(() => generoSeleccionado = value);
-                            },
-                          ),
-                        ),
-                      ],
-                    )
-                  else
-                    Column(
-                      children: [
-                        CustomTextInput(
+                      ),
+                      const SizedBox(height: 12),
+                      _buildResponsiveFields(
+                        isWide: isWide,
+                        first: CustomTextInput(
                           title: 'Fecha de nacimiento (DD/MM/AAAA)',
                           controller: fechaNacimiento,
                           placeholder: 'DD/MM/AAAA',
@@ -488,10 +540,9 @@ class _PacientesPageState extends State<PacientesPage> with FormController {
                           onTap: () => _seleccionarFecha(fechaNacimiento),
                           validate: _validarFechaOpcional,
                         ),
-                        const SizedBox(height: 12),
-                        DropdownButtonFormField<String>(
+                        second: DropdownButtonFormField<String>(
                           decoration: const InputDecoration(
-                            labelText: 'Género',
+                            labelText: 'Género (opcional)',
                             isDense: true,
                           ),
                           initialValue: generoSeleccionado,
@@ -510,88 +561,65 @@ class _PacientesPageState extends State<PacientesPage> with FormController {
                             ),
                           ],
                           onChanged: (value) {
-                            setState(() => generoSeleccionado = value);
+                            setStateModal(() => generoSeleccionado = value);
                           },
                         ),
-                      ],
-                    ),
-                  const SizedBox(height: 12),
-                  CustomTextInput(
-                    title: 'Observación',
-                    controller: observacion,
-                    lines: 3,
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: SimpleButton(
-                          title: 'Cancelar',
-                          outlined: true,
-                          background: _theme.primary,
-                          onTap: () => Navigator.of(context).pop(false),
-                        ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: SimpleButton(
-                          title: paciente == null ? 'Crear' : 'Guardar',
-                          onTap: () =>
-                              Navigator.of(context).pop(validateForm(formKey)),
+                      const SizedBox(height: 12),
+                      CustomTextInput(
+                        title: 'Observación (opcional)',
+                        controller: observacion,
+                        lines: 3,
+                      ),
+                      if (errorGuardado.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            errorGuardado,
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                              fontSize: 12,
+                            ),
+                          ),
                         ),
+                      ],
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: SimpleButton(
+                              title: 'Cancelar',
+                              outlined: true,
+                              background: _theme.primary,
+                              onTap: guardando
+                                  ? null
+                                  : () => Navigator.of(context).pop(false),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: SimpleButton(
+                              title: guardando
+                                  ? 'Guardando...'
+                                  : (paciente == null ? 'Crear' : 'Guardar'),
+                              onTap: guardando ? null : guardarPaciente,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
 
     if (result != true) {
       return;
-    }
-
-    final fechaBackend = _formatearFechaBackend(fechaNacimiento.text);
-    final payload = <String, dynamic>{
-      'nombres': nombres.text.trim(),
-      if (primerApellido.text.trim().isNotEmpty)
-        'primerApellido': primerApellido.text.trim(),
-      if (segundoApellido.text.trim().isNotEmpty)
-        'segundoApellido': segundoApellido.text.trim(),
-      if (nroDocumento.text.trim().isNotEmpty)
-        'nroDocumento': nroDocumento.text.trim(),
-      if (fechaBackend.isNotEmpty) 'fechaNacimiento': fechaBackend,
-      if (telefono.text.trim().isNotEmpty) 'telefono': telefono.text.trim(),
-      if (generoSeleccionado?.trim().isNotEmpty ?? false)
-        'genero': generoSeleccionado,
-      if (observacion.text.trim().isNotEmpty)
-        'observacion': observacion.text.trim(),
-    };
-
-    final response = paciente == null
-        ? await _service.crearPaciente(payload)
-        : await _service.actualizarPaciente(paciente.id, payload);
-
-    if (!mounted) return;
-
-    if (response.status == StatusNetwork.connected) {
-      showSnackBar(
-        pacientesMessenger,
-        response.message,
-        state: StatusSnackBar.success,
-        colorText: _theme.white,
-      );
-      _cargarPacientes();
-    } else {
-      showSnackBar(
-        pacientesMessenger,
-        response.message,
-        state: StatusSnackBar.error,
-        colorText: _theme.white,
-      );
     }
   }
 
@@ -684,7 +712,7 @@ class _PacientesPageState extends State<PacientesPage> with FormController {
                   'Fecha de nacimiento',
                   _formatearFechaInicial(paciente.fechaNacimiento),
                 ),
-                _buildDetailRow('Teléfono', paciente.telefono),
+                _buildDetailRow('Celular', paciente.telefono),
                 _buildDetailRow('Género', _formatearGenero(paciente.genero)),
                 _buildDetailRow('Estado', paciente.estado),
                 _buildDetailRow('Observación', paciente.observacion),
@@ -826,7 +854,7 @@ class _PacientesPageState extends State<PacientesPage> with FormController {
                     columnas: [
                       CriterioOrdenType(nombre: 'Nombre'),
                       CriterioOrdenType(nombre: 'Documento'),
-                      CriterioOrdenType(nombre: 'Teléfono'),
+                      CriterioOrdenType(nombre: 'Celular'),
                       CriterioOrdenType(nombre: 'Género'),
                       CriterioOrdenType(nombre: 'Estado'),
                       CriterioOrdenType(nombre: 'Acciones'),
@@ -1011,7 +1039,7 @@ class _PacientesPageState extends State<PacientesPage> with FormController {
                   ],
                   if ((paciente.telefono ?? '').isNotEmpty) ...[
                     const SizedBox(height: 4),
-                    Text('Teléfono: ${paciente.telefono}'),
+                    Text('Celular: ${paciente.telefono}'),
                   ],
                   if ((paciente.fechaNacimiento ?? '').isNotEmpty) ...[
                     const SizedBox(height: 4),
