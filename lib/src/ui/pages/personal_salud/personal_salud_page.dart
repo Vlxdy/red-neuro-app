@@ -566,6 +566,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     String? submitErrorText;
     bool submitting = false;
     int currentStep = 0;
+    final bool isEditing = personal != null;
+    final int lastStepIndex = isEditing ? 2 : 3;
 
     final seleccionInicial = personal?.especialidades ?? [];
     final selectedEspecialidades = seleccionInicial.isNotEmpty
@@ -1154,7 +1156,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                           title: personal == null
                               ? 'Registrar personal de salud'
                               : 'Editar personal de salud',
-                          totalSteps: 4,
+                          totalSteps: lastStepIndex + 1,
                           currentStep: currentStep,
                           stepErrorText: modalErrorText,
                           submitErrorText: submitErrorText,
@@ -1171,17 +1173,17 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                   });
                                 }
                               : null,
-                          nextLabel: currentStep == 3
-                              ? (personal == null ? 'Crear' : 'Guardar cambios')
+                          nextLabel: currentStep == lastStepIndex
+                              ? (personal == null ? 'Crear' : 'Guardar')
                               : 'Siguiente',
-                          nextIcon: currentStep == 3
+                          nextIcon: currentStep == lastStepIndex
                               ? (personal == null
                                     ? PhosphorIconsFill.userPlus
                                     : PhosphorIconsFill.floppyDisk)
                               : null,
                           stepContent: stepContent(),
                           onNext: () async {
-                            if (currentStep < 3) {
+                            if (currentStep < lastStepIndex) {
                               final isValid = validateForm(formKey);
                               if (!isValid) return;
                               final apellidoError = _validarApellidos(
@@ -1210,7 +1212,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                             setStateDialog(() {
                               modalErrorText = null;
                             });
-                            if ((contrasena.text.isNotEmpty ||
+                            if (!isEditing &&
+                                (contrasena.text.isNotEmpty ||
                                     repetirContrasena.text.isNotEmpty) &&
                                 contrasena.text != repetirContrasena.text) {
                               setStateDialog(() {
@@ -1252,10 +1255,6 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                               body = {
                                 'persona': persona,
                                 'correoElectronico': correo.text.trim(),
-                                if (contrasena.text.isNotEmpty)
-                                  'contrasena': contrasena.text,
-                                if (repetirContrasena.text.isNotEmpty)
-                                  'repetirContrasena': repetirContrasena.text,
                                 'esSupervisor': esSupervisor,
                                 if (idsEspecialidades.isNotEmpty)
                                   'idEspecialidades': idsEspecialidades,
