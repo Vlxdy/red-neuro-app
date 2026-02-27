@@ -2136,9 +2136,20 @@ class _CitasPageState extends State<CitasPage> {
                     const SizedBox(height: 16),
                     Align(
                       alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Tipo de cita *',
-                        style: Theme.of(context).textTheme.bodyMedium,
+                      child: RichText(
+                        text: TextSpan(
+                          text: 'Tipo de cita',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                          children: [
+                            TextSpan(
+                              text: ' *',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     RadioListTile<String>(
@@ -2180,7 +2191,8 @@ class _CitasPageState extends State<CitasPage> {
                     const SizedBox(height: 8),
                     CitasAutocompleteSelectorField(
                       controller: estudioController,
-                      labelText: 'Servicio *',
+                      labelText: 'Servicio',
+                      requiredData: true,
                       hintText: 'Selecciona un servicio',
                       onTap: abrirSelectorEstudio,
                     ),
@@ -2228,7 +2240,8 @@ class _CitasPageState extends State<CitasPage> {
                     children: [
                       Expanded(
                         child: FechaSelector(
-                          label: 'Fecha *',
+                          label: 'Fecha',
+                          requiredData: true,
                           value: fechaInicio,
                           formatter: _dateFormat,
                           onTap: updateFechaInicioFecha,
@@ -2237,7 +2250,8 @@ class _CitasPageState extends State<CitasPage> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: FechaSelector(
-                          label: 'Hora *',
+                          label: 'Hora',
+                          requiredData: true,
                           value: fechaInicio,
                           formatter: _timeFormat,
                           onTap: updateFechaInicioHora,

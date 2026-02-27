@@ -11,6 +11,7 @@ class CitasAutocompleteSelectorField extends StatelessWidget {
     this.errorText,
     this.onClear,
     this.enabled = true,
+    this.requiredData = false,
   });
 
   final TextEditingController controller;
@@ -20,6 +21,7 @@ class CitasAutocompleteSelectorField extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback? onClear;
   final bool enabled;
+  final bool requiredData;
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +33,7 @@ class CitasAutocompleteSelectorField extends StatelessWidget {
         label: labelText,
         hint: hintText,
         enabled: enabled,
+        requiredData: requiredData,
         suffixIcon: onClear != null
             ? IconButton(
                 tooltip: 'Quitar',
