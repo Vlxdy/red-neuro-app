@@ -3090,64 +3090,6 @@
         ]
       }
     },
-    "/servicios/{id}/especialidades": {
-      "post": {
-        "operationId": "ServicioController_asignarEspecialidad",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "example": "12",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AsignarEspecialidadDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/BaseResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "datos": {
-                          "$ref": "#/components/schemas/ServicioResponseDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Asocia una especialidad a un servicio",
-        "tags": [
-          "Servicios"
-        ]
-      }
-    },
     "/especialidades": {
       "get": {
         "operationId": "EspecialidadController_listar",
@@ -5998,19 +5940,6 @@
             "example": "ACTIVO"
           }
         }
-      },
-      "AsignarEspecialidadDto": {
-        "type": "object",
-        "properties": {
-          "especialidadId": {
-            "type": "string",
-            "description": "Identificador de la especialidad a asociar al servicio",
-            "example": "2"
-          }
-        },
-        "required": [
-          "especialidadId"
-        ]
       },
       "ServicioResumenDto": {
         "type": "object",

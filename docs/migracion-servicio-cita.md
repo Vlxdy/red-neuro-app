@@ -1,6 +1,7 @@
 # Migración a `servicio_cita` en módulo de citas
 
 ## Resumen
+
 Se unificó el manejo de **consultas** y **estudios** bajo un único concepto: `servicio_cita`.
 
 - Antes: `tipoCita` + `idEstudio` (solo para ESTUDIO).
@@ -10,6 +11,7 @@ Se unificó el manejo de **consultas** y **estudios** bajo un único concepto: `
 ## Cambios de modelo
 
 ### Nuevas entidades relacionadas
+
 - `servicio`
   - `id`
   - `nombre`
@@ -25,6 +27,7 @@ Se unificó el manejo de **consultas** y **estudios** bajo un único concepto: `
 > La relación `servicio` ↔ `especialidad` ahora es **muchos-a-muchos** a través de `servicio_especialidad`.
 
 ### Cita
+
 - Reemplazo de campo relacional:
   - ❌ `idEstudio`
   - ✅ `idServicio`
@@ -35,6 +38,7 @@ Se unificó el manejo de **consultas** y **estudios** bajo un único concepto: `
 ## APIs que deben actualizarse
 
 ## 1) REST `/citas` (POST)
+
 Actualizar body de creación:
 
 ```json
@@ -53,6 +57,7 @@ Actualizar body de creación:
 > `idEspecialidad` puede omitirse. Si se envía, debe pertenecer al conjunto de especialidades asociadas al servicio.
 
 ## 2) REST `/citas/:id` (PATCH)
+
 Para cambiar tipo/servicio:
 
 ```json
@@ -73,28 +78,39 @@ Para cambiar tipo/servicio:
 ```
 
 ## 4) Respuesta de cita
+
 Campos de salida actualizados:
+
 - `servicioId`
 - `servicio` (objeto con nombre, tipo, duración, costo, estado)
 
 ## 5) Historial
+
 El campo auditado para servicio cambia a:
+
 - `idServicio`
 
 ## Sockets (si aplica)
+
 Actualizar payloads de eventos:
+
 - `citas:crear` → usar `idServicio`
 - `citas:actualizar` → usar `idServicio`
 - `citas:reprogramar` → usar `idServicio`
 
 ## Checklist de frontends/integraciones
+
 - [ ] Reemplazar `idEstudio` por `idServicio` en formularios.
 - [ ] Reemplazar `estudioId` por `servicioId` en modelos de vista.
 - [ ] Leer `servicio` en vez de `estudio` en detalles/listados.
 - [ ] Ajustar validaciones (ya no depende de ESTUDIO para enviar identificador).
 
-
 ## APIs de servicios (actualización de contrato)
+
 - `POST /servicios` y `PATCH /servicios/:id` ahora reciben `especialidadIds?: string[]` para asignar múltiples especialidades.
 - `GET /servicios` y `GET /servicios/:id` devuelven `especialidades: EspecialidadResumenDto[]`.
-- `POST /servicios/:id/especialidades` agrega una especialidad sin reemplazar las existentes.
+- La gestión de especialidades asociadas al servicio se realiza con `PATCH /servicios/:id` enviando el arreglo final en `especialidadIds`.
+- La sincronización de especialidades es lógica (no elimina físicamente):
+  - `especialidadIds` `undefined`/`null` no modifica relaciones,
+  - `especialidadIds: []` inactiva todas las relaciones,
+  - con IDs se crean/reactivan las enviadas e inactivan las omitidas.
