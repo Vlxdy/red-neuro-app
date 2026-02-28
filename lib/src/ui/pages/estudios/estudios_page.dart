@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:red_neuro_app/src/config/form_controller.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
@@ -250,7 +249,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
     var tipoSeleccionado = (servicio?.tipo ?? 'ESTUDIO').toUpperCase();
     final especialidadesSeleccionadas =
         servicio?.especialidades.map((item) => item.id).toSet() ?? <String>{};
-    final mostrarPasoEspecialidades = servicio == null;
+    const mostrarPasoEspecialidades = true;
     var currentStep = 0;
     String? modalError;
 
@@ -480,8 +479,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
       'duracionMinutos': int.parse(duracionController.text.trim()),
       'costo': double.parse(costoController.text.trim().replaceAll(',', '.')),
       'tipo': tipoSeleccionado,
-      if (servicio == null)
-        'especialidadIds': especialidadesSeleccionadas.toList(),
+      'especialidadIds': especialidadesSeleccionadas.toList(),
     };
 
     final response = servicio == null
@@ -554,252 +552,6 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
         state: StatusSnackBar.error,
         colorText: _theme.white,
       );
-    }
-  }
-
-  Future<void> _abrirAsignacion(Servicio servicio) async {
-    final asignadasIds = servicio.especialidades
-        .map((especialidad) => especialidad.id)
-        .toSet();
-    final seleccionadas = <String>{};
-    final especialidadesDisponibles = <Especialidad>[];
-    final scrollController = ScrollController();
-    var listenerAdded = false;
-
-    var page = 1;
-    const limit = 20;
-    var hasMore = true;
-    var loading = false;
-    var filtro = '';
-    Timer? debounce;
-
-    Future<void> cargarEspecialidades(
-      void Function(void Function()) setDialogState, {
-      bool reset = false,
-    }) async {
-      if (loading) return;
-
-      setDialogState(() => loading = true);
-      if (reset) {
-        page = 1;
-        hasMore = true;
-        especialidadesDisponibles.clear();
-      }
-
-      final result = await _service.obtenerEspecialidadesPaginadas(
-        page: page,
-        limit: limit,
-        filtro: filtro,
-      );
-      if (!mounted) return;
-
-      final nuevas = result.items
-          .where((item) => !asignadasIds.contains(item.id))
-          .toList();
-
-      setDialogState(() {
-        if (reset) {
-          especialidadesDisponibles
-            ..clear()
-            ..addAll(nuevas);
-        } else {
-          final existentes = especialidadesDisponibles
-              .map((item) => item.id)
-              .toSet();
-          especialidadesDisponibles.addAll(
-            nuevas.where((item) => !existentes.contains(item.id)),
-          );
-        }
-        hasMore = result.items.length >= limit;
-        if (hasMore) page += 1;
-        loading = false;
-      });
-    }
-
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            if (!listenerAdded) {
-              listenerAdded = true;
-              scrollController.addListener(() {
-                if (!hasMore || loading || !scrollController.hasClients) return;
-                final current = scrollController.position.pixels;
-                final max = scrollController.position.maxScrollExtent;
-                if (current >= max - 120) {
-                  cargarEspecialidades(setDialogState);
-                }
-              });
-              cargarEspecialidades(setDialogState, reset: true);
-            }
-
-            return AlertDialog(
-              title: Text('Asignar especialidades a "${servicio.nombre}"'),
-              content: SizedBox(
-                width: 440,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (servicio.especialidades.isNotEmpty) ...[
-                      Text(
-                        'Especialidades actuales',
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: servicio.especialidades
-                            .map(
-                              (especialidad) => Chip(
-                                label: Text(especialidad.nombre),
-                                backgroundColor: HexColor.fromHex(
-                                  especialidad.colorHex,
-                                ).withValues(alpha: .15),
-                              ),
-                            )
-                            .toList(),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                    Text(
-                      'Selecciona nuevas especialidades',
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      decoration: const InputDecoration(
-                        labelText: 'Buscar especialidad',
-                        prefixIcon: Icon(Icons.search),
-                      ),
-                      onChanged: (value) {
-                        filtro = value.trim();
-                        debounce?.cancel();
-                        debounce = Timer(
-                          const Duration(milliseconds: 350),
-                          () =>
-                              cargarEspecialidades(setDialogState, reset: true),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    if (especialidadesDisponibles.isEmpty && loading)
-                      const SizedBox(
-                        height: 220,
-                        child: Center(child: CircularProgressIndicator()),
-                      )
-                    else if (especialidadesDisponibles.isEmpty)
-                      SizedBox(
-                        height: 220,
-                        child: Center(
-                          child: Text(
-                            'No hay especialidades disponibles para asignar.',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ),
-                      )
-                    else
-                      SizedBox(
-                        height: 280,
-                        child: ListView.builder(
-                          controller: scrollController,
-                          itemCount:
-                              especialidadesDisponibles.length +
-                              ((hasMore || loading) ? 1 : 0),
-                          itemBuilder: (context, index) {
-                            if (index == especialidadesDisponibles.length) {
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                ),
-                                child: Center(
-                                  child: loading
-                                      ? const CircularProgressIndicator()
-                                      : const SizedBox.shrink(),
-                                ),
-                              );
-                            }
-
-                            final especialidad =
-                                especialidadesDisponibles[index];
-                            final selected = seleccionadas.contains(
-                              especialidad.id,
-                            );
-                            return CheckboxListTile(
-                              value: selected,
-                              title: Text(especialidad.nombre),
-                              subtitle: Text(especialidad.descripcion ?? '-'),
-                              onChanged: (value) {
-                                setDialogState(() {
-                                  if (value == true) {
-                                    seleccionadas.add(especialidad.id);
-                                  } else {
-                                    seleccionadas.remove(especialidad.id);
-                                  }
-                                });
-                              },
-                            );
-                          },
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('Cancelar'),
-                ),
-                TextButton(
-                  onPressed: seleccionadas.isEmpty
-                      ? null
-                      : () => Navigator.of(context).pop(true),
-                  child: const Text('Asignar'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-
-    debounce?.cancel();
-    scrollController.dispose();
-
-    if (result != true || seleccionadas.isEmpty) {
-      return;
-    }
-
-    bool allSuccess = true;
-    String lastMessage = '';
-
-    for (final especialidadId in seleccionadas) {
-      final response = await _service.asignarEspecialidad(
-        estudioId: servicio.id,
-        especialidadId: especialidadId,
-      );
-      lastMessage = response.message;
-      if (response.status != StatusNetwork.connected) {
-        allSuccess = false;
-        break;
-      }
-    }
-
-    if (!mounted) return;
-    showSnackBar(
-      estudiosMessenger,
-      lastMessage.isNotEmpty
-          ? lastMessage
-          : allSuccess
-          ? 'Especialidades asignadas.'
-          : 'No se pudieron asignar las especialidades.',
-      state: allSuccess ? StatusSnackBar.success : StatusSnackBar.error,
-      colorText: _theme.white,
-    );
-    if (allSuccess) {
-      _cargarServicios();
     }
   }
 
@@ -968,11 +720,6 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                                   ),
                                   onPressed: () => _cambiarEstado(servicio),
                                 ),
-                                IconButton(
-                                  tooltip: 'Asignar especialidades',
-                                  icon: const Icon(Icons.add_circle_outline),
-                                  onPressed: () => _abrirAsignacion(servicio),
-                                ),
                               ],
                             ),
                           ],
@@ -1139,11 +886,6 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                               ? 'Desactivar'
                               : 'Activar',
                         ),
-                      ),
-                      TextButton.icon(
-                        onPressed: () => _abrirAsignacion(servicio),
-                        icon: const Icon(Icons.add_circle_outline),
-                        label: const Text('Asignar'),
                       ),
                     ],
                   ),
