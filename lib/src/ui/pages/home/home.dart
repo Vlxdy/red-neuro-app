@@ -568,6 +568,7 @@ List<ChildrenItem> _submodulesFromRole({
     '/admin/usuarios',
     '/admin/especialidades',
     '/admin/estudios',
+    '/admin/servicios',
   ];
 
   if (selectedRole != null && selectedRole.modulos.isNotEmpty) {
@@ -646,7 +647,10 @@ ChildrenItem _submoduleToItem(
   final isEspecialidadesModule = normalizedUrl.contains('especialidades') ||
       normalizedName == 'especialidades';
   final isEstudiosModule =
-      normalizedUrl.contains('estudios') || normalizedName == 'estudios';
+      normalizedUrl.contains('estudios') ||
+      normalizedUrl.contains('servicios') ||
+      normalizedName == 'estudios' ||
+      normalizedName == 'servicios';
   final isCitasModule =
       normalizedUrl == '/admin/citas' || normalizedName == 'citas';
   final isPacientesModule =
@@ -663,7 +667,7 @@ ChildrenItem _submoduleToItem(
       : isEspecialidadesModule
       ? 'especialidades'
       : isEstudiosModule
-      ? 'estudios'
+      ? 'servicios'
       : subModule.propiedades?.icono;
 
   return ChildrenItem(
@@ -672,7 +676,9 @@ ChildrenItem _submoduleToItem(
       resolvedIconName,
       filled: true,
     ),
-    titulo: subModule.label.isNotEmpty ? subModule.label : subModule.nombre,
+    titulo: isEstudiosModule
+        ? 'Servicios'
+        : (subModule.label.isNotEmpty ? subModule.label : subModule.nombre),
     color: theme.primary,
     children: KeepAlivePage(
       child: isUsuariosModule
@@ -722,6 +728,7 @@ IconData _moduleIconData(String? iconName, {bool filled = false}) {
     case 'medical_services':
       return filled ? Icons.medical_services : Icons.medical_services_outlined;
     case 'estudios':
+    case 'servicios':
     case 'science':
       return filled ? Icons.science : Icons.science_outlined;
     case 'user':
@@ -798,7 +805,7 @@ List<ChildrenItem> _adminMenu(ThemeController theme) => [
   ChildrenItem(
     iconoImagen: Icons.science_outlined,
     iconoImagenSeleccionada: Icons.science,
-    titulo: 'Estudios',
+    titulo: 'Servicios',
     children: const KeepAlivePage(child: EstudiosPage()),
   ),
 ];
