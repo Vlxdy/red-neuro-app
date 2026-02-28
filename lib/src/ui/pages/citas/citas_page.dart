@@ -820,9 +820,7 @@ class _CitasPageState extends State<CitasPage> {
                                 title: Text(option.nombreCompleto),
                                 subtitle:
                                     (option.nroDocumento?.isNotEmpty ?? false)
-                                    ? Text(
-                                        'Documento: ${option.nroDocumento}',
-                                      )
+                                    ? Text('Documento: ${option.nroDocumento}')
                                     : null,
                                 onTap: () => Navigator.pop(context, option),
                               );
@@ -2044,7 +2042,9 @@ class _CitasPageState extends State<CitasPage> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   color: _theme.primary.withValues(alpha: .08),
-                  border: Border.all(color: _theme.primary.withValues(alpha: .2)),
+                  border: Border.all(
+                    color: _theme.primary.withValues(alpha: .2),
+                  ),
                 ),
                 child: Wrap(
                   runSpacing: 8,
@@ -2101,7 +2101,8 @@ class _CitasPageState extends State<CitasPage> {
                         if (nuevo == null) return;
                         setStateDialog(() {
                           pacienteSeleccionado = nuevo;
-                          pacienteAutocompleteController.text = nuevo.nombreCompleto;
+                          pacienteAutocompleteController.text =
+                              nuevo.nombreCompleto;
                           pacientesDisponibles.insert(0, nuevo);
                         });
                         pacienteFieldKey.currentState?.didChange(nuevo);
@@ -2152,10 +2153,7 @@ class _CitasPageState extends State<CitasPage> {
                         ),
                       ),
                     ),
-                    RadioListTile<String>(
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text('Consulta'),
-                      value: 'CONSULTA',
+                    RadioGroup<String>(
                       groupValue: tipoCita,
                       onChanged: (value) {
                         if (value == null) return;
@@ -2169,24 +2167,20 @@ class _CitasPageState extends State<CitasPage> {
                           unawaited(cargarServicios(reset: true));
                         });
                       },
-                    ),
-                    RadioListTile<String>(
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text('Estudio'),
-                      value: 'ESTUDIO',
-                      groupValue: tipoCita,
-                      onChanged: (value) {
-                        if (value == null) return;
-                        setStateDialog(() {
-                          tipoCita = value;
-                          servicioSeleccionado = null;
-                          servicioController.clear();
-                          serviciosDisponibles.clear();
-                          serviciosHasMore = true;
-                          serviciosPage = 1;
-                          unawaited(cargarServicios(reset: true));
-                        });
-                      },
+                      child: const Column(
+                        children: [
+                          RadioListTile<String>(
+                            title: Text('Consulta'),
+                            value: 'CONSULTA',
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                          RadioListTile<String>(
+                            title: Text('Estudio'),
+                            value: 'ESTUDIO',
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 8),
                     CitasAutocompleteSelectorField(
@@ -2269,7 +2263,8 @@ class _CitasPageState extends State<CitasPage> {
                       ),
                       items: CitaEstado.values.map((estadoItem) {
                         final restringido =
-                            estadoItem == 'CONFIRMADA' || estadoItem == 'RECHAZADA';
+                            estadoItem == 'CONFIRMADA' ||
+                            estadoItem == 'RECHAZADA';
                         final habilitado =
                             !restringido ||
                             _puedeAprobarRechazar(cita) ||
@@ -2304,8 +2299,8 @@ class _CitasPageState extends State<CitasPage> {
                         top: Radius.circular(24),
                       ),
                     ),
-                    child: WillPopScope(
-                      onWillPop: () async => true,
+                    child: PopScope(
+                      canPop: true,
                       child: SingleChildScrollView(
                         padding: EdgeInsets.fromLTRB(
                           16,
@@ -2334,7 +2329,9 @@ class _CitasPageState extends State<CitasPage> {
                                   }
                                 : null,
                             nextLabel: currentStep == 2
-                                ? (cita == null ? 'Crear cita' : 'Guardar cambios')
+                                ? (cita == null
+                                      ? 'Crear cita'
+                                      : 'Guardar cambios')
                                 : 'Siguiente',
                             stepContent: stepContent(),
                             onNext: () async {
@@ -2386,7 +2383,8 @@ class _CitasPageState extends State<CitasPage> {
           'idPaciente': pacienteSeleccionado?.id,
         if (especialidadId.isNotEmpty) 'idEspecialidad': especialidadId,
         'tipoCita': tipoCita,
-        if (servicioSeleccionado != null) 'idServicio': servicioSeleccionado!.id,
+        if (servicioSeleccionado != null)
+          'idServicio': servicioSeleccionado!.id,
       });
       final ok = await _handleResponseError(
         response,
@@ -2434,7 +2432,8 @@ class _CitasPageState extends State<CitasPage> {
         'id': cita.id,
         'fechaInicio': fechaInicio!.toUtc().toIso8601String(),
         'tipoCita': tipoCita,
-        if (servicioSeleccionado != null) 'idServicio': servicioSeleccionado!.id,
+        if (servicioSeleccionado != null)
+          'idServicio': servicioSeleccionado!.id,
       });
     }
 

@@ -1,6 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -133,15 +131,16 @@ class _PerfilState extends State<Perfil> {
     if (_updatingPhoto) return;
 
     final ThemeController theme = ThemeController.instance;
+
+    // 1) Esto es un async gap, aún no tocaste UI “peligrosa”
     final FilePickerResult? selected = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: _allowedAvatarExtensions,
       allowMultiple: false,
     );
 
-    if (selected == null || selected.files.isEmpty) {
-      return;
-    }
+    if (!mounted) return; // <- recomendable tras el await del picker
+    if (selected == null || selected.files.isEmpty) return;
 
     final PlatformFile platformFile = selected.files.first;
     final String extension = (platformFile.extension ?? '').toLowerCase();
@@ -190,32 +189,29 @@ class _PerfilState extends State<Perfil> {
 
     setState(() => _updatingPhoto = true);
 
+    // Captura el service ANTES del await de red
+    final PerfilService service = PerfilService('', context);
+
     try {
-      final PerfilService service = PerfilService('', context);
       final ResponseApi response = await service.actualizarFotoPerfil(foto);
 
       if (!mounted) return;
 
       final bool synced = await _refreshProfileAfterPhotoChange(service);
-      if (synced) {
-        showSnackBar(
-          perfilMessenger,
-          response.status == StatusNetwork.connected
-              ? response.message
-              : 'Foto actualizada y perfil refrescado.',
-          state: StatusSnackBar.success,
-          colorText: theme.white,
-        );
-      } else {
-        showSnackBar(
-          perfilMessenger,
-          response.status == StatusNetwork.connected
-              ? 'La foto se actualizó, pero no se pudo refrescar el perfil.'
-              : response.message,
-          state: StatusSnackBar.error,
-          colorText: theme.white,
-        );
-      }
+      if (!mounted) return;
+
+      showSnackBar(
+        perfilMessenger,
+        synced
+            ? (response.status == StatusNetwork.connected
+                  ? response.message
+                  : 'Foto actualizada y perfil refrescado.')
+            : (response.status == StatusNetwork.connected
+                  ? 'La foto se actualizó, pero no se pudo refrescar el perfil.'
+                  : response.message),
+        state: synced ? StatusSnackBar.success : StatusSnackBar.error,
+        colorText: theme.white,
+      );
     } catch (e) {
       if (!mounted) return;
       showSnackBar(
@@ -278,7 +274,6 @@ class _PerfilState extends State<Perfil> {
     }
   }
 
-
   Future<void> _applyProfileUpdate(Usuario refreshed) async {
     await Auth.instance.updateUser(refreshed);
     if (!mounted) return;
@@ -293,7 +288,6 @@ class _PerfilState extends State<Perfil> {
       _avatarCache.clear();
     });
   }
-
 
   Future<bool> _refreshProfileAfterPhotoChange(PerfilService service) async {
     for (int intentos = 0; intentos < 2; intentos++) {
@@ -359,7 +353,6 @@ class _PerfilState extends State<Perfil> {
       client.close(force: true);
     }
   }
-
 
   Future<void> _logout() async {
     if (_loggingOut) return;
@@ -481,41 +474,49 @@ class _PerfilState extends State<Perfil> {
                                   child: ClipOval(
                                     child: showRemoteAvatar
                                         ? FutureBuilder<Uint8List?>(
-                                            future: _fetchAvatarBytes(avatarUrl),
-                                            builder: (
-                                              BuildContext context,
-                                              AsyncSnapshot<Uint8List?> snapshot,
-                                            ) {
-                                              final Uint8List? bytes =
-                                                  snapshot.data;
-                                              if (snapshot.connectionState ==
-                                                      ConnectionState.done &&
-                                                  bytes == null &&
-                                                  mounted &&
-                                                  _avatarFailedUrl != avatarUrl) {
-                                                WidgetsBinding.instance
-                                                    .addPostFrameCallback((_) {
-                                                      if (!mounted) return;
-                                                      setState(() {
-                                                        _avatarFailedUrl =
-                                                            avatarUrl;
-                                                      });
-                                                    });
-                                              }
+                                            future: _fetchAvatarBytes(
+                                              avatarUrl,
+                                            ),
+                                            builder:
+                                                (
+                                                  BuildContext context,
+                                                  AsyncSnapshot<Uint8List?>
+                                                  snapshot,
+                                                ) {
+                                                  final Uint8List? bytes =
+                                                      snapshot.data;
+                                                  if (snapshot.connectionState ==
+                                                          ConnectionState
+                                                              .done &&
+                                                      bytes == null &&
+                                                      mounted &&
+                                                      _avatarFailedUrl !=
+                                                          avatarUrl) {
+                                                    WidgetsBinding.instance
+                                                        .addPostFrameCallback((
+                                                          _,
+                                                        ) {
+                                                          if (!mounted) return;
+                                                          setState(() {
+                                                            _avatarFailedUrl =
+                                                                avatarUrl;
+                                                          });
+                                                        });
+                                                  }
 
-                                              if (bytes != null) {
-                                                return Image.memory(
-                                                  bytes,
-                                                  fit: BoxFit.cover,
-                                                  gaplessPlayback: true,
-                                                );
-                                              }
+                                                  if (bytes != null) {
+                                                    return Image.memory(
+                                                      bytes,
+                                                      fit: BoxFit.cover,
+                                                      gaplessPlayback: true,
+                                                    );
+                                                  }
 
-                                              return _buildAvatarFallback(
-                                                theme,
-                                                profile,
-                                              );
-                                            },
+                                                  return _buildAvatarFallback(
+                                                    theme,
+                                                    profile,
+                                                  );
+                                                },
                                           )
                                         : _buildAvatarFallback(theme, profile),
                                   ),
@@ -555,7 +556,9 @@ class _PerfilState extends State<Perfil> {
                               if (profile.urlFoto != null &&
                                   profile.urlFoto!.trim().isNotEmpty)
                                 OutlinedButton.icon(
-                                  onPressed: _updatingPhoto ? null : _deletePhoto,
+                                  onPressed: _updatingPhoto
+                                      ? null
+                                      : _deletePhoto,
                                   icon: const Icon(Icons.delete_outline),
                                   label: const Text('Quitar'),
                                   style: _profileDangerButtonStyle(theme),
@@ -830,26 +833,22 @@ class _RoleCard extends StatelessWidget {
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: roles
-                  .map(
-                    (Rol rol) {
-                      final bool isSelected = rol.idRol == activeRoleId;
-                      return isSelected
-                          ? FilledButton(
-                              onPressed: null,
-                              style: _roleFilledButtonStyle(theme),
-                              child: Text(rol.rol.isEmpty ? 'Rol' : rol.rol),
-                            )
-                          : OutlinedButton(
-                              onPressed: changing
-                                  ? null
-                                  : () => onRoleSelected?.call(rol.idRol),
-                              style: _roleOutlinedButtonStyle(theme),
-                              child: Text(rol.rol.isEmpty ? 'Rol' : rol.rol),
-                            );
-                    },
-                  )
-                  .toList(),
+              children: roles.map((Rol rol) {
+                final bool isSelected = rol.idRol == activeRoleId;
+                return isSelected
+                    ? FilledButton(
+                        onPressed: null,
+                        style: _roleFilledButtonStyle(theme),
+                        child: Text(rol.rol.isEmpty ? 'Rol' : rol.rol),
+                      )
+                    : OutlinedButton(
+                        onPressed: changing
+                            ? null
+                            : () => onRoleSelected?.call(rol.idRol),
+                        style: _roleOutlinedButtonStyle(theme),
+                        child: Text(rol.rol.isEmpty ? 'Rol' : rol.rol),
+                      );
+              }).toList(),
             ),
             if (changing) ...<Widget>[
               const SizedBox(height: 10),
@@ -900,7 +899,6 @@ class _ProfileSectionCard extends StatelessWidget {
     );
   }
 }
-
 
 ButtonStyle _roleFilledButtonStyle(ThemeController theme) {
   return FilledButton.styleFrom(

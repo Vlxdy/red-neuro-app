@@ -211,8 +211,9 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
   }
 
   String _colorToHex(Color color) {
-    final rgbHex =
-        (color.toARGB32() & 0x00FFFFFF).toRadixString(16).padLeft(6, '0');
+    final rgbHex = (color.toARGB32() & 0x00FFFFFF)
+        .toRadixString(16)
+        .padLeft(6, '0');
     return '#${rgbHex.toUpperCase()}';
   }
 
@@ -362,10 +363,7 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
                       });
                     },
                   ),
-                  Text(
-                    'Brillo',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
+                  Text('Brillo', style: Theme.of(context).textTheme.bodySmall),
                   Slider(
                     min: 0,
                     max: 1,
@@ -381,8 +379,8 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
               );
             }
 
-            return WillPopScope(
-              onWillPop: () async => !submitting,
+            return PopScope(
+              canPop: !submitting,
               child: Padding(
                 padding: EdgeInsets.only(
                   bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -423,6 +421,7 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
                               : 'Siguiente',
                           stepContent: stepContent(),
                           onNext: () async {
+                            final navigator = Navigator.of(context);
                             if (currentStep < lastStepIndex) {
                               final isValid = validateForm(formKey);
                               if (!isValid) return;
@@ -456,10 +455,10 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
                                     payload,
                                   );
 
-                            if (!mounted) return;
+                            if (!context.mounted) return;
 
                             if (response.status == StatusNetwork.connected) {
-                              Navigator.pop(context);
+                              navigator.pop();
                               showSnackBar(
                                 especialidadesMessenger,
                                 response.message,

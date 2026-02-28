@@ -235,7 +235,9 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
 
   Future<void> _abrirFormulario({Servicio? servicio}) async {
     final formKey = GlobalKey<FormState>();
-    final nombreController = TextEditingController(text: servicio?.nombre ?? '');
+    final nombreController = TextEditingController(
+      text: servicio?.nombre ?? '',
+    );
     final descripcionController = TextEditingController(
       text: servicio?.descripcion ?? '',
     );
@@ -301,7 +303,9 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                         if (!RegExp(r'^\d+(?:[\.,]\d{1,2})?$').hasMatch(raw)) {
                           return 'Ingresa un monto válido (máx. 2 decimales)';
                         }
-                        final parsed = double.tryParse(raw.replaceAll(',', '.'));
+                        final parsed = double.tryParse(
+                          raw.replaceAll(',', '.'),
+                        );
                         if (parsed == null || parsed < 0) {
                           return 'Ingresa un monto válido';
                         }
@@ -316,25 +320,27 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                     ),
-                    RadioListTile<String>(
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text('Consulta'),
-                      value: 'CONSULTA',
+                    RadioGroup<String>(
                       groupValue: tipoSeleccionado,
                       onChanged: (value) {
                         if (value == null) return;
                         setDialogState(() => tipoSeleccionado = value);
                       },
-                    ),
-                    RadioListTile<String>(
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text('Estudio'),
-                      value: 'ESTUDIO',
-                      groupValue: tipoSeleccionado,
-                      onChanged: (value) {
-                        if (value == null) return;
-                        setDialogState(() => tipoSeleccionado = value);
-                      },
+                      child: const Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          RadioListTile<String>(
+                            contentPadding: EdgeInsets.zero,
+                            title: Text('Consulta'),
+                            value: 'CONSULTA',
+                          ),
+                          RadioListTile<String>(
+                            contentPadding: EdgeInsets.zero,
+                            title: Text('Estudio'),
+                            value: 'ESTUDIO',
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 );
@@ -366,7 +372,8 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                       child: ListView.builder(
                         itemCount: _especialidadesDisponibles.length,
                         itemBuilder: (context, index) {
-                          final especialidad = _especialidadesDisponibles[index];
+                          final especialidad =
+                              _especialidadesDisponibles[index];
                           return CheckboxListTile(
                             value: especialidadesSeleccionadas.contains(
                               especialidad.id,
@@ -376,9 +383,13 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                             onChanged: (value) {
                               setDialogState(() {
                                 if (value == true) {
-                                  especialidadesSeleccionadas.add(especialidad.id);
+                                  especialidadesSeleccionadas.add(
+                                    especialidad.id,
+                                  );
                                 } else {
-                                  especialidadesSeleccionadas.remove(especialidad.id);
+                                  especialidadesSeleccionadas.remove(
+                                    especialidad.id,
+                                  );
                                 }
                               });
                             },
@@ -404,8 +415,9 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                     child: Form(
                       key: formKey,
                       child: StepFormDialogLayout(
-                        title:
-                            servicio == null ? 'Nuevo servicio' : 'Editar servicio',
+                        title: servicio == null
+                            ? 'Nuevo servicio'
+                            : 'Editar servicio',
                         totalSteps: totalSteps,
                         currentStep: currentStep,
                         stepErrorText: modalError,
@@ -422,7 +434,8 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                             ? (servicio == null ? 'Crear' : 'Guardar')
                             : 'Siguiente',
                         onNext: () async {
-                          if ((!mostrarPasoEspecialidades || currentStep == 0) &&
+                          if ((!mostrarPasoEspecialidades ||
+                                  currentStep == 0) &&
                               (nombreController.text.trim().isEmpty ||
                                   descripcionController.text.trim().isEmpty)) {
                             setDialogState(() {
@@ -467,7 +480,8 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
       'duracionMinutos': int.parse(duracionController.text.trim()),
       'costo': double.parse(costoController.text.trim().replaceAll(',', '.')),
       'tipo': tipoSeleccionado,
-      if (servicio == null) 'especialidadIds': especialidadesSeleccionadas.toList(),
+      if (servicio == null)
+        'especialidadIds': especialidadesSeleccionadas.toList(),
     };
 
     final response = servicio == null
@@ -550,6 +564,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
     final seleccionadas = <String>{};
     final especialidadesDisponibles = <Especialidad>[];
     final scrollController = ScrollController();
+    var listenerAdded = false;
 
     var page = 1;
     const limit = 20;
@@ -606,7 +621,8 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            if (!scrollController.hasListeners) {
+            if (!listenerAdded) {
+              listenerAdded = true;
               scrollController.addListener(() {
                 if (!hasMore || loading || !scrollController.hasClients) return;
                 final current = scrollController.position.pixels;
@@ -663,7 +679,8 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                         debounce?.cancel();
                         debounce = Timer(
                           const Duration(milliseconds: 350),
-                          () => cargarEspecialidades(setDialogState, reset: true),
+                          () =>
+                              cargarEspecialidades(setDialogState, reset: true),
                         );
                       },
                     ),
@@ -688,12 +705,15 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                         height: 280,
                         child: ListView.builder(
                           controller: scrollController,
-                          itemCount: especialidadesDisponibles.length +
+                          itemCount:
+                              especialidadesDisponibles.length +
                               ((hasMore || loading) ? 1 : 0),
                           itemBuilder: (context, index) {
                             if (index == especialidadesDisponibles.length) {
                               return Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
                                 child: Center(
                                   child: loading
                                       ? const CircularProgressIndicator()
@@ -702,9 +722,11 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                               );
                             }
 
-                            final especialidad = especialidadesDisponibles[index];
-                            final selected =
-                                seleccionadas.contains(especialidad.id);
+                            final especialidad =
+                                especialidadesDisponibles[index];
+                            final selected = seleccionadas.contains(
+                              especialidad.id,
+                            );
                             return CheckboxListTile(
                               value: selected,
                               title: Text(especialidad.nombre),
@@ -771,8 +793,8 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
       lastMessage.isNotEmpty
           ? lastMessage
           : allSuccess
-              ? 'Especialidades asignadas.'
-              : 'No se pudieron asignar las especialidades.',
+          ? 'Especialidades asignadas.'
+          : 'No se pudieron asignar las especialidades.',
       state: allSuccess ? StatusSnackBar.success : StatusSnackBar.error,
       colorText: _theme.white,
     );
@@ -1025,114 +1047,114 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
         itemBuilder: (context, index) {
           final servicio = _servicios[index];
           return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        servicio.nombre,
-                        style: Theme.of(context).textTheme.titleMedium,
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          servicio.nombre,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
                       ),
-                    ),
-                    Chip(
-                      label: Text(servicio.estado.toUpperCase()),
-                      backgroundColor:
-                          (servicio.estado).toUpperCase() == 'ACTIVO'
-                          ? _theme.success.withValues(alpha: .15)
-                          : _theme.error.withValues(alpha: .15),
-                      labelStyle: TextStyle(
-                        color: (servicio.estado).toUpperCase() == 'ACTIVO'
-                            ? _theme.success
-                            : _theme.error,
-                        fontWeight: FontWeight.w600,
+                      Chip(
+                        label: Text(servicio.estado.toUpperCase()),
+                        backgroundColor:
+                            (servicio.estado).toUpperCase() == 'ACTIVO'
+                            ? _theme.success.withValues(alpha: .15)
+                            : _theme.error.withValues(alpha: .15),
+                        labelStyle: TextStyle(
+                          color: (servicio.estado).toUpperCase() == 'ACTIVO'
+                              ? _theme.success
+                              : _theme.error,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(servicio.descripcion),
-                const SizedBox(height: 8),
-                Text(
-                  'Tipo: ${servicio.tipo.toUpperCase()}',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Duración: ${servicio.duracionMinutos} min',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Costo: Bs ${servicio.costo.toStringAsFixed(2)}',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Especialidades',
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-                const SizedBox(height: 6),
-                if (servicio.especialidades.isEmpty)
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(servicio.descripcion),
+                  const SizedBox(height: 8),
                   Text(
-                    'Sin especialidades asignadas.',
+                    'Tipo: ${servicio.tipo.toUpperCase()}',
                     style: Theme.of(context).textTheme.bodySmall,
-                  )
-                else
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Duración: ${servicio.duracionMinutos} min',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Costo: Bs ${servicio.costo.toStringAsFixed(2)}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Especialidades',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 6),
+                  if (servicio.especialidades.isEmpty)
+                    Text(
+                      'Sin especialidades asignadas.',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    )
+                  else
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: servicio.especialidades
+                          .map(
+                            (especialidad) => Chip(
+                              label: Text(especialidad.nombre),
+                              backgroundColor: HexColor.fromHex(
+                                especialidad.colorHex,
+                              ).withValues(alpha: .15),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
-                    runSpacing: 8,
-                    children: servicio.especialidades
-                        .map(
-                          (especialidad) => Chip(
-                            label: Text(especialidad.nombre),
-                            backgroundColor: HexColor.fromHex(
-                              especialidad.colorHex,
-                            ).withValues(alpha: .15),
-                          ),
-                        )
-                        .toList(),
+                    children: [
+                      TextButton.icon(
+                        onPressed: () => _abrirFormulario(servicio: servicio),
+                        icon: const Icon(Icons.edit_outlined),
+                        label: const Text('Editar'),
+                      ),
+                      TextButton.icon(
+                        onPressed: () => _cambiarEstado(servicio),
+                        icon: Icon(
+                          servicio.estado.toUpperCase() == 'ACTIVO'
+                              ? Icons.toggle_off
+                              : Icons.toggle_on,
+                        ),
+                        label: Text(
+                          servicio.estado.toUpperCase() == 'ACTIVO'
+                              ? 'Desactivar'
+                              : 'Activar',
+                        ),
+                      ),
+                      TextButton.icon(
+                        onPressed: () => _abrirAsignacion(servicio),
+                        icon: const Icon(Icons.add_circle_outline),
+                        label: const Text('Asignar'),
+                      ),
+                    ],
                   ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    TextButton.icon(
-                      onPressed: () => _abrirFormulario(servicio: servicio),
-                      icon: const Icon(Icons.edit_outlined),
-                      label: const Text('Editar'),
-                    ),
-                    TextButton.icon(
-                      onPressed: () => _cambiarEstado(servicio),
-                      icon: Icon(
-                        servicio.estado.toUpperCase() == 'ACTIVO'
-                            ? Icons.toggle_off
-                            : Icons.toggle_on,
-                      ),
-                      label: Text(
-                        servicio.estado.toUpperCase() == 'ACTIVO'
-                            ? 'Desactivar'
-                            : 'Activar',
-                      ),
-                    ),
-                    TextButton.icon(
-                      onPressed: () => _abrirAsignacion(servicio),
-                      icon: const Icon(Icons.add_circle_outline),
-                      label: const Text('Asignar'),
-                    ),
+                  if (_loadingMore && index == _servicios.length - 1) ...[
+                    const SizedBox(height: 12),
+                    const Center(child: CircularProgressIndicator()),
                   ],
-                ),
-                if (_loadingMore && index == _servicios.length - 1) ...[
-                  const SizedBox(height: 12),
-                  const Center(child: CircularProgressIndicator()),
                 ],
-              ],
+              ),
             ),
-          ),
-        );
+          );
         },
       ),
     );
