@@ -1000,7 +1000,7 @@ class _CitasPageState extends State<CitasPage> {
         ? cita!.tipoCita!
         : 'CONSULTA';
     Especialidad? especialidadSeleccionada;
-    Estudio? estudioSeleccionado;
+    Servicio? servicioSeleccionado;
     if (cita?.especialidadId != null && cita!.especialidadId!.isNotEmpty) {
       especialidadSeleccionada = Especialidad(
         id: cita.especialidadId!,
@@ -1013,9 +1013,9 @@ class _CitasPageState extends State<CitasPage> {
       );
     }
     if (cita?.servicioId != null && cita!.servicioId!.isNotEmpty) {
-      estudioSeleccionado = Estudio(
+      servicioSeleccionado = Servicio(
         id: cita.servicioId!,
-        nombre: cita.servicioNombre ?? 'Estudio ${cita.servicioId}',
+        nombre: cita.servicioNombre ?? 'Servicio ${cita.servicioId}',
         descripcion: '',
         duracionMinutos: Constantes.citasDuracionDefectoMinutos,
         estado: 'ACTIVO',
@@ -1025,31 +1025,31 @@ class _CitasPageState extends State<CitasPage> {
     final especialidadController = TextEditingController(
       text: especialidadSeleccionada?.nombre ?? '',
     );
-    final estudioController = TextEditingController(
-      text: estudioSeleccionado?.nombre ?? '',
+    final servicioController = TextEditingController(
+      text: servicioSeleccionado?.nombre ?? '',
     );
     final List<Especialidad> especialidadesDisponibles = [];
-    final List<Estudio> estudiosDisponibles = [];
+    final List<Servicio> serviciosDisponibles = [];
     final List<Paciente> pacientesDisponibles = [];
     final List<PersonalMedico> medicosDisponibles = [];
     bool especialidadesLoading = false;
-    bool estudiosLoading = false;
+    bool serviciosLoading = false;
     bool pacientesLoading = false;
     bool medicosLoading = false;
     bool especialidadesHasMore = true;
-    bool estudiosHasMore = true;
+    bool serviciosHasMore = true;
     bool pacientesHasMore = true;
     bool medicosHasMore = true;
     int especialidadesPage = 1;
-    int estudiosPage = 1;
+    int serviciosPage = 1;
     int pacientesPage = 1;
     int medicosPage = 1;
     String especialidadesFiltro = '';
-    String estudiosFiltro = '';
+    String serviciosFiltro = '';
     String pacientesFiltro = '';
     String medicosFiltro = '';
     Timer? especialidadesDebounce;
-    Timer? estudiosDebounce;
+    Timer? serviciosDebounce;
     Timer? pacientesDebounce;
     Timer? medicosDebounce;
     bool inicializado = false;
@@ -1112,45 +1112,45 @@ class _CitasPageState extends State<CitasPage> {
               onUpdated?.call();
             }
 
-            Future<void> cargarEstudios({
+            Future<void> cargarServicios({
               bool reset = false,
               void Function()? onUpdated,
             }) async {
-              if (estudiosLoading) return;
+              if (serviciosLoading) return;
               final especialidadId = especialidadSeleccionada?.id ?? '';
-              setStateDialog(() => estudiosLoading = true);
+              setStateDialog(() => serviciosLoading = true);
               if (reset) {
-                estudiosPage = 1;
-                estudiosHasMore = true;
-                estudiosDisponibles.clear();
+                serviciosPage = 1;
+                serviciosHasMore = true;
+                serviciosDisponibles.clear();
               }
               final result = especialidadId.isNotEmpty
-                  ? await _service.obtenerEstudiosPorEspecialidad(
+                  ? await _service.obtenerServiciosPorEspecialidad(
                       especialidadId: especialidadId,
                       tipo: tipoCita,
-                      page: estudiosPage,
+                      page: serviciosPage,
                       limit: 10,
-                      filtro: estudiosFiltro,
+                      filtro: serviciosFiltro,
                     )
                   : await _service.obtenerServicios(
                       tipo: tipoCita,
-                      page: estudiosPage,
+                      page: serviciosPage,
                       limit: 10,
-                      filtro: estudiosFiltro,
+                      filtro: serviciosFiltro,
                     );
               if (!mounted) return;
               setStateDialog(() {
                 if (reset) {
-                  estudiosDisponibles
+                  serviciosDisponibles
                     ..clear()
                     ..addAll(result.items);
                 } else {
-                  estudiosDisponibles.addAll(result.items);
+                  serviciosDisponibles.addAll(result.items);
                 }
                 final total = result.total;
-                estudiosHasMore = estudiosDisponibles.length < total;
-                estudiosPage += 1;
-                estudiosLoading = false;
+                serviciosHasMore = serviciosDisponibles.length < total;
+                serviciosPage += 1;
+                serviciosLoading = false;
               });
               onUpdated?.call();
             }
@@ -1224,7 +1224,7 @@ class _CitasPageState extends State<CitasPage> {
             if (!inicializado) {
               inicializado = true;
               unawaited(cargarEspecialidades(reset: true));
-              unawaited(cargarEstudios(reset: true));
+              unawaited(cargarServicios(reset: true));
             }
 
             void updateFechaInicioFecha() async {
@@ -1682,32 +1682,32 @@ class _CitasPageState extends State<CitasPage> {
                 especialidadSeleccionada = seleccion;
                 especialidadController.text = seleccion.nombre;
                 tipoCita = tipoCita.isNotEmpty ? tipoCita : 'CONSULTA';
-                estudioSeleccionado = null;
-                estudioController.clear();
-                estudiosFiltro = '';
-                estudiosDisponibles.clear();
-                estudiosHasMore = true;
-                estudiosPage = 1;
+                servicioSeleccionado = null;
+                servicioController.clear();
+                serviciosFiltro = '';
+                serviciosDisponibles.clear();
+                serviciosHasMore = true;
+                serviciosPage = 1;
               });
-              unawaited(cargarEstudios(reset: true));
+              unawaited(cargarServicios(reset: true));
             }
 
-            Future<void> abrirSelectorEstudio() async {
-              if (estudiosDisponibles.isEmpty && !estudiosLoading) {
-                await cargarEstudios(reset: true);
+            Future<void> abrirSelectorServicio() async {
+              if (serviciosDisponibles.isEmpty && !serviciosLoading) {
+                await cargarServicios(reset: true);
                 if (!context.mounted) return;
               }
-              final seleccion = await showModalBottomSheet<Estudio>(
+              final seleccion = await showModalBottomSheet<Servicio>(
                 context: context,
                 isScrollControlled: true,
                 builder: (context) {
                   final searchController = TextEditingController(
-                    text: estudiosFiltro,
+                    text: serviciosFiltro,
                   );
                   return StatefulBuilder(
                     builder: (context, setStateSheet) {
                       Future<void> cargar({required bool reset}) async {
-                        await cargarEstudios(
+                        await cargarServicios(
                           reset: reset,
                           onUpdated: () => setStateSheet(() {}),
                         );
@@ -1744,9 +1744,9 @@ class _CitasPageState extends State<CitasPage> {
                                   controller: searchController,
                                   title: 'Buscar servicio',
                                   onChange: (value) {
-                                    estudiosFiltro = value;
-                                    estudiosDebounce?.cancel();
-                                    estudiosDebounce = Timer(
+                                    serviciosFiltro = value;
+                                    serviciosDebounce?.cancel();
+                                    serviciosDebounce = Timer(
                                       const Duration(milliseconds: 300),
                                       () => cargar(reset: true),
                                     );
@@ -1757,13 +1757,13 @@ class _CitasPageState extends State<CitasPage> {
                               Flexible(
                                 child: Builder(
                                   builder: (context) {
-                                    if (estudiosDisponibles.isEmpty &&
-                                        estudiosLoading) {
+                                    if (serviciosDisponibles.isEmpty &&
+                                        serviciosLoading) {
                                       return const Center(
                                         child: CircularProgressIndicator(),
                                       );
                                     }
-                                    if (estudiosDisponibles.isEmpty) {
+                                    if (serviciosDisponibles.isEmpty) {
                                       return const Center(
                                         child: Text('Sin resultados'),
                                       );
@@ -1771,19 +1771,19 @@ class _CitasPageState extends State<CitasPage> {
                                     return ListView.builder(
                                       shrinkWrap: true,
                                       itemCount:
-                                          estudiosDisponibles.length +
-                                          (estudiosHasMore ? 1 : 0),
+                                          serviciosDisponibles.length +
+                                          (serviciosHasMore ? 1 : 0),
                                       itemBuilder: (context, index) {
                                         if (index ==
-                                                estudiosDisponibles.length &&
-                                            estudiosHasMore) {
+                                                serviciosDisponibles.length &&
+                                            serviciosHasMore) {
                                           return Padding(
                                             padding: const EdgeInsets.symmetric(
                                               vertical: 8,
                                             ),
                                             child: Center(
                                               child: TextButton.icon(
-                                                onPressed: estudiosLoading
+                                                onPressed: serviciosLoading
                                                     ? null
                                                     : () =>
                                                           cargar(reset: false),
@@ -1796,7 +1796,7 @@ class _CitasPageState extends State<CitasPage> {
                                           );
                                         }
                                         final option =
-                                            estudiosDisponibles[index];
+                                            serviciosDisponibles[index];
                                         return ListTile(
                                           title: Text(option.nombre),
                                           subtitle:
@@ -1822,8 +1822,8 @@ class _CitasPageState extends State<CitasPage> {
               );
               if (seleccion == null) return;
               setStateDialog(() {
-                estudioSeleccionado = seleccion;
-                estudioController.text = seleccion.nombre;
+                servicioSeleccionado = seleccion;
+                servicioController.text = seleccion.nombre;
               });
             }
 
@@ -2027,7 +2027,7 @@ class _CitasPageState extends State<CitasPage> {
             }
 
             String? validarPasoActual() {
-              if (currentStep == 1 && estudioSeleccionado == null) {
+              if (currentStep == 1 && servicioSeleccionado == null) {
                 return 'Selecciona el servicio de la cita.';
               }
               if (currentStep == 2 && fechaInicio == null) {
@@ -2054,7 +2054,7 @@ class _CitasPageState extends State<CitasPage> {
                       style: resumenStyle,
                     ),
                     Text(
-                      'Servicio: ${estudioSeleccionado?.nombre ?? 'Pendiente'}',
+                      'Servicio: ${servicioSeleccionado?.nombre ?? 'Pendiente'}',
                       style: resumenStyle,
                     ),
                     Text(
@@ -2138,7 +2138,7 @@ class _CitasPageState extends State<CitasPage> {
                       alignment: Alignment.centerLeft,
                       child: RichText(
                         text: TextSpan(
-                          text: 'Tipo de cita',
+                          text: 'Tipo de servicio',
                           style: Theme.of(context).textTheme.bodyMedium,
                           children: [
                             TextSpan(
@@ -2161,12 +2161,12 @@ class _CitasPageState extends State<CitasPage> {
                         if (value == null) return;
                         setStateDialog(() {
                           tipoCita = value;
-                          estudioSeleccionado = null;
-                          estudioController.clear();
-                          estudiosDisponibles.clear();
-                          estudiosHasMore = true;
-                          estudiosPage = 1;
-                          unawaited(cargarEstudios(reset: true));
+                          servicioSeleccionado = null;
+                          servicioController.clear();
+                          serviciosDisponibles.clear();
+                          serviciosHasMore = true;
+                          serviciosPage = 1;
+                          unawaited(cargarServicios(reset: true));
                         });
                       },
                     ),
@@ -2179,22 +2179,22 @@ class _CitasPageState extends State<CitasPage> {
                         if (value == null) return;
                         setStateDialog(() {
                           tipoCita = value;
-                          estudioSeleccionado = null;
-                          estudioController.clear();
-                          estudiosDisponibles.clear();
-                          estudiosHasMore = true;
-                          estudiosPage = 1;
-                          unawaited(cargarEstudios(reset: true));
+                          servicioSeleccionado = null;
+                          servicioController.clear();
+                          serviciosDisponibles.clear();
+                          serviciosHasMore = true;
+                          serviciosPage = 1;
+                          unawaited(cargarServicios(reset: true));
                         });
                       },
                     ),
                     const SizedBox(height: 8),
                     CitasAutocompleteSelectorField(
-                      controller: estudioController,
+                      controller: servicioController,
                       labelText: 'Servicio',
                       requiredData: true,
                       hintText: 'Selecciona un servicio',
-                      onTap: abrirSelectorEstudio,
+                      onTap: abrirSelectorServicio,
                     ),
                   ],
                 );
@@ -2366,7 +2366,7 @@ class _CitasPageState extends State<CitasPage> {
     );
 
     especialidadesDebounce?.cancel();
-    estudiosDebounce?.cancel();
+    serviciosDebounce?.cancel();
     pacientesDebounce?.cancel();
     medicosDebounce?.cancel();
     if (result != true) return;
@@ -2386,7 +2386,7 @@ class _CitasPageState extends State<CitasPage> {
           'idPaciente': pacienteSeleccionado?.id,
         if (especialidadId.isNotEmpty) 'idEspecialidad': especialidadId,
         'tipoCita': tipoCita,
-        if (estudioSeleccionado != null) 'idServicio': estudioSeleccionado!.id,
+        if (servicioSeleccionado != null) 'idServicio': servicioSeleccionado!.id,
       });
       final ok = await _handleResponseError(
         response,
@@ -2416,8 +2416,8 @@ class _CitasPageState extends State<CitasPage> {
       updates['idEspecialidad'] = especialidadId;
     }
     if (tipoCita != (cita.tipoCita ?? '')) updates['tipoCita'] = tipoCita;
-    if (estudioSeleccionado?.id != (cita.servicioId ?? '')) {
-      updates['idServicio'] = estudioSeleccionado?.id;
+    if (servicioSeleccionado?.id != (cita.servicioId ?? '')) {
+      updates['idServicio'] = servicioSeleccionado?.id;
     }
 
     if (updates.isNotEmpty) {
@@ -2434,7 +2434,7 @@ class _CitasPageState extends State<CitasPage> {
         'id': cita.id,
         'fechaInicio': fechaInicio!.toUtc().toIso8601String(),
         'tipoCita': tipoCita,
-        if (estudioSeleccionado != null) 'idServicio': estudioSeleccionado!.id,
+        if (servicioSeleccionado != null) 'idServicio': servicioSeleccionado!.id,
       });
     }
 
@@ -2581,7 +2581,7 @@ class _CitasPageState extends State<CitasPage> {
 
   String _formatearTipoCita(String value) {
     final normalized = value.trim().toUpperCase();
-    if (normalized == 'ESTUDIO') return 'Estudio';
+    if (normalized == 'ESTUDIO') return 'Servicio';
     if (normalized == 'CONSULTA') return 'Consulta';
     return value;
   }
@@ -2625,12 +2625,12 @@ class _CitasPageState extends State<CitasPage> {
     return 'Actualización de $label';
   }
 
-  String _formatearDetalleEstudio(HistorialDetalleEstudio detalle) {
+  String _formatearDetalleServicio(HistorialDetalleEstudio detalle) {
     final nombre = detalle.nombre.trim();
     return nombre.isNotEmpty ? nombre : '--';
   }
 
-  String _formatearCambioEstudio({
+  String _formatearCambioServicio({
     required String label,
     required String beforeValue,
     required String afterValue,
@@ -2638,10 +2638,10 @@ class _CitasPageState extends State<CitasPage> {
     HistorialDetalleEstudio? afterDetalle,
   }) {
     final antes = beforeDetalle != null
-        ? _formatearDetalleEstudio(beforeDetalle)
+        ? _formatearDetalleServicio(beforeDetalle)
         : beforeValue;
     final despues = afterDetalle != null
-        ? _formatearDetalleEstudio(afterDetalle)
+        ? _formatearDetalleServicio(afterDetalle)
         : afterValue;
     final antesNormalizado = antes == '--' ? '' : antes;
     final despuesNormalizado = despues == '--' ? '' : despues;
@@ -2675,8 +2675,8 @@ class _CitasPageState extends State<CitasPage> {
       'fechaFin': 'Fecha fin',
       'detalle': 'Detalle',
       'estado': 'Estado',
-      'tipoCita': 'Tipo de cita',
-      'esEstudio': 'Tipo de cita',
+      'tipoCita': 'Tipo de servicio',
+      'esEstudio': 'Tipo de servicio',
       'idEspecialidad': 'Especialidad',
       'idMedico': 'Médico',
       'idPaciente': 'Paciente',
@@ -2724,8 +2724,8 @@ class _CitasPageState extends State<CitasPage> {
       'fechaFin': 'Fecha fin',
       'detalle': 'Detalle',
       'estado': 'Estado',
-      'tipoCita': 'Tipo de cita',
-      'esEstudio': 'Tipo de cita',
+      'tipoCita': 'Tipo de servicio',
+      'esEstudio': 'Tipo de servicio',
       'idEspecialidad': 'Especialidad',
       'idMedico': 'Médico',
       'idPaciente': 'Paciente',
@@ -2748,7 +2748,7 @@ class _CitasPageState extends State<CitasPage> {
       );
     }
     if (field == 'idServicio' || field == 'idEstudio') {
-      return _formatearCambioEstudio(
+      return _formatearCambioServicio(
         label: label,
         beforeValue: beforeValue,
         afterValue: afterValue,
@@ -3326,7 +3326,7 @@ class _CitasPageState extends State<CitasPage> {
     if (estudio.isNotEmpty) return estudio;
     final tipo = (cita.tipoCita ?? '').trim().toUpperCase();
     if (tipo == 'CONSULTA') return 'Consulta';
-    if (tipo == 'ESTUDIO') return 'Estudio';
+    if (tipo == 'ESTUDIO') return 'Servicio';
     if (tipo.isNotEmpty) return cita.tipoCita!.trim();
     if ((cita.especialidadNombre ?? '').trim().isNotEmpty) return 'Consulta';
     return 'Cita médica';
@@ -3451,7 +3451,7 @@ class _CitasPageState extends State<CitasPage> {
                     if (cita.tipoCita?.isNotEmpty ?? false)
                       CitasDetalleRow(
                         icon: PhosphorIconsRegular.folder,
-                        label: 'Tipo de cita',
+                        label: 'Tipo de servicio',
                         value: cita.tipoCita!,
                         theme: _theme,
                       ),

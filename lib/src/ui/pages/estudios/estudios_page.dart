@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:red_neuro_app/src/config/form_controller.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
@@ -9,6 +10,7 @@ import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
 import 'package:red_neuro_app/src/ui/common/customdatatable/custom_datatable.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
+import 'package:red_neuro_app/src/ui/common/form_stepper/step_form_dialog_layout.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/pages/estudios/estudios_service.dart';
 
@@ -26,7 +28,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
   final _theme = ThemeController.instance;
   late final EstudiosService _service;
 
-  List<Estudio> _estudios = [];
+  List<Servicio> _servicios = [];
   List<Especialidad> _especialidadesDisponibles = [];
   bool _loading = false;
   bool _loadingMore = false;
@@ -44,7 +46,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
     super.initState();
     _service = EstudiosService(context);
     _cargarEspecialidadesDisponibles();
-    _cargarEstudios();
+    _cargarServicios();
     _scrollController.addListener(_handleScroll);
   }
 
@@ -63,8 +65,8 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
     }
     final maxScroll = _scrollController.position.maxScrollExtent;
     final current = _scrollController.position.pixels;
-    if (current >= maxScroll - 200 && _estudios.length < _total) {
-      _cargarEstudios(page: _page + 1, append: true);
+    if (current >= maxScroll - 200 && _servicios.length < _total) {
+      _cargarServicios(page: _page + 1, append: true);
     }
   }
 
@@ -77,13 +79,13 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
     });
   }
 
-  Future<void> _cargarEstudios({int? page, bool append = false}) async {
+  Future<void> _cargarServicios({int? page, bool append = false}) async {
     if (append) {
       setState(() => _loadingMore = true);
     } else {
       setState(() => _loading = true);
     }
-    final result = await _service.obtenerEstudios(
+    final result = await _service.obtenerServicios(
       page: page ?? _page,
       limit: _limit,
       filtro: _filtro,
@@ -91,9 +93,9 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
 
     setState(() {
       if (append) {
-        _estudios = [..._estudios, ...result.estudios];
+        _servicios = [..._servicios, ...result.servicios];
       } else {
-        _estudios = result.estudios;
+        _servicios = result.servicios;
       }
       _page = page ?? result.page;
       _limit = result.limit;
@@ -176,7 +178,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
       _filtro = controller.text.trim();
       _searchController.text = _filtro;
     });
-    _cargarEstudios(page: 1);
+    _cargarServicios(page: 1);
   }
 
   Widget _buildFilterSummary() {
@@ -192,7 +194,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
         children: [
           Expanded(
             child: Text(
-              'Filtro: $_filtro',
+              'Filtro de servicios: $_filtro',
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ),
@@ -202,7 +204,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                 _filtro = '';
                 _searchController.clear();
               });
-              _cargarEstudios(page: 1);
+              _cargarServicios(page: 1);
             },
             child: const Text('Quitar filtros'),
           ),
@@ -212,7 +214,11 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
   }
 
   String _validarRequerido(String? value, String alias) {
-    return validateData(context, value, alias, required: true);
+    final raw = value?.trim() ?? '';
+    if (raw.isEmpty) {
+      return 'Campo requerido';
+    }
+    return '';
   }
 
   String _validarDuracion(String? value, String alias) {
@@ -227,86 +233,226 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
     return '';
   }
 
-  Future<void> _abrirFormulario({Estudio? estudio}) async {
+  Future<void> _abrirFormulario({Servicio? servicio}) async {
     final formKey = GlobalKey<FormState>();
-    final nombreController = TextEditingController(text: estudio?.nombre ?? '');
+    final nombreController = TextEditingController(text: servicio?.nombre ?? '');
     final descripcionController = TextEditingController(
-      text: estudio?.descripcion ?? '',
+      text: servicio?.descripcion ?? '',
     );
     final duracionController = TextEditingController(
-      text: estudio?.duracionMinutos.toString() ?? '30',
+      text: (servicio?.duracionMinutos ?? 30).toString(),
     );
+    final costoController = TextEditingController(
+      text: (servicio?.costo ?? 0).toStringAsFixed(2),
+    );
+    var tipoSeleccionado = (servicio?.tipo ?? 'ESTUDIO').toUpperCase();
+    final especialidadesSeleccionadas =
+        servicio?.especialidades.map((item) => item.id).toSet() ?? <String>{};
+    final mostrarPasoEspecialidades = servicio == null;
+    var currentStep = 0;
+    String? modalError;
 
     final result = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-          ),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            Widget buildStepContent() {
+              if (!mostrarPasoEspecialidades || currentStep == 0) {
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CustomTextInput(
+                      title: 'Nombre',
+                      controller: nombreController,
+                      requiredData: true,
+                      validate: _validarRequerido,
+                    ),
+                    const SizedBox(height: 12),
+                    CustomTextInput(
+                      title: 'Descripción',
+                      controller: descripcionController,
+                      requiredData: true,
+                      validate: _validarRequerido,
+                      lines: 3,
+                    ),
+                    const SizedBox(height: 12),
+                    CustomTextInput(
+                      title: 'Duración (minutos)',
+                      controller: duracionController,
+                      requiredData: true,
+                      validate: _validarDuracion,
+                      onlyNumbers: true,
+                    ),
+                    const SizedBox(height: 12),
+                    CustomTextInput(
+                      title: 'Costo',
+                      controller: costoController,
+                      requiredData: true,
+                      textFiltering: RegExp(r'[0-9.,]'),
+                      validate: (value, alias) {
+                        final raw = (value ?? '').trim();
+                        if (raw.isEmpty) return 'Campo requerido';
+                        if (!RegExp(r'^\d+(?:[\.,]\d{1,2})?$').hasMatch(raw)) {
+                          return 'Ingresa un monto válido (máx. 2 decimales)';
+                        }
+                        final parsed = double.tryParse(raw.replaceAll(',', '.'));
+                        if (parsed == null || parsed < 0) {
+                          return 'Ingresa un monto válido';
+                        }
+                        return '';
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Tipo de servicio',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ),
+                    RadioListTile<String>(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Consulta'),
+                      value: 'CONSULTA',
+                      groupValue: tipoSeleccionado,
+                      onChanged: (value) {
+                        if (value == null) return;
+                        setDialogState(() => tipoSeleccionado = value);
+                      },
+                    ),
+                    RadioListTile<String>(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('Estudio'),
+                      value: 'ESTUDIO',
+                      groupValue: tipoSeleccionado,
+                      onChanged: (value) {
+                        if (value == null) return;
+                        setDialogState(() => tipoSeleccionado = value);
+                      },
+                    ),
+                  ],
+                );
+              }
+
+              if (_loadingEspecialidades) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 32),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    estudio == null ? 'Nuevo estudio' : 'Editar estudio',
-                    style: Theme.of(context).textTheme.titleLarge,
+                    'Especialidades asociadas',
+                    style: Theme.of(context).textTheme.titleSmall,
                   ),
-                  const SizedBox(height: 16),
-                  CustomTextInput(
-                    title: 'Nombre',
-                    controller: nombreController,
-                    requiredData: true,
-                    validate: _validarRequerido,
-                  ),
-                  const SizedBox(height: 12),
-                  CustomTextInput(
-                    title: 'Descripción',
-                    controller: descripcionController,
-                    requiredData: true,
-                    validate: _validarRequerido,
-                    lines: 3,
-                  ),
-                  const SizedBox(height: 12),
-                  CustomTextInput(
-                    title: 'Duración (minutos)',
-                    controller: duracionController,
-                    requiredData: true,
-                    validate: _validarDuracion,
-                    onlyNumbers: true,
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: SimpleButton(
-                          title: 'Cancelar',
-                          outlined: true,
-                          background: _theme.primary,
-                          onTap: () => Navigator.of(context).pop(false),
-                        ),
+                  const SizedBox(height: 8),
+                  if (_especialidadesDisponibles.isEmpty)
+                    Text(
+                      'No hay especialidades disponibles.',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    )
+                  else
+                    SizedBox(
+                      height: 280,
+                      child: ListView.builder(
+                        itemCount: _especialidadesDisponibles.length,
+                        itemBuilder: (context, index) {
+                          final especialidad = _especialidadesDisponibles[index];
+                          return CheckboxListTile(
+                            value: especialidadesSeleccionadas.contains(
+                              especialidad.id,
+                            ),
+                            title: Text(especialidad.nombre),
+                            subtitle: Text(especialidad.descripcion ?? '-'),
+                            onChanged: (value) {
+                              setDialogState(() {
+                                if (value == true) {
+                                  especialidadesSeleccionadas.add(especialidad.id);
+                                } else {
+                                  especialidadesSeleccionadas.remove(especialidad.id);
+                                }
+                              });
+                            },
+                          );
+                        },
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: SimpleButton(
-                          title: estudio == null ? 'Crear' : 'Guardar',
-                          onTap: () =>
-                              Navigator.of(context).pop(validateForm(formKey)),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
                 ],
+              );
+            }
+
+            final totalSteps = mostrarPasoEspecialidades ? 2 : 1;
+            final isLastStep = currentStep == totalSteps - 1;
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
               ),
-            ),
-          ),
+              child: SafeArea(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Form(
+                      key: formKey,
+                      child: StepFormDialogLayout(
+                        title:
+                            servicio == null ? 'Nuevo servicio' : 'Editar servicio',
+                        totalSteps: totalSteps,
+                        currentStep: currentStep,
+                        stepErrorText: modalError,
+                        isSubmitting: false,
+                        stepContent: buildStepContent(),
+                        onClose: () => Navigator.of(context).pop(false),
+                        onBack: currentStep == 0
+                            ? null
+                            : () => setDialogState(() {
+                                currentStep -= 1;
+                                modalError = null;
+                              }),
+                        nextLabel: isLastStep
+                            ? (servicio == null ? 'Crear' : 'Guardar')
+                            : 'Siguiente',
+                        onNext: () async {
+                          if ((!mostrarPasoEspecialidades || currentStep == 0) &&
+                              (nombreController.text.trim().isEmpty ||
+                                  descripcionController.text.trim().isEmpty)) {
+                            setDialogState(() {
+                              modalError =
+                                  'Completa nombre y descripción para continuar.';
+                            });
+                            return;
+                          }
+                          final valid = validateForm(formKey);
+                          if (!valid) return;
+                          if (!isLastStep) {
+                            if (_especialidadesDisponibles.isEmpty &&
+                                !_loadingEspecialidades) {
+                              await _cargarEspecialidadesDisponibles();
+                            }
+                            setDialogState(() {
+                              currentStep += 1;
+                              modalError = null;
+                            });
+                            return;
+                          }
+                          Navigator.of(context).pop(true);
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
         );
       },
     );
@@ -319,11 +465,14 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
       'nombre': nombreController.text.trim(),
       'descripcion': descripcionController.text.trim(),
       'duracionMinutos': int.parse(duracionController.text.trim()),
+      'costo': double.parse(costoController.text.trim().replaceAll(',', '.')),
+      'tipo': tipoSeleccionado,
+      if (servicio == null) 'especialidadIds': especialidadesSeleccionadas.toList(),
     };
 
-    final response = estudio == null
-        ? await _service.crearEstudio(payload)
-        : await _service.actualizarEstudio(estudio.id, payload);
+    final response = servicio == null
+        ? await _service.crearServicio(payload)
+        : await _service.actualizarServicio(servicio.id, payload);
 
     if (!mounted) return;
 
@@ -334,7 +483,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
         state: StatusSnackBar.success,
         colorText: _theme.white,
       );
-      _cargarEstudios();
+      _cargarServicios();
     } else {
       showSnackBar(
         estudiosMessenger,
@@ -345,13 +494,18 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
     }
   }
 
-  Future<void> _confirmarEliminacion(Estudio estudio) async {
-    final result = await showDialog<bool>(
+  Future<void> _cambiarEstado(Servicio servicio) async {
+    final activando = servicio.estado.toUpperCase() != 'ACTIVO';
+    final confirmar = await showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Eliminar estudio'),
-          content: Text('¿Deseas eliminar el estudio "${estudio.nombre}"?'),
+          title: Text(activando ? 'Activar servicio' : 'Desactivar servicio'),
+          content: Text(
+            activando
+                ? '¿Deseas activar el servicio "${servicio.nombre}"?'
+                : '¿Deseas desactivar el servicio "${servicio.nombre}"?',
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
@@ -359,16 +513,16 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Eliminar'),
+              child: Text(activando ? 'Activar' : 'Desactivar'),
             ),
           ],
         );
       },
     );
 
-    if (result != true) return;
+    if (confirmar != true) return;
 
-    final response = await _service.eliminarEstudio(estudio.id);
+    final response = await _service.cambiarEstadoServicio(servicio.id);
 
     if (!mounted) return;
     if (response.status == StatusNetwork.connected) {
@@ -378,7 +532,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
         state: StatusSnackBar.success,
         colorText: _theme.white,
       );
-      _cargarEstudios();
+      _cargarServicios();
     } else {
       showSnackBar(
         estudiosMessenger,
@@ -389,56 +543,90 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
     }
   }
 
-  Future<void> _cambiarEstado(Estudio estudio) async {
-    final response = await _service.cambiarEstadoEstudio(estudio.id);
-
-    if (!mounted) return;
-    if (response.status == StatusNetwork.connected) {
-      showSnackBar(
-        estudiosMessenger,
-        response.message,
-        state: StatusSnackBar.success,
-        colorText: _theme.white,
-      );
-      _cargarEstudios();
-    } else {
-      showSnackBar(
-        estudiosMessenger,
-        response.message,
-        state: StatusSnackBar.error,
-        colorText: _theme.white,
-      );
-    }
-  }
-
-  Future<void> _abrirAsignacion(Estudio estudio) async {
-    if (_especialidadesDisponibles.isEmpty && !_loadingEspecialidades) {
-      await _cargarEspecialidadesDisponibles();
-      if (!mounted) return;
-    }
-
-    final asignadasIds = estudio.especialidades
+  Future<void> _abrirAsignacion(Servicio servicio) async {
+    final asignadasIds = servicio.especialidades
         .map((especialidad) => especialidad.id)
         .toSet();
-    final disponibles = _especialidadesDisponibles
-        .where((especialidad) => !asignadasIds.contains(especialidad.id))
-        .toList();
     final seleccionadas = <String>{};
+    final especialidadesDisponibles = <Especialidad>[];
+    final scrollController = ScrollController();
+
+    var page = 1;
+    const limit = 20;
+    var hasMore = true;
+    var loading = false;
+    var filtro = '';
+    Timer? debounce;
+
+    Future<void> cargarEspecialidades(
+      void Function(void Function()) setDialogState, {
+      bool reset = false,
+    }) async {
+      if (loading) return;
+
+      setDialogState(() => loading = true);
+      if (reset) {
+        page = 1;
+        hasMore = true;
+        especialidadesDisponibles.clear();
+      }
+
+      final result = await _service.obtenerEspecialidadesPaginadas(
+        page: page,
+        limit: limit,
+        filtro: filtro,
+      );
+      if (!mounted) return;
+
+      final nuevas = result.items
+          .where((item) => !asignadasIds.contains(item.id))
+          .toList();
+
+      setDialogState(() {
+        if (reset) {
+          especialidadesDisponibles
+            ..clear()
+            ..addAll(nuevas);
+        } else {
+          final existentes = especialidadesDisponibles
+              .map((item) => item.id)
+              .toSet();
+          especialidadesDisponibles.addAll(
+            nuevas.where((item) => !existentes.contains(item.id)),
+          );
+        }
+        hasMore = result.items.length >= limit;
+        if (hasMore) page += 1;
+        loading = false;
+      });
+    }
 
     final result = await showDialog<bool>(
       context: context,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
+            if (!scrollController.hasListeners) {
+              scrollController.addListener(() {
+                if (!hasMore || loading || !scrollController.hasClients) return;
+                final current = scrollController.position.pixels;
+                final max = scrollController.position.maxScrollExtent;
+                if (current >= max - 120) {
+                  cargarEspecialidades(setDialogState);
+                }
+              });
+              cargarEspecialidades(setDialogState, reset: true);
+            }
+
             return AlertDialog(
-              title: Text('Asignar especialidades a "${estudio.nombre}"'),
+              title: Text('Asignar especialidades a "${servicio.nombre}"'),
               content: SizedBox(
-                width: 420,
+                width: 440,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (estudio.especialidades.isNotEmpty) ...[
+                    if (servicio.especialidades.isNotEmpty) ...[
                       Text(
                         'Especialidades actuales',
                         style: Theme.of(context).textTheme.titleSmall,
@@ -447,7 +635,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                       Wrap(
                         spacing: 8,
                         runSpacing: 8,
-                        children: estudio.especialidades
+                        children: servicio.especialidades
                             .map(
                               (especialidad) => Chip(
                                 label: Text(especialidad.nombre),
@@ -465,21 +653,58 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                     const SizedBox(height: 8),
-                    if (disponibles.isEmpty)
-                      Text(
-                        'No hay especialidades disponibles para asignar.',
-                        style: Theme.of(context).textTheme.bodySmall,
+                    TextField(
+                      decoration: const InputDecoration(
+                        labelText: 'Buscar especialidad',
+                        prefixIcon: Icon(Icons.search),
+                      ),
+                      onChanged: (value) {
+                        filtro = value.trim();
+                        debounce?.cancel();
+                        debounce = Timer(
+                          const Duration(milliseconds: 350),
+                          () => cargarEspecialidades(setDialogState, reset: true),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    if (especialidadesDisponibles.isEmpty && loading)
+                      const SizedBox(
+                        height: 220,
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    else if (especialidadesDisponibles.isEmpty)
+                      SizedBox(
+                        height: 220,
+                        child: Center(
+                          child: Text(
+                            'No hay especialidades disponibles para asignar.',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                        ),
                       )
                     else
                       SizedBox(
-                        height: 300,
+                        height: 280,
                         child: ListView.builder(
-                          itemCount: disponibles.length,
+                          controller: scrollController,
+                          itemCount: especialidadesDisponibles.length +
+                              ((hasMore || loading) ? 1 : 0),
                           itemBuilder: (context, index) {
-                            final especialidad = disponibles[index];
-                            final selected = seleccionadas.contains(
-                              especialidad.id,
-                            );
+                            if (index == especialidadesDisponibles.length) {
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                child: Center(
+                                  child: loading
+                                      ? const CircularProgressIndicator()
+                                      : const SizedBox.shrink(),
+                                ),
+                              );
+                            }
+
+                            final especialidad = especialidadesDisponibles[index];
+                            final selected =
+                                seleccionadas.contains(especialidad.id);
                             return CheckboxListTile(
                               value: selected,
                               title: Text(especialidad.nombre),
@@ -518,6 +743,9 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
       },
     );
 
+    debounce?.cancel();
+    scrollController.dispose();
+
     if (result != true || seleccionadas.isEmpty) {
       return;
     }
@@ -527,7 +755,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
 
     for (final especialidadId in seleccionadas) {
       final response = await _service.asignarEspecialidad(
-        estudioId: estudio.id,
+        estudioId: servicio.id,
         especialidadId: especialidadId,
       );
       lastMessage = response.message;
@@ -543,24 +771,24 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
       lastMessage.isNotEmpty
           ? lastMessage
           : allSuccess
-          ? 'Especialidades asignadas.'
-          : 'No se pudieron asignar las especialidades.',
+              ? 'Especialidades asignadas.'
+              : 'No se pudieron asignar las especialidades.',
       state: allSuccess ? StatusSnackBar.success : StatusSnackBar.error,
       colorText: _theme.white,
     );
     if (allSuccess) {
-      _cargarEstudios();
+      _cargarServicios();
     }
   }
 
-  Widget _buildEspecialidadesCell(Estudio estudio) {
-    if (estudio.especialidades.isEmpty) {
+  Widget _buildEspecialidadesCell(Servicio servicio) {
+    if (servicio.especialidades.isEmpty) {
       return const Text('-');
     }
     return Wrap(
       spacing: 8,
       runSpacing: 8,
-      children: estudio.especialidades
+      children: servicio.especialidades
           .map(
             (especialidad) => Chip(
               label: Text(especialidad.nombre),
@@ -592,12 +820,12 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Estudios',
+                        'Servicios',
                         style: Theme.of(context).textTheme.headlineSmall,
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Administra estudios y asigna especialidades médicas.',
+                        'Administra servicios (consultas y estudios) y sus especialidades.',
                         style: Theme.of(context).textTheme.labelMedium,
                       ),
                       const SizedBox(height: 8),
@@ -611,14 +839,9 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                             label: const Text('Filtros'),
                           ),
                           TextButton.icon(
-                            onPressed: _cargarEspecialidadesDisponibles,
-                            icon: const Icon(Icons.sync),
-                            label: const Text('Actualizar'),
-                          ),
-                          TextButton.icon(
                             onPressed: () => _abrirFormulario(),
                             icon: const Icon(Icons.add),
-                            label: const Text('Nuevo'),
+                            label: const Text('Nuevo servicio'),
                           ),
                         ],
                       ),
@@ -633,12 +856,12 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Estudios',
+                              'Servicios',
                               style: Theme.of(context).textTheme.headlineSmall,
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Administra estudios y asigna especialidades médicas.',
+                              'Administra servicios (consultas y estudios) y sus especialidades.',
                               style: Theme.of(context).textTheme.labelMedium,
                             ),
                           ],
@@ -653,14 +876,9 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                             label: const Text('Filtros'),
                           ),
                           TextButton.icon(
-                            onPressed: _cargarEspecialidadesDisponibles,
-                            icon: const Icon(Icons.sync),
-                            label: const Text('Actualizar'),
-                          ),
-                          TextButton.icon(
                             onPressed: () => _abrirFormulario(),
                             icon: const Icon(Icons.add),
-                            label: const Text('Nuevo'),
+                            label: const Text('Nuevo servicio'),
                           ),
                         ],
                       ),
@@ -670,38 +888,37 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                 const SizedBox(height: 12),
                 if (!isCompact)
                   CustomDesktopDataTable(
-                    titulo: 'Gestión de estudios',
-                    descripcion: 'Consulta y administra estudios clínicos.',
-                    acciones: [
-                      IconButton(
-                        onPressed: _cargarEstudios,
-                        icon: const Icon(Icons.refresh),
-                      ),
-                    ],
+                    titulo: 'Gestión de servicios médicos',
+                    descripcion: 'Consulta y administra servicios clínicos.',
+                    acciones: const [],
                     columnas: [
                       CriterioOrdenType(nombre: 'Nombre'),
                       CriterioOrdenType(nombre: 'Descripción'),
+                      CriterioOrdenType(nombre: 'Tipo'),
                       CriterioOrdenType(nombre: 'Duración'),
+                      CriterioOrdenType(nombre: 'Costo'),
                       CriterioOrdenType(nombre: 'Especialidades'),
                       CriterioOrdenType(nombre: 'Estado'),
                       CriterioOrdenType(nombre: 'Acciones'),
                     ],
-                    contenidoTabla: _estudios
+                    contenidoTabla: _servicios
                         .map(
-                          (estudio) => [
-                            Text(estudio.nombre),
-                            Text(estudio.descripcion),
-                            Text('${estudio.duracionMinutos} min'),
-                            _buildEspecialidadesCell(estudio),
+                          (servicio) => [
+                            Text(servicio.nombre),
+                            Text(servicio.descripcion),
+                            Text(servicio.tipo.toUpperCase()),
+                            Text('${servicio.duracionMinutos} min'),
+                            Text('Bs ${servicio.costo.toStringAsFixed(2)}'),
+                            _buildEspecialidadesCell(servicio),
                             Chip(
-                              label: Text(estudio.estado.toUpperCase()),
+                              label: Text(servicio.estado.toUpperCase()),
                               backgroundColor:
-                                  (estudio.estado).toUpperCase() == 'ACTIVO'
+                                  (servicio.estado).toUpperCase() == 'ACTIVO'
                                   ? _theme.success.withValues(alpha: .15)
                                   : _theme.error.withValues(alpha: .15),
                               labelStyle: TextStyle(
                                 color:
-                                    (estudio.estado).toUpperCase() == 'ACTIVO'
+                                    (servicio.estado).toUpperCase() == 'ACTIVO'
                                     ? _theme.success
                                     : _theme.error,
                                 fontWeight: FontWeight.w600,
@@ -714,31 +931,25 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                                   tooltip: 'Editar',
                                   icon: const Icon(Icons.edit_outlined),
                                   onPressed: () =>
-                                      _abrirFormulario(estudio: estudio),
-                                ),
-                                IconButton(
-                                  tooltip: 'Eliminar',
-                                  icon: const Icon(Icons.delete_outline),
-                                  onPressed: () =>
-                                      _confirmarEliminacion(estudio),
+                                      _abrirFormulario(servicio: servicio),
                                 ),
                                 IconButton(
                                   tooltip:
-                                      estudio.estado.toUpperCase() == 'ACTIVO'
+                                      servicio.estado.toUpperCase() == 'ACTIVO'
                                       ? 'Desactivar'
                                       : 'Activar',
                                   icon: Icon(
-                                    estudio.estado.toUpperCase() == 'ACTIVO'
+                                    servicio.estado.toUpperCase() == 'ACTIVO'
                                         ? Icons.toggle_off
                                         : Icons.toggle_on,
                                     color: _theme.primary,
                                   ),
-                                  onPressed: () => _cambiarEstado(estudio),
+                                  onPressed: () => _cambiarEstado(servicio),
                                 ),
                                 IconButton(
                                   tooltip: 'Asignar especialidades',
                                   icon: const Icon(Icons.add_circle_outline),
-                                  onPressed: () => _abrirAsignacion(estudio),
+                                  onPressed: () => _abrirAsignacion(servicio),
                                 ),
                               ],
                             ),
@@ -761,26 +972,26 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
   }
 
   Widget _buildPagination() {
-    final inicio = _estudios.isEmpty ? 0 : ((_page - 1) * _limit) + 1;
-    final fin = (_page - 1) * _limit + _estudios.length;
+    final inicio = _servicios.isEmpty ? 0 : ((_page - 1) * _limit) + 1;
+    final fin = (_page - 1) * _limit + _servicios.length;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('Mostrando $inicio - $fin de $_total estudios'),
+          Text('Mostrando $inicio - $fin de $_total servicios'),
           Row(
             children: [
               IconButton(
                 onPressed: _page > 1 && !_loading
-                    ? () => _cargarEstudios(page: _page - 1)
+                    ? () => _cargarServicios(page: _page - 1)
                     : null,
                 icon: const Icon(Icons.chevron_left),
               ),
               Text('$_page'),
               IconButton(
                 onPressed: (_page * _limit) < _total && !_loading
-                    ? () => _cargarEstudios(page: _page + 1)
+                    ? () => _cargarServicios(page: _page + 1)
                     : null,
                 icon: const Icon(Icons.chevron_right),
               ),
@@ -795,22 +1006,25 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (_estudios.isEmpty) {
+    if (_servicios.isEmpty) {
       return Center(
         child: Text(
-          'No hay estudios registrados.',
+          'No hay servicios registrados.',
           style: Theme.of(context).textTheme.bodyMedium,
         ),
       );
     }
 
-    return ListView.separated(
-      controller: _scrollController,
-      itemCount: _estudios.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final estudio = _estudios[index];
-        return Card(
+    return RefreshIndicator(
+      onRefresh: () => _cargarServicios(page: 1),
+      child: ListView.separated(
+        controller: _scrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: _servicios.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          final servicio = _servicios[index];
+          return Card(
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Column(
@@ -820,18 +1034,18 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                   children: [
                     Expanded(
                       child: Text(
-                        estudio.nombre,
+                        servicio.nombre,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ),
                     Chip(
-                      label: Text(estudio.estado.toUpperCase()),
+                      label: Text(servicio.estado.toUpperCase()),
                       backgroundColor:
-                          (estudio.estado).toUpperCase() == 'ACTIVO'
+                          (servicio.estado).toUpperCase() == 'ACTIVO'
                           ? _theme.success.withValues(alpha: .15)
                           : _theme.error.withValues(alpha: .15),
                       labelStyle: TextStyle(
-                        color: (estudio.estado).toUpperCase() == 'ACTIVO'
+                        color: (servicio.estado).toUpperCase() == 'ACTIVO'
                             ? _theme.success
                             : _theme.error,
                         fontWeight: FontWeight.w600,
@@ -840,10 +1054,20 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text(estudio.descripcion),
+                Text(servicio.descripcion),
                 const SizedBox(height: 8),
                 Text(
-                  'Duración: ${estudio.duracionMinutos} min',
+                  'Tipo: ${servicio.tipo.toUpperCase()}',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Duración: ${servicio.duracionMinutos} min',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Costo: Bs ${servicio.costo.toStringAsFixed(2)}',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 const SizedBox(height: 8),
@@ -852,7 +1076,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                   style: Theme.of(context).textTheme.titleSmall,
                 ),
                 const SizedBox(height: 6),
-                if (estudio.especialidades.isEmpty)
+                if (servicio.especialidades.isEmpty)
                   Text(
                     'Sin especialidades asignadas.',
                     style: Theme.of(context).textTheme.bodySmall,
@@ -861,7 +1085,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: estudio.especialidades
+                    children: servicio.especialidades
                         .map(
                           (especialidad) => Chip(
                             label: Text(especialidad.nombre),
@@ -877,36 +1101,31 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                   spacing: 8,
                   children: [
                     TextButton.icon(
-                      onPressed: () => _abrirFormulario(estudio: estudio),
+                      onPressed: () => _abrirFormulario(servicio: servicio),
                       icon: const Icon(Icons.edit_outlined),
                       label: const Text('Editar'),
                     ),
                     TextButton.icon(
-                      onPressed: () => _confirmarEliminacion(estudio),
-                      icon: const Icon(Icons.delete_outline),
-                      label: const Text('Eliminar'),
-                    ),
-                    TextButton.icon(
-                      onPressed: () => _cambiarEstado(estudio),
+                      onPressed: () => _cambiarEstado(servicio),
                       icon: Icon(
-                        estudio.estado.toUpperCase() == 'ACTIVO'
+                        servicio.estado.toUpperCase() == 'ACTIVO'
                             ? Icons.toggle_off
                             : Icons.toggle_on,
                       ),
                       label: Text(
-                        estudio.estado.toUpperCase() == 'ACTIVO'
+                        servicio.estado.toUpperCase() == 'ACTIVO'
                             ? 'Desactivar'
                             : 'Activar',
                       ),
                     ),
                     TextButton.icon(
-                      onPressed: () => _abrirAsignacion(estudio),
+                      onPressed: () => _abrirAsignacion(servicio),
                       icon: const Icon(Icons.add_circle_outline),
                       label: const Text('Asignar'),
                     ),
                   ],
                 ),
-                if (_loadingMore && index == _estudios.length - 1) ...[
+                if (_loadingMore && index == _servicios.length - 1) ...[
                   const SizedBox(height: 12),
                   const Center(child: CircularProgressIndicator()),
                 ],
@@ -914,7 +1133,8 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
             ),
           ),
         );
-      },
+        },
+      ),
     );
   }
 }

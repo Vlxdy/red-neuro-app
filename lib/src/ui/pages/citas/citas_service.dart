@@ -265,7 +265,7 @@ class CitasService extends ServiceConfig {
     }
   }
 
-  Future<CatalogoPageResult<Estudio>> obtenerEstudiosPorEspecialidad({
+  Future<CatalogoPageResult<Servicio>> obtenerServiciosPorEspecialidad({
     required String especialidadId,
     required String tipo,
     int page = 1,
@@ -300,17 +300,17 @@ class CitasService extends ServiceConfig {
           data['items'] ??
           data['datos'] ??
           [];
-      final estudios = (filasRaw is List)
+      final servicios = (filasRaw is List)
           ? filasRaw
                 .whereType<Map<String, dynamic>>()
-                .map(Estudio.fromJson)
+                .map(Servicio.fromJson)
                 .toList()
-          : <Estudio>[];
+          : <Servicio>[];
       final total = totalRaw is int
           ? totalRaw
-          : int.tryParse('$totalRaw') ?? estudios.length;
+          : int.tryParse('$totalRaw') ?? servicios.length;
       return CatalogoPageResult(
-        items: estudios,
+        items: servicios,
         total: total,
         page: page,
         limit: limit,
@@ -324,7 +324,22 @@ class CitasService extends ServiceConfig {
     }
   }
 
-  Future<CatalogoPageResult<Estudio>> obtenerServicios({
+  @Deprecated('Usar obtenerServiciosPorEspecialidad')
+  Future<CatalogoPageResult<Servicio>> obtenerEstudiosPorEspecialidad({
+    required String especialidadId,
+    required String tipo,
+    int page = 1,
+    int limit = 10,
+    String? filtro,
+  }) => obtenerServiciosPorEspecialidad(
+        especialidadId: especialidadId,
+        tipo: tipo,
+        page: page,
+        limit: limit,
+        filtro: filtro,
+      );
+
+  Future<CatalogoPageResult<Servicio>> obtenerServicios({
     required String tipo,
     int page = 1,
     int limit = 10,
@@ -358,17 +373,17 @@ class CitasService extends ServiceConfig {
           data['items'] ??
           data['datos'] ??
           [];
-      final estudios = (filasRaw is List)
+      final servicios = (filasRaw is List)
           ? filasRaw
                 .whereType<Map<String, dynamic>>()
-                .map(Estudio.fromJson)
+                .map(Servicio.fromJson)
                 .toList()
-          : <Estudio>[];
+          : <Servicio>[];
       final total = totalRaw is int
           ? totalRaw
-          : int.tryParse('$totalRaw') ?? estudios.length;
+          : int.tryParse('$totalRaw') ?? servicios.length;
       return CatalogoPageResult(
-        items: estudios,
+        items: servicios,
         total: total,
         page: page,
         limit: limit,
