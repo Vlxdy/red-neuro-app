@@ -221,19 +221,6 @@ class EstudiosService extends ServiceConfig {
     );
   }
 
-  Future<ResponseApi> asignarEspecialidad({
-    required String estudioId,
-    required String especialidadId,
-  }) async {
-    return fetch(
-      '/servicios/$estudioId/especialidades',
-      type: HttpProtocol.post,
-      body: {
-        'especialidadId': especialidadId,
-      },
-    );
-  }
-
   @Deprecated('Usar crearServicio')
   Future<ResponseApi> crearEstudio(Map<String, dynamic> body) =>
       crearServicio(body);
