@@ -29,7 +29,7 @@ import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_badges.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_calendario_panel.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_detalle_widgets.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_filters_fields.dart';
-import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_header.dart';
+import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_listado.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_autocomplete_selector_field.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/fecha_selector.dart';
@@ -3062,6 +3062,19 @@ class _CitasPageState extends State<CitasPage> {
     fechaFinController.dispose();
   }
 
+
+  List<PopupMenuEntry<int>> _buildViewItems(TextStyle? textStyle) {
+    const labels = ['Agenda diaria', 'Calendario', 'Listado'];
+    return List.generate(
+      labels.length,
+      (index) => CheckedPopupMenuItem<int>(
+        value: index,
+        checked: index == _currentTabIndex,
+        child: Text(labels[index], style: textStyle),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final citasCalendarioFiltradas = _filtrarCitasLocal(_citasCalendario);
@@ -3069,54 +3082,90 @@ class _CitasPageState extends State<CitasPage> {
     final citasSeleccionadas = _selectedDay != null
         ? _citasSeleccionadas
         : citasCalendarioFiltradas;
+    final isCompactHeader = MediaQuery.sizeOf(context).width < 980;
 
     return TemplatePage(
       showEnvironmentBanner: false,
       cargando: _loading,
-      page: SafeArea(
-        child: ScaffoldMessenger(
-          key: citasMessenger,
-          child: Scaffold(
-            backgroundColor: _theme.transparent,
-            body: LayoutBuilder(
+      page: ScaffoldMessenger(
+        key: citasMessenger,
+        child: Scaffold(
+          backgroundColor: _theme.transparent,
+          appBar: TrayModuleHeader(
+            titulo: widget.titulo,
+            subtitulo: widget.soloMisCitas
+                ? 'Agenda personal en tiempo real'
+                : 'Supervisa, crea y edita citas médicas en vivo',
+            isCompact: isCompactHeader,
+            actions: [
+              Container(
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: _theme.white.withValues(alpha: 0.35),
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: SizedBox(
+                  width: 36,
+                  height: 36,
+                  child: PopupMenuButton<int>(
+                    tooltip: 'Vista',
+                    padding: EdgeInsets.zero,
+                    iconSize: 18,
+                    onSelected: (value) {
+                      if (value == _currentTabIndex) return;
+                      _setViewIndex(value);
+                    },
+                    itemBuilder: (context) => _buildViewItems(
+                      Theme.of(context).textTheme.bodySmall,
+                    ),
+                    icon: Icon(
+                      Icons.view_list_rounded,
+                      color: _theme.white,
+                    ),
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: _toggleFilters,
+                icon: Icon(
+                  Icons.filter_list_rounded,
+                  color: _theme.white,
+                ),
+                style: IconButton.styleFrom(
+                  minimumSize: const Size(36, 36),
+                  side: BorderSide(
+                    color: _theme.white.withValues(alpha: 0.35),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          body: LayoutBuilder(
               builder: (context, constraints) {
                 final isCompact = constraints.maxWidth < 980;
                 return Stack(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          CitasHeader(
-                            titulo: widget.titulo,
-                            subtitulo: widget.soloMisCitas
-                                ? 'Agenda personal en tiempo real'
-                                : 'Supervisa, crea y edita citas médicas en vivo',
-                            isCompact: isCompact,
-                            currentViewIndex: _currentTabIndex,
-                            onViewSelected: _setViewIndex,
-                            onToggleFilters: _toggleFilters,
-                            theme: _theme,
-                          ),
                           CitasActiveFiltersRibbon(
-                            theme: _theme,
-                            buscarTexto: _buscarTexto,
-                            estadoFiltro: _estadoFiltro,
-                            medicoFiltroNombre: _medicoFiltroNombre,
-                            fechaInicioFiltro: _fechaInicioFiltro,
-                            fechaFinFiltro: _fechaFinFiltro,
-                            formatter: _dateFormat,
-                            onClearBuscar: _limpiarFiltroBuscar,
-                            onClearEstado: _limpiarFiltroEstado,
-                            onClearMedico: _limpiarFiltroMedico,
-                            onClearRango: _limpiarFiltroRango,
-                            onClearAll: _limpiarFiltros,
-                          ),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
+                                  theme: _theme,
+                                  buscarTexto: _buscarTexto,
+                                  estadoFiltro: _estadoFiltro,
+                                  medicoFiltroNombre: _medicoFiltroNombre,
+                                  fechaInicioFiltro: _fechaInicioFiltro,
+                                  fechaFinFiltro: _fechaFinFiltro,
+                                  formatter: _dateFormat,
+                                  onClearBuscar: _limpiarFiltroBuscar,
+                                  onClearEstado: _limpiarFiltroEstado,
+                                  onClearMedico: _limpiarFiltroMedico,
+                                  onClearRango: _limpiarFiltroRango,
+                                  onClearAll: _limpiarFiltros,
+                                ),
                                 Expanded(
                                   child: IndexedStack(
                                     index: _currentTabIndex,
@@ -3264,9 +3313,6 @@ class _CitasPageState extends State<CitasPage> {
                               ],
                             ),
                           ),
-                        ],
-                      ),
-                    ),
                     Positioned(
                       bottom: 24,
                       right: 24,
@@ -3283,8 +3329,7 @@ class _CitasPageState extends State<CitasPage> {
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 
   String _formatoHoraAgenda(DateTime? inicio, int hour) {

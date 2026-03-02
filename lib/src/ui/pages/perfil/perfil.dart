@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:red_neuro_app/src/config/service_config.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/constants.dart';
@@ -12,6 +11,7 @@ import 'package:red_neuro_app/src/models/rol.dart';
 import 'package:red_neuro_app/src/models/user.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth_service.dart';
+import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
 import 'package:red_neuro_app/src/ui/pages/perfil/componentes/perfil_info_card.dart';
@@ -422,23 +422,10 @@ class _PerfilState extends State<Perfil> {
           key: perfilMessenger,
           child: Scaffold(
             backgroundColor: theme.background,
-            appBar: AppBar(
-              scrolledUnderElevation: 0,
-              elevation: 0,
-              systemOverlayStyle: SystemUiOverlayStyle(
-                statusBarBrightness: theme.isDark
-                    ? Brightness.dark
-                    : Brightness.light,
-                statusBarColor: theme.transparent,
-              ),
-              backgroundColor: theme.transparent,
-              centerTitle: true,
-              title: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  Text('Perfil', style: TextStyle(fontWeight: FontWeight.bold)),
-                ],
-              ),
+            appBar: TrayModuleHeader(
+              titulo: 'Configuración',
+              subtitulo: 'Administra tu perfil y seguridad de tu cuenta.',
+              isCompact: MediaQuery.of(context).size.width < 560,
             ),
             body: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
