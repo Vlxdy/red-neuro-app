@@ -142,6 +142,8 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  bool get _usePrimaryTrayShell => _itemsMenu.isNotEmpty;
+
   void _showMenu(
     List<ChildrenItem> itemsSubmenu,
     int indexPadre,
@@ -287,10 +289,13 @@ class _HomePageState extends State<HomePage> {
     int badgeCount = 0,
   }) {
     final bool isSelected = _selectedIndex == index;
+    final navColor = _usePrimaryTrayShell
+        ? (isSelected ? theme.white : theme.white.withValues(alpha: 0.78))
+        : color;
 
     Widget iconWidget = Icon(
       icon,
-      color: color ?? (isSelected ? theme.primary : null),
+      color: navColor ?? (isSelected ? theme.primary : null),
     );
 
     if (badgeCount > 0) {
@@ -328,7 +333,7 @@ class _HomePageState extends State<HomePage> {
                             ? SolarIconsBold.roundDoubleAltArrowLeft
                             : SolarIconsOutline.menuDots,
                         size: 15,
-                        color: color ?? (isSelected ? theme.primary : null),
+                        color: navColor ?? (isSelected ? theme.primary : null),
                       ),
                     )
                   : const SizedBox(),
@@ -339,7 +344,7 @@ class _HomePageState extends State<HomePage> {
               label,
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: color ?? (isSelected ? theme.primary : null),
+                color: navColor ?? (isSelected ? theme.primary : null),
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 fontSize: 11,
                 overflow: TextOverflow.ellipsis,
@@ -389,14 +394,17 @@ class _HomePageState extends State<HomePage> {
               statusBarBrightness: theme.isDark
                   ? Brightness.dark
                   : Brightness.light,
-              statusBarColor: theme.transparent,
+              statusBarColor: _usePrimaryTrayShell
+                  ? theme.primary
+                  : theme.transparent,
             ),
-            backgroundColor: theme.transparent,
+            backgroundColor: _usePrimaryTrayShell
+                ? theme.primary
+                : theme.transparent,
             centerTitle: false,
           ),
           body: Column(
             children: [
-              const SizedBox(height: 10),
               Expanded(
                 child: PageView(
                   physics: const NeverScrollableScrollPhysics(),
@@ -434,7 +442,7 @@ class _HomePageState extends State<HomePage> {
             ],
           ),
           bottomNavigationBar: BottomAppBar(
-            color: theme.background,
+            color: _usePrimaryTrayShell ? theme.primary : theme.background,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: _itemsMenu.asMap().entries.map((

@@ -15,6 +15,7 @@ import 'package:red_neuro_app/src/models/user.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
 import 'package:red_neuro_app/src/ui/common/customdatatable/custom_datatable.dart';
+import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
 import 'package:red_neuro_app/src/ui/common/form_stepper/step_form_dialog_layout.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/common/text_inputs/autocomplete_field.dart';
@@ -1568,195 +1569,163 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
   @override
   Widget build(BuildContext context) {
     final isCompact = MediaQuery.of(context).size.width < 840;
+    final isNarrowHeader = MediaQuery.of(context).size.width < 560;
     return ScaffoldMessenger(
       key: personalSaludMessenger,
       child: Scaffold(
         backgroundColor: _theme.background,
-        body: SafeArea(
-          child: Stack(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                if (!isCompact)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Personal de salud',
-                              style: Theme.of(context).textTheme.titleLarge,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Administra perfiles, especialidades y permisos administrativos.',
-                              style: Theme.of(context).textTheme.labelMedium,
-                            ),
-                          ],
-                        ),
-                        Wrap(
-                          spacing: 8,
-                          children: [
-                            TextButton.icon(
-                              onPressed: _processingAction ? null : _abrirFiltros,
-                              icon: const Icon(Icons.filter_list),
-                              label: const Text('Filtros'),
-                            ),
-                            TextButton.icon(
-                              onPressed:
-                                  _processingAction ? null : () => _abrirFormulario(),
-                              icon: const Icon(Icons.add),
-                              label: const Text('Nuevo'),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  )
-                else
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Personal de salud',
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: _processingAction ? null : _abrirFiltros,
-                          icon: const Icon(Icons.filter_list),
-                        ),
-                        IconButton(
-                          onPressed:
-                              _processingAction ? null : () => _abrirFormulario(),
-                          icon: const Icon(Icons.add),
-                        ),
-                      ],
-                    ),
-                  ),
-                _buildFilterSummary(),
-                const SizedBox(height: 12),
-                if (!isCompact)
-                  CustomDesktopDataTable(
-                    titulo: 'Gestión de personal de salud',
-                    descripcion:
-                        'Consulta, filtra y administra el personal de salud.',
-                    acciones: [
-                      IconButton(
-                        onPressed: _processingAction ? null : _cargarPersonalSalud,
-                        icon: const Icon(Icons.refresh),
-                      ),
-                    ],
-                    columnas: [
-                      CriterioOrdenType(nombre: 'Nombre'),
-                      CriterioOrdenType(nombre: 'Documento'),
-                      CriterioOrdenType(nombre: 'Estado'),
-                      CriterioOrdenType(nombre: 'Especialidades'),
-                      CriterioOrdenType(nombre: 'Admin'),
-                      CriterioOrdenType(nombre: 'Acciones'),
-                    ],
-                    contenidoTabla: _personal
-                        .map(
-                          (persona) => [
-                            Row(
-                              children: [
-                                _buildAvatar(persona, radius: 16),
-                                const SizedBox(width: 8),
-                                Expanded(child: Text(persona.nombreCompleto)),
-                              ],
-                            ),
-                            Text(persona.nroDocumento ?? '-'),
-                            Chip(
-                              label: Text(
-                                persona.estaActivo ? 'Activo' : 'Inactivo',
-                              ),
-                              backgroundColor: (persona.estaActivo
-                                      ? Colors.green
-                                      : Colors.grey)
-                                  .withValues(alpha: .15),
-                              labelStyle: TextStyle(
-                                color: persona.estaActivo
-                                    ? Colors.green.shade700
-                                    : Colors.grey.shade700,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            _buildEspecialidadesCell(persona),
-                            persona.esSupervisor
-                                ? Chip(
-                                    label: const Text('Admin'),
-                                    backgroundColor: _theme.primary.withValues(
-                                      alpha: .15,
-                                    ),
-                                    labelStyle: TextStyle(
-                                      color: _theme.primary,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  )
-                                : const Text('—'),
-                            Row(
-                              children: [
-                                if (!_esUsuarioActual(persona))
-                                  IconButton(
-                                    tooltip: 'Editar',
-                                    icon: const Icon(Icons.edit_outlined),
-                                    onPressed: _processingAction
-                                        ? null
-                                        : () =>
-                                              _abrirFormulario(personal: persona),
-                                  ),
-                                IconButton(
-                                  tooltip: 'Ver detalles',
-                                  icon: const Icon(Icons.visibility_outlined),
-                                  onPressed: () =>
-                                      _mostrarDetallesPersonal(persona),
-                                ),
-                                if (!_esUsuarioActual(persona))
-                                  IconButton(
-                                    tooltip: persona.estaActivo
-                                        ? 'Inactivar'
-                                        : 'Activar',
-                                    icon: Icon(
-                                      persona.estaActivo
-                                          ? Icons.person_off_outlined
-                                          : Icons.person_add_alt_1_outlined,
-                                    ),
-                                    onPressed: _processingAction
-                                        ? null
-                                        : () => _confirmarCambioEstado(persona),
-                                  ),
-                              ],
-                            ),
-                          ],
-                        )
-                        .toList(),
-                    paginacion: _buildPagination(),
-                    cargando: _loading,
-                  )
-                else ...[
-                  const SizedBox(height: 12),
-                  Expanded(child: _buildCompactList()),
-                ],
-                  ],
+        appBar: TrayModuleHeader(
+          titulo: 'Personal de salud',
+          subtitulo:
+              'Administra perfiles, especialidades y permisos administrativos.',
+          isCompact: isNarrowHeader,
+          actions: [
+            IconButton(
+              onPressed: _processingAction ? null : _abrirFiltros,
+              icon: Icon(Icons.filter_list, color: _theme.white),
+              style: IconButton.styleFrom(
+                minimumSize: const Size(36, 36),
+                side: BorderSide(
+                  color: _theme.white.withValues(alpha: 0.35),
                 ),
               ),
-              if (_processingAction)
-                const Positioned.fill(
-                  child: ColoredBox(
-                    color: Colors.black26,
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
+            ),
+            IconButton(
+              onPressed: _processingAction ? null : () => _abrirFormulario(),
+              icon: Icon(Icons.add, color: _theme.white),
+              style: IconButton.styleFrom(
+                minimumSize: const Size(36, 36),
+                side: BorderSide(
+                  color: _theme.white.withValues(alpha: 0.35),
                 ),
-            ],
-          ),
+              ),
+            ),
+          ],
+        ),
+        body: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildFilterSummary(),
+                  const SizedBox(height: 12),
+                  if (!isCompact)
+                    CustomDesktopDataTable(
+                      titulo: 'Gestión de personal de salud',
+                      descripcion:
+                          'Consulta, filtra y administra el personal de salud.',
+                      acciones: [
+                        IconButton(
+                          onPressed:
+                              _processingAction ? null : _cargarPersonalSalud,
+                          icon: const Icon(Icons.refresh),
+                        ),
+                      ],
+                      columnas: [
+                        CriterioOrdenType(nombre: 'Nombre'),
+                        CriterioOrdenType(nombre: 'Documento'),
+                        CriterioOrdenType(nombre: 'Estado'),
+                        CriterioOrdenType(nombre: 'Especialidades'),
+                        CriterioOrdenType(nombre: 'Admin'),
+                        CriterioOrdenType(nombre: 'Acciones'),
+                      ],
+                      contenidoTabla: _personal
+                          .map(
+                            (persona) => [
+                              Row(
+                                children: [
+                                  _buildAvatar(persona, radius: 16),
+                                  const SizedBox(width: 8),
+                                  Expanded(child: Text(persona.nombreCompleto)),
+                                ],
+                              ),
+                              Text(persona.nroDocumento ?? '-'),
+                              Chip(
+                                label: Text(
+                                  persona.estaActivo ? 'Activo' : 'Inactivo',
+                                ),
+                                backgroundColor: (persona.estaActivo
+                                        ? Colors.green
+                                        : Colors.grey)
+                                    .withValues(alpha: .15),
+                                labelStyle: TextStyle(
+                                  color: persona.estaActivo
+                                      ? Colors.green.shade700
+                                      : Colors.grey.shade700,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              _buildEspecialidadesCell(persona),
+                              persona.esSupervisor
+                                  ? Chip(
+                                      label: const Text('Admin'),
+                                      backgroundColor: _theme.primary.withValues(
+                                        alpha: .15,
+                                      ),
+                                      labelStyle: TextStyle(
+                                        color: _theme.primary,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    )
+                                  : const Text('—'),
+                              Row(
+                                children: [
+                                  if (!_esUsuarioActual(persona))
+                                    IconButton(
+                                      tooltip: 'Editar',
+                                      icon: const Icon(Icons.edit_outlined),
+                                      onPressed: _processingAction
+                                          ? null
+                                          : () => _abrirFormulario(
+                                                personal: persona,
+                                              ),
+                                    ),
+                                  IconButton(
+                                    tooltip: 'Ver detalles',
+                                    icon: const Icon(Icons.visibility_outlined),
+                                    onPressed: () =>
+                                        _mostrarDetallesPersonal(persona),
+                                  ),
+                                  if (!_esUsuarioActual(persona))
+                                    IconButton(
+                                      tooltip: persona.estaActivo
+                                          ? 'Inactivar'
+                                          : 'Activar',
+                                      icon: Icon(
+                                        persona.estaActivo
+                                            ? Icons.person_off_outlined
+                                            : Icons.person_add_alt_1_outlined,
+                                      ),
+                                      onPressed: _processingAction
+                                          ? null
+                                          : () =>
+                                                _confirmarCambioEstado(persona),
+                                    ),
+                                ],
+                              ),
+                            ],
+                          )
+                          .toList(),
+                      paginacion: _buildPagination(),
+                      cargando: _loading,
+                    )
+                  else ...[
+                    const SizedBox(height: 12),
+                    Expanded(child: _buildCompactList()),
+                  ],
+                ],
+              ),
+            ),
+            if (_processingAction)
+              const Positioned.fill(
+                child: ColoredBox(
+                  color: Colors.black26,
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              ),
+          ],
         ),
       ),
     );

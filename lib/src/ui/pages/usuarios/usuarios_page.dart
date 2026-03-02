@@ -8,6 +8,7 @@ import 'package:red_neuro_app/src/models/user.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
+import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
@@ -1038,65 +1039,63 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
 
   @override
   Widget build(BuildContext context) {
+    final isCompactHeader = MediaQuery.of(context).size.width < 560;
+    final subtitle = _esAdministrador(_currentRole)
+        ? 'Administra todos los roles disponibles'
+        : 'El personal de salud con permisos administrativos gestiona usuarios del rol personal de salud';
+
     return ScaffoldMessenger(
       key: usuariosMessenger,
       child: TemplatePage(
         cargando: _processingEstado,
         showEnvironmentBanner: false,
-        page: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
+        page: Scaffold(
+          backgroundColor: _theme.transparent,
+          appBar: TrayModuleHeader(
+            titulo: 'Usuarios',
+            subtitulo: subtitle,
+            isCompact: isCompactHeader,
+            actions: [
+              IconButton(
+                tooltip: _mostrarFiltros ? 'Ocultar filtros' : 'Mostrar filtros',
+                onPressed: _processingEstado
+                    ? null
+                    : () {
+                        setState(() {
+                          _mostrarFiltros = !_mostrarFiltros;
+                        });
+                      },
+                icon: Icon(
+                  _mostrarFiltros
+                      ? Icons.filter_alt_off_outlined
+                      : Icons.filter_alt_outlined,
+                  color: _theme.white,
+                ),
+                style: IconButton.styleFrom(
+                  minimumSize: const Size(36, 36),
+                  side: BorderSide(
+                    color: _theme.white.withValues(alpha: 0.35),
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Nuevo usuario',
+                onPressed: _processingEstado ? null : () => _abrirFormulario(),
+                icon: Icon(PhosphorIconsFill.userPlus, color: _theme.white),
+                style: IconButton.styleFrom(
+                  minimumSize: const Size(36, 36),
+                  side: BorderSide(
+                    color: _theme.white.withValues(alpha: 0.35),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          body: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Usuarios',
-                            style: Theme.of(context).textTheme.headlineSmall,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            _esAdministrador(_currentRole)
-                                ? 'Administra todos los roles disponibles'
-                                : 'El personal de salud con permisos administrativos gestiona usuarios del rol personal de salud',
-                            style: Theme.of(context).textTheme.labelMedium,
-                          ),
-                        ],
-                      ),
-                    ),
-                    SimpleButton(
-                      title: 'Nuevo usuario',
-                      preffixicon: PhosphorIconsFill.userPlus,
-                      fullWidth: false,
-                      onTap: _processingEstado ? null : () => _abrirFormulario(),
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton(
-                      tooltip: _mostrarFiltros
-                          ? 'Ocultar filtros'
-                          : 'Mostrar filtros',
-                      onPressed: _processingEstado
-                          ? null
-                          : () {
-                              setState(() {
-                                _mostrarFiltros = !_mostrarFiltros;
-                              });
-                            },
-                      icon: Icon(
-                        _mostrarFiltros
-                            ? Icons.filter_alt_off_outlined
-                            : Icons.filter_alt_outlined,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
                 _buildFiltros(),
                 Expanded(child: _buildListaUsuarios()),
               ],

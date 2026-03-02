@@ -7,6 +7,7 @@ import 'package:red_neuro_app/src/models/especialidad.dart';
 import 'package:red_neuro_app/src/models/estudio.dart';
 import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
 import 'package:red_neuro_app/src/ui/common/customdatatable/custom_datatable.dart';
+import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
 import 'package:red_neuro_app/src/ui/common/form_stepper/step_form_dialog_layout.dart';
@@ -583,81 +584,41 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
       key: estudiosMessenger,
       child: TemplatePage(
         showEnvironmentBanner: false,
-        page: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
+        page: Scaffold(
+          backgroundColor: _theme.transparent,
+          appBar: TrayModuleHeader(
+            titulo: 'Servicios',
+            subtitulo:
+                'Administra servicios (consultas y estudios) y sus especialidades.',
+            isCompact: isNarrowHeader,
+            actions: [
+              IconButton(
+                onPressed: _abrirFiltros,
+                icon: Icon(Icons.filter_list, color: _theme.white),
+                style: IconButton.styleFrom(
+                  minimumSize: const Size(36, 36),
+                  side: BorderSide(
+                    color: _theme.white.withValues(alpha: 0.35),
+                  ),
+                ),
+              ),
+              IconButton(
+                onPressed: () => _abrirFormulario(),
+                icon: Icon(Icons.add, color: _theme.white),
+                style: IconButton.styleFrom(
+                  minimumSize: const Size(36, 36),
+                  side: BorderSide(
+                    color: _theme.white.withValues(alpha: 0.35),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          body: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (isNarrowHeader)
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Servicios',
-                        style: Theme.of(context).textTheme.headlineSmall,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Administra servicios (consultas y estudios) y sus especialidades.',
-                        style: Theme.of(context).textTheme.labelMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: [
-                          TextButton.icon(
-                            onPressed: _abrirFiltros,
-                            icon: const Icon(Icons.filter_list),
-                            label: const Text('Filtros'),
-                          ),
-                          TextButton.icon(
-                            onPressed: () => _abrirFormulario(),
-                            icon: const Icon(Icons.add),
-                            label: const Text('Nuevo servicio'),
-                          ),
-                        ],
-                      ),
-                    ],
-                  )
-                else
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Servicios',
-                              style: Theme.of(context).textTheme.headlineSmall,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Administra servicios (consultas y estudios) y sus especialidades.',
-                              style: Theme.of(context).textTheme.labelMedium,
-                            ),
-                          ],
-                        ),
-                      ),
-                      Wrap(
-                        spacing: 8,
-                        children: [
-                          TextButton.icon(
-                            onPressed: _abrirFiltros,
-                            icon: const Icon(Icons.filter_list),
-                            label: const Text('Filtros'),
-                          ),
-                          TextButton.icon(
-                            onPressed: () => _abrirFormulario(),
-                            icon: const Icon(Icons.add),
-                            label: const Text('Nuevo servicio'),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
                 _buildFilterSummary(),
                 const SizedBox(height: 12),
                 if (!isCompact)
@@ -730,7 +691,9 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                   )
                 else ...[
                   const SizedBox(height: 12),
-                  Expanded(child: _buildCompactList()),
+                  Expanded(
+                    child: _buildCompactList(),
+                  ),
                 ],
               ],
             ),
@@ -739,6 +702,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
       ),
     );
   }
+
 
   Widget _buildPagination() {
     final inicio = _servicios.isEmpty ? 0 : ((_page - 1) * _limit) + 1;
