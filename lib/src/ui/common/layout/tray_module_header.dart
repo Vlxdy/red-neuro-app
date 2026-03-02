@@ -16,7 +16,35 @@ class TrayModuleHeader extends StatelessWidget implements PreferredSizeWidget {
   });
 
   @override
-  Size get preferredSize => Size.fromHeight(isCompact ? 104 : 92);
+  Size get preferredSize => Size.fromHeight(isCompact ? 68 : 62);
+
+  Widget _buildInfoAction(BuildContext context, ThemeController theme) {
+    return IconButton(
+      tooltip: 'Información de esta bandeja',
+      onPressed: () {
+        showDialog<void>(
+          context: context,
+          builder: (dialogContext) {
+            return AlertDialog(
+              title: Text(titulo),
+              content: Text(subtitulo),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Entendido'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+      icon: Icon(Icons.info_outline_rounded, color: theme.white),
+      style: IconButton.styleFrom(
+        minimumSize: const Size(36, 36),
+        side: BorderSide(color: theme.white.withValues(alpha: 0.35)),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,22 +63,7 @@ class TrayModuleHeader extends StatelessWidget implements PreferredSizeWidget {
           color: theme.white,
         ),
       ),
-      actions: [...actions, const SizedBox(width: 12)],
-      bottom: PreferredSize(
-        preferredSize: Size.fromHeight(isCompact ? 42 : 34),
-        child: Container(
-          width: double.infinity,
-          alignment: Alignment.centerLeft,
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
-          child: Text(
-            subtitulo,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: theme.white,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ),
+      actions: [_buildInfoAction(context, theme), ...actions, const SizedBox(width: 12)],
     );
   }
 }
