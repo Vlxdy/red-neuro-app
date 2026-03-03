@@ -4046,204 +4046,314 @@ class _CitasPageState extends State<CitasPage> {
     final estudioNombre = (cita.servicioNombre ?? cita.servicioId)?.trim();
     final especialidadColor = _colorEspecialidad(cita);
 
-    await showDialog<void>(
+    final acciones = <_CitaDetalleAccion>[
+      if (cita.estado == 'SOLICITADA' && _puedeGestionarSolicitada(cita))
+        _CitaDetalleAccion(
+          label: 'Confirmar',
+          icon: Icons.check_circle_outline,
+          isPrimary: true,
+          onTap: () async {
+            final ok = await _confirmarCitaSolicitadaConOpciones(cita);
+            return ok;
+          },
+        ),
+      if (_puedeEditarCita(cita))
+        _CitaDetalleAccion(
+          label: 'Editar',
+          icon: Icons.edit_outlined,
+          onTap: () async {
+            _abrirFormulario(cita: cita);
+            return true;
+          },
+        ),
+      if (cita.estado == 'SOLICITADA' && _puedeGestionarSolicitada(cita))
+        _CitaDetalleAccion(
+          label: 'Rechazar',
+          icon: Icons.block_outlined,
+          isDestructive: true,
+          onTap: () => _rechazarCitaSolicitadaConConfirmacion(cita),
+        ),
+      if (cita.estado == 'CONFIRMADA' && _citaYaIniciada(cita))
+        _CitaDetalleAccion(
+          label: 'Completar',
+          icon: Icons.task_alt_outlined,
+          isPrimary: true,
+          onTap: () async {
+            await _completarCitaConConfirmacion(cita);
+            return true;
+          },
+        ),
+      if (cita.estado == 'CONFIRMADA' && _citaYaIniciada(cita))
+        _CitaDetalleAccion(
+          label: 'No asistió',
+          icon: Icons.person_off_outlined,
+          onTap: () async {
+            await _marcarNoAsistioCitaConConfirmacion(cita);
+            return true;
+          },
+        ),
+      if (cita.estado == 'CONFIRMADA' ||
+          cita.estado == 'CANCELADA' ||
+          cita.estado == 'NO_ASISTIO')
+        _CitaDetalleAccion(
+          label: 'Reprogramar',
+          icon: Icons.schedule_outlined,
+          onTap: () async {
+            await _reprogramarCitaConConfirmacion(cita);
+            return true;
+          },
+        ),
+      if (cita.estado == 'CONFIRMADA')
+        _CitaDetalleAccion(
+          label: 'Cancelar',
+          icon: Icons.cancel_outlined,
+          isDestructive: true,
+          onTap: () async {
+            await _cancelarCitaConConfirmacion(cita);
+            return true;
+          },
+        ),
+      if (cita.estado == 'BORRADOR')
+        _CitaDetalleAccion(
+          label: 'Eliminar borrador',
+          icon: Icons.delete_outline,
+          isDestructive: true,
+          onTap: () async {
+            await _eliminarBorradorConConfirmacion(cita);
+            return true;
+          },
+        ),
+      _CitaDetalleAccion(
+        label: 'Ver historial',
+        icon: Icons.history,
+        cierraModal: false,
+        onTap: () async {
+          await _mostrarHistorialCita(cita);
+          return false;
+        },
+      ),
+    ];
+
+    await showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
       builder: (context) {
-        return AlertDialog(
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(_tituloCita(cita)),
-              if (_subtituloCita(cita).isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  _subtituloCita(cita),
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: _theme.grey),
-                ),
-              ],
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  CitasEstadoBadge(
-                    estado: cita.estado,
-                    color: _colorEstado(cita.estado),
-                  ),
-                  if (especialidadNombre?.isNotEmpty ?? false)
-                    CitasEspecialidadTag(
-                      label: especialidadNombre!,
-                      color: especialidadColor,
-                    ),
-                ],
-              ),
-            ],
-          ),
-          content: SingleChildScrollView(
+        return FractionallySizedBox(
+          heightFactor: 0.94,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CitasDetalleSection(
-                  title: 'Horario',
-                  theme: _theme,
-                  children: [
-                    CitasDetalleRow(
-                      icon: PhosphorIconsRegular.calendar,
-                      label: 'Fecha',
-                      value: _formatoFechaCita(cita.fechaInicio),
-                      theme: _theme,
-                    ),
-                    CitasDetalleRow(
-                      icon: PhosphorIconsRegular.clock,
-                      label: 'Hora',
-                      value: _formatoHorarioCita(
-                        cita.fechaInicio,
-                        cita.fechaFin,
-                      ),
-                      theme: _theme,
-                    ),
-                  ],
-                ),
-                CitasDetalleSection(
-                  title: 'Información clínica',
-                  theme: _theme,
-                  children: [
-                    if (_nombrePaciente(cita).isNotEmpty)
-                      CitasDetalleRow(
-                        icon: PhosphorIconsRegular.userCircle,
-                        label: 'Paciente',
-                        value: _nombrePaciente(cita),
-                        theme: _theme,
-                      ),
-                    if (_nombreMedico(cita).isNotEmpty)
-                      CitasDetalleRow(
-                        icon: PhosphorIconsRegular.stethoscope,
-                        label: 'Médico',
-                        value: _nombreMedico(cita),
-                        theme: _theme,
-                      ),
-                    if (especialidadNombre?.isNotEmpty ?? false)
-                      CitasDetalleRow(
-                        icon: PhosphorIconsRegular.stethoscope,
-                        label: 'Especialidad',
-                        value: especialidadNombre!,
-                        theme: _theme,
-                      ),
-                    if (cita.tipoCita?.isNotEmpty ?? false)
-                      CitasDetalleRow(
-                        icon: PhosphorIconsRegular.folder,
-                        label: 'Tipo de servicio',
-                        value: cita.tipoCita!,
-                        theme: _theme,
-                      ),
-                    if (estudioNombre?.isNotEmpty ?? false)
-                      CitasDetalleRow(
-                        icon: PhosphorIconsRegular.testTube,
-                        label: 'Servicio',
-                        value: estudioNombre!,
-                        theme: _theme,
-                      ),
-                  ],
-                ),
-                if (cita.detalle.trim().isNotEmpty)
-                  CitasDetalleSection(
-                    title: 'Notas',
-                    theme: _theme,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 12, 6),
+                  child: Row(
                     children: [
-                      CitasDetalleRow(
-                        icon: PhosphorIconsRegular.note,
-                        label: 'Detalle',
-                        value: cita.detalle.trim(),
-                        theme: _theme,
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _tituloCita(cita),
+                              style: Theme.of(context).textTheme.titleLarge,
+                            ),
+                            if (_subtituloCita(cita).isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                _subtituloCita(cita),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(color: _theme.grey),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: 'Cerrar',
+                        onPressed: () => Navigator.of(context).pop(),
+                        icon: const Icon(Icons.close_rounded),
                       ),
                     ],
                   ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        CitasEstadoBadge(
+                          estado: cita.estado,
+                          color: _colorEstado(cita.estado),
+                        ),
+                        if (especialidadNombre?.isNotEmpty ?? false)
+                          CitasEspecialidadTag(
+                            label: especialidadNombre!,
+                            color: especialidadColor,
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CitasDetalleSection(
+                          title: 'Horario',
+                          theme: _theme,
+                          children: [
+                            CitasDetalleRow(
+                              icon: PhosphorIconsRegular.calendar,
+                              label: 'Fecha',
+                              value: _formatoFechaCita(cita.fechaInicio),
+                              theme: _theme,
+                            ),
+                            CitasDetalleRow(
+                              icon: PhosphorIconsRegular.clock,
+                              label: 'Hora',
+                              value: _formatoHorarioCita(
+                                cita.fechaInicio,
+                                cita.fechaFin,
+                              ),
+                              theme: _theme,
+                            ),
+                          ],
+                        ),
+                        CitasDetalleSection(
+                          title: 'Información clínica',
+                          theme: _theme,
+                          children: [
+                            if (_nombrePaciente(cita).isNotEmpty)
+                              CitasDetalleRow(
+                                icon: PhosphorIconsRegular.userCircle,
+                                label: 'Paciente',
+                                value: _nombrePaciente(cita),
+                                theme: _theme,
+                              ),
+                            if (_nombreMedico(cita).isNotEmpty)
+                              CitasDetalleRow(
+                                icon: PhosphorIconsRegular.stethoscope,
+                                label: 'Médico',
+                                value: _nombreMedico(cita),
+                                theme: _theme,
+                              ),
+                            if (especialidadNombre?.isNotEmpty ?? false)
+                              CitasDetalleRow(
+                                icon: PhosphorIconsRegular.stethoscope,
+                                label: 'Especialidad',
+                                value: especialidadNombre!,
+                                theme: _theme,
+                              ),
+                            if (cita.tipoCita?.isNotEmpty ?? false)
+                              CitasDetalleRow(
+                                icon: PhosphorIconsRegular.folder,
+                                label: 'Tipo de servicio',
+                                value: cita.tipoCita!,
+                                theme: _theme,
+                              ),
+                            if (estudioNombre?.isNotEmpty ?? false)
+                              CitasDetalleRow(
+                                icon: PhosphorIconsRegular.testTube,
+                                label: 'Servicio',
+                                value: estudioNombre!,
+                                theme: _theme,
+                              ),
+                          ],
+                        ),
+                        if (cita.detalle.trim().isNotEmpty)
+                          CitasDetalleSection(
+                            title: 'Notas',
+                            theme: _theme,
+                            children: [
+                              CitasDetalleRow(
+                                icon: PhosphorIconsRegular.note,
+                                label: 'Detalle',
+                                value: cita.detalle.trim(),
+                                theme: _theme,
+                              ),
+                            ],
+                          ),
+                        if (acciones.isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          Text(
+                            'Acciones',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: 10),
+                          ...acciones.map(
+                            (accion) => Padding(
+                              padding: const EdgeInsets.only(bottom: 10),
+                              child: SizedBox(
+                                width: double.infinity,
+                                child: accion.isPrimary
+                                    ? FilledButton.icon(
+                                        onPressed: () async {
+                                          Navigator.of(context).pop();
+                                          await accion.onTap();
+                                        },
+                                        icon: Icon(accion.icon),
+                                        label: Text(accion.label),
+                                      )
+                                    : OutlinedButton.icon(
+                                        style: accion.isDestructive
+                                            ? OutlinedButton.styleFrom(
+                                                foregroundColor: Theme.of(
+                                                  context,
+                                                ).colorScheme.error,
+                                              )
+                                            : null,
+                                        onPressed: () async {
+                                          if (accion.cierraModal) {
+                                            Navigator.of(context).pop();
+                                          }
+                                          await accion.onTap();
+                                        },
+                                        icon: Icon(accion.icon),
+                                        label: Text(accion.label),
+                                      ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
-          actions: [
-            if (_puedeEditarCita(cita))
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  _abrirFormulario(cita: cita);
-                },
-                child: const Text('Editar'),
-              ),
-            if (cita.estado == 'SOLICITADA' && _puedeGestionarSolicitada(cita))
-              TextButton(
-                onPressed: () async {
-                  final ok = await _rechazarCitaSolicitadaConConfirmacion(cita);
-                  if (ok && mounted) Navigator.of(context).pop();
-                },
-                child: const Text('Rechazar'),
-              ),
-            if (cita.estado == 'SOLICITADA' && _puedeGestionarSolicitada(cita))
-              TextButton(
-                onPressed: () async {
-                  final ok = await _confirmarCitaSolicitadaConOpciones(cita);
-                  if (ok && mounted) Navigator.of(context).pop();
-                },
-                child: const Text('Confirmar'),
-              ),
-            if (cita.estado == 'BORRADOR')
-              TextButton(
-                onPressed: () async {
-                  await _eliminarBorradorConConfirmacion(cita);
-                },
-                child: const Text('Eliminar'),
-              ),
-            if (cita.estado == 'CONFIRMADA' && _citaYaIniciada(cita))
-              TextButton(
-                onPressed: () async {
-                  Navigator.of(context).pop();
-                  await _marcarNoAsistioCitaConConfirmacion(cita);
-                },
-                child: const Text('No asistió'),
-              ),
-            if (cita.estado == 'CONFIRMADA' && _citaYaIniciada(cita))
-              TextButton(
-                onPressed: () async {
-                  Navigator.of(context).pop();
-                  await _completarCitaConConfirmacion(cita);
-                },
-                child: const Text('Completar'),
-              ),
-            if (cita.estado == 'CONFIRMADA')
-              TextButton(
-                onPressed: () async {
-                  Navigator.of(context).pop();
-                  await _cancelarCitaConConfirmacion(cita);
-                },
-                child: const Text('Cancelar'),
-              ),
-            if (cita.estado == 'CONFIRMADA' ||
-                cita.estado == 'CANCELADA' ||
-                cita.estado == 'NO_ASISTIO')
-              TextButton(
-                onPressed: () async {
-                  Navigator.of(context).pop();
-                  await _reprogramarCitaConConfirmacion(cita);
-                },
-                child: const Text('Reprogramar'),
-              ),
-            TextButton(
-              onPressed: () async {
-                await _mostrarHistorialCita(cita);
-              },
-              child: const Text('Ver historial'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cerrar'),
-            ),
-          ],
         );
       },
     );
   }
+}
+
+class _CitaDetalleAccion {
+  final String label;
+  final IconData icon;
+  final bool isPrimary;
+  final bool isDestructive;
+  final bool cierraModal;
+  final Future<bool> Function() onTap;
+
+  const _CitaDetalleAccion({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+    this.isPrimary = false,
+    this.isDestructive = false,
+    this.cierraModal = true,
+  });
 }
 
 class _CitasSocketClient {
