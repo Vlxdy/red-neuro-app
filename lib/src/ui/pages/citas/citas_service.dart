@@ -13,6 +13,69 @@ import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 class CitasService extends ServiceConfig {
   CitasService(BuildContext context) : super('', context);
 
+  Future<Map<DateTime, int>> obtenerCantidadCitasPorDia({
+    required Map<String, String> filtros,
+  }) async {
+    try {
+      final response = await fetch('/citas/cantidad-por-dia', params: filtros);
+      if (!context.mounted) return {};
+
+      if (response.status != StatusNetwork.connected) {
+        if (response.status != StatusNetwork.noContent) {
+          final message = response.message.isNotEmpty
+              ? response.message
+              : 'No se pudo cargar la cantidad de citas por día.';
+          await showErrorDialog(context, message);
+        }
+        return {};
+      }
+
+      final raw =
+          response.data['datos'] ??
+          response.data['data'] ??
+          response.data['list'] ??
+          response.data['items'] ??
+          [];
+
+      if (raw is! List) return {};
+
+      final result = <DateTime, int>{};
+      for (final item in raw) {
+        if (item is! Map<String, dynamic>) continue;
+        final fechaRaw = (item['fecha'] ?? '').toString().trim();
+        if (fechaRaw.isEmpty) continue;
+
+        // Normaliza por componente calendario (YYYY-MM-DD) para evitar
+        // desfases por zona horaria en vista semanal/mensual.
+        final fechaBase = fechaRaw.length >= 10
+            ? fechaRaw.substring(0, 10)
+            : fechaRaw;
+        final partes = fechaBase.split('-');
+        if (partes.length != 3) continue;
+        final year = int.tryParse(partes[0]);
+        final month = int.tryParse(partes[1]);
+        final day = int.tryParse(partes[2]);
+        if (year == null || month == null || day == null) continue;
+        final key = DateTime(year, month, day);
+        final cantidadRaw = item['cantidad'];
+        final cantidad = cantidadRaw is int
+            ? cantidadRaw
+            : int.tryParse('$cantidadRaw') ?? 0;
+        result[key] = cantidad;
+      }
+
+      return result;
+    } catch (e, stacktrace) {
+      Logger.error('Error al obtener cantidad de citas por día $e');
+      Logger.error('stacktrace $stacktrace');
+      await showErrorDialog(
+        context,
+        'No se pudo cargar la cantidad de citas por día.',
+      );
+      return {};
+    }
+  }
+
   Future<List<CitaMedica>> obtenerCitas({
     bool soloMisCitas = false,
     Map<String, String>? filtros,

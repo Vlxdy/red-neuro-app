@@ -67,6 +67,7 @@ class _CitasPageState extends State<CitasPage> {
   List<CitaMedica> _citasSeleccionadas = [];
   List<CitaMedica> _citasAgenda = [];
   List<CitaMedica> _citasAgendaCalendario = [];
+  Map<DateTime, int> _cantidadCitasCalendarioPorDia = {};
 
   bool _loading = false;
   bool _dayLoading = false;
@@ -161,17 +162,21 @@ class _CitasPageState extends State<CitasPage> {
 
   Future<void> _cargarCitasCalendario() async {
     setState(() => _loading = true);
-    final filtros = _buildCalendarFiltersQuery();
-    final citas = await _service.obtenerCitas(
-      soloMisCitas: widget.soloMisCitas,
-      filtros: filtros.isNotEmpty ? filtros : null,
-    );
-
-    setState(() {
-      _citasCalendario = citas;
-      _loading = false;
-    });
+    await _recargarConteoCitasCalendario();
+    if (!mounted) return;
+    setState(() => _loading = false);
     await _cargarCitasDelDia();
+  }
+
+  Future<void> _recargarConteoCitasCalendario() async {
+    final filtros = _buildCalendarFiltersQuery();
+    final cantidadPorDia = await _service.obtenerCantidadCitasPorDia(
+      filtros: filtros,
+    );
+    if (!mounted) return;
+    setState(() {
+      _cantidadCitasCalendarioPorDia = cantidadPorDia;
+    });
   }
 
   Future<void> _cargarCitasAgendaSemana() async {
@@ -214,6 +219,13 @@ class _CitasPageState extends State<CitasPage> {
 
   Map<String, String> _buildCalendarFiltersQuery() {
     final filtros = _buildBaseFiltersQuery();
+    if (widget.soloMisCitas) {
+      final medicoId = Auth.instance.profile.id ?? '';
+      if (medicoId.isNotEmpty &&
+          (_medicoFiltro?.isNotEmpty ?? false) == false) {
+        filtros['idMedico'] = medicoId;
+      }
+    }
     final range = _resolveCalendarRange();
     filtros['fechaInicio'] = range.start.toUtc().toIso8601String();
     filtros['fechaFin'] = range.end.toUtc().toIso8601String();
@@ -308,6 +320,7 @@ class _CitasPageState extends State<CitasPage> {
     final cita = _parseSocketCita(data);
     if (cita == null) return;
     _upsertCita(cita);
+    unawaited(_recargarConteoCitasCalendario());
   }
 
   void _onSocketEstadoActualizado(dynamic data) {
@@ -320,11 +333,13 @@ class _CitasPageState extends State<CitasPage> {
         (cita) =>
             cita.copyWith(estado: estado.isNotEmpty ? estado : cita.estado),
       );
+      unawaited(_recargarConteoCitasCalendario());
       return;
     }
     final cita = _parseSocketCita(data);
     if (cita != null) {
       _upsertCita(cita);
+      unawaited(_recargarConteoCitasCalendario());
     }
   }
 
@@ -332,6 +347,7 @@ class _CitasPageState extends State<CitasPage> {
     final cita = _parseSocketCita(data);
     if (cita != null) {
       _upsertCita(cita);
+      unawaited(_recargarConteoCitasCalendario());
       return;
     }
     if (data is Map<String, dynamic>) {
@@ -344,6 +360,7 @@ class _CitasPageState extends State<CitasPage> {
           fechaFin: _parseDate(data['fechaFin']),
         ),
       );
+      unawaited(_recargarConteoCitasCalendario());
     }
   }
 
@@ -352,11 +369,13 @@ class _CitasPageState extends State<CitasPage> {
       final id = (data['id'] ?? '').toString();
       if (id.isEmpty) return;
       _actualizarCitaLocal(id, (cita) => cita.copyWith(estado: 'CANCELADA'));
+      unawaited(_recargarConteoCitasCalendario());
       return;
     }
     final cita = _parseSocketCita(data);
     if (cita != null) {
       _upsertCita(cita.copyWith(estado: 'CANCELADA'));
+      unawaited(_recargarConteoCitasCalendario());
     }
   }
 
@@ -3231,7 +3250,8 @@ class _CitasPageState extends State<CitasPage> {
                                         calendarFormat: _calendarFormat,
                                         focusedDay: _focusedDay,
                                         selectedDay: _selectedDay,
-                                        citasPorDia: _citasPorDia,
+                                        citasPorDia:
+                                            _cantidadCitasCalendarioPorDia,
                                         onFormatChanged: (format) {
                                           if (_calendarFormat != format) {
                                             setState(() {
@@ -3257,7 +3277,9 @@ class _CitasPageState extends State<CitasPage> {
                                               );
                                             },
                                         onPageChanged: (focusedDay) {
-                                          _focusedDay = focusedDay;
+                                          setState(
+                                            () => _focusedDay = focusedDay,
+                                          );
                                           if (_currentTabIndex == 1) {
                                             _cargarCitasCalendario();
                                           }
