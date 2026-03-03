@@ -112,20 +112,50 @@ class CitasAgendaSection extends StatelessWidget {
               onAgendaFormatChanged: onAgendaFormatChanged,
             ),
           ),
-          InfoPill(
-            icon: PhosphorIconsRegular.calendarBlank,
-            label: 'Agenda ${dateFormat.format(agendaDay)}',
-            color: theme.primary,
-          ),
-          InfoPill(
-            icon: PhosphorIconsRegular.clock,
-            label: '08:00 - 20:00 + fuera de rango',
-            color: theme.grey,
-          ),
-          InfoPill(
-            icon: PhosphorIconsRegular.stethoscope,
-            label: '${ordenadas.length} citas',
-            color: theme.secondary,
+          SizedBox(
+            width: double.infinity,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              decoration: BoxDecoration(
+                color: theme.primary.withValues(alpha: theme.isLight ? 0.1 : 0.16),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: theme.primary.withValues(alpha: 0.24),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Center(
+                      child: InfoPill(
+                        icon: PhosphorIconsRegular.calendarBlank,
+                        label: dateFormat.format(agendaDay),
+                        color: theme.primary,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Center(
+                      child: InfoPill(
+                        icon: PhosphorIconsRegular.clock,
+                        label: '08:00 - 20:00',
+                        color: theme.primary,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Center(
+                      child: InfoPill(
+                        icon: PhosphorIconsRegular.stethoscope,
+                        label: '${ordenadas.length} citas',
+                        color: theme.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
