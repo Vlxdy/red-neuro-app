@@ -323,9 +323,9 @@ class CitasService extends ServiceConfig {
 
   Future<ResponseApi> marcarNoAsistioCita(String id) async {
     return fetch(
-      '/citas/$id/estado',
-      type: HttpProtocol.patch,
-      body: const {'estado': 'NO_ASISTIO'},
+      '/citas/$id/no-asistio',
+      type: HttpProtocol.post,
+      body: const {},
     );
   }
 
