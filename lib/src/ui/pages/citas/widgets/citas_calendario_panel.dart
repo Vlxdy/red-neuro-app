@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
-import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class CitasCalendarioPanel extends StatelessWidget {
@@ -9,7 +8,7 @@ class CitasCalendarioPanel extends StatelessWidget {
   final CalendarFormat calendarFormat;
   final DateTime focusedDay;
   final DateTime? selectedDay;
-  final Map<DateTime, List<CitaMedica>> citasPorDia;
+  final Map<DateTime, int> citasPorDia;
   final ValueChanged<CalendarFormat> onFormatChanged;
   final void Function(DateTime selectedDay, DateTime focusedDay) onDaySelected;
   final ValueChanged<DateTime> onPageChanged;
@@ -61,7 +60,7 @@ class CitasCalendarioPanel extends StatelessWidget {
       ),
       child: Column(
         children: [
-          TableCalendar<CitaMedica>(
+          TableCalendar<int>(
             locale: 'es_ES',
             firstDay: DateTime.utc(2020, 1, 1),
             lastDay: DateTime.utc(2100, 12, 31),
@@ -91,7 +90,8 @@ class CitasCalendarioPanel extends StatelessWidget {
             onFormatChanged: onFormatChanged,
             eventLoader: (day) {
               final key = DateTime(day.year, day.month, day.day);
-              return citasPorDia[key] ?? [];
+              final cantidad = citasPorDia[key] ?? 0;
+              return List<int>.filled(cantidad, 1);
             },
             onDaySelected: onDaySelected,
             onPageChanged: onPageChanged,
