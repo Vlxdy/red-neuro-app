@@ -2218,63 +2218,6 @@
         "tags": [
           "Gestión de Citas"
         ]
-      },
-      "patch": {
-        "deprecated": true,
-        "operationId": "CitasController_actualizar",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "example": "12",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ActualizarCitaDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/BaseResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "datos": {
-                          "$ref": "#/components/schemas/CitaResponseDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Actualiza datos generales de la cita",
-        "tags": [
-          "Gestión de Citas"
-        ]
       }
     },
     "/citas/{id}/editar-borrador": {
@@ -2557,10 +2500,9 @@
         ]
       }
     },
-    "/citas/{id}/estado": {
-      "patch": {
-        "deprecated": true,
-        "operationId": "CitasController_actualizarEstado",
+    "/citas/{id}/no-asistio": {
+      "post": {
+        "operationId": "CitasController_marcarNoAsistio",
         "parameters": [
           {
             "name": "id",
@@ -2577,7 +2519,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ActualizarEstadoCitaDto"
+                "$ref": "#/components/schemas/MarcarNoAsistioCitaDto"
               }
             }
           }
@@ -2610,7 +2552,7 @@
             "bearer": []
           }
         ],
-        "summary": "Actualiza únicamente el estado de la cita",
+        "summary": "Marca una cita confirmada como no asistida",
         "tags": [
           "Gestión de Citas"
         ]
@@ -2727,63 +2669,6 @@
           }
         ],
         "summary": "Cancela una cita confirmada",
-        "tags": [
-          "Gestión de Citas"
-        ]
-      },
-      "patch": {
-        "deprecated": true,
-        "operationId": "CitasController_cancelar",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "example": "12",
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CancelarCitaDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/BaseResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "datos": {
-                          "$ref": "#/components/schemas/CitaResponseDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Cancela una cita",
         "tags": [
           "Gestión de Citas"
         ]
@@ -6602,91 +6487,14 @@
           }
         }
       },
-      "ActualizarCitaDto": {
+      "MarcarNoAsistioCitaDto": {
         "type": "object",
         "properties": {
-          "accion": {
+          "comentario": {
             "type": "string",
-            "enum": [
-              "GUARDAR",
-              "ENVIAR"
-            ],
-            "description": "Acción al crear la cita: GUARDAR (borrador) o ENVIAR",
-            "example": "GUARDAR"
-          },
-          "detalle": {
-            "type": "string",
-            "description": "Detalle o motivo de la cita",
-            "example": "Control nutricional mensual"
-          },
-          "fechaInicio": {
-            "type": "string",
-            "description": "Fecha de inicio (ISO)",
-            "example": "2024-06-15T10:00:00Z"
-          },
-          "idMedico": {
-            "type": "string",
-            "description": "Identificador del médico responsable",
-            "example": "42"
-          },
-          "idPaciente": {
-            "type": "string",
-            "description": "Identificador del paciente asignado",
-            "example": "105"
-          },
-          "idConsultorio": {
-            "type": "string",
-            "description": "Identificador del consultorio asignado",
-            "example": "8"
-          },
-          "idLugar": {
-            "type": "string",
-            "description": "Identificador de la institución asociada",
-            "example": "2"
-          },
-          "idEspecialidad": {
-            "type": "string",
-            "description": "Identificador de la especialidad asociada (opcional)",
-            "example": "12"
-          },
-          "tipoCita": {
-            "type": "string",
-            "enum": [
-              "CONSULTA",
-              "ESTUDIO"
-            ],
-            "description": "Tipo de cita: CONSULTA o ESTUDIO",
-            "example": "CONSULTA"
-          },
-          "idServicio": {
-            "type": "string",
-            "description": "Identificador del servicio a realizar",
-            "example": "5"
+            "description": "Comentario asociado al marcado de no asistencia (se guarda en historial)"
           }
         }
-      },
-      "ActualizarEstadoCitaDto": {
-        "type": "object",
-        "properties": {
-          "estado": {
-            "type": "string",
-            "enum": [
-              "INACTIVO",
-              "BORRADOR",
-              "SOLICITADA",
-              "CONFIRMADA",
-              "COMPLETADA",
-              "NO_ASISTIO",
-              "REPROGRAMADA",
-              "CANCELADA",
-              "RECHAZADA"
-            ],
-            "description": "Nuevo estado de la cita"
-          }
-        },
-        "required": [
-          "estado"
-        ]
       },
       "ReprogramarCitaDto": {
         "type": "object",
