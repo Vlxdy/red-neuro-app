@@ -316,6 +316,125 @@ class _CitasPageState extends State<CitasPage> {
     return false;
   }
 
+  Future<String?> _seleccionarAccionCreacionCita() async {
+    return showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Finalizar registro de cita'),
+          content: const Text(
+            '¿Deseas guardar la cita como borrador o enviarla ahora?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, 'GUARDAR'),
+              child: const Text('Guardar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, 'ENVIAR'),
+              child: const Text('Enviar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<String?> _seleccionarAccionEdicionBorrador() async {
+    return showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Finalizar edición de borrador'),
+          content: const Text(
+            '¿Deseas guardar los cambios en borrador o enviar la cita?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, 'GUARDAR'),
+              child: const Text('Guardar borrador'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, 'ENVIAR'),
+              child: const Text('Enviar cita'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<bool> _confirmarEnvioCita() async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Confirmar envío de cita'),
+          content: const Text(
+            'Una vez enviada la cita ya no se puede editar directamente. '
+            '¿Deseas continuar?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Volver'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Sí, enviar'),
+            ),
+          ],
+        );
+      },
+    );
+    return confirmar == true;
+  }
+
+  Future<bool> _aplicarCambioEstadoCita(
+    CitaMedica cita,
+    String estado,
+  ) async {
+    if (estado == 'CANCELADA') {
+      return _handleResponseError(
+        await _service.cancelarCita(cita.id),
+        'No se pudo cancelar la cita.',
+      );
+    }
+    if (estado == 'COMPLETADA') {
+      return _handleResponseError(
+        await _service.completarCita(cita.id),
+        'No se pudo completar la cita.',
+      );
+    }
+    if (estado == 'CONFIRMADA') {
+      return _handleResponseError(
+        await _service.confirmarCita(cita.id),
+        'No se pudo confirmar la cita.',
+      );
+    }
+    if (estado == 'RECHAZADA') {
+      final motivo = await _solicitarMotivoRechazo();
+      if (motivo == null) return false;
+      return _handleResponseError(
+        await _service.rechazarCita(cita.id, motivoRechazo: motivo),
+        'No se pudo rechazar la cita.',
+      );
+    }
+
+    return _handleResponseError(
+      await _service.actualizarCita(cita.id, {'estado': estado}),
+      'No se pudo actualizar el estado de la cita.',
+    );
+  }
+
   void _onSocketCreated(dynamic data) {
     final cita = _parseSocketCita(data);
     if (cita == null) return;
@@ -1098,6 +1217,8 @@ class _CitasPageState extends State<CitasPage> {
 
     int currentStep = 0;
     String? modalErrorText;
+    String? accionCreacion;
+    String? accionEdicionBorrador;
     final result = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -2284,20 +2405,32 @@ class _CitasPageState extends State<CitasPage> {
                       ),
                     ],
                   ),
-                  if (cita != null) const SizedBox(height: 12),
-                  if (cita != null)
+                  if (cita != null &&
+                      (cita.estado == 'SOLICITADA' ||
+                          cita.estado == 'CONFIRMADA'))
+                    const SizedBox(height: 12),
+                  if (cita != null &&
+                      (cita.estado == 'SOLICITADA' ||
+                          cita.estado == 'CONFIRMADA'))
                     DropdownButtonFormField<String?>(
                       initialValue: estado,
                       decoration: CustomTextInputStyles.decoration(
                         label: 'Estado',
                       ),
-                      items: CitaEstado.values.map((estadoItem) {
-                        final restringido =
+                      items: [
+                        cita.estado,
+                        if (cita.estado == 'SOLICITADA') ...[
+                          'CONFIRMADA',
+                          'RECHAZADA',
+                        ],
+                        if (cita.estado == 'CONFIRMADA') 'CANCELADA',
+                      ].toSet().map((estadoItem) {
+                        final requierePermiso =
                             estadoItem == 'CONFIRMADA' ||
                             estadoItem == 'RECHAZADA';
                         final habilitado =
-                            !restringido ||
-                            _puedeAprobarRechazar(cita) ||
+                            !requierePermiso ||
+                            _puedeGestionarSolicitada(cita) ||
                             estadoItem == cita.estado;
                         return DropdownMenuItem(
                           value: estadoItem,
@@ -2360,8 +2493,10 @@ class _CitasPageState extends State<CitasPage> {
                                 : null,
                             nextLabel: currentStep == 2
                                 ? (cita == null
-                                      ? 'Crear cita'
-                                      : 'Guardar cambios')
+                                      ? 'Finalizar'
+                                      : (cita.estado == 'BORRADOR'
+                                            ? 'Finalizar'
+                                            : 'Guardar cambios'))
                                 : 'Siguiente',
                             stepContent: stepContent(),
                             onNext: () async {
@@ -2376,6 +2511,25 @@ class _CitasPageState extends State<CitasPage> {
                                   modalErrorText = null;
                                 });
                                 return;
+                              }
+                              if (cita == null) {
+                                final accion =
+                                    await _seleccionarAccionCreacionCita();
+                                if (accion == null) return;
+                                if (accion == 'ENVIAR') {
+                                  final confirmado = await _confirmarEnvioCita();
+                                  if (!confirmado) return;
+                                }
+                                accionCreacion = accion;
+                              } else if (cita.estado == 'BORRADOR') {
+                                final accion =
+                                    await _seleccionarAccionEdicionBorrador();
+                                if (accion == null) return;
+                                if (accion == 'ENVIAR') {
+                                  final confirmado = await _confirmarEnvioCita();
+                                  if (!confirmado) return;
+                                }
+                                accionEdicionBorrador = accion;
                               }
                               Navigator.pop(context, true);
                             },
@@ -2404,8 +2558,9 @@ class _CitasPageState extends State<CitasPage> {
     final especialidadId = especialidadSeleccionada?.id ?? '';
 
     if (cita == null) {
-      // Endpoint REST: POST /citas (creación de cita).
+      final accion = accionCreacion ?? 'GUARDAR';
       final response = await _service.crearCita({
+        'accion': accion,
         'detalle': detalle,
         'fechaInicio': fechaInicio!.toUtc().toIso8601String(),
         if (medicoId.isNotEmpty) 'idMedico': medicoId,
@@ -2416,14 +2571,14 @@ class _CitasPageState extends State<CitasPage> {
         if (servicioSeleccionado != null)
           'idServicio': servicioSeleccionado!.id,
       });
-      final ok = await _handleResponseError(
-        response,
-        'No se pudo crear la cita.',
-      );
+      final ok = await _handleResponseError(response, 'No se pudo crear la cita.');
       if (!ok) return;
+
       showSnackBar(
         citasMessenger,
-        'Cita enviada al calendario',
+        accion == 'GUARDAR'
+            ? 'Cita guardada en borrador'
+            : 'Cita enviada al calendario',
         state: StatusSnackBar.success,
         colorText: _theme.white,
       );
@@ -2434,55 +2589,209 @@ class _CitasPageState extends State<CitasPage> {
       return;
     }
 
-    final updates = <String, dynamic>{};
-    if (detalle != cita.detalle) updates['detalle'] = detalle;
-    if (medicoId != cita.medicoId) updates['idMedico'] = medicoId;
-    if (pacienteId != (cita.pacienteId ?? '')) {
-      updates['idPaciente'] = pacienteId.isEmpty ? null : pacienteId;
-    }
-    if (especialidadId != (cita.especialidadId ?? '')) {
-      updates['idEspecialidad'] = especialidadId;
-    }
-    if (tipoCita != (cita.tipoCita ?? '')) updates['tipoCita'] = tipoCita;
-    if (servicioSeleccionado?.id != (cita.servicioId ?? '')) {
-      updates['idServicio'] = servicioSeleccionado?.id;
-    }
+    final estadoActual = cita.estado;
+    final estadoSeleccionado = estado;
+    final cambioDetalle = detalle != cita.detalle;
+    final cambioFecha = fechaInicio != cita.fechaInicio;
+    final cambioMedico = medicoId != cita.medicoId;
+    final cambioPaciente = pacienteId != (cita.pacienteId ?? '');
+    final cambioEspecialidad = especialidadId != (cita.especialidadId ?? '');
+    final cambioTipoCita = tipoCita != (cita.tipoCita ?? '');
+    final cambioServicio = servicioSeleccionado?.id != (cita.servicioId ?? '');
 
-    if (updates.isNotEmpty) {
-      final response = await _service.actualizarCita(cita.id, updates);
-      final ok = await _handleResponseError(
-        response,
-        'No se pudo actualizar la cita.',
-      );
-      if (!ok) return;
-    }
+    if (estadoActual == 'BORRADOR') {
+      final updates = <String, dynamic>{};
+      if (cambioDetalle) updates['detalle'] = detalle;
+      if (cambioMedico) updates['idMedico'] = medicoId;
+      if (cambioPaciente) {
+        updates['idPaciente'] = pacienteId.isEmpty ? null : pacienteId;
+      }
+      if (cambioEspecialidad) {
+        updates['idEspecialidad'] = especialidadId;
+      }
+      if (cambioTipoCita) updates['tipoCita'] = tipoCita;
+      if (cambioServicio) {
+        updates['idServicio'] = servicioSeleccionado?.id;
+      }
+      if (cambioFecha) {
+        updates['fechaInicio'] = fechaInicio!.toUtc().toIso8601String();
+      }
 
-    if (fechaInicio != cita.fechaInicio) {
-      _socketClient.emitReprogramar({
-        'id': cita.id,
-        'fechaInicio': fechaInicio!.toUtc().toIso8601String(),
-        'tipoCita': tipoCita,
-        if (servicioSeleccionado != null)
-          'idServicio': servicioSeleccionado!.id,
-      });
-    }
+      if (updates.isNotEmpty) {
+        final ok = await _handleResponseError(
+          await _service.editarBorradorCita(cita.id, updates),
+          'No se pudo actualizar la cita borrador.',
+        );
+        if (!ok) return;
+      }
 
-    if (estado != null && estado != cita.estado) {
-      final requierePermiso = estado == 'CONFIRMADA' || estado == 'RECHAZADA';
-      if (requierePermiso && !_puedeAprobarRechazar(cita)) {
+      if (accionEdicionBorrador == 'ENVIAR') {
+        final ok = await _handleResponseError(
+          await _service.enviarCita(cita.id, idMedico: medicoId),
+          'No se pudo enviar la cita.',
+        );
+        if (!ok) return;
+      }
+    } else if (estadoActual == 'SOLICITADA') {
+      if (cambioMedico ||
+          cambioPaciente ||
+          cambioEspecialidad ||
+          cambioTipoCita ||
+          cambioServicio) {
         showSnackBar(
           citasMessenger,
-          'Solo el médico asignado, el administrador o el personal de salud con permisos administrativos pueden aprobar o rechazar.',
+          'En SOLICITADA solo puedes ajustar hora y detalle.',
           state: StatusSnackBar.error,
           colorText: _theme.white,
         );
         return;
       }
-      if (estado == 'CANCELADA') {
-        _socketClient.emitCancelar({'id': cita.id});
-      } else {
-        _socketClient.emitEstado({'id': cita.id, 'estado': estado});
+      if (!_puedeGestionarSolicitada(cita)) {
+        showSnackBar(
+          citasMessenger,
+          'Solo el profesional asignado o el administrador pueden gestionar una cita solicitada.',
+          state: StatusSnackBar.error,
+          colorText: _theme.white,
+        );
+        return;
       }
+
+      final ajuste = <String, dynamic>{};
+      if (cambioDetalle) ajuste['detalle'] = detalle;
+      if (cambioFecha) {
+        ajuste['fechaInicio'] = fechaInicio!.toUtc().toIso8601String();
+      }
+
+      if (estadoSeleccionado == null || estadoSeleccionado == estadoActual) {
+        if (ajuste.isNotEmpty) {
+          showSnackBar(
+            citasMessenger,
+            'En SOLICITADA debes confirmar o rechazar para aplicar cambios.',
+            state: StatusSnackBar.error,
+            colorText: _theme.white,
+          );
+        }
+        return;
+      }
+
+      if (estadoSeleccionado == 'CANCELADA') {
+        showSnackBar(
+          citasMessenger,
+          'Una cita solicitada no puede cancelarse directamente.',
+          state: StatusSnackBar.error,
+          colorText: _theme.white,
+        );
+        return;
+      }
+
+      if (estadoSeleccionado == 'CONFIRMADA') {
+        final ok = await _handleResponseError(
+          await _service.confirmarCita(cita.id, body: ajuste),
+          'No se pudo confirmar la cita.',
+        );
+        if (!ok) return;
+      } else if (estadoSeleccionado == 'RECHAZADA') {
+        final motivo = await _solicitarMotivoRechazo();
+        if (motivo == null) return;
+        final ok = await _handleResponseError(
+          await _service.rechazarCita(cita.id, motivoRechazo: motivo),
+          'No se pudo rechazar la cita.',
+        );
+        if (!ok) return;
+      } else {
+        showSnackBar(
+          citasMessenger,
+          'En SOLICITADA solo puedes confirmar o rechazar.',
+          state: StatusSnackBar.error,
+          colorText: _theme.white,
+        );
+        return;
+      }
+    } else if (estadoActual == 'CONFIRMADA') {
+      if (cambioDetalle ||
+          cambioMedico ||
+          cambioPaciente ||
+          cambioEspecialidad ||
+          cambioTipoCita ||
+          cambioServicio) {
+        showSnackBar(
+          citasMessenger,
+          'La cita confirmada no es editable.',
+          state: StatusSnackBar.error,
+          colorText: _theme.white,
+        );
+        return;
+      }
+      if (estadoSeleccionado == 'CANCELADA') {
+        final ok = await _handleResponseError(
+          await _service.cancelarCita(cita.id),
+          'No se pudo cancelar la cita.',
+        );
+        if (!ok) return;
+      } else if (cambioFecha) {
+        final ok = await _handleResponseError(
+          await _service.reprogramarCita(cita.id, {
+            'fechaInicio': fechaInicio!.toUtc().toIso8601String(),
+            'tipoCita': tipoCita,
+            if (servicioSeleccionado != null)
+              'idServicio': servicioSeleccionado!.id,
+          }),
+          'No se pudo reprogramar la cita.',
+        );
+        if (!ok) return;
+      } else if (estadoSeleccionado != null && estadoSeleccionado != estadoActual) {
+        showSnackBar(
+          citasMessenger,
+          'En CONFIRMADA solo puedes cancelar o reprogramar.',
+          state: StatusSnackBar.error,
+          colorText: _theme.white,
+        );
+        return;
+      }
+    } else if (estadoActual == 'CANCELADA' || estadoActual == 'NO_ASISTIO') {
+      if (cambioDetalle ||
+          cambioMedico ||
+          cambioPaciente ||
+          cambioEspecialidad ||
+          cambioTipoCita ||
+          cambioServicio ||
+          (estadoSeleccionado != null && estadoSeleccionado != estadoActual)) {
+        showSnackBar(
+          citasMessenger,
+          'En este estado solo está permitida la reprogramación.',
+          state: StatusSnackBar.error,
+          colorText: _theme.white,
+        );
+        return;
+      }
+      if (cambioFecha) {
+        final ok = await _handleResponseError(
+          await _service.reprogramarCita(cita.id, {
+            'fechaInicio': fechaInicio!.toUtc().toIso8601String(),
+            'tipoCita': tipoCita,
+            if (servicioSeleccionado != null)
+              'idServicio': servicioSeleccionado!.id,
+          }),
+          'No se pudo reprogramar la cita.',
+        );
+        if (!ok) return;
+      } else {
+        showSnackBar(
+          citasMessenger,
+          'En este estado solo está permitida la reprogramación.',
+          state: StatusSnackBar.error,
+          colorText: _theme.white,
+        );
+        return;
+      }
+    } else {
+      showSnackBar(
+        citasMessenger,
+        'La cita no es editable en su estado actual.',
+        state: StatusSnackBar.error,
+        colorText: _theme.white,
+      );
+      return;
     }
 
     await _cargarCitasCalendario();
@@ -2493,11 +2802,12 @@ class _CitasPageState extends State<CitasPage> {
 
   Color _colorEstado(String estado) {
     switch (estado) {
+      case 'BORRADOR':
+        return _theme.grey.withValues(alpha: 0.7);
       case 'CONFIRMADA':
         return _theme.success;
-      case 'EN_CURSO':
-        return _theme.warning;
       case 'COMPLETADA':
+      case 'REPROGRAMADA':
         return _theme.primary;
       case 'CANCELADA':
       case 'RECHAZADA':
@@ -2547,14 +2857,20 @@ class _CitasPageState extends State<CitasPage> {
   }
 
   bool _esMedicoAsignado(CitaMedica cita) {
-    final idUsuario = Auth.instance.profile.id ?? '';
-    return idUsuario.isNotEmpty && cita.medicoId == idUsuario;
+    final medicoId = cita.medicoId.trim();
+    final idUsuarioRol = (Auth.instance.profile.idUsuarioRol ?? '').trim();
+    if (medicoId.isEmpty || idUsuarioRol.isEmpty) return false;
+    return medicoId == idUsuarioRol;
   }
 
   bool _puedeAprobarRechazar(CitaMedica cita) {
     return _esMedicoAsignado(cita) ||
         _esAdministrador() ||
         _esPersonalSaludSupervisor();
+  }
+
+  bool _puedeGestionarSolicitada(CitaMedica cita) {
+    return _esMedicoAsignado(cita) || _esAdministrador();
   }
 
   String _formatoFechaHoraHistorial(DateTime? fecha) {
@@ -3319,6 +3635,7 @@ class _CitasPageState extends State<CitasPage> {
                                           onEditar: (cita) =>
                                               () =>
                                                   _abrirFormulario(cita: cita),
+                                          puedeEditar: _puedeEditarCita,
                                         ),
                                         onRefresh: _refreshCalendario,
                                       ),
@@ -3340,6 +3657,7 @@ class _CitasPageState extends State<CitasPage> {
                                             () => _mostrarDetalleCita(cita),
                                         onEditar: (cita) =>
                                             () => _abrirFormulario(cita: cita),
+                                        puedeEditar: _puedeEditarCita,
                                       ),
                                     ],
                                   ),
@@ -3433,6 +3751,293 @@ class _CitasPageState extends State<CitasPage> {
       if (detalle.isNotEmpty) detalle,
     ];
     return parts.join(' • ');
+  }
+
+
+  bool _puedeEditarCita(CitaMedica cita) {
+    final estado = cita.estado;
+    return estado == 'BORRADOR' || estado == 'RECHAZADA';
+  }
+
+  Future<bool> _confirmarAccionCita({
+    required String titulo,
+    required String mensaje,
+    required String accion,
+  }) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(titulo),
+        content: Text(mensaje),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Volver'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(accion),
+          ),
+        ],
+      ),
+    );
+    return ok == true;
+  }
+
+  Future<DateTime?> _seleccionarFechaHoraReprogramacion(DateTime? base) async {
+    final now = DateTime.now();
+    final initial = base ?? now;
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(now.year - 1),
+      lastDate: DateTime(now.year + 3),
+    );
+    if (pickedDate == null) return null;
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(initial),
+    );
+    if (pickedTime == null) return null;
+    return DateTime(
+      pickedDate.year,
+      pickedDate.month,
+      pickedDate.day,
+      pickedTime.hour,
+      pickedTime.minute,
+    );
+  }
+
+  Future<void> _cancelarCitaConConfirmacion(CitaMedica cita) async {
+    final confirmar = await _confirmarAccionCita(
+      titulo: 'Cancelar cita',
+      mensaje: '¿Confirmas que deseas cancelar esta cita?',
+      accion: 'Sí, cancelar',
+    );
+    if (!confirmar) return;
+    final ok = await _handleResponseError(
+      await _service.cancelarCita(cita.id),
+      'No se pudo cancelar la cita.',
+    );
+    if (!ok) return;
+    if (mounted) {
+      await _cargarCitasCalendario();
+      if (_currentTabIndex == 2) await _cargarCitasListado();
+    }
+  }
+
+  Future<void> _reprogramarCitaConConfirmacion(CitaMedica cita) async {
+    final nuevaFecha = await _seleccionarFechaHoraReprogramacion(cita.fechaInicio);
+    if (nuevaFecha == null) return;
+    final confirmar = await _confirmarAccionCita(
+      titulo: 'Reprogramar cita',
+      mensaje: '¿Confirmas reprogramar la cita para ${_dateTimeFormat.format(nuevaFecha)}?',
+      accion: 'Sí, reprogramar',
+    );
+    if (!confirmar) return;
+    final ok = await _handleResponseError(
+      await _service.reprogramarCita(cita.id, {
+        'fechaInicio': nuevaFecha.toUtc().toIso8601String(),
+        'tipoCita': cita.tipoCita,
+        if ((cita.servicioId ?? '').trim().isNotEmpty) 'idServicio': cita.servicioId,
+      }),
+      'No se pudo reprogramar la cita.',
+    );
+    if (!ok) return;
+    if (mounted) {
+      await _cargarCitasCalendario();
+      if (_currentTabIndex == 2) await _cargarCitasListado();
+    }
+  }
+
+
+  bool _citaYaIniciada(CitaMedica cita) {
+    final fechaInicio = cita.fechaInicio;
+    if (fechaInicio == null) return false;
+    return !DateTime.now().isBefore(fechaInicio);
+  }
+
+  Future<void> _completarCitaConConfirmacion(CitaMedica cita) async {
+    final confirmar = await _confirmarAccionCita(
+      titulo: 'Completar cita',
+      mensaje: '¿Confirmas marcar esta cita como completada?',
+      accion: 'Sí, completar',
+    );
+    if (!confirmar) return;
+    final ok = await _handleResponseError(
+      await _service.completarCita(cita.id),
+      'No se pudo completar la cita.',
+    );
+    if (!ok) return;
+    if (mounted) {
+      await _cargarCitasCalendario();
+      if (_currentTabIndex == 2) await _cargarCitasListado();
+    }
+  }
+
+  Future<void> _marcarNoAsistioCitaConConfirmacion(CitaMedica cita) async {
+    final confirmar = await _confirmarAccionCita(
+      titulo: 'Marcar no asistió',
+      mensaje: '¿Confirmas marcar esta cita como no asistió?',
+      accion: 'Sí, marcar',
+    );
+    if (!confirmar) return;
+    final ok = await _handleResponseError(
+      await _service.marcarNoAsistioCita(cita.id),
+      'No se pudo marcar la cita como no asistió.',
+    );
+    if (!ok) return;
+    if (mounted) {
+      await _cargarCitasCalendario();
+      if (_currentTabIndex == 2) await _cargarCitasListado();
+    }
+  }
+
+  Future<void> _eliminarBorradorConConfirmacion(CitaMedica cita) async {
+    final confirmar = await _confirmarAccionCita(
+      titulo: 'Eliminar borrador',
+      mensaje: '¿Confirmas eliminar este borrador de cita?',
+      accion: 'Sí, eliminar',
+    );
+    if (!confirmar) return;
+    final ok = await _handleResponseError(
+      await _service.eliminarCitaBorrador(cita.id),
+      'No se pudo eliminar el borrador.',
+    );
+    if (!ok) return;
+    if (mounted) {
+      Navigator.of(context).pop();
+      await _cargarCitasCalendario();
+      if (_currentTabIndex == 2) await _cargarCitasListado();
+    }
+  }
+
+
+  Future<String?> _solicitarMotivoRechazo() async {
+    final controller = TextEditingController();
+    final motivo = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Motivo de rechazo'),
+        content: TextFormField(
+          controller: controller,
+          maxLines: 3,
+          maxLength: 255,
+          decoration: const InputDecoration(labelText: 'Motivo (opcional)'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final value = controller.text.trim();
+              Navigator.pop(dialogContext, value);
+            },
+            child: const Text('Rechazar'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    return motivo;
+  }
+
+  Future<bool> _rechazarCitaSolicitadaConConfirmacion(CitaMedica cita) async {
+    if (!_puedeGestionarSolicitada(cita)) return false;
+    final motivo = await _solicitarMotivoRechazo();
+    if (motivo == null) return false;
+    final ok = await _handleResponseError(
+      await _service.rechazarCita(cita.id, motivoRechazo: motivo),
+      'No se pudo rechazar la cita.',
+    );
+    if (!ok) return false;
+    if (mounted) {
+      await _cargarCitasCalendario();
+      if (_currentTabIndex == 2) await _cargarCitasListado();
+    }
+    return true;
+  }
+
+  Future<bool> _confirmarCitaSolicitadaConOpciones(CitaMedica cita) async {
+    if (!_puedeGestionarSolicitada(cita)) return false;
+
+    final detalleController = TextEditingController(text: cita.detalle);
+    DateTime? fechaSeleccionada = cita.fechaInicio;
+
+    final aplicar = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setStateDialog) {
+          Future<void> seleccionarFechaHora() async {
+            final nueva = await _seleccionarFechaHoraReprogramacion(
+              fechaSeleccionada,
+            );
+            if (nueva == null) return;
+            setStateDialog(() => fechaSeleccionada = nueva);
+          }
+
+          return AlertDialog(
+            title: const Text('Confirmar cita solicitada'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextFormField(
+                  controller: detalleController,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                    labelText: 'Detalle (opcional)',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: seleccionarFechaHora,
+                  icon: const Icon(Icons.schedule),
+                  label: Text(
+                    fechaSeleccionada == null
+                        ? 'Ajustar hora (opcional)'
+                        : 'Hora: ${_dateTimeFormat.format(fechaSeleccionada!)}',
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: const Text('Cancelar'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: const Text('Confirmar'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    if (aplicar != true) return false;
+
+    final body = <String, dynamic>{};
+    final detalle = detalleController.text.trim();
+    if (detalle != cita.detalle) body['detalle'] = detalle;
+    if (fechaSeleccionada != null && fechaSeleccionada != cita.fechaInicio) {
+      body['fechaInicio'] = fechaSeleccionada!.toUtc().toIso8601String();
+    }
+
+    final ok = await _handleResponseError(
+      await _service.confirmarCita(cita.id, body: body),
+      'No se pudo confirmar la cita.',
+    );
+    if (!ok) return false;
+
+    if (mounted) {
+      await _cargarCitasCalendario();
+      if (_currentTabIndex == 2) await _cargarCitasListado();
+    }
+    return true;
   }
 
   Future<void> _mostrarDetalleCita(CitaMedica cita) async {
@@ -3559,13 +4164,71 @@ class _CitasPageState extends State<CitasPage> {
             ),
           ),
           actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _abrirFormulario(cita: cita);
-              },
-              child: const Text('Editar'),
-            ),
+            if (_puedeEditarCita(cita))
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  _abrirFormulario(cita: cita);
+                },
+                child: const Text('Editar'),
+              ),
+            if (cita.estado == 'SOLICITADA' && _puedeGestionarSolicitada(cita))
+              TextButton(
+                onPressed: () async {
+                  final ok = await _rechazarCitaSolicitadaConConfirmacion(cita);
+                  if (ok && mounted) Navigator.of(context).pop();
+                },
+                child: const Text('Rechazar'),
+              ),
+            if (cita.estado == 'SOLICITADA' && _puedeGestionarSolicitada(cita))
+              TextButton(
+                onPressed: () async {
+                  final ok = await _confirmarCitaSolicitadaConOpciones(cita);
+                  if (ok && mounted) Navigator.of(context).pop();
+                },
+                child: const Text('Confirmar'),
+              ),
+            if (cita.estado == 'BORRADOR')
+              TextButton(
+                onPressed: () async {
+                  await _eliminarBorradorConConfirmacion(cita);
+                },
+                child: const Text('Eliminar'),
+              ),
+            if (cita.estado == 'CONFIRMADA' && _citaYaIniciada(cita))
+              TextButton(
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  await _marcarNoAsistioCitaConConfirmacion(cita);
+                },
+                child: const Text('No asistió'),
+              ),
+            if (cita.estado == 'CONFIRMADA' && _citaYaIniciada(cita))
+              TextButton(
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  await _completarCitaConConfirmacion(cita);
+                },
+                child: const Text('Completar'),
+              ),
+            if (cita.estado == 'CONFIRMADA')
+              TextButton(
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  await _cancelarCitaConConfirmacion(cita);
+                },
+                child: const Text('Cancelar'),
+              ),
+            if (cita.estado == 'CONFIRMADA' ||
+                cita.estado == 'CANCELADA' ||
+                cita.estado == 'NO_ASISTIO')
+              TextButton(
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  await _reprogramarCitaConConfirmacion(cita);
+                },
+                child: const Text('Reprogramar'),
+              ),
             TextButton(
               onPressed: () async {
                 await _mostrarHistorialCita(cita);

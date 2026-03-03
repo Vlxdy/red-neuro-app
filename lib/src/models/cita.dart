@@ -161,13 +161,13 @@ class CitaMedica {
 
 class CitaEstado {
   static const List<String> values = [
-    'INACTIVO',
+    'BORRADOR',
     'SOLICITADA',
     'CONFIRMADA',
-    'EN_CURSO',
     'COMPLETADA',
     'NO_ASISTIO',
     'CANCELADA',
     'RECHAZADA',
+    'REPROGRAMADA',
   ];
 }

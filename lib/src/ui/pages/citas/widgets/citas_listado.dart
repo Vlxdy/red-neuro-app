@@ -21,6 +21,7 @@ class CitasListadoTab extends StatelessWidget {
   final String Function(CitaMedica cita) nombrePaciente;
   final VoidCallback Function(CitaMedica cita) onVerDetalle;
   final VoidCallback Function(CitaMedica cita) onEditar;
+  final bool Function(CitaMedica cita) puedeEditar;
 
   const CitasListadoTab({
     super.key,
@@ -39,6 +40,7 @@ class CitasListadoTab extends StatelessWidget {
     required this.nombrePaciente,
     required this.onVerDetalle,
     required this.onEditar,
+    required this.puedeEditar,
   });
 
   @override
@@ -61,6 +63,7 @@ class CitasListadoTab extends StatelessWidget {
             nombrePaciente: nombrePaciente,
             onVerDetalle: onVerDetalle,
             onEditar: onEditar,
+            puedeEditar: puedeEditar,
           ),
         ),
         if (isLoadingMore) const SizedBox(height: 12),
@@ -93,6 +96,7 @@ class CitasListado extends StatelessWidget {
   final String Function(CitaMedica cita) nombrePaciente;
   final VoidCallback Function(CitaMedica cita) onVerDetalle;
   final VoidCallback Function(CitaMedica cita) onEditar;
+  final bool Function(CitaMedica cita) puedeEditar;
 
   const CitasListado({
     super.key,
@@ -111,6 +115,7 @@ class CitasListado extends StatelessWidget {
     required this.nombrePaciente,
     required this.onVerDetalle,
     required this.onEditar,
+    required this.puedeEditar,
   });
 
   @override
@@ -282,11 +287,12 @@ class CitasListado extends StatelessWidget {
                             icon: const Icon(Icons.info_outline),
                             tooltip: 'Ver detalles',
                           ),
-                          IconButton(
-                            onPressed: onEditar(cita),
-                            icon: const Icon(Icons.edit),
-                            tooltip: 'Editar',
-                          ),
+                          if (puedeEditar(cita))
+                            IconButton(
+                              onPressed: onEditar(cita),
+                              icon: const Icon(Icons.edit),
+                              tooltip: 'Editar',
+                            ),
                         ],
                       ),
                     ],

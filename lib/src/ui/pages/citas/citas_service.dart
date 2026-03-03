@@ -269,6 +269,77 @@ class CitasService extends ServiceConfig {
     return fetch('/citas/$id', type: HttpProtocol.patch, body: body);
   }
 
+  Future<ResponseApi> editarBorradorCita(
+    String id,
+    Map<String, dynamic> body,
+  ) async {
+    return fetch('/citas/$id/editar-borrador', type: HttpProtocol.patch, body: body);
+  }
+
+  Future<ResponseApi> ajustarSolicitadaCita(
+    String id,
+    Map<String, dynamic> body,
+  ) async {
+    return fetch('/citas/$id/ajustar-solicitada', type: HttpProtocol.patch, body: body);
+  }
+
+  Future<ResponseApi> enviarCita(
+    String id, {
+    String? idMedico,
+  }) async {
+    final body = <String, dynamic>{
+      if (idMedico != null && idMedico.trim().isNotEmpty)
+        'idMedico': idMedico.trim(),
+    };
+    return fetch('/citas/$id/enviar', type: HttpProtocol.post, body: body);
+  }
+
+  Future<ResponseApi> confirmarCita(
+    String id, {
+    Map<String, dynamic>? body,
+  }) async {
+    return fetch(
+      '/citas/$id/confirmar',
+      type: HttpProtocol.post,
+      body: body ?? const {},
+    );
+  }
+
+  Future<ResponseApi> rechazarCita(String id, {String? motivoRechazo}) async {
+    final body = <String, dynamic>{
+      if (motivoRechazo != null && motivoRechazo.trim().isNotEmpty)
+        'motivoRechazo': motivoRechazo.trim(),
+    };
+    return fetch('/citas/$id/rechazar', type: HttpProtocol.post, body: body);
+  }
+
+  Future<ResponseApi> cancelarCita(String id) async {
+    return fetch('/citas/$id/cancelar', type: HttpProtocol.post, body: const {});
+  }
+
+  Future<ResponseApi> completarCita(String id) async {
+    return fetch('/citas/$id/completar', type: HttpProtocol.post, body: const {});
+  }
+
+  Future<ResponseApi> marcarNoAsistioCita(String id) async {
+    return fetch(
+      '/citas/$id/estado',
+      type: HttpProtocol.patch,
+      body: const {'estado': 'NO_ASISTIO'},
+    );
+  }
+
+  Future<ResponseApi> reprogramarCita(
+    String id,
+    Map<String, dynamic> body,
+  ) async {
+    return fetch('/citas/$id/reprogramar', type: HttpProtocol.patch, body: body);
+  }
+
+  Future<ResponseApi> eliminarCitaBorrador(String id) async {
+    return fetch('/citas/$id', type: HttpProtocol.delete);
+  }
+
   Future<ResponseApi> crearCita(Map<String, dynamic> body) async {
     return fetch('/citas', type: HttpProtocol.post, body: body);
   }
