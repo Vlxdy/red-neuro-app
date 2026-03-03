@@ -1900,6 +1900,97 @@
         ]
       }
     },
+    "/citas/cantidad-por-dia": {
+      "get": {
+        "operationId": "CitasController_obtenerCantidadPorDia",
+        "parameters": [
+          {
+            "name": "fechaInicio",
+            "required": true,
+            "in": "query",
+            "description": "Fecha de inicio del rango (ISO)",
+            "schema": {
+              "example": "2024-06-01T00:00:00Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "fechaFin",
+            "required": true,
+            "in": "query",
+            "description": "Fecha de fin del rango (ISO)",
+            "schema": {
+              "example": "2024-06-30T23:59:59Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "idMedico",
+            "required": false,
+            "in": "query",
+            "description": "Identificador del médico para filtrar la cantidad",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          },
+          {
+            "name": "estado",
+            "required": false,
+            "in": "query",
+            "description": "Filtrar por estado de la cita",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "INACTIVO",
+                "SOLICITADA",
+                "CONFIRMADA",
+                "EN_CURSO",
+                "COMPLETADA",
+                "NO_ASISTIO",
+                "CANCELADA",
+                "RECHAZADA"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/CantidadCitasPorDiaResponseDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Obtiene la cantidad de citas por día dentro de un rango de fechas",
+        "tags": [
+          "Gestión de Citas"
+        ]
+      }
+    },
     "/citas/mis-citas": {
       "get": {
         "operationId": "CitasController_listarMisCitas",
@@ -5462,6 +5553,25 @@
           "estado",
           "medicoId",
           "medico"
+        ]
+      },
+      "CantidadCitasPorDiaResponseDto": {
+        "type": "object",
+        "properties": {
+          "fecha": {
+            "type": "string",
+            "description": "Fecha del día consultado en formato YYYY-MM-DD",
+            "example": "2024-06-15"
+          },
+          "cantidad": {
+            "type": "number",
+            "description": "Cantidad total de citas para el día",
+            "example": 8
+          }
+        },
+        "required": [
+          "fecha",
+          "cantidad"
         ]
       },
       "CrearCitaDto": {
