@@ -683,13 +683,24 @@ class _CitasPageState extends State<CitasPage> {
     await _cargarCitasCalendario();
   }
 
+  Future<void> _refreshAgenda() async {
+    await Future.wait<void>([
+      _cargarCitasAgendaSemana(),
+      _cargarCitasAgendaDay(day: _agendaDay),
+      _recargarConteoCitasCalendario(),
+    ]);
+  }
+
   Future<void> _refreshListado() async {
     _listPage = 1;
     _listLoadingMore = false;
     if (_listScrollController.hasClients) {
       _listScrollController.jumpTo(0);
     }
-    await _cargarCitasListado(page: 1);
+    await Future.wait<void>([
+      _cargarCitasListado(page: 1),
+      _recargarConteoCitasCalendario(),
+    ]);
   }
 
   Future<void> _seleccionarFecha({required bool inicio}) async {
@@ -3232,6 +3243,7 @@ class _CitasPageState extends State<CitasPage> {
                                               _agendaCalendarCollapsed = false,
                                         ),
                                         isLoading: _agendaLoading,
+                                        onRefresh: _refreshAgenda,
                                         scrollController:
                                             _agendaScrollController,
                                         formatoHoraAgenda: _formatoHoraAgenda,
