@@ -23,6 +23,7 @@ class CitasAgendaSection extends StatelessWidget {
   final ValueChanged<CalendarFormat> onAgendaFormatChanged;
   final VoidCallback onExpandCalendar;
   final bool isLoading;
+  final Future<void> Function() onRefresh;
   final ScrollController? scrollController;
   final String Function(DateTime? inicio, int hour) formatoHoraAgenda;
   final String Function(DateTime? inicio, DateTime? fin) formatoHorarioCita;
@@ -50,6 +51,7 @@ class CitasAgendaSection extends StatelessWidget {
     required this.onAgendaFormatChanged,
     required this.onExpandCalendar,
     required this.isLoading,
+    required this.onRefresh,
     required this.scrollController,
     required this.formatoHoraAgenda,
     required this.formatoHorarioCita,
@@ -175,21 +177,24 @@ class CitasAgendaSection extends StatelessWidget {
                     child: CircularProgressIndicator(color: theme.primary),
                   ),
                 )
-              : _AgendaTimeline(
-                  citasPorHora: citasPorHora,
-                  citasAntesDeLasOcho: citasAntesDeLasOcho,
-                  citasDespuesDeLasVeinte: citasDespuesDeLasVeinte,
-                  theme: theme,
-                  scrollController: scrollController,
-                  formatoHoraAgenda: formatoHoraAgenda,
-                  formatoHorarioCita: formatoHorarioCita,
-                  tituloCita: tituloCita,
-                  nombreMedico: nombreMedico,
-                  nombrePaciente: nombrePaciente,
-                  iconoTipoCita: iconoTipoCita,
-                  colorEspecialidad: colorEspecialidad,
-                  colorEstado: colorEstado,
-                  onTapCita: onTapCita,
+              : RefreshIndicator(
+                  onRefresh: onRefresh,
+                  child: _AgendaTimeline(
+                    citasPorHora: citasPorHora,
+                    citasAntesDeLasOcho: citasAntesDeLasOcho,
+                    citasDespuesDeLasVeinte: citasDespuesDeLasVeinte,
+                    theme: theme,
+                    scrollController: scrollController,
+                    formatoHoraAgenda: formatoHoraAgenda,
+                    formatoHorarioCita: formatoHorarioCita,
+                    tituloCita: tituloCita,
+                    nombreMedico: nombreMedico,
+                    nombrePaciente: nombrePaciente,
+                    iconoTipoCita: iconoTipoCita,
+                    colorEspecialidad: colorEspecialidad,
+                    colorEstado: colorEstado,
+                    onTapCita: onTapCita,
+                  ),
                 ),
         ),
       ],
@@ -407,11 +412,26 @@ class _AgendaTimeline extends StatelessWidget {
     }
 
     if (filas.isEmpty) {
-      return const SizedBox.shrink();
+      return ListView(
+        controller: scrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.only(top: 24, bottom: 16),
+        children: [
+          Center(
+            child: Text(
+              'No hay citas para este día',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: theme.grey.withValues(alpha: 0.8),
+              ),
+            ),
+          ),
+        ],
+      );
     }
 
     return ListView.separated(
       controller: scrollController,
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.only(bottom: 16),
       itemCount: filas.length,
       separatorBuilder: (_, _) => const SizedBox(height: 2),
