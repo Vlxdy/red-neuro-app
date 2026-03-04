@@ -45,21 +45,21 @@ enum CitasEstado {
   Color color(ThemeController theme) {
     switch (this) {
       case CitasEstado.borrador:
-        return theme.grey.withValues(alpha: 0.6);
+        return theme.grey.withValues(alpha: 0.75);
       case CitasEstado.solicitada:
-        return theme.accent200;
+        return theme.accent500;
       case CitasEstado.confirmada:
-        return theme.success;
+        return theme.primary;
       case CitasEstado.completada:
-        return theme.primary200;
+        return theme.success;
       case CitasEstado.noAsistio:
         return theme.warning;
       case CitasEstado.cancelada:
         return theme.error;
       case CitasEstado.rechazada:
-        return theme.otherAccent;
+        return theme.accent500;
       case CitasEstado.reprogramada:
-        return theme.primary;
+        return const Color(0xFF8E7CC3);
     }
   }
 

@@ -3331,19 +3331,21 @@ class _CitasPageState extends State<CitasPage> {
   Color _colorEstado(String estado) {
     switch (estado) {
       case 'BORRADOR':
-        return _theme.grey.withValues(alpha: 0.7);
-      case 'CONFIRMADA':
-        return _theme.success;
-      case 'COMPLETADA':
-      case 'REPROGRAMADA':
-        return _theme.primary;
-      case 'CANCELADA':
-      case 'RECHAZADA':
-        return _theme.error;
-      case 'NO_ASISTIO':
-        return _theme.error.withValues(alpha: 0.7);
+        return _theme.grey.withValues(alpha: 0.75);
       case 'SOLICITADA':
-        return _theme.secondary;
+        return _theme.accent500;
+      case 'CONFIRMADA':
+        return _theme.primary;
+      case 'COMPLETADA':
+        return _theme.success;
+      case 'NO_ASISTIO':
+        return _theme.warning;
+      case 'CANCELADA':
+        return _theme.error;
+      case 'RECHAZADA':
+        return _theme.accent500;
+      case 'REPROGRAMADA':
+        return const Color(0xFF8E7CC3);
       default:
         return _theme.grey.withValues(alpha: 0.6);
     }
