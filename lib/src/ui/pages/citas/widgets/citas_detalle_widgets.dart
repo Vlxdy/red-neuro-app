@@ -16,21 +16,32 @@ class CitasDetalleSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (children.isEmpty) return const SizedBox.shrink();
+    final showTitle = title.trim().isNotEmpty;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: theme.grey,
-                  fontWeight: FontWeight.w600,
-                ),
-          ),
-          const SizedBox(height: 8),
-          ...children,
-        ],
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(10, 8, 10, 4),
+        decoration: BoxDecoration(
+          color: theme.bgCard2,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: theme.grey.withValues(alpha: 0.15)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (showTitle)
+              Text(
+                title,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: theme.grey,
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+            if (showTitle) const SizedBox(height: 6),
+            ...children,
+          ],
+        ),
       ),
     );
   }
@@ -54,7 +65,7 @@ class CitasDetalleRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final resolvedValue = value.trim().isNotEmpty ? value : '--';
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -233,6 +244,68 @@ class CitasHistorialTimelineItem extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class CitasDetalleGrid extends StatelessWidget {
+  final List<Widget> children;
+  final double spacing;
+  final double runSpacing;
+  final double minItemWidth;
+  final int? columns;
+
+  const CitasDetalleGrid({
+    super.key,
+    required this.children,
+    this.spacing = 12,
+    this.runSpacing = 0,
+    this.minItemWidth = 230,
+    this.columns,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (children.isEmpty) return const SizedBox.shrink();
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (columns != null && columns! > 1) {
+          final requested = columns!;
+          final requestedWidth =
+              (constraints.maxWidth - (spacing * (requested - 1))) / requested;
+          if (requestedWidth >= minItemWidth) {
+            return Wrap(
+              spacing: spacing,
+              runSpacing: runSpacing,
+              children: [
+                for (final child in children)
+                  SizedBox(
+                    width: requestedWidth,
+                    child: child,
+                  ),
+              ],
+            );
+          }
+        }
+
+        final canUseTwoColumns = constraints.maxWidth >=
+            (minItemWidth * 2) + spacing;
+        final itemWidth = canUseTwoColumns
+            ? (constraints.maxWidth - spacing) / 2
+            : constraints.maxWidth;
+
+        return Wrap(
+          spacing: spacing,
+          runSpacing: runSpacing,
+          children: [
+            for (final child in children)
+              SizedBox(
+                width: itemWidth,
+                child: child,
+              ),
+          ],
+        );
+      },
     );
   }
 }
