@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/active_filter_chip.dart';
 
@@ -92,7 +91,7 @@ class CitasActiveFiltersRibbon extends StatelessWidget {
             child: Row(
               children: [
                 Icon(
-                  PhosphorIconsRegular.funnel,
+                  Icons.filter_alt_rounded,
                   size: 16,
                   color: theme.primary,
                 ),
