@@ -4186,20 +4186,6 @@ class _CitasPageState extends State<CitasPage> {
     return PhosphorIconsRegular.calendarCheck;
   }
 
-  String _subtituloCita(CitaMedica cita) {
-    final estudio = (cita.servicioNombre ?? cita.servicioId ?? '').trim();
-    final especialidad = (cita.especialidadNombre ?? cita.especialidadId ?? '')
-        .trim();
-    final detalle = cita.detalle.trim();
-    final parts = <String>[
-      if (estudio.isNotEmpty) estudio,
-      if (especialidad.isNotEmpty) especialidad,
-      if (detalle.isNotEmpty) detalle,
-    ];
-    return parts.join(' • ');
-  }
-
-
   bool _puedeEditarCita(CitaMedica cita) {
     final estado = cita.estado;
     return estado == 'BORRADOR' || estado == 'RECHAZADA';
@@ -4609,14 +4595,6 @@ class _CitasPageState extends State<CitasPage> {
                               _tituloCita(cita),
                               style: Theme.of(context).textTheme.titleLarge,
                             ),
-                            if (_subtituloCita(cita).isNotEmpty) ...[
-                              const SizedBox(height: 4),
-                              Text(
-                                _subtituloCita(cita),
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(color: _theme.grey),
-                              ),
-                            ],
                           ],
                         ),
                       ),
@@ -4666,6 +4644,7 @@ class _CitasPageState extends State<CitasPage> {
                           theme: _theme,
                           children: [
                             CitasDetalleGrid(
+                              minItemWidth: 150,
                               children: [
                                 CitasDetalleRow(
                                   icon: PhosphorIconsRegular.calendar,
@@ -4690,15 +4669,16 @@ class _CitasPageState extends State<CitasPage> {
                           title: 'Paciente',
                           theme: _theme,
                           children: [
+                            if (pacienteNombre.isNotEmpty)
+                              CitasDetalleRow(
+                                icon: PhosphorIconsRegular.userCircle,
+                                label: 'Paciente',
+                                value: pacienteNombre,
+                                theme: _theme,
+                              ),
                             CitasDetalleGrid(
+                              minItemWidth: 170,
                               children: [
-                                if (pacienteNombre.isNotEmpty)
-                                  CitasDetalleRow(
-                                    icon: PhosphorIconsRegular.userCircle,
-                                    label: 'Paciente',
-                                    value: pacienteNombre,
-                                    theme: _theme,
-                                  ),
                                 if (pacienteDocumento != null)
                                   CitasDetalleRow(
                                     icon: PhosphorIconsRegular.identificationCard,
@@ -4743,18 +4723,18 @@ class _CitasPageState extends State<CitasPage> {
                           children: [
                             CitasDetalleGrid(
                               children: [
-                                if (especialidadNombre != null)
-                                  CitasDetalleRow(
-                                    icon: PhosphorIconsRegular.stethoscope,
-                                    label: 'Especialidad',
-                                    value: especialidadNombre,
-                                    theme: _theme,
-                                  ),
                                 if (servicioNombre != null)
                                   CitasDetalleRow(
                                     icon: PhosphorIconsRegular.testTube,
                                     label: etiquetaPrestacion,
                                     value: servicioNombre,
+                                    theme: _theme,
+                                  ),
+                                if (especialidadNombre != null)
+                                  CitasDetalleRow(
+                                    icon: PhosphorIconsRegular.stethoscope,
+                                    label: 'Especialidad',
+                                    value: especialidadNombre,
                                     theme: _theme,
                                   ),
                                 if ((servicioDuracion ?? 0) > 0)

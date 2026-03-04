@@ -18,19 +18,28 @@ class CitasDetalleSection extends StatelessWidget {
     if (children.isEmpty) return const SizedBox.shrink();
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: theme.grey,
-                  fontWeight: FontWeight.w600,
-                ),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
+        decoration: BoxDecoration(
+          color: theme.bgCard2,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: theme.grey.withValues(alpha: 0.15)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: theme.grey,
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            ...children,
           ),
-          const SizedBox(height: 8),
-          ...children,
-        ],
+        ),
       ),
     );
   }
