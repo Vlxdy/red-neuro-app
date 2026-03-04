@@ -5,6 +5,7 @@ import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/models/especialidad.dart';
 import 'package:red_neuro_app/src/models/estudio.dart';
 import 'package:red_neuro_app/src/models/historial_cita.dart';
+import 'package:red_neuro_app/src/models/lugar.dart';
 import 'package:red_neuro_app/src/models/paciente.dart';
 import 'package:red_neuro_app/src/models/personal_medico.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
@@ -634,6 +635,59 @@ class CitasService extends ServiceConfig {
       Logger.error('Error al obtener personal medico $e');
       Logger.error('stacktrace $stacktrace');
       return CatalogoPageResult.empty('No se pudo cargar el personal médico.');
+    }
+  }
+
+  Future<CatalogoPageResult<Lugar>> obtenerLugares({
+    int page = 1,
+    int limit = 10,
+    String? filtro,
+  }) async {
+    try {
+      final params = <String, String>{
+        'pagina': '$page',
+        'limite': '$limit',
+        if (filtro != null && filtro.trim().isNotEmpty) 'filtro': filtro.trim(),
+      };
+      final response = await fetch('/lugares', params: params);
+      if (response.status != StatusNetwork.connected) {
+        return CatalogoPageResult.empty(
+          response.message.isNotEmpty
+              ? response.message
+              : 'No se pudieron cargar los lugares.',
+        );
+      }
+      final data = response.data;
+      final datos = data['datos'] ?? data['data'] ?? data;
+      final totalRaw = datos['total'] ?? data['total'] ?? 0;
+      final filasRaw =
+          datos['filas'] ??
+          datos['items'] ??
+          data['filas'] ??
+          data['items'] ??
+          data['datos'] ??
+          [];
+      final lugares = (filasRaw is List)
+          ? filasRaw
+                .whereType<Map<String, dynamic>>()
+                .map(Lugar.fromJson)
+                .toList()
+          : <Lugar>[];
+      final total = totalRaw is int
+          ? totalRaw
+          : int.tryParse('$totalRaw') ?? lugares.length;
+      return CatalogoPageResult(
+        items: lugares,
+        total: total,
+        page: page,
+        limit: limit,
+        message: response.message,
+        status: response.status,
+      );
+    } catch (e, stacktrace) {
+      Logger.error('Error al obtener lugares $e');
+      Logger.error('stacktrace $stacktrace');
+      return CatalogoPageResult.empty('No se pudieron cargar los lugares.');
     }
   }
 
