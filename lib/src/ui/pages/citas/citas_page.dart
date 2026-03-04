@@ -499,11 +499,6 @@ class _CitasPageState extends State<CitasPage> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      resumenFila(
-                        icon: Icons.category_outlined,
-                        label: 'Tipo de cita',
-                        value: etiquetaPrestacion,
-                      ),
                       Container(
                         width: double.infinity,
                         margin: const EdgeInsets.only(bottom: 10),
@@ -4498,8 +4493,6 @@ class _CitasPageState extends State<CitasPage> {
     final pacienteGenero = _valorDetalle(_formatearGenero(cita.pacienteGenero));
     final especialidadNombre =
         _valorDetalle(cita.especialidadNombre ?? cita.especialidadId);
-    final especialidadDescripcion = _valorDetalle(cita.especialidadDescripcion);
-    final tipoServicio = _valorDetalle(cita.servicioTipo ?? cita.tipoCita);
     final etiquetaPrestacion = _etiquetaPrestacion(cita.servicioTipo ?? cita.tipoCita);
     final servicioNombre = _valorDetalle(cita.servicioNombre ?? cita.servicioId);
     final servicioDuracion = cita.servicioDuracionMinutos;
@@ -4745,20 +4738,6 @@ class _CitasPageState extends State<CitasPage> {
                                 icon: PhosphorIconsRegular.stethoscope,
                                 label: 'Especialidad',
                                 value: especialidadNombre,
-                                theme: _theme,
-                              ),
-                            if (especialidadDescripcion != null)
-                              CitasDetalleRow(
-                                icon: PhosphorIconsRegular.note,
-                                label: 'Detalle especialidad',
-                                value: especialidadDescripcion,
-                                theme: _theme,
-                              ),
-                            if (tipoServicio != null)
-                              CitasDetalleRow(
-                                icon: PhosphorIconsRegular.testTube,
-                                label: 'Tipo de cita',
-                                value: tipoServicio,
                                 theme: _theme,
                               ),
                             if (servicioNombre != null)
