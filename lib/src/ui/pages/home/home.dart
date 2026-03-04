@@ -12,6 +12,7 @@ import 'package:red_neuro_app/src/ui/pages/usuarios/usuarios_page.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_page.dart';
 import 'package:red_neuro_app/src/ui/pages/especialidades/especialidades_page.dart';
 import 'package:red_neuro_app/src/ui/pages/estudios/estudios_page.dart';
+import 'package:red_neuro_app/src/ui/pages/lugares/lugares_page.dart';
 import 'package:red_neuro_app/src/ui/pages/pacientes/pacientes_page.dart';
 import 'package:red_neuro_app/src/ui/pages/personal_salud/personal_salud_page.dart';
 import 'package:flutter/material.dart';
@@ -575,6 +576,7 @@ List<ChildrenItem> _submodulesFromRole({
     '/admin/personal_medico',
     '/admin/usuarios',
     '/admin/especialidades',
+    '/admin/lugares',
     '/admin/estudios',
     '/admin/servicios',
   ];
@@ -659,6 +661,8 @@ ChildrenItem _submoduleToItem(
       normalizedUrl.contains('servicios') ||
       normalizedName == 'estudios' ||
       normalizedName == 'servicios';
+  final isLugaresModule =
+      normalizedUrl.contains('lugares') || normalizedName == 'lugares';
   final isCitasModule =
       normalizedUrl == '/admin/citas' || normalizedName == 'citas';
   final isPacientesModule =
@@ -674,6 +678,8 @@ ChildrenItem _submoduleToItem(
       ? 'personal_medico'
       : isEspecialidadesModule
       ? 'especialidades'
+      : isLugaresModule
+      ? 'lugares'
       : isEstudiosModule
       ? 'servicios'
       : subModule.propiedades?.icono;
@@ -693,6 +699,8 @@ ChildrenItem _submoduleToItem(
           ? const UsuariosPage()
           : isEspecialidadesModule
           ? const EspecialidadesPage()
+          : isLugaresModule
+          ? const LugaresPage()
           : isEstudiosModule
           ? const EstudiosPage()
           : isCitasModule
@@ -739,6 +747,9 @@ IconData _moduleIconData(String? iconName, {bool filled = false}) {
     case 'servicios':
     case 'science':
       return filled ? Icons.science : Icons.science_outlined;
+    case 'lugares':
+    case 'place':
+      return filled ? Icons.location_city : Icons.location_city_outlined;
     case 'user':
     case 'usuarios':
       return filled ? PhosphorIconsFill.users : PhosphorIconsRegular.users;
@@ -809,6 +820,12 @@ List<ChildrenItem> _adminMenu(ThemeController theme) => [
     iconoImagenSeleccionada: Icons.medical_services,
     titulo: 'Especialidades',
     children: const KeepAlivePage(child: EspecialidadesPage()),
+  ),
+  ChildrenItem(
+    iconoImagen: Icons.location_city_outlined,
+    iconoImagenSeleccionada: Icons.location_city,
+    titulo: 'Lugares',
+    children: const KeepAlivePage(child: LugaresPage()),
   ),
   ChildrenItem(
     iconoImagen: Icons.science_outlined,
@@ -1061,6 +1078,16 @@ _TrayBlueprint _resolveTrayBlueprint(SubModulo subModule) {
         'Registrar o actualizar perfiles médicos',
       ],
       icon: _moduleIconData('manage_accounts'),
+    ),
+    '/admin/lugares': _TrayBlueprint(
+      title: 'Lugares',
+      description:
+          'Gestiona instituciones y lugares de atención disponibles en la plataforma.',
+      actions: const [
+        'Listar lugares con filtros y paginación',
+        'Crear, editar y cambiar estado de lugares',
+      ],
+      icon: _moduleIconData('lugares'),
     ),
     'usuarios': _TrayBlueprint(
       title: 'Usuarios',
