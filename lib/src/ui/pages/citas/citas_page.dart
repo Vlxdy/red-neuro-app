@@ -56,6 +56,7 @@ class CitasPage extends StatefulWidget {
 
 class _CitasPageState extends State<CitasPage> {
   static const _viewPreferenceKey = 'citas_view_index';
+  static const _soloMisCitasPreferenceKey = 'citas_solo_mis_asignadas';
   final ThemeController _theme = ThemeController.instance;
   late final CitasService _service;
   final DateFormat _dateFormat = DateFormat('dd/MM/yyyy');
@@ -104,6 +105,56 @@ class _CitasPageState extends State<CitasPage> {
       : _citasListado.length == _listLimit;
   late final _CitasSocketClient _socketClient;
   bool get _usarSoloMisCitas => widget.soloMisCitas || _soloCitasAsignadas;
+  bool get _bloquearFiltroMedicoPorSoloMisCitas =>
+      _usarSoloMisCitas && widget.mostrarFiltroMedico;
+
+  String get _nombreMedicoActual {
+    final perfil = Auth.instance.profile;
+    final nombreCompleto = [
+      perfil.nombres,
+      perfil.primerApellido,
+      perfil.segundoApellido,
+    ].where((valor) => valor.trim().isNotEmpty).join(' ').trim();
+    return nombreCompleto.isNotEmpty ? nombreCompleto : 'Mi agenda';
+  }
+
+  Widget _buildModoMisCitasBanner(BuildContext context) {
+    if (!_usarSoloMisCitas) return const SizedBox.shrink();
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            _theme.primary.withValues(alpha: 0.18),
+            _theme.secondary.withValues(alpha: 0.18),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _theme.primary.withValues(alpha: 0.45)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.person_pin_circle_rounded, color: _theme.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              'Mostrando solo citas asignadas a ti • $_nombreMedicoActual',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: _theme.primary,
+                fontWeight: FontWeight.w500,
+                letterSpacing: 0,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -117,7 +168,6 @@ class _CitasPageState extends State<CitasPage> {
     _medicoFiltroController = TextEditingController();
     _service = CitasService(context);
     _agendaScrollController.addListener(_handleAgendaScroll);
-    _soloCitasAsignadas = widget.soloMisCitas;
     _socketClient = _CitasSocketClient(
       onCreated: _onSocketCreated,
       onEstadoActualizado: _onSocketEstadoActualizado,
@@ -141,6 +191,18 @@ class _CitasPageState extends State<CitasPage> {
   }
 
   Future<void> _cargarInicial() async {
+    if (!widget.soloMisCitas) {
+      final soloMisCitasGuardado = await PreferencesService.instance.getBool(
+        _soloMisCitasPreferenceKey,
+      );
+      if (!mounted) return;
+      setState(() {
+        _soloCitasAsignadas = soloMisCitasGuardado;
+      });
+    } else {
+      _soloCitasAsignadas = true;
+    }
+
     await _socketClient.connect();
     await _cargarCitasAgendaSemana();
     await _cargarCitasAgendaDay(day: _agendaDay);
@@ -674,6 +736,9 @@ class _CitasPageState extends State<CitasPage> {
                               mostrarFiltroMedico: widget.mostrarFiltroMedico,
                               medicoController: _medicoFiltroController,
                               medicoIdSeleccionado: _medicoFiltro,
+                              bloquearFiltroMedico:
+                                  _bloquearFiltroMedicoPorSoloMisCitas,
+                              etiquetaMedicoBloqueado: _nombreMedicoActual,
                               onTapMedico: () async {
                                 await _abrirSelectorMedicoFiltro();
                                 setStateModal(() {});
@@ -698,6 +763,41 @@ class _CitasPageState extends State<CitasPage> {
                         ),
                       ),
                       const SizedBox(height: 12),
+                      if (_bloquearFiltroMedicoPorSoloMisCitas)
+                        Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: _theme.primary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: _theme.primary.withValues(alpha: 0.35),
+                            ),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                Icons.verified_user_rounded,
+                                color: _theme.primary,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Modo activo: solo mis citas • $_nombreMedicoActual',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w500,
+                                        color: _theme.primary,
+                                      ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
@@ -3496,10 +3596,20 @@ class _CitasPageState extends State<CitasPage> {
             actions: [
               if (!widget.soloMisCitas)
                 IconButton(
-                  onPressed: () {
+                  onPressed: () async {
+                    final nuevoValor = !_soloCitasAsignadas;
                     setState(() {
-                      _soloCitasAsignadas = !_soloCitasAsignadas;
+                      _soloCitasAsignadas = nuevoValor;
+                      if (_soloCitasAsignadas) {
+                        _medicoFiltro = null;
+                        _medicoFiltroNombre = null;
+                        _medicoFiltroController.clear();
+                      }
                     });
+                    await PreferencesService.instance.setBool(
+                      _soloMisCitasPreferenceKey,
+                      nuevoValor,
+                    );
                     _aplicarFiltros();
                   },
                   tooltip: _soloCitasAsignadas
@@ -3543,6 +3653,7 @@ class _CitasPageState extends State<CitasPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          _buildModoMisCitasBanner(context),
                           CitasActiveFiltersRibbon(
                                   theme: _theme,
                                   buscarTexto: _buscarTexto,

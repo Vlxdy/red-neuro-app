@@ -20,6 +20,8 @@ class CitasFiltersFields extends StatelessWidget {
   final DateFormat formatter;
   final VoidCallback onTapFechaInicio;
   final VoidCallback onTapFechaFin;
+  final bool bloquearFiltroMedico;
+  final String? etiquetaMedicoBloqueado;
 
   const CitasFiltersFields({
     super.key,
@@ -38,6 +40,8 @@ class CitasFiltersFields extends StatelessWidget {
     required this.formatter,
     required this.onTapFechaInicio,
     required this.onTapFechaFin,
+    this.bloquearFiltroMedico = false,
+    this.etiquetaMedicoBloqueado,
   });
 
   @override
@@ -77,11 +81,21 @@ class CitasFiltersFields extends StatelessWidget {
             child: TextFormField(
               controller: medicoController,
               readOnly: true,
+              enabled: !bloquearFiltroMedico,
               decoration: InputDecoration(
                 labelText: 'Médico',
-                hintText: 'Selecciona un médico',
+                hintText: bloquearFiltroMedico
+                    ? (etiquetaMedicoBloqueado?.trim().isNotEmpty ?? false)
+                          ? etiquetaMedicoBloqueado
+                          : 'Filtrando por ti'
+                    : 'Selecciona un médico',
+                helperText: bloquearFiltroMedico
+                    ? 'Filtro bloqueado mientras usas "Solo mis citas"'
+                    : null,
                 border: const OutlineInputBorder(),
-                suffixIcon: medicoIdSeleccionado == null
+                suffixIcon: bloquearFiltroMedico
+                    ? const Icon(Icons.lock_rounded)
+                    : medicoIdSeleccionado == null
                     ? const Icon(Icons.expand_more)
                     : IconButton(
                         tooltip: 'Quitar',
@@ -89,7 +103,7 @@ class CitasFiltersFields extends StatelessWidget {
                         onPressed: onClearMedico,
                       ),
               ),
-              onTap: onTapMedico,
+              onTap: bloquearFiltroMedico ? null : onTapMedico,
             ),
           ),
         FiltroFecha(
