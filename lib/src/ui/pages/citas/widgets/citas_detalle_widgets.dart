@@ -16,6 +16,7 @@ class CitasDetalleSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (children.isEmpty) return const SizedBox.shrink();
+    final showTitle = title.trim().isNotEmpty;
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Container(
@@ -29,14 +30,15 @@ class CitasDetalleSection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              title,
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: theme.grey,
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-            const SizedBox(height: 8),
+            if (showTitle)
+              Text(
+                title,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: theme.grey,
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+            if (showTitle) const SizedBox(height: 8),
             ...children,
           ],
         ),
