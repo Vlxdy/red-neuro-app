@@ -20,8 +20,6 @@ import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:red_neuro_app/src/plugins/utils/preferences.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
-import 'package:red_neuro_app/src/ui/common/form_stepper/step_form_dialog_layout.dart';
-import 'package:red_neuro_app/src/ui/common/text_inputs/autocomplete_field.dart';
 import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_service.dart';
@@ -364,86 +362,287 @@ class _CitasPageState extends State<CitasPage> {
     return false;
   }
 
-  Future<String?> _seleccionarAccionCreacionCita() async {
+  Future<String?> _confirmarAccionCita({
+    required bool esNueva,
+    required String tipoCita,
+    required String servicioNombre,
+    required DateTime fechaInicio,
+    int? duracionMinutos,
+    String? pacienteNombre,
+    String? especialidadNombre,
+    String? medicoNombre,
+    String? pacienteDocumento,
+    String? pacienteTelefono,
+    String? pacienteGenero,
+    String? lugarNombre,
+    String? lugarDireccion,
+    String? detalle,
+  }) async {
+    Widget resumenFila({
+      required IconData icon,
+      required String label,
+      required String value,
+    }) {
+      return Container(
+        width: double.infinity,
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: _theme.grey.withValues(alpha: .12),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: _theme.grey.withValues(alpha: .2)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, size: 18, color: _theme.primary),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: _theme.grey,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(value, style: Theme.of(context).textTheme.bodyMedium),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final lugarDetalle = [
+      if ((lugarNombre ?? '').trim().isNotEmpty) lugarNombre!.trim(),
+      if ((lugarDireccion ?? '').trim().isNotEmpty) lugarDireccion!.trim(),
+    ].join(' • ');
+
+    final tipoNormalizado = tipoCita.trim().toUpperCase();
+    final esConsulta = tipoNormalizado == 'CONSULTA';
+    final etiquetaPrestacion = esConsulta ? 'Consulta' : 'Estudio';
+
+    final mostrarPaciente =
+        (pacienteNombre ?? '').trim().isNotEmpty ||
+        (pacienteDocumento ?? '').trim().isNotEmpty ||
+        (pacienteTelefono ?? '').trim().isNotEmpty ||
+        (pacienteGenero ?? '').trim().isNotEmpty;
+
+    final pacienteItems = <Widget>[
+      if ((pacienteNombre ?? '').trim().isNotEmpty)
+        Text('Nombre: ${pacienteNombre!.trim()}'),
+      if ((pacienteDocumento ?? '').trim().isNotEmpty)
+        Text('Documento: ${pacienteDocumento!.trim()}'),
+      if ((pacienteTelefono ?? '').trim().isNotEmpty)
+        Text('Teléfono: ${pacienteTelefono!.trim()}'),
+      if ((pacienteGenero ?? '').trim().isNotEmpty)
+        Text('Género: ${pacienteGenero!.trim()}'),
+    ];
+
+    int segundosConfirmar = 2;
+    Timer? countdownTimer;
+    bool countdownIniciado = false;
+
     return showDialog<String>(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Finalizar registro de cita'),
-          content: const Text(
-            '¿Deseas guardar la cita como borrador o enviarla ahora?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancelar'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, 'GUARDAR'),
-              child: const Text('Guardar'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(dialogContext, 'ENVIAR'),
-              child: const Text('Enviar'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+        return StatefulBuilder(
+          builder: (dialogContext, setStateDialog) {
+            void cerrar([String? resultado]) {
+              countdownTimer?.cancel();
+              Navigator.pop(dialogContext, resultado);
+            }
 
-  Future<String?> _seleccionarAccionEdicionBorrador() async {
-    return showDialog<String>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Finalizar edición de borrador'),
-          content: const Text(
-            '¿Deseas guardar los cambios en borrador o enviar la cita?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancelar'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, 'GUARDAR'),
-              child: const Text('Guardar borrador'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(dialogContext, 'ENVIAR'),
-              child: const Text('Enviar cita'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+            if (!countdownIniciado) {
+              countdownIniciado = true;
+              countdownTimer = Timer.periodic(const Duration(seconds: 1), (
+                timer,
+              ) {
+                if (!dialogContext.mounted) {
+                  timer.cancel();
+                  return;
+                }
+                setStateDialog(() {
+                  if (segundosConfirmar > 0) {
+                    segundosConfirmar -= 1;
+                  }
+                  if (segundosConfirmar == 0) {
+                    timer.cancel();
+                  }
+                });
+              });
+            }
 
-  Future<bool> _confirmarEnvioCita() async {
-    final confirmar = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('Confirmar envío de cita'),
-          content: const Text(
-            'Una vez enviada la cita ya no se puede editar directamente. '
-            '¿Deseas continuar?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: const Text('Volver'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
-              child: const Text('Sí, enviar'),
-            ),
-          ],
+            return AlertDialog(
+              titlePadding: const EdgeInsets.fromLTRB(20, 16, 8, 8),
+              title: Row(
+                children: [
+                  Expanded(
+                    child: Text(esNueva ? 'Confirmar cita' : 'Confirmar cambios'),
+                  ),
+                  IconButton(
+                    tooltip: 'Cerrar',
+                    onPressed: () => cerrar(),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+              content: SizedBox(
+                width: 440,
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      resumenFila(
+                        icon: Icons.category_outlined,
+                        label: 'Tipo de cita',
+                        value: tipoCita,
+                      ),
+                      Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _theme.grey.withValues(alpha: .12),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: _theme.grey.withValues(alpha: .2)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.medical_services_outlined,
+                                  size: 18,
+                                  color: _theme.primary,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  etiquetaPrestacion,
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: _theme.grey,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(servicioNombre),
+                            if ((duracionMinutos ?? 0) > 0)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text('Duración: $duracionMinutos min'),
+                              ),
+                            if ((especialidadNombre ?? '').trim().isNotEmpty)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Text(
+                                  'Especialidad: ${especialidadNombre!.trim()}',
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      resumenFila(
+                        icon: Icons.event_outlined,
+                        label: 'Fecha y hora',
+                        value: _dateTimeFormat.format(fechaInicio),
+                      ),
+                      if (mostrarPaciente)
+                        Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: _theme.primary.withValues(alpha: .08),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: _theme.primary.withValues(alpha: .2),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.person_outline,
+                                    size: 18,
+                                    color: _theme.primary,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Paciente',
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(
+                                          color: _theme.grey,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              ...pacienteItems,
+                            ],
+                          ),
+                        ),
+                      if ((medicoNombre ?? '').trim().isNotEmpty)
+                        resumenFila(
+                          icon: Icons.badge_outlined,
+                          label: 'Médico',
+                          value: medicoNombre!.trim(),
+                        ),
+                      if (lugarDetalle.isNotEmpty)
+                        resumenFila(
+                          icon: Icons.place_outlined,
+                          label: 'Lugar',
+                          value: lugarDetalle,
+                        ),
+                      if ((detalle ?? '').trim().isNotEmpty)
+                        resumenFila(
+                          icon: Icons.notes_outlined,
+                          label: 'Detalle',
+                          value: detalle!.trim(),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => cerrar('GUARDAR'),
+                  child: const Text('Guardar'),
+                ),
+                FilledButton(
+                  onPressed: segundosConfirmar == 0
+                      ? () => cerrar('ENVIAR')
+                      : null,
+                  child: Text(
+                    segundosConfirmar == 0
+                        ? 'Confirmar'
+                        : 'Confirmar (${segundosConfirmar}s)',
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );
-    return confirmar == true;
   }
 
   Future<bool> _aplicarCambioEstadoCita(
@@ -661,9 +860,39 @@ class _CitasPageState extends State<CitasPage> {
     return data;
   }
 
-  DateTime _resolveDefaultStartTime(DateTime baseDay) {
+  List<CitaMedica> _obtenerCitasDelDiaParaDefault(DateTime baseDay) {
     final key = DateTime(baseDay.year, baseDay.month, baseDay.day);
-    final citasDelDia = _citasPorDia[key] ?? [];
+    final acumuladas = <String, CitaMedica>{};
+
+    void agregar(List<CitaMedica> origen) {
+      for (final cita in origen) {
+        final inicio = cita.fechaInicio;
+        if (inicio == null) continue;
+        final citaKey = DateTime(inicio.year, inicio.month, inicio.day);
+        if (citaKey != key) continue;
+        acumuladas[cita.id] = cita;
+      }
+    }
+
+    agregar(_citasSeleccionadas);
+    agregar(_citasAgenda);
+    agregar(_citasCalendario);
+    agregar(_citasAgendaCalendario);
+
+    final citas = acumuladas.values.toList();
+    citas.sort((a, b) {
+      final aFecha = a.fechaInicio;
+      final bFecha = b.fechaInicio;
+      if (aFecha == null && bFecha == null) return 0;
+      if (aFecha == null) return -1;
+      if (bFecha == null) return 1;
+      return aFecha.compareTo(bFecha);
+    });
+    return citas;
+  }
+
+  DateTime _resolveDefaultStartTime(DateTime baseDay) {
+    final citasDelDia = _obtenerCitasDelDiaParaDefault(baseDay);
     DateTime? ultimaHora;
     for (final cita in citasDelDia) {
       final fecha = cita.fechaFin ?? cita.fechaInicio;
@@ -672,7 +901,15 @@ class _CitasPageState extends State<CitasPage> {
         ultimaHora = fecha;
       }
     }
-    if (ultimaHora != null) return ultimaHora;
+    if (ultimaHora != null) {
+      return DateTime(
+        baseDay.year,
+        baseDay.month,
+        baseDay.day,
+        ultimaHora.hour,
+        ultimaHora.minute,
+      );
+    }
     return DateTime(baseDay.year, baseDay.month, baseDay.day, 8, 0);
   }
 
@@ -1206,6 +1443,7 @@ class _CitasPageState extends State<CitasPage> {
     Paciente? pacienteSeleccionado;
     Lugar? lugarSeleccionado;
     final pacienteFieldKey = GlobalKey<FormFieldState<Paciente>>();
+    final servicioFieldKey = GlobalKey<FormFieldState<Servicio>>();
     final pacienteAutocompleteController = TextEditingController(
       text: cita?.pacienteNombre ?? '',
     );
@@ -1257,6 +1495,9 @@ class _CitasPageState extends State<CitasPage> {
     final servicioController = TextEditingController(
       text: servicioSeleccionado?.nombre ?? '',
     );
+    final lugarController = TextEditingController(
+      text: lugarSeleccionado?.nombre ?? '',
+    );
     final List<Especialidad> especialidadesDisponibles = [];
     final List<Servicio> serviciosDisponibles = [];
     final List<Paciente> pacientesDisponibles = [];
@@ -1302,10 +1543,8 @@ class _CitasPageState extends State<CitasPage> {
       );
     }
 
-    int currentStep = 0;
-    String? modalErrorText;
-    String? accionCreacion;
-    String? accionEdicionBorrador;
+    String? accionFormulario;
+    bool intentoEnvio = false;
     final result = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -1953,6 +2192,103 @@ class _CitasPageState extends State<CitasPage> {
               unawaited(cargarServicios(reset: true));
             }
 
+            Future<void> abrirSelectorLugar() async {
+              if (lugaresDisponibles.isEmpty && !lugaresLoading) {
+                await cargarLugares(reset: true);
+                if (!context.mounted) return;
+              }
+              final seleccion = await showModalBottomSheet<Lugar>(
+                context: context,
+                isScrollControlled: true,
+                builder: (context) {
+                  final searchController = TextEditingController(
+                    text: lugaresFiltro,
+                  );
+                  return StatefulBuilder(
+                    builder: (context, setStateSheet) {
+                      Future<void> cargar({required bool reset}) async {
+                        await cargarLugares(reset: reset);
+                        setStateSheet(() {});
+                      }
+
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          bottom: MediaQuery.of(context).viewInsets.bottom,
+                        ),
+                        child: SafeArea(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                                child: Text(
+                                  'Selecciona un lugar',
+                                  style: Theme.of(context).textTheme.titleMedium,
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 20),
+                                child: CustomTextInput(
+                                  controller: searchController,
+                                  title: 'Buscar lugar',
+                                  onChange: (value) {
+                                    lugaresFiltro = value;
+                                    lugaresDebounce?.cancel();
+                                    lugaresDebounce = Timer(
+                                      const Duration(milliseconds: 300),
+                                      () => cargar(reset: true),
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Flexible(
+                                child: Builder(
+                                  builder: (context) {
+                                    if (lugaresDisponibles.isEmpty && lugaresLoading) {
+                                      return const Center(
+                                        child: CircularProgressIndicator(),
+                                      );
+                                    }
+                                    if (lugaresDisponibles.isEmpty) {
+                                      return const Center(
+                                        child: Text('Sin resultados'),
+                                      );
+                                    }
+                                    return ListView.builder(
+                                      shrinkWrap: true,
+                                      itemCount: lugaresDisponibles.length,
+                                      itemBuilder: (context, index) {
+                                        final option = lugaresDisponibles[index];
+                                        return ListTile(
+                                          title: Text(option.nombre),
+                                          subtitle: option.direccion.trim().isNotEmpty
+                                              ? Text(option.direccion)
+                                              : null,
+                                          onTap: () => Navigator.pop(context, option),
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  );
+                },
+              );
+              if (seleccion == null) return;
+              setStateDialog(() {
+                lugarSeleccionado = seleccion;
+                lugarController.text = seleccion.nombre;
+              });
+            }
+
             Future<void> abrirSelectorServicio() async {
               if (serviciosDisponibles.isEmpty && !serviciosLoading) {
                 await cargarServicios(reset: true);
@@ -2086,6 +2422,10 @@ class _CitasPageState extends State<CitasPage> {
                 servicioSeleccionado = seleccion;
                 servicioController.text = seleccion.nombre;
               });
+              servicioFieldKey.currentState?.didChange(seleccion);
+              if (intentoEnvio) {
+                servicioFieldKey.currentState?.validate();
+              }
             }
 
             Future<Paciente?> abrirNuevoPaciente() async {
@@ -2287,76 +2627,26 @@ class _CitasPageState extends State<CitasPage> {
               );
             }
 
-            String? validarPasoActual() {
-              if (currentStep == 1 && servicioSeleccionado == null) {
-                return 'Selecciona el servicio de la cita.';
-              }
-              if (currentStep == 2 && fechaInicio == null) {
-                return 'Selecciona fecha y hora de inicio.';
-              }
-              return null;
+            bool validarFormulario() {
+              final servicioValido = servicioFieldKey.currentState?.validate() ??
+                  servicioSeleccionado != null;
+              final fechaValida = fechaInicio != null;
+              return servicioValido && fechaValida;
             }
 
-            Widget buildResumenCard() {
-              final resumenStyle = Theme.of(context).textTheme.bodyMedium;
-              return Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  color: _theme.primary.withValues(alpha: .08),
-                  border: Border.all(
-                    color: _theme.primary.withValues(alpha: .2),
-                  ),
-                ),
-                child: Wrap(
-                  runSpacing: 8,
-                  children: [
-                    Text(
-                      'Paciente: ${pacienteSeleccionado?.nombreCompleto.isNotEmpty == true ? pacienteSeleccionado!.nombreCompleto : 'Pendiente'}',
-                      style: resumenStyle,
-                    ),
-                    Text(
-                      'Servicio: ${servicioSeleccionado?.nombre ?? 'Pendiente'}',
-                      style: resumenStyle,
-                    ),
-                    Text(
-                      'Lugar: ${lugarSeleccionado?.nombre.trim().isNotEmpty == true ? lugarSeleccionado!.nombre : 'Pendiente'}',
-                      style: resumenStyle,
-                    ),
-                    Text(
-                      'Fecha: ${fechaInicio != null ? _dateTimeFormat.format(fechaInicio!) : 'Pendiente'}',
-                      style: resumenStyle,
-                    ),
-                  ],
-                ),
-              );
-            }
-
-            Widget stepContent() {
-              if (currentStep == 0) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    buildResumenCard(),
-                    const SizedBox(height: 12),
+            Widget buildFormularioCompleto() {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (pacienteSeleccionado == null) ...[
                     FormField<Paciente>(
                       key: pacienteFieldKey,
                       builder: (state) {
                         return CitasAutocompleteSelectorField(
                           controller: pacienteAutocompleteController,
-                          labelText: 'Paciente (opcional)',
+                          labelText: 'Paciente',
                           hintText: 'Selecciona un paciente si aplica',
                           errorText: state.errorText,
-                          onClear: pacienteSeleccionado == null
-                              ? null
-                              : () {
-                                  setStateDialog(() {
-                                    pacienteSeleccionado = null;
-                                    pacienteAutocompleteController.clear();
-                                  });
-                                  state.didChange(null);
-                                },
                           onTap: abrirSelectorPaciente,
                         );
                       },
@@ -2368,141 +2658,213 @@ class _CitasPageState extends State<CitasPage> {
                         if (nuevo == null) return;
                         setStateDialog(() {
                           pacienteSeleccionado = nuevo;
-                          pacienteAutocompleteController.text =
-                              nuevo.nombreCompleto;
+                          pacienteAutocompleteController.text = nuevo.nombreCompleto;
                           pacientesDisponibles.insert(0, nuevo);
                         });
                         pacienteFieldKey.currentState?.didChange(nuevo);
                       },
                       icon: const Icon(Icons.person_add),
-                      label: const Text('Registrar paciente en el momento'),
+                      label: const Text('Registrar paciente'),
                     ),
-                  ],
-                );
-              }
-
-              if (currentStep == 1) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    buildResumenCard(),
-                    const SizedBox(height: 12),
-                    FormField<Especialidad>(
-                      builder: (state) {
-                        return CitasAutocompleteSelectorField(
-                          controller: especialidadController,
-                          labelText: 'Especialidad (opcional)',
-                          hintText: 'Selecciona una especialidad',
-                          errorText: state.errorText,
-                          onTap: () async {
-                            await abrirSelectorEspecialidad();
-                            state.didChange(especialidadSeleccionada);
-                          },
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: RichText(
-                        text: TextSpan(
-                          text: 'Tipo de servicio',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                          children: [
-                            TextSpan(
-                              text: ' *',
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.error,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
+                  ] else ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: _theme.primary.withValues(alpha: .08),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: _theme.primary.withValues(alpha: .2),
                         ),
                       ),
-                    ),
-                    RadioGroup<String>(
-                      groupValue: tipoCita,
-                      onChanged: (value) {
-                        if (value == null) return;
-                        setStateDialog(() {
-                          tipoCita = value;
-                          servicioSeleccionado = null;
-                          servicioController.clear();
-                          serviciosDisponibles.clear();
-                          serviciosHasMore = true;
-                          serviciosPage = 1;
-                          unawaited(cargarServicios(reset: true));
-                        });
-                      },
-                      child: const Column(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          RadioListTile<String>(
-                            title: Text('Consulta'),
-                            value: 'CONSULTA',
-                            contentPadding: EdgeInsets.zero,
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  pacienteSeleccionado!.nombreCompleto,
+                                  style: Theme.of(context).textTheme.titleSmall,
+                                ),
+                              ),
+                              IconButton(
+                                tooltip: 'Cambiar paciente',
+                                onPressed: () {
+                                  setStateDialog(() {
+                                    pacienteSeleccionado = null;
+                                    pacienteAutocompleteController.clear();
+                                  });
+                                },
+                                icon: const Icon(Icons.swap_horiz),
+                              ),
+                            ],
                           ),
-                          RadioListTile<String>(
-                            title: Text('Estudio'),
-                            value: 'ESTUDIO',
-                            contentPadding: EdgeInsets.zero,
+                          if ((pacienteSeleccionado!.nroDocumento ?? '').trim().isNotEmpty)
+                            Text('Documento: ${pacienteSeleccionado!.nroDocumento}'),
+                          if ((pacienteSeleccionado!.telefono ?? '').trim().isNotEmpty)
+                            Text('Teléfono: ${pacienteSeleccionado!.telefono}'),
+                          if ((pacienteSeleccionado!.genero ?? '').trim().isNotEmpty)
+                            Text('Género: ${pacienteSeleccionado!.genero}'),
+                        ],
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: RichText(
+                      text: TextSpan(
+                        text: 'Tipo de cita',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                        children: [
+                          TextSpan(
+                            text: ' *',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    CitasAutocompleteSelectorField(
-                      controller: servicioController,
-                      labelText: 'Servicio',
-                      requiredData: true,
-                      hintText: 'Selecciona un servicio',
-                      onTap: abrirSelectorServicio,
-                    ),
-                  ],
-                );
-              }
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  buildResumenCard(),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    runAlignment: WrapAlignment.center,
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      ChoiceChip(
+                        label: Text(
+                          'Consulta',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: tipoCita == 'CONSULTA' ? _theme.white : _theme.grey,
+                          ),
+                        ),
+                        selectedColor: _theme.primary,
+                        backgroundColor: _theme.grey.withValues(alpha: .12),
+                        side: BorderSide(
+                          color: tipoCita == 'CONSULTA'
+                              ? _theme.primary
+                              : _theme.grey.withValues(alpha: .35),
+                        ),
+                        selected: tipoCita == 'CONSULTA',
+                        onSelected: (_) {
+                          setStateDialog(() {
+                            tipoCita = 'CONSULTA';
+                            servicioSeleccionado = null;
+                            servicioController.clear();
+                            serviciosDisponibles.clear();
+                            serviciosHasMore = true;
+                            serviciosPage = 1;
+                            unawaited(cargarServicios(reset: true));
+                          });
+                        },
+                      ),
+                      ChoiceChip(
+                        label: Text(
+                          'Estudio',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: tipoCita == 'ESTUDIO' ? _theme.white : _theme.grey,
+                          ),
+                        ),
+                        selectedColor: _theme.primary,
+                        backgroundColor: _theme.grey.withValues(alpha: .12),
+                        side: BorderSide(
+                          color: tipoCita == 'ESTUDIO'
+                              ? _theme.primary
+                              : _theme.grey.withValues(alpha: .35),
+                        ),
+                        selected: tipoCita == 'ESTUDIO',
+                        onSelected: (_) {
+                          setStateDialog(() {
+                            tipoCita = 'ESTUDIO';
+                            servicioSeleccionado = null;
+                            servicioController.clear();
+                            serviciosDisponibles.clear();
+                            serviciosHasMore = true;
+                            serviciosPage = 1;
+                            unawaited(cargarServicios(reset: true));
+                          });
+                        },
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 12),
-                  AutocompleteField<Lugar>(
-                    labelText: 'Lugar (opcional)',
-                    loading: lugaresLoading,
-                    optionsHeaderText: 'Selecciona un lugar',
-                    displayStringForOption: (option) => option.nombre,
-                    isOptionSelected: (option) =>
-                        option.id == lugarSeleccionado?.id,
-                    onChanged: (value) {
-                      if (lugarSeleccionado != null &&
-                          value.trim() !=
-                              (lugarSeleccionado?.nombre ?? '').trim()) {
-                        setStateDialog(() => lugarSeleccionado = null);
-                      }
-                      lugaresDebounce?.cancel();
-                      lugaresDebounce = Timer(
-                        const Duration(milliseconds: 300),
-                        () {
-                          lugaresFiltro = value.trim();
-                          unawaited(cargarLugares(reset: true));
+                  FormField<Especialidad>(
+                    builder: (state) {
+                      return CitasAutocompleteSelectorField(
+                        controller: especialidadController,
+                        labelText: 'Especialidad',
+                        hintText: 'Selecciona una especialidad',
+                        errorText: state.errorText,
+                        onClear: especialidadSeleccionada == null
+                            ? null
+                            : () {
+                                setStateDialog(() {
+                                  especialidadSeleccionada = null;
+                                  especialidadController.clear();
+                                  servicioSeleccionado = null;
+                                  servicioController.clear();
+                                  serviciosDisponibles.clear();
+                                  serviciosHasMore = true;
+                                  serviciosPage = 1;
+                                });
+                                state.didChange(null);
+                                unawaited(cargarServicios(reset: true));
+                              },
+                        onTap: () async {
+                          await abrirSelectorEspecialidad();
+                          state.didChange(especialidadSeleccionada);
                         },
                       );
                     },
-                    optionsBuilder: (textEditingValue) {
-                      final filtro = textEditingValue.text.trim().toLowerCase();
-                      if (filtro.isEmpty) return lugaresDisponibles;
-                      return lugaresDisponibles.where((option) {
-                        final label =
-                            '${option.nombre} ${option.sigla} ${option.direccion}'
-                                .toLowerCase();
-                        return label.contains(filtro);
-                      });
+                  ),
+                  const SizedBox(height: 8),
+                  FormField<Servicio>(
+                    key: servicioFieldKey,
+                    validator: (_) =>
+                        servicioSeleccionado == null ? 'Selecciona un servicio' : null,
+                    builder: (state) {
+                      return CitasAutocompleteSelectorField(
+                        controller: servicioController,
+                        labelText: 'Servicio',
+                        requiredData: true,
+                        hintText: 'Selecciona un servicio',
+                        errorText: state.errorText,
+                        onTap: () async {
+                          await abrirSelectorServicio();
+                          state.didChange(servicioSeleccionado);
+                        },
+                      );
                     },
-                    onSelected: (option) {
-                      setStateDialog(() {
-                        lugarSeleccionado = option;
-                        lugaresFiltro = option.nombre;
-                      });
+                  ),
+                  const SizedBox(height: 12),
+                  FormField<Lugar>(
+                    builder: (state) {
+                      return CitasAutocompleteSelectorField(
+                        controller: lugarController,
+                        labelText: 'Lugar',
+                        hintText: 'Selecciona un lugar',
+                        errorText: state.errorText,
+                        onClear: lugarSeleccionado == null
+                            ? null
+                            : () {
+                                setStateDialog(() {
+                                  lugarSeleccionado = null;
+                                  lugarController.clear();
+                                });
+                                state.didChange(null);
+                              },
+                        onTap: () async {
+                          await abrirSelectorLugar();
+                          state.didChange(lugarSeleccionado);
+                        },
+                      );
                     },
                   ),
                   const SizedBox(height: 12),
@@ -2517,7 +2879,7 @@ class _CitasPageState extends State<CitasPage> {
                       return CitasAutocompleteSelectorField(
                         controller: medicoController,
                         labelText: 'Médico',
-                        hintText: 'Selecciona un médico (opcional)',
+                        hintText: 'Selecciona un médico',
                         errorText: state.errorText,
                         onClear: medicoIdSeleccionado == null
                             ? null
@@ -2561,13 +2923,20 @@ class _CitasPageState extends State<CitasPage> {
                       ),
                     ],
                   ),
-                  if (cita != null &&
-                      (cita.estado == 'SOLICITADA' ||
-                          cita.estado == 'CONFIRMADA'))
+                  if (intentoEnvio && fechaInicio == null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6, left: 12),
+                      child: Text(
+                        'Selecciona fecha y hora de inicio.',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  if (cita != null && (cita.estado == 'SOLICITADA' || cita.estado == 'CONFIRMADA'))
                     const SizedBox(height: 12),
-                  if (cita != null &&
-                      (cita.estado == 'SOLICITADA' ||
-                          cita.estado == 'CONFIRMADA'))
+                  if (cita != null && (cita.estado == 'SOLICITADA' || cita.estado == 'CONFIRMADA'))
                     DropdownButtonFormField<String?>(
                       initialValue: estado,
                       decoration: CustomTextInputStyles.decoration(
@@ -2575,19 +2944,12 @@ class _CitasPageState extends State<CitasPage> {
                       ),
                       items: [
                         cita.estado,
-                        if (cita.estado == 'SOLICITADA') ...[
-                          'CONFIRMADA',
-                          'RECHAZADA',
-                        ],
+                        if (cita.estado == 'SOLICITADA') ...['CONFIRMADA', 'RECHAZADA'],
                         if (cita.estado == 'CONFIRMADA') 'CANCELADA',
                       ].toSet().map((estadoItem) {
-                        final requierePermiso =
-                            estadoItem == 'CONFIRMADA' ||
-                            estadoItem == 'RECHAZADA';
+                        final requierePermiso = estadoItem == 'CONFIRMADA' || estadoItem == 'RECHAZADA';
                         final habilitado =
-                            !requierePermiso ||
-                            _puedeGestionarSolicitada(cita) ||
-                            estadoItem == cita.estado;
+                            !requierePermiso || _puedeGestionarSolicitada(cita) || estadoItem == cita.estado;
                         return DropdownMenuItem(
                           value: estadoItem,
                           enabled: habilitado,
@@ -2609,9 +2971,7 @@ class _CitasPageState extends State<CitasPage> {
                   alignment: Alignment.bottomCenter,
                   child: Container(
                     width: double.infinity,
-                    constraints: BoxConstraints(
-                      maxHeight: MediaQuery.of(context).size.height * .92,
-                    ),
+                    constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * .92),
                     decoration: BoxDecoration(
                       color: _theme.background,
                       borderRadius: const BorderRadius.vertical(
@@ -2620,7 +2980,7 @@ class _CitasPageState extends State<CitasPage> {
                     ),
                     child: PopScope(
                       canPop: true,
-                      child: SingleChildScrollView(
+                      child: Padding(
                         padding: EdgeInsets.fromLTRB(
                           16,
                           16,
@@ -2629,66 +2989,69 @@ class _CitasPageState extends State<CitasPage> {
                         ),
                         child: Form(
                           key: formKey,
-                          child: StepFormDialogLayout(
-                            title: cita == null
-                                ? 'Registro rápido de cita'
-                                : 'Actualizar cita en 3 pasos',
-                            totalSteps: 3,
-                            currentStep: currentStep,
-                            stepErrorText: modalErrorText,
-                            submitErrorText: null,
-                            isSubmitting: false,
-                            onClose: () => Navigator.pop(context, false),
-                            onBack: currentStep > 0
-                                ? () {
-                                    setStateDialog(() {
-                                      currentStep -= 1;
-                                      modalErrorText = null;
-                                    });
-                                  }
-                                : null,
-                            nextLabel: currentStep == 2
-                                ? (cita == null
-                                      ? 'Finalizar'
-                                      : (cita.estado == 'BORRADOR'
-                                            ? 'Finalizar'
-                                            : 'Guardar cambios'))
-                                : 'Siguiente',
-                            stepContent: stepContent(),
-                            onNext: () async {
-                              final error = validarPasoActual();
-                              if (error != null) {
-                                setStateDialog(() => modalErrorText = error);
-                                return;
-                              }
-                              if (currentStep < 2) {
-                                setStateDialog(() {
-                                  currentStep += 1;
-                                  modalErrorText = null;
-                                });
-                                return;
-                              }
-                              if (cita == null) {
-                                final accion =
-                                    await _seleccionarAccionCreacionCita();
-                                if (accion == null) return;
-                                if (accion == 'ENVIAR') {
-                                  final confirmado = await _confirmarEnvioCita();
-                                  if (!confirmado) return;
-                                }
-                                accionCreacion = accion;
-                              } else if (cita.estado == 'BORRADOR') {
-                                final accion =
-                                    await _seleccionarAccionEdicionBorrador();
-                                if (accion == null) return;
-                                if (accion == 'ENVIAR') {
-                                  final confirmado = await _confirmarEnvioCita();
-                                  if (!confirmado) return;
-                                }
-                                accionEdicionBorrador = accion;
-                              }
-                              Navigator.pop(context, true);
-                            },
+                          autovalidateMode: intentoEnvio
+                              ? AutovalidateMode.always
+                              : AutovalidateMode.disabled,
+                          child: SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Text(
+                                  cita == null ? 'Registro de cita' : 'Actualizar cita',
+                                  style: Theme.of(context).textTheme.titleLarge,
+                                ),
+                                const SizedBox(height: 12),
+                                buildFormularioCompleto(),
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: OutlinedButton(
+                                        onPressed: () => Navigator.pop(context, false),
+                                        child: const Text('Cancelar'),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: FilledButton(
+                                      onPressed: () async {
+                                        setStateDialog(() => intentoEnvio = true);
+                                        if (!validarFormulario()) {
+                                          return;
+                                        }
+                                        if (cita == null || cita.estado == 'BORRADOR') {
+                                          final accion = await _confirmarAccionCita(
+                                            esNueva: cita == null,
+                                            tipoCita: _formatearTipoCita(tipoCita),
+                                            pacienteNombre: pacienteSeleccionado?.nombreCompleto,
+                                            especialidadNombre: especialidadSeleccionada?.nombre,
+                                            servicioNombre: servicioSeleccionado?.nombre ?? 'Sin servicio',
+                                            medicoNombre: medicoController.text.trim(),
+                                            pacienteDocumento: pacienteSeleccionado?.nroDocumento,
+                                            pacienteTelefono: pacienteSeleccionado?.telefono,
+                                            pacienteGenero: pacienteSeleccionado?.genero,
+                                            lugarNombre: lugarSeleccionado?.nombre,
+                                            lugarDireccion: lugarSeleccionado?.direccion,
+                                            detalle: detalleController.text.trim(),
+                                            fechaInicio: fechaInicio!,
+                                            duracionMinutos: servicioSeleccionado?.duracionMinutos,
+                                          );
+                                          if (accion == null) return;
+                                          accionFormulario = accion;
+                                        }
+                                        Navigator.pop(context, true);
+                                      },
+                                      child: Text(
+                                        cita == null
+                                            ? 'Crear cita'
+                                            : (cita.estado == 'BORRADOR' ? 'Guardar cambios' : 'Actualizar cita'),
+                                      ),
+                                    ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
@@ -2716,7 +3079,7 @@ class _CitasPageState extends State<CitasPage> {
     final lugarId = (lugarSeleccionado?.id ?? '').trim();
 
     if (cita == null) {
-      final accion = accionCreacion ?? 'GUARDAR';
+      final accion = accionFormulario ?? 'GUARDAR';
       final response = await _service.crearCita({
         'accion': accion,
         'detalle': detalle,
@@ -2788,7 +3151,7 @@ class _CitasPageState extends State<CitasPage> {
         if (!ok) return;
       }
 
-      if (accionEdicionBorrador == 'ENVIAR') {
+      if (accionFormulario == 'ENVIAR') {
         final ok = await _handleResponseError(
           await _service.enviarCita(cita.id, idMedico: medicoId),
           'No se pudo enviar la cita.',
@@ -3091,7 +3454,7 @@ class _CitasPageState extends State<CitasPage> {
 
   String _formatearTipoCita(String value) {
     final normalized = value.trim().toUpperCase();
-    if (normalized == 'ESTUDIO') return 'Servicio';
+    if (normalized == 'ESTUDIO') return 'Estudio';
     if (normalized == 'CONSULTA') return 'Consulta';
     return value;
   }
@@ -3185,8 +3548,8 @@ class _CitasPageState extends State<CitasPage> {
       'fechaFin': 'Fecha fin',
       'detalle': 'Detalle',
       'estado': 'Estado',
-      'tipoCita': 'Tipo de servicio',
-      'esEstudio': 'Tipo de servicio',
+      'tipoCita': 'Tipo de cita',
+      'esEstudio': 'Tipo de cita',
       'idEspecialidad': 'Especialidad',
       'idMedico': 'Médico',
       'idPaciente': 'Paciente',
@@ -3235,8 +3598,8 @@ class _CitasPageState extends State<CitasPage> {
       'fechaFin': 'Fecha fin',
       'detalle': 'Detalle',
       'estado': 'Estado',
-      'tipoCita': 'Tipo de servicio',
-      'esEstudio': 'Tipo de servicio',
+      'tipoCita': 'Tipo de cita',
+      'esEstudio': 'Tipo de cita',
       'idEspecialidad': 'Especialidad',
       'idMedico': 'Médico',
       'idPaciente': 'Paciente',
@@ -3818,7 +4181,7 @@ class _CitasPageState extends State<CitasPage> {
     return estado == 'BORRADOR' || estado == 'RECHAZADA';
   }
 
-  Future<bool> _confirmarAccionCita({
+  Future<bool> _confirmarAccionSimple({
     required String titulo,
     required String mensaje,
     required String accion,
@@ -3868,7 +4231,7 @@ class _CitasPageState extends State<CitasPage> {
   }
 
   Future<void> _cancelarCitaConConfirmacion(CitaMedica cita) async {
-    final confirmar = await _confirmarAccionCita(
+    final confirmar = await _confirmarAccionSimple(
       titulo: 'Cancelar cita',
       mensaje: '¿Confirmas que deseas cancelar esta cita?',
       accion: 'Sí, cancelar',
@@ -3888,7 +4251,7 @@ class _CitasPageState extends State<CitasPage> {
   Future<void> _reprogramarCitaConConfirmacion(CitaMedica cita) async {
     final nuevaFecha = await _seleccionarFechaHoraReprogramacion(cita.fechaInicio);
     if (nuevaFecha == null) return;
-    final confirmar = await _confirmarAccionCita(
+    final confirmar = await _confirmarAccionSimple(
       titulo: 'Reprogramar cita',
       mensaje: '¿Confirmas reprogramar la cita para ${_dateTimeFormat.format(nuevaFecha)}?',
       accion: 'Sí, reprogramar',
@@ -3917,7 +4280,7 @@ class _CitasPageState extends State<CitasPage> {
   }
 
   Future<void> _completarCitaConConfirmacion(CitaMedica cita) async {
-    final confirmar = await _confirmarAccionCita(
+    final confirmar = await _confirmarAccionSimple(
       titulo: 'Completar cita',
       mensaje: '¿Confirmas marcar esta cita como completada?',
       accion: 'Sí, completar',
@@ -3935,7 +4298,7 @@ class _CitasPageState extends State<CitasPage> {
   }
 
   Future<void> _marcarNoAsistioCitaConConfirmacion(CitaMedica cita) async {
-    final confirmar = await _confirmarAccionCita(
+    final confirmar = await _confirmarAccionSimple(
       titulo: 'Marcar no asistió',
       mensaje: '¿Confirmas marcar esta cita como no asistió?',
       accion: 'Sí, marcar',
@@ -3953,7 +4316,7 @@ class _CitasPageState extends State<CitasPage> {
   }
 
   Future<void> _eliminarBorradorConConfirmacion(CitaMedica cita) async {
-    final confirmar = await _confirmarAccionCita(
+    final confirmar = await _confirmarAccionSimple(
       titulo: 'Eliminar borrador',
       mensaje: '¿Confirmas eliminar este borrador de cita?',
       accion: 'Sí, eliminar',
@@ -3982,7 +4345,7 @@ class _CitasPageState extends State<CitasPage> {
           controller: controller,
           maxLines: 3,
           maxLength: 255,
-          decoration: const InputDecoration(labelText: 'Motivo (opcional)'),
+          decoration: const InputDecoration(labelText: 'Motivo'),
         ),
         actions: [
           TextButton(
@@ -4047,7 +4410,7 @@ class _CitasPageState extends State<CitasPage> {
                   controller: detalleController,
                   maxLines: 2,
                   decoration: const InputDecoration(
-                    labelText: 'Detalle (opcional)',
+                    labelText: 'Detalle',
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -4056,7 +4419,7 @@ class _CitasPageState extends State<CitasPage> {
                   icon: const Icon(Icons.schedule),
                   label: Text(
                     fechaSeleccionada == null
-                        ? 'Ajustar hora (opcional)'
+                        ? 'Ajustar hora'
                         : 'Hora: ${_dateTimeFormat.format(fechaSeleccionada!)}',
                   ),
                 ),
@@ -4317,7 +4680,7 @@ class _CitasPageState extends State<CitasPage> {
                             if (cita.tipoCita?.isNotEmpty ?? false)
                               CitasDetalleRow(
                                 icon: PhosphorIconsRegular.folder,
-                                label: 'Tipo de servicio',
+                                label: 'Tipo de cita',
                                 value: cita.tipoCita!,
                                 theme: _theme,
                               ),
