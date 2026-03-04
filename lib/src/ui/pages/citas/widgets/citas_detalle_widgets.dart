@@ -251,6 +251,7 @@ class CitasDetalleGrid extends StatelessWidget {
   final double spacing;
   final double runSpacing;
   final double minItemWidth;
+  final int? columns;
 
   const CitasDetalleGrid({
     super.key,
@@ -258,6 +259,7 @@ class CitasDetalleGrid extends StatelessWidget {
     this.spacing = 12,
     this.runSpacing = 0,
     this.minItemWidth = 230,
+    this.columns,
   });
 
   @override
@@ -265,6 +267,25 @@ class CitasDetalleGrid extends StatelessWidget {
     if (children.isEmpty) return const SizedBox.shrink();
     return LayoutBuilder(
       builder: (context, constraints) {
+        if (columns != null && columns! > 1) {
+          final requested = columns!;
+          final requestedWidth =
+              (constraints.maxWidth - (spacing * (requested - 1))) / requested;
+          if (requestedWidth >= minItemWidth) {
+            return Wrap(
+              spacing: spacing,
+              runSpacing: runSpacing,
+              children: [
+                for (final child in children)
+                  SizedBox(
+                    width: requestedWidth,
+                    child: child,
+                  ),
+              ],
+            );
+          }
+        }
+
         final canUseTwoColumns = constraints.maxWidth >=
             (minItemWidth * 2) + spacing;
         final itemWidth = canUseTwoColumns

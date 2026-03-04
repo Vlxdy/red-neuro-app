@@ -4158,6 +4158,14 @@ class _CitasPageState extends State<CitasPage> {
     }
   }
 
+  String _formatearFechaPaciente(String? fechaRaw) {
+    final value = (fechaRaw ?? '').trim();
+    if (value.isEmpty) return '';
+    final parsed = DateTime.tryParse(value);
+    if (parsed == null) return value;
+    return _dateFormat.format(parsed.toLocal());
+  }
+
   String _etiquetaPrestacion(String? tipo) {
     final tipoNormalizado = (tipo ?? '').trim().toUpperCase();
     return tipoNormalizado == 'CONSULTA' ? 'Consulta' : 'Estudio';
@@ -4477,6 +4485,8 @@ class _CitasPageState extends State<CitasPage> {
     final pacienteDocumento = _valorDetalle(cita.pacienteNroDocumento);
     final pacienteTelefono = _valorDetalle(cita.pacienteTelefono);
     final pacienteGenero = _valorDetalle(_formatearGenero(cita.pacienteGenero));
+    final pacienteFechaNacimiento =
+        _valorDetalle(_formatearFechaPaciente(cita.pacienteFechaNacimiento));
     final especialidadNombre =
         _valorDetalle(cita.especialidadNombre ?? cita.especialidadId);
     final etiquetaPrestacion = _etiquetaPrestacion(cita.servicioTipo ?? cita.tipoCita);
@@ -4645,6 +4655,7 @@ class _CitasPageState extends State<CitasPage> {
                           children: [
                             CitasDetalleGrid(
                               minItemWidth: 150,
+                              columns: 2,
                               children: [
                                 CitasDetalleRow(
                                   icon: PhosphorIconsRegular.calendar,
@@ -4678,6 +4689,7 @@ class _CitasPageState extends State<CitasPage> {
                               ),
                             CitasDetalleGrid(
                               minItemWidth: 170,
+                              columns: 2,
                               children: [
                                 if (pacienteDocumento != null)
                                   CitasDetalleRow(
@@ -4698,6 +4710,13 @@ class _CitasPageState extends State<CitasPage> {
                                     icon: PhosphorIconsRegular.genderIntersex,
                                     label: 'Género',
                                     value: pacienteGenero,
+                                    theme: _theme,
+                                  ),
+                                if (pacienteFechaNacimiento != null)
+                                  CitasDetalleRow(
+                                    icon: PhosphorIconsRegular.cake,
+                                    label: 'Fecha nacimiento',
+                                    value: pacienteFechaNacimiento,
                                     theme: _theme,
                                   ),
                               ],

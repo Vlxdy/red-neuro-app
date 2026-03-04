@@ -11,6 +11,7 @@ class CitaMedica {
   final String? pacienteNroDocumento;
   final String? pacienteTelefono;
   final String? pacienteGenero;
+  final String? pacienteFechaNacimiento;
   final String? especialidadId;
   final String? especialidadNombre;
   final String? especialidadColorHex;
@@ -40,6 +41,7 @@ class CitaMedica {
     required this.pacienteNroDocumento,
     required this.pacienteTelefono,
     required this.pacienteGenero,
+    required this.pacienteFechaNacimiento,
     required this.especialidadId,
     required this.especialidadNombre,
     required this.especialidadColorHex,
@@ -116,6 +118,9 @@ class CitaMedica {
       pacienteGenero: pacienteRaw is Map<String, dynamic>
           ? pacienteRaw['genero']?.toString()
           : json['pacienteGenero']?.toString(),
+      pacienteFechaNacimiento: pacienteRaw is Map<String, dynamic>
+          ? pacienteRaw['fechaNacimiento']?.toString()
+          : json['pacienteFechaNacimiento']?.toString(),
       especialidadId: (json['especialidadId'] ?? json['idEspecialidad'] ?? '')
           .toString()
           .isNotEmpty
@@ -185,6 +190,7 @@ class CitaMedica {
     String? pacienteNroDocumento,
     String? pacienteTelefono,
     String? pacienteGenero,
+    String? pacienteFechaNacimiento,
     String? especialidadId,
     String? especialidadNombre,
     String? especialidadColorHex,
@@ -214,6 +220,8 @@ class CitaMedica {
       pacienteNroDocumento: pacienteNroDocumento ?? this.pacienteNroDocumento,
       pacienteTelefono: pacienteTelefono ?? this.pacienteTelefono,
       pacienteGenero: pacienteGenero ?? this.pacienteGenero,
+      pacienteFechaNacimiento:
+          pacienteFechaNacimiento ?? this.pacienteFechaNacimiento,
       especialidadId: especialidadId ?? this.especialidadId,
       especialidadNombre: especialidadNombre ?? this.especialidadNombre,
       especialidadColorHex:
