@@ -38,7 +38,7 @@ class CitasDetalleSection extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             ...children,
-          ),
+          ],
         ),
       ),
     );
