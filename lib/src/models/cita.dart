@@ -11,6 +11,8 @@ class CitaMedica {
   final String? especialidadId;
   final String? especialidadNombre;
   final String? especialidadColorHex;
+  final String? lugarId;
+  final String? lugarNombre;
   final String? tipoCita;
   final String? servicioId;
   final String? servicioNombre;
@@ -28,6 +30,8 @@ class CitaMedica {
     required this.especialidadId,
     required this.especialidadNombre,
     required this.especialidadColorHex,
+    required this.lugarId,
+    required this.lugarNombre,
     required this.tipoCita,
     required this.servicioId,
     required this.servicioNombre,
@@ -38,6 +42,7 @@ class CitaMedica {
         ? (jsonRaw['datos'] as Map<String, dynamic>)
         : jsonRaw;
     final especialidadRaw = json['especialidad'];
+    final lugarRaw = json['lugar'];
     final servicioRaw = json['servicio'] ?? json['estudio'];
     final medicoRaw = json['medico'];
     final pacienteRaw = json['paciente'];
@@ -96,6 +101,14 @@ class CitaMedica {
               json['colorHex'] ??
               especialidadColor)
           ?.toString(),
+      lugarId: (json['lugarId'] ?? json['idLugar'] ?? '').toString().isNotEmpty
+          ? (json['lugarId'] ?? json['idLugar']).toString()
+          : (lugarRaw is Map<String, dynamic>
+              ? lugarRaw['id']?.toString()
+              : null),
+      lugarNombre: lugarRaw is Map<String, dynamic>
+          ? lugarRaw['nombre']?.toString()
+          : json['lugarNombre']?.toString(),
       tipoCita: (json['tipoCita'] ?? json['tipo'] ?? '').toString(),
       servicioId:
           (json['servicioId'] ?? json['idServicio'] ?? json['estudioId'] ?? json['idEstudio'] ?? '').toString().isNotEmpty
@@ -122,6 +135,8 @@ class CitaMedica {
     String? especialidadId,
     String? especialidadNombre,
     String? especialidadColorHex,
+    String? lugarId,
+    String? lugarNombre,
     String? tipoCita,
     String? servicioId,
     String? servicioNombre,
@@ -140,6 +155,8 @@ class CitaMedica {
       especialidadNombre: especialidadNombre ?? this.especialidadNombre,
       especialidadColorHex:
           especialidadColorHex ?? this.especialidadColorHex,
+      lugarId: lugarId ?? this.lugarId,
+      lugarNombre: lugarNombre ?? this.lugarNombre,
       tipoCita: tipoCita ?? this.tipoCita,
       servicioId: servicioId ?? this.servicioId,
       servicioNombre: servicioNombre ?? this.servicioNombre,

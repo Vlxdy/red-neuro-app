@@ -13,6 +13,7 @@ import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/models/especialidad.dart';
 import 'package:red_neuro_app/src/models/estudio.dart';
 import 'package:red_neuro_app/src/models/historial_cita.dart';
+import 'package:red_neuro_app/src/models/lugar.dart';
 import 'package:red_neuro_app/src/models/paciente.dart';
 import 'package:red_neuro_app/src/models/personal_medico.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
@@ -20,6 +21,7 @@ import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:red_neuro_app/src/plugins/utils/preferences.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/common/form_stepper/step_form_dialog_layout.dart';
+import 'package:red_neuro_app/src/ui/common/text_inputs/autocomplete_field.dart';
 import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_service.dart';
@@ -872,7 +874,7 @@ class _CitasPageState extends State<CitasPage> {
         medicosDisponibles.addAll(result.items);
       }
       total = result.total;
-      medicosHasMore = medicosDisponibles.length < total;
+      medicosHasMore = medicosDisponibles.length < result.total;
       medicosPage += 1;
       medicosLoading = false;
       onUpdated?.call();
@@ -1133,6 +1135,7 @@ class _CitasPageState extends State<CitasPage> {
         : null;
     PersonalMedico? medicoSeleccionado;
     Paciente? pacienteSeleccionado;
+    Lugar? lugarSeleccionado;
     final pacienteFieldKey = GlobalKey<FormFieldState<Paciente>>();
     final pacienteAutocompleteController = TextEditingController(
       text: cita?.pacienteNombre ?? '',
@@ -1159,6 +1162,16 @@ class _CitasPageState extends State<CitasPage> {
         estudios: const [],
       );
     }
+    if ((cita?.lugarId ?? '').trim().isNotEmpty) {
+      lugarSeleccionado = Lugar(
+        id: cita!.lugarId!.trim(),
+        nombre: (cita.lugarNombre ?? '').trim(),
+        sigla: '',
+        direccion: '',
+        tipo: '',
+        estado: 'ACTIVO',
+      );
+    }
     if (cita?.servicioId != null && cita!.servicioId!.isNotEmpty) {
       servicioSeleccionado = Servicio(
         id: cita.servicioId!,
@@ -1179,10 +1192,12 @@ class _CitasPageState extends State<CitasPage> {
     final List<Servicio> serviciosDisponibles = [];
     final List<Paciente> pacientesDisponibles = [];
     final List<PersonalMedico> medicosDisponibles = [];
+    final List<Lugar> lugaresDisponibles = [];
     bool especialidadesLoading = false;
     bool serviciosLoading = false;
     bool pacientesLoading = false;
     bool medicosLoading = false;
+    bool lugaresLoading = false;
     bool especialidadesHasMore = true;
     bool serviciosHasMore = true;
     bool pacientesHasMore = true;
@@ -1191,14 +1206,17 @@ class _CitasPageState extends State<CitasPage> {
     int serviciosPage = 1;
     int pacientesPage = 1;
     int medicosPage = 1;
+    int lugaresPage = 1;
     String especialidadesFiltro = '';
     String serviciosFiltro = '';
     String pacientesFiltro = '';
     String medicosFiltro = '';
+    String lugaresFiltro = '';
     Timer? especialidadesDebounce;
     Timer? serviciosDebounce;
     Timer? pacientesDebounce;
     Timer? medicosDebounce;
+    Timer? lugaresDebounce;
     bool inicializado = false;
     if ((cita?.pacienteId ?? '').trim().isNotEmpty) {
       pacienteSeleccionado = Paciente(
@@ -1252,9 +1270,8 @@ class _CitasPageState extends State<CitasPage> {
                 } else {
                   especialidadesDisponibles.addAll(result.items);
                 }
-                final total = result.total;
                 especialidadesHasMore =
-                    especialidadesDisponibles.length < total;
+                    especialidadesDisponibles.length < result.total;
                 especialidadesPage += 1;
                 especialidadesLoading = false;
               });
@@ -1296,8 +1313,7 @@ class _CitasPageState extends State<CitasPage> {
                 } else {
                   serviciosDisponibles.addAll(result.items);
                 }
-                final total = result.total;
-                serviciosHasMore = serviciosDisponibles.length < total;
+                serviciosHasMore = serviciosDisponibles.length < result.total;
                 serviciosPage += 1;
                 serviciosLoading = false;
               });
@@ -1329,8 +1345,7 @@ class _CitasPageState extends State<CitasPage> {
                 } else {
                   pacientesDisponibles.addAll(result.items);
                 }
-                final total = result.total;
-                pacientesHasMore = pacientesDisponibles.length < total;
+                pacientesHasMore = pacientesDisponibles.length < result.total;
                 pacientesPage += 1;
                 pacientesLoading = false;
               });
@@ -1362,18 +1377,46 @@ class _CitasPageState extends State<CitasPage> {
                 } else {
                   medicosDisponibles.addAll(result.items);
                 }
-                final total = result.total;
-                medicosHasMore = medicosDisponibles.length < total;
+                medicosHasMore = medicosDisponibles.length < result.total;
                 medicosPage += 1;
                 medicosLoading = false;
               });
               onUpdated?.call();
             }
 
+            Future<void> cargarLugares({
+              bool reset = false,
+            }) async {
+              if (lugaresLoading) return;
+              setStateDialog(() => lugaresLoading = true);
+              if (reset) {
+                lugaresPage = 1;
+                lugaresDisponibles.clear();
+              }
+              final result = await _service.obtenerLugares(
+                page: lugaresPage,
+                limit: 10,
+                filtro: lugaresFiltro,
+              );
+              if (!mounted) return;
+              setStateDialog(() {
+                if (reset) {
+                  lugaresDisponibles
+                    ..clear()
+                    ..addAll(result.items);
+                } else {
+                  lugaresDisponibles.addAll(result.items);
+                }
+                lugaresPage += 1;
+                lugaresLoading = false;
+              });
+            }
+
             if (!inicializado) {
               inicializado = true;
               unawaited(cargarEspecialidades(reset: true));
               unawaited(cargarServicios(reset: true));
+              unawaited(cargarLugares(reset: true));
             }
 
             void updateFechaInicioFecha() async {
@@ -2209,6 +2252,10 @@ class _CitasPageState extends State<CitasPage> {
                       style: resumenStyle,
                     ),
                     Text(
+                      'Lugar: ${lugarSeleccionado?.nombre.trim().isNotEmpty == true ? lugarSeleccionado!.nombre : 'Pendiente'}',
+                      style: resumenStyle,
+                    ),
+                    Text(
                       'Fecha: ${fechaInicio != null ? _dateTimeFormat.format(fechaInicio!) : 'Pendiente'}',
                       style: resumenStyle,
                     ),
@@ -2349,6 +2396,46 @@ class _CitasPageState extends State<CitasPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   buildResumenCard(),
+                  const SizedBox(height: 12),
+                  AutocompleteField<Lugar>(
+                    labelText: 'Lugar (opcional)',
+                    loading: lugaresLoading,
+                    optionsHeaderText: 'Selecciona un lugar',
+                    displayStringForOption: (option) => option.nombre,
+                    isOptionSelected: (option) =>
+                        option.id == lugarSeleccionado?.id,
+                    onChanged: (value) {
+                      if (lugarSeleccionado != null &&
+                          value.trim() !=
+                              (lugarSeleccionado?.nombre ?? '').trim()) {
+                        setStateDialog(() => lugarSeleccionado = null);
+                      }
+                      lugaresDebounce?.cancel();
+                      lugaresDebounce = Timer(
+                        const Duration(milliseconds: 300),
+                        () {
+                          lugaresFiltro = value.trim();
+                          unawaited(cargarLugares(reset: true));
+                        },
+                      );
+                    },
+                    optionsBuilder: (textEditingValue) {
+                      final filtro = textEditingValue.text.trim().toLowerCase();
+                      if (filtro.isEmpty) return lugaresDisponibles;
+                      return lugaresDisponibles.where((option) {
+                        final label =
+                            '${option.nombre} ${option.sigla} ${option.direccion}'
+                                .toLowerCase();
+                        return label.contains(filtro);
+                      });
+                    },
+                    onSelected: (option) {
+                      setStateDialog(() {
+                        lugarSeleccionado = option;
+                        lugaresFiltro = option.nombre;
+                      });
+                    },
+                  ),
                   const SizedBox(height: 12),
                   CustomTextInput(
                     controller: detalleController,
@@ -2550,12 +2637,14 @@ class _CitasPageState extends State<CitasPage> {
     serviciosDebounce?.cancel();
     pacientesDebounce?.cancel();
     medicosDebounce?.cancel();
+    lugaresDebounce?.cancel();
     if (result != true) return;
 
     final detalle = detalleController.text.trim();
     final medicoId = (medicoIdSeleccionado ?? '').trim();
     final pacienteId = (pacienteSeleccionado?.id ?? '').trim();
     final especialidadId = especialidadSeleccionada?.id ?? '';
+    final lugarId = (lugarSeleccionado?.id ?? '').trim();
 
     if (cita == null) {
       final accion = accionCreacion ?? 'GUARDAR';
@@ -2567,6 +2656,7 @@ class _CitasPageState extends State<CitasPage> {
         if (pacienteSeleccionado != null)
           'idPaciente': pacienteSeleccionado?.id,
         if (especialidadId.isNotEmpty) 'idEspecialidad': especialidadId,
+        if (lugarId.isNotEmpty) 'idLugar': lugarId,
         'tipoCita': tipoCita,
         if (servicioSeleccionado != null)
           'idServicio': servicioSeleccionado!.id,
@@ -2597,6 +2687,7 @@ class _CitasPageState extends State<CitasPage> {
     final cambioPaciente = pacienteId != (cita.pacienteId ?? '');
     final cambioEspecialidad = especialidadId != (cita.especialidadId ?? '');
     final cambioTipoCita = tipoCita != (cita.tipoCita ?? '');
+    final cambioLugar = lugarId != (cita.lugarId ?? '');
     final cambioServicio = servicioSeleccionado?.id != (cita.servicioId ?? '');
 
     if (estadoActual == 'BORRADOR') {
@@ -2610,6 +2701,9 @@ class _CitasPageState extends State<CitasPage> {
         updates['idEspecialidad'] = especialidadId;
       }
       if (cambioTipoCita) updates['tipoCita'] = tipoCita;
+      if (cambioLugar) {
+        updates['idLugar'] = lugarId.isEmpty ? null : lugarId;
+      }
       if (cambioServicio) {
         updates['idServicio'] = servicioSeleccionado?.id;
       }
@@ -2637,7 +2731,8 @@ class _CitasPageState extends State<CitasPage> {
           cambioPaciente ||
           cambioEspecialidad ||
           cambioTipoCita ||
-          cambioServicio) {
+          cambioServicio ||
+          cambioLugar) {
         showSnackBar(
           citasMessenger,
           'En SOLICITADA solo puedes ajustar hora y detalle.',
@@ -2713,7 +2808,8 @@ class _CitasPageState extends State<CitasPage> {
           cambioPaciente ||
           cambioEspecialidad ||
           cambioTipoCita ||
-          cambioServicio) {
+          cambioServicio ||
+          cambioLugar) {
         showSnackBar(
           citasMessenger,
           'La cita confirmada no es editable.',
@@ -3026,6 +3122,7 @@ class _CitasPageState extends State<CitasPage> {
       'idMedico': 'Médico',
       'idPaciente': 'Paciente',
       'idConsultorio': 'Consultorio',
+      'idLugar': 'Lugar',
       'idServicio': 'Servicio',
       'idEstudio': 'Servicio',
     };
@@ -3075,6 +3172,7 @@ class _CitasPageState extends State<CitasPage> {
       'idMedico': 'Médico',
       'idPaciente': 'Paciente',
       'idConsultorio': 'Consultorio',
+      'idLugar': 'Lugar',
       'idServicio': 'Servicio',
       'idEstudio': 'Servicio',
     };
@@ -4044,6 +4142,7 @@ class _CitasPageState extends State<CitasPage> {
     final especialidadNombre = (cita.especialidadNombre ?? cita.especialidadId)
         ?.trim();
     final estudioNombre = (cita.servicioNombre ?? cita.servicioId)?.trim();
+    final lugarNombre = (cita.lugarNombre ?? cita.lugarId)?.trim();
     final especialidadColor = _colorEspecialidad(cita);
 
     final acciones = <_CitaDetalleAccion>[
@@ -4266,6 +4365,13 @@ class _CitasPageState extends State<CitasPage> {
                                 icon: PhosphorIconsRegular.testTube,
                                 label: 'Servicio',
                                 value: estudioNombre!,
+                                theme: _theme,
+                              ),
+                            if (lugarNombre?.isNotEmpty ?? false)
+                              CitasDetalleRow(
+                                icon: PhosphorIconsRegular.mapPin,
+                                label: 'Lugar',
+                                value: lugarNombre!,
                                 theme: _theme,
                               ),
                           ],
