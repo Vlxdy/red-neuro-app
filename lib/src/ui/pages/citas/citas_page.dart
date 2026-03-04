@@ -4665,20 +4665,24 @@ class _CitasPageState extends State<CitasPage> {
                           title: 'Horario',
                           theme: _theme,
                           children: [
-                            CitasDetalleRow(
-                              icon: PhosphorIconsRegular.calendar,
-                              label: 'Fecha',
-                              value: _formatoFechaCita(cita.fechaInicio),
-                              theme: _theme,
-                            ),
-                            CitasDetalleRow(
-                              icon: PhosphorIconsRegular.clock,
-                              label: 'Hora',
-                              value: _formatoHorarioCita(
-                                cita.fechaInicio,
-                                cita.fechaFin,
-                              ),
-                              theme: _theme,
+                            CitasDetalleGrid(
+                              children: [
+                                CitasDetalleRow(
+                                  icon: PhosphorIconsRegular.calendar,
+                                  label: 'Fecha',
+                                  value: _formatoFechaCita(cita.fechaInicio),
+                                  theme: _theme,
+                                ),
+                                CitasDetalleRow(
+                                  icon: PhosphorIconsRegular.clock,
+                                  label: 'Hora',
+                                  value: _formatoHorarioCita(
+                                    cita.fechaInicio,
+                                    cita.fechaFin,
+                                  ),
+                                  theme: _theme,
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -4686,34 +4690,38 @@ class _CitasPageState extends State<CitasPage> {
                           title: 'Paciente',
                           theme: _theme,
                           children: [
-                            if (pacienteNombre.isNotEmpty)
-                              CitasDetalleRow(
-                                icon: PhosphorIconsRegular.userCircle,
-                                label: 'Paciente',
-                                value: pacienteNombre,
-                                theme: _theme,
-                              ),
-                            if (pacienteDocumento != null)
-                              CitasDetalleRow(
-                                icon: PhosphorIconsRegular.identificationCard,
-                                label: 'Documento',
-                                value: pacienteDocumento,
-                                theme: _theme,
-                              ),
-                            if (pacienteTelefono != null)
-                              CitasDetalleRow(
-                                icon: PhosphorIconsRegular.phone,
-                                label: 'Teléfono',
-                                value: pacienteTelefono,
-                                theme: _theme,
-                              ),
-                            if (pacienteGenero != null)
-                              CitasDetalleRow(
-                                icon: PhosphorIconsRegular.genderIntersex,
-                                label: 'Género',
-                                value: pacienteGenero,
-                                theme: _theme,
-                              ),
+                            CitasDetalleGrid(
+                              children: [
+                                if (pacienteNombre.isNotEmpty)
+                                  CitasDetalleRow(
+                                    icon: PhosphorIconsRegular.userCircle,
+                                    label: 'Paciente',
+                                    value: pacienteNombre,
+                                    theme: _theme,
+                                  ),
+                                if (pacienteDocumento != null)
+                                  CitasDetalleRow(
+                                    icon: PhosphorIconsRegular.identificationCard,
+                                    label: 'Documento',
+                                    value: pacienteDocumento,
+                                    theme: _theme,
+                                  ),
+                                if (pacienteTelefono != null)
+                                  CitasDetalleRow(
+                                    icon: PhosphorIconsRegular.phone,
+                                    label: 'Teléfono',
+                                    value: pacienteTelefono,
+                                    theme: _theme,
+                                  ),
+                                if (pacienteGenero != null)
+                                  CitasDetalleRow(
+                                    icon: PhosphorIconsRegular.genderIntersex,
+                                    label: 'Género',
+                                    value: pacienteGenero,
+                                    theme: _theme,
+                                  ),
+                              ],
+                            ),
                           ],
                         ),
                         CitasDetalleSection(
@@ -4733,27 +4741,31 @@ class _CitasPageState extends State<CitasPage> {
                           title: 'Servicio',
                           theme: _theme,
                           children: [
-                            if (especialidadNombre != null)
-                              CitasDetalleRow(
-                                icon: PhosphorIconsRegular.stethoscope,
-                                label: 'Especialidad',
-                                value: especialidadNombre,
-                                theme: _theme,
-                              ),
-                            if (servicioNombre != null)
-                              CitasDetalleRow(
-                                icon: PhosphorIconsRegular.testTube,
-                                label: etiquetaPrestacion,
-                                value: servicioNombre,
-                                theme: _theme,
-                              ),
-                            if ((servicioDuracion ?? 0) > 0)
-                              CitasDetalleRow(
-                                icon: PhosphorIconsRegular.clock,
-                                label: 'Duración ${etiquetaPrestacion.toLowerCase()}',
-                                value: '${servicioDuracion!} min',
-                                theme: _theme,
-                              ),
+                            CitasDetalleGrid(
+                              children: [
+                                if (especialidadNombre != null)
+                                  CitasDetalleRow(
+                                    icon: PhosphorIconsRegular.stethoscope,
+                                    label: 'Especialidad',
+                                    value: especialidadNombre,
+                                    theme: _theme,
+                                  ),
+                                if (servicioNombre != null)
+                                  CitasDetalleRow(
+                                    icon: PhosphorIconsRegular.testTube,
+                                    label: etiquetaPrestacion,
+                                    value: servicioNombre,
+                                    theme: _theme,
+                                  ),
+                                if ((servicioDuracion ?? 0) > 0)
+                                  CitasDetalleRow(
+                                    icon: PhosphorIconsRegular.clock,
+                                    label: 'Duración ${etiquetaPrestacion.toLowerCase()}',
+                                    value: '${servicioDuracion!} min',
+                                    theme: _theme,
+                                  ),
+                              ],
+                            ),
                             if (servicioDescripcion != null)
                               CitasDetalleRow(
                                 icon: PhosphorIconsRegular.note,
@@ -4767,27 +4779,31 @@ class _CitasPageState extends State<CitasPage> {
                           title: 'Lugar',
                           theme: _theme,
                           children: [
-                            if (lugarNombre != null)
-                              CitasDetalleRow(
-                                icon: PhosphorIconsRegular.mapPin,
-                                label: 'Nombre',
-                                value: lugarNombre,
-                                theme: _theme,
-                              ),
-                            if (lugarSigla != null)
-                              CitasDetalleRow(
-                                icon: PhosphorIconsRegular.tag,
-                                label: 'Sigla',
-                                value: lugarSigla,
-                                theme: _theme,
-                              ),
-                            if (lugarTipo != null)
-                              CitasDetalleRow(
-                                icon: PhosphorIconsRegular.buildings,
-                                label: 'Tipo',
-                                value: lugarTipo,
-                                theme: _theme,
-                              ),
+                            CitasDetalleGrid(
+                              children: [
+                                if (lugarNombre != null)
+                                  CitasDetalleRow(
+                                    icon: PhosphorIconsRegular.mapPin,
+                                    label: 'Nombre',
+                                    value: lugarNombre,
+                                    theme: _theme,
+                                  ),
+                                if (lugarSigla != null)
+                                  CitasDetalleRow(
+                                    icon: PhosphorIconsRegular.tag,
+                                    label: 'Sigla',
+                                    value: lugarSigla,
+                                    theme: _theme,
+                                  ),
+                                if (lugarTipo != null)
+                                  CitasDetalleRow(
+                                    icon: PhosphorIconsRegular.buildings,
+                                    label: 'Tipo',
+                                    value: lugarTipo,
+                                    theme: _theme,
+                                  ),
+                              ],
+                            ),
                             if (lugarDireccion != null)
                               CitasDetalleRow(
                                 icon: PhosphorIconsRegular.mapTrifold,

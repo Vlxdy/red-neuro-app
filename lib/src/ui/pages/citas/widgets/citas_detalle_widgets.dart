@@ -236,3 +236,44 @@ class CitasHistorialTimelineItem extends StatelessWidget {
     );
   }
 }
+
+class CitasDetalleGrid extends StatelessWidget {
+  final List<Widget> children;
+  final double spacing;
+  final double runSpacing;
+  final double minItemWidth;
+
+  const CitasDetalleGrid({
+    super.key,
+    required this.children,
+    this.spacing = 12,
+    this.runSpacing = 0,
+    this.minItemWidth = 230,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (children.isEmpty) return const SizedBox.shrink();
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final canUseTwoColumns = constraints.maxWidth >=
+            (minItemWidth * 2) + spacing;
+        final itemWidth = canUseTwoColumns
+            ? (constraints.maxWidth - spacing) / 2
+            : constraints.maxWidth;
+
+        return Wrap(
+          spacing: spacing,
+          runSpacing: runSpacing,
+          children: [
+            for (final child in children)
+              SizedBox(
+                width: itemWidth,
+                child: child,
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
