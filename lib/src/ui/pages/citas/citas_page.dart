@@ -4529,6 +4529,49 @@ class _CitasPageState extends State<CitasPage> {
         pacienteFechaNacimiento != null ||
         pacienteEdad != null;
     final tienePersonalAsignado = personalAsignado.isNotEmpty;
+
+    final detallesPacienteDisponibles = <({
+      IconData icon,
+      String label,
+      String value,
+    })>[
+      if (pacienteTelefono != null)
+        (
+          icon: PhosphorIconsRegular.phone,
+          label: 'Teléfono',
+          value: pacienteTelefono,
+        ),
+      if (pacienteDocumento != null)
+        (
+          icon: PhosphorIconsRegular.identificationCard,
+          label: 'Documento',
+          value: pacienteDocumento,
+        ),
+      if (pacienteGenero != null)
+        (
+          icon: PhosphorIconsRegular.genderIntersex,
+          label: 'Género',
+          value: pacienteGenero,
+        ),
+      if (pacienteFechaNacimiento != null)
+        (
+          icon: PhosphorIconsRegular.cake,
+          label: 'Fecha nacimiento',
+          value: pacienteFechaNacimiento,
+        ),
+      if (pacienteEdad != null)
+        (
+          icon: PhosphorIconsRegular.hourglass,
+          label: 'Edad',
+          value: pacienteEdad,
+        ),
+    ];
+    final detallePacienteVisible = detallesPacienteDisponibles.isNotEmpty
+        ? detallesPacienteDisponibles.first
+        : null;
+    final detallesPacienteExtra = detallesPacienteDisponibles.length > 1
+        ? detallesPacienteDisponibles.sublist(1)
+        : const <({IconData icon, String label, String value})>[];
     var mostrarMasPaciente = false;
 
     final acciones = <_CitaDetalleAccion>[
@@ -4792,78 +4835,82 @@ class _CitasPageState extends State<CitasPage> {
                             title: '',
                             theme: _theme,
                             children: [
-                              if (pacienteNombre.isNotEmpty)
-                                CitasDetalleRow(
-                                  icon: PhosphorIconsRegular.userCircle,
-                                  label: 'Paciente',
-                                  value: pacienteNombre,
-                                  theme: _theme,
-                                ),
-                              if (pacienteDocumento != null)
-                                CitasDetalleRow(
-                                  icon: PhosphorIconsRegular.identificationCard,
-                                  label: 'Documento',
-                                  value: pacienteDocumento,
-                                  theme: _theme,
-                                ),
-                              if (pacienteTelefono != null ||
-                                  pacienteGenero != null ||
-                                  pacienteFechaNacimiento != null ||
-                                  pacienteEdad != null)
-                                Align(
-                                  alignment: Alignment.centerRight,
-                                  child: IconButton(
-                                    tooltip: mostrarMasPaciente
-                                        ? 'Ver menos paciente'
-                                        : 'Ver más paciente',
-                                    icon: Icon(
-                                      mostrarMasPaciente
-                                          ? Icons.expand_less_rounded
-                                          : Icons.expand_more_rounded,
+                              Stack(
+                                children: [
+                                  Padding(
+                                    padding: EdgeInsets.only(
+                                      right: detallesPacienteExtra.isNotEmpty
+                                          ? 40
+                                          : 0,
                                     ),
-                                    onPressed: () {
-                                      setStateSheet(
-                                        () => mostrarMasPaciente =
-                                            !mostrarMasPaciente,
-                                      );
-                                    },
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        if (pacienteNombre.isNotEmpty)
+                                          CitasDetalleRow(
+                                            icon:
+                                                PhosphorIconsRegular.userCircle,
+                                            label: 'Paciente',
+                                            value: pacienteNombre,
+                                            theme: _theme,
+                                          ),
+                                        if (detallePacienteVisible != null)
+                                          CitasDetalleRow(
+                                            icon: detallePacienteVisible.icon,
+                                            label: detallePacienteVisible.label,
+                                            value: detallePacienteVisible.value,
+                                            theme: _theme,
+                                          ),
+                                        if (mostrarMasPaciente &&
+                                            detallesPacienteExtra.isNotEmpty)
+                                          CitasDetalleGrid(
+                                            minItemWidth: 170,
+                                            columns: 2,
+                                            children: detallesPacienteExtra
+                                                .map(
+                                                  (item) => CitasDetalleRow(
+                                                    icon: item.icon,
+                                                    label: item.label,
+                                                    value: item.value,
+                                                    theme: _theme,
+                                                  ),
+                                                )
+                                                .toList(),
+                                          ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              if (mostrarMasPaciente)
-                                CitasDetalleGrid(
-                                  minItemWidth: 170,
-                                  columns: 2,
-                                  children: [
-                                    if (pacienteTelefono != null)
-                                      CitasDetalleRow(
-                                        icon: PhosphorIconsRegular.phone,
-                                        label: 'Teléfono',
-                                        value: pacienteTelefono,
-                                        theme: _theme,
+                                  if (detallesPacienteExtra.isNotEmpty)
+                                    Positioned(
+                                      top: 0,
+                                      right: 0,
+                                      child: IconButton(
+                                        tooltip: mostrarMasPaciente
+                                            ? 'Ver menos paciente'
+                                            : 'Ver más paciente',
+                                        visualDensity: VisualDensity.compact,
+                                        constraints: const BoxConstraints(
+                                          minWidth: 32,
+                                          minHeight: 32,
+                                        ),
+                                        padding: EdgeInsets.zero,
+                                        icon: Icon(
+                                          mostrarMasPaciente
+                                              ? Icons.expand_less_rounded
+                                              : Icons.expand_more_rounded,
+                                          size: 20,
+                                        ),
+                                        onPressed: () {
+                                          setStateSheet(
+                                            () => mostrarMasPaciente =
+                                                !mostrarMasPaciente,
+                                          );
+                                        },
                                       ),
-                                    if (pacienteGenero != null)
-                                      CitasDetalleRow(
-                                        icon: PhosphorIconsRegular.genderIntersex,
-                                        label: 'Género',
-                                        value: pacienteGenero,
-                                        theme: _theme,
-                                      ),
-                                    if (pacienteFechaNacimiento != null)
-                                      CitasDetalleRow(
-                                        icon: PhosphorIconsRegular.cake,
-                                        label: 'Fecha nacimiento',
-                                        value: pacienteFechaNacimiento,
-                                        theme: _theme,
-                                      ),
-                                    if (pacienteEdad != null)
-                                      CitasDetalleRow(
-                                        icon: PhosphorIconsRegular.hourglass,
-                                        label: 'Edad',
-                                        value: pacienteEdad,
-                                        theme: _theme,
-                                      ),
-                                  ],
-                                ),
+                                    ),
+                                ],
+                              ),
                             ],
                           ),
                         if (tienePersonalAsignado)
