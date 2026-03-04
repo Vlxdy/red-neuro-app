@@ -4508,18 +4508,19 @@ class _CitasPageState extends State<CitasPage> {
     final etiquetaPrestacion = _etiquetaPrestacion(cita.servicioTipo ?? cita.tipoCita);
     final servicioNombre = _valorDetalle(cita.servicioNombre ?? cita.servicioId);
     final servicioDuracion = cita.servicioDuracionMinutos;
-    final servicioDescripcion = _valorDetalle(cita.servicioDescripcion);
     final lugarNombre = _valorDetalle(cita.lugarNombre ?? cita.lugarId);
     final lugarSigla = _valorDetalle(cita.lugarSigla);
     final lugarTipo = _valorDetalle(cita.lugarTipo);
     final lugarDireccion = _valorDetalle(cita.lugarDireccion);
+    final lugarDisplay = (lugarSigla != null && lugarNombre != null)
+        ? '${lugarSigla.toUpperCase()} * $lugarNombre'
+        : lugarNombre;
     final especialidadColor = _colorEspecialidad(cita);
     final personalAsignado = _nombreMedico(cita);
 
     final tieneDatosServicio = servicioNombre != null ||
         especialidadNombre != null ||
-        (servicioDuracion ?? 0) > 0 ||
-        servicioDescripcion != null;
+        (servicioDuracion ?? 0) > 0;
     final tieneDatosLugar =
         lugarNombre != null || lugarSigla != null || lugarTipo != null || lugarDireccion != null;
     final tieneDatosPaciente = pacienteNombre.isNotEmpty ||
@@ -4750,6 +4751,13 @@ class _CitasPageState extends State<CitasPage> {
                                 ),
                               ],
                             ),
+                            if (cita.detalle.trim().isNotEmpty)
+                              CitasDetalleRow(
+                                icon: PhosphorIconsRegular.note,
+                                label: 'Detalle',
+                                value: cita.detalle.trim(),
+                                theme: _theme,
+                              ),
                           ],
                         ),
                         if (tieneDatosServicio)
@@ -4782,13 +4790,6 @@ class _CitasPageState extends State<CitasPage> {
                                     ),
                                 ],
                               ),
-                              if (servicioDescripcion != null)
-                                CitasDetalleRow(
-                                  icon: PhosphorIconsRegular.note,
-                                  label: 'Detalles',
-                                  value: servicioDescripcion,
-                                  theme: _theme,
-                                ),
                             ],
                           ),
                         if (tieneDatosLugar)
@@ -4798,18 +4799,11 @@ class _CitasPageState extends State<CitasPage> {
                             children: [
                               CitasDetalleGrid(
                                 children: [
-                                  if (lugarNombre != null)
+                                  if (lugarDisplay != null)
                                     CitasDetalleRow(
                                       icon: PhosphorIconsRegular.mapPin,
                                       label: 'Lugar',
-                                      value: lugarNombre,
-                                      theme: _theme,
-                                    ),
-                                  if (lugarSigla != null)
-                                    CitasDetalleRow(
-                                      icon: PhosphorIconsRegular.tag,
-                                      label: 'Sigla',
-                                      value: lugarSigla,
+                                      value: lugarDisplay,
                                       theme: _theme,
                                     ),
                                   if (lugarTipo != null)
@@ -4922,19 +4916,6 @@ class _CitasPageState extends State<CitasPage> {
                                 icon: PhosphorIconsRegular.stethoscope,
                                 label: 'Personal asignado',
                                 value: personalAsignado,
-                                theme: _theme,
-                              ),
-                            ],
-                          ),
-                        if (cita.detalle.trim().isNotEmpty)
-                          CitasDetalleSection(
-                            title: '',
-                            theme: _theme,
-                            children: [
-                              CitasDetalleRow(
-                                icon: PhosphorIconsRegular.note,
-                                label: 'Detalle',
-                                value: cita.detalle.trim(),
                                 theme: _theme,
                               ),
                             ],
