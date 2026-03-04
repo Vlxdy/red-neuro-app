@@ -18,10 +18,10 @@ class CitasDetalleSection extends StatelessWidget {
     if (children.isEmpty) return const SizedBox.shrink();
     final showTitle = title.trim().isNotEmpty;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
+        padding: const EdgeInsets.fromLTRB(10, 8, 10, 4),
         decoration: BoxDecoration(
           color: theme.bgCard2,
           borderRadius: BorderRadius.circular(12),
@@ -38,7 +38,7 @@ class CitasDetalleSection extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
               ),
-            if (showTitle) const SizedBox(height: 8),
+            if (showTitle) const SizedBox(height: 6),
             ...children,
           ],
         ),
@@ -65,7 +65,7 @@ class CitasDetalleRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final resolvedValue = value.trim().isNotEmpty ? value : '--';
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

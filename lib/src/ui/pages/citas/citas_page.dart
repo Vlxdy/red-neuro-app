@@ -4513,7 +4513,7 @@ class _CitasPageState extends State<CitasPage> {
     final lugarTipo = _valorDetalle(cita.lugarTipo);
     final lugarDireccion = _valorDetalle(cita.lugarDireccion);
     final lugarDisplay = (lugarSigla != null && lugarNombre != null)
-        ? '${lugarSigla.toUpperCase()} * $lugarNombre'
+        ? '${lugarSigla.toUpperCase()} • $lugarNombre'
         : lugarNombre;
     final especialidadColor = _colorEspecialidad(cita);
     final personalAsignado = _nombreMedico(cita);
