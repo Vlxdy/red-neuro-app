@@ -441,7 +441,7 @@ class _CitasPageState extends State<CitasPage> {
       if ((pacienteTelefono ?? '').trim().isNotEmpty)
         Text('Teléfono: ${pacienteTelefono!.trim()}'),
       if ((pacienteGenero ?? '').trim().isNotEmpty)
-        Text('Género: ${pacienteGenero!.trim()}'),
+        Text('Género: ${_formatearGenero(pacienteGenero)}'),
     ];
 
     int segundosConfirmar = 2;
@@ -502,7 +502,7 @@ class _CitasPageState extends State<CitasPage> {
                       resumenFila(
                         icon: Icons.category_outlined,
                         label: 'Tipo de cita',
-                        value: tipoCita,
+                        value: etiquetaPrestacion,
                       ),
                       Container(
                         width: double.infinity,
@@ -542,7 +542,9 @@ class _CitasPageState extends State<CitasPage> {
                             if ((duracionMinutos ?? 0) > 0)
                               Padding(
                                 padding: const EdgeInsets.only(top: 4),
-                                child: Text('Duración: $duracionMinutos min'),
+                                child: Text(
+                                  'Duración ${etiquetaPrestacion.toLowerCase()}: $duracionMinutos min',
+                                ),
                               ),
                             if ((especialidadNombre ?? '').trim().isNotEmpty)
                               Padding(
@@ -603,7 +605,7 @@ class _CitasPageState extends State<CitasPage> {
                       if ((medicoNombre ?? '').trim().isNotEmpty)
                         resumenFila(
                           icon: Icons.badge_outlined,
-                          label: 'Médico',
+                          label: 'Personal asignado',
                           value: medicoNombre!.trim(),
                         ),
                       if (lugarDetalle.isNotEmpty)
@@ -1230,7 +1232,7 @@ class _CitasPageState extends State<CitasPage> {
                     Padding(
                       padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
                       child: Text(
-                        'Selecciona un médico',
+                        'Selecciona personal asignado',
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ),
@@ -1239,7 +1241,7 @@ class _CitasPageState extends State<CitasPage> {
                       child: TextField(
                         controller: searchController,
                         decoration: const InputDecoration(
-                          labelText: 'Buscar médico',
+                          labelText: 'Buscar personal asignado',
                           border: OutlineInputBorder(),
                         ),
                         onChanged: (value) {
@@ -1484,7 +1486,8 @@ class _CitasPageState extends State<CitasPage> {
         id: cita.servicioId!,
         nombre: cita.servicioNombre ?? 'Servicio ${cita.servicioId}',
         descripcion: '',
-        duracionMinutos: Constantes.citasDuracionDefectoMinutos,
+        duracionMinutos:
+            cita.servicioDuracionMinutos ?? Constantes.citasDuracionDefectoMinutos,
         estado: 'ACTIVO',
         especialidades: const [],
       );
@@ -1946,7 +1949,7 @@ class _CitasPageState extends State<CitasPage> {
                                   8,
                                 ),
                                 child: Text(
-                                  'Selecciona un médico',
+                                  'Selecciona personal asignado',
                                   style: Theme.of(
                                     context,
                                   ).textTheme.titleMedium,
@@ -1958,7 +1961,7 @@ class _CitasPageState extends State<CitasPage> {
                                 ),
                                 child: CustomTextInput(
                                   controller: searchController,
-                                  title: 'Buscar médico',
+                                  title: 'Buscar personal asignado',
                                   onChange: (value) {
                                     medicosFiltro = value;
                                     medicosDebounce?.cancel();
@@ -2705,7 +2708,9 @@ class _CitasPageState extends State<CitasPage> {
                           if ((pacienteSeleccionado!.telefono ?? '').trim().isNotEmpty)
                             Text('Teléfono: ${pacienteSeleccionado!.telefono}'),
                           if ((pacienteSeleccionado!.genero ?? '').trim().isNotEmpty)
-                            Text('Género: ${pacienteSeleccionado!.genero}'),
+                            Text(
+                              'Género: ${_formatearGenero(pacienteSeleccionado!.genero)}',
+                            ),
                         ],
                       ),
                     ),
@@ -2878,8 +2883,8 @@ class _CitasPageState extends State<CitasPage> {
                     builder: (state) {
                       return CitasAutocompleteSelectorField(
                         controller: medicoController,
-                        labelText: 'Médico',
-                        hintText: 'Selecciona un médico',
+                        labelText: 'Personal asignado',
+                        hintText: 'Selecciona personal asignado',
                         errorText: state.errorText,
                         onClear: medicoIdSeleccionado == null
                             ? null
@@ -3044,7 +3049,7 @@ class _CitasPageState extends State<CitasPage> {
                                       child: Text(
                                         cita == null
                                             ? 'Crear cita'
-                                            : (cita.estado == 'BORRADOR' ? 'Guardar cambios' : 'Actualizar cita'),
+                                            : (cita.estado == 'BORRADOR' ? 'Guardar' : 'Actualizar cita'),
                                       ),
                                     ),
                                     ),
@@ -3553,7 +3558,7 @@ class _CitasPageState extends State<CitasPage> {
       'tipoCita': 'Tipo de cita',
       'esEstudio': 'Tipo de cita',
       'idEspecialidad': 'Especialidad',
-      'idMedico': 'Médico',
+      'idMedico': 'Personal asignado',
       'idPaciente': 'Paciente',
       'idConsultorio': 'Consultorio',
       'idLugar': 'Lugar',
@@ -3603,7 +3608,7 @@ class _CitasPageState extends State<CitasPage> {
       'tipoCita': 'Tipo de cita',
       'esEstudio': 'Tipo de cita',
       'idEspecialidad': 'Especialidad',
-      'idMedico': 'Médico',
+      'idMedico': 'Personal asignado',
       'idPaciente': 'Paciente',
       'idConsultorio': 'Consultorio',
       'idLugar': 'Lugar',
@@ -4082,7 +4087,7 @@ class _CitasPageState extends State<CitasPage> {
                                     iconoTipoCita: _iconoTipoCita,
                                     colorEspecialidad: _colorEspecialidad,
                                     onTapCita: (cita) =>
-                                        () => _mostrarDetalleCita(cita),
+                                        () => _abrirCitaSegunEstado(cita),
                                     onRefresh: _refreshAgenda,
                                   ),
                                 ),
@@ -4139,6 +4144,28 @@ class _CitasPageState extends State<CitasPage> {
 
   String _nombrePaciente(CitaMedica cita) {
     return (cita.pacienteNombre ?? '').trim();
+  }
+
+  String _formatearGenero(String? genero) {
+    final value = (genero ?? '').trim().toUpperCase();
+    switch (value) {
+      case 'M':
+      case 'MASCULINO':
+        return 'Masculino';
+      case 'F':
+      case 'FEMENINO':
+        return 'Femenino';
+      case 'O':
+      case 'OTRO':
+        return 'Otro';
+      default:
+        return (genero ?? '').trim();
+    }
+  }
+
+  String _etiquetaPrestacion(String? tipo) {
+    final tipoNormalizado = (tipo ?? '').trim().toUpperCase();
+    return tipoNormalizado == 'CONSULTA' ? 'Consulta' : 'Estudio';
   }
 
   String _tituloCita(CitaMedica cita) {
@@ -4465,10 +4492,22 @@ class _CitasPageState extends State<CitasPage> {
   }
 
   Future<void> _mostrarDetalleCita(CitaMedica cita) async {
-    final especialidadNombre = (cita.especialidadNombre ?? cita.especialidadId)
-        ?.trim();
-    final estudioNombre = (cita.servicioNombre ?? cita.servicioId)?.trim();
-    final lugarNombre = (cita.lugarNombre ?? cita.lugarId)?.trim();
+    final pacienteNombre = _nombrePaciente(cita);
+    final pacienteDocumento = _valorDetalle(cita.pacienteNroDocumento);
+    final pacienteTelefono = _valorDetalle(cita.pacienteTelefono);
+    final pacienteGenero = _valorDetalle(_formatearGenero(cita.pacienteGenero));
+    final especialidadNombre =
+        _valorDetalle(cita.especialidadNombre ?? cita.especialidadId);
+    final especialidadDescripcion = _valorDetalle(cita.especialidadDescripcion);
+    final tipoServicio = _valorDetalle(cita.servicioTipo ?? cita.tipoCita);
+    final etiquetaPrestacion = _etiquetaPrestacion(cita.servicioTipo ?? cita.tipoCita);
+    final servicioNombre = _valorDetalle(cita.servicioNombre ?? cita.servicioId);
+    final servicioDuracion = cita.servicioDuracionMinutos;
+    final servicioDescripcion = _valorDetalle(cita.servicioDescripcion);
+    final lugarNombre = _valorDetalle(cita.lugarNombre ?? cita.lugarId);
+    final lugarSigla = _valorDetalle(cita.lugarSigla);
+    final lugarTipo = _valorDetalle(cita.lugarTipo);
+    final lugarDireccion = _valorDetalle(cita.lugarDireccion);
     final especialidadColor = _colorEspecialidad(cita);
 
     final acciones = <_CitaDetalleAccion>[
@@ -4548,15 +4587,6 @@ class _CitasPageState extends State<CitasPage> {
             return true;
           },
         ),
-      _CitaDetalleAccion(
-        label: 'Ver historial',
-        icon: Icons.history,
-        cierraModal: false,
-        onTap: () async {
-          await _mostrarHistorialCita(cita);
-          return false;
-        },
-      ),
     ];
 
     await showModalBottomSheet<void>(
@@ -4596,6 +4626,11 @@ class _CitasPageState extends State<CitasPage> {
                             ],
                           ],
                         ),
+                      ),
+                      IconButton(
+                        tooltip: 'Ver historial',
+                        onPressed: () => _mostrarHistorialCita(cita),
+                        icon: const Icon(Icons.history_outlined),
                       ),
                       IconButton(
                         tooltip: 'Cerrar',
@@ -4655,49 +4690,130 @@ class _CitasPageState extends State<CitasPage> {
                           ],
                         ),
                         CitasDetalleSection(
-                          title: 'Información clínica',
+                          title: 'Paciente',
                           theme: _theme,
                           children: [
-                            if (_nombrePaciente(cita).isNotEmpty)
+                            if (pacienteNombre.isNotEmpty)
                               CitasDetalleRow(
                                 icon: PhosphorIconsRegular.userCircle,
                                 label: 'Paciente',
-                                value: _nombrePaciente(cita),
+                                value: pacienteNombre,
                                 theme: _theme,
                               ),
+                            if (pacienteDocumento != null)
+                              CitasDetalleRow(
+                                icon: PhosphorIconsRegular.identificationCard,
+                                label: 'Documento',
+                                value: pacienteDocumento,
+                                theme: _theme,
+                              ),
+                            if (pacienteTelefono != null)
+                              CitasDetalleRow(
+                                icon: PhosphorIconsRegular.phone,
+                                label: 'Teléfono',
+                                value: pacienteTelefono,
+                                theme: _theme,
+                              ),
+                            if (pacienteGenero != null)
+                              CitasDetalleRow(
+                                icon: PhosphorIconsRegular.genderIntersex,
+                                label: 'Género',
+                                value: pacienteGenero,
+                                theme: _theme,
+                              ),
+                          ],
+                        ),
+                        CitasDetalleSection(
+                          title: 'Personal asignado',
+                          theme: _theme,
+                          children: [
                             if (_nombreMedico(cita).isNotEmpty)
                               CitasDetalleRow(
                                 icon: PhosphorIconsRegular.stethoscope,
-                                label: 'Médico',
+                                label: 'Personal asignado',
                                 value: _nombreMedico(cita),
                                 theme: _theme,
                               ),
-                            if (especialidadNombre?.isNotEmpty ?? false)
+                          ],
+                        ),
+                        CitasDetalleSection(
+                          title: 'Servicio',
+                          theme: _theme,
+                          children: [
+                            if (especialidadNombre != null)
                               CitasDetalleRow(
                                 icon: PhosphorIconsRegular.stethoscope,
                                 label: 'Especialidad',
-                                value: especialidadNombre!,
+                                value: especialidadNombre,
                                 theme: _theme,
                               ),
-                            if (cita.tipoCita?.isNotEmpty ?? false)
+                            if (especialidadDescripcion != null)
                               CitasDetalleRow(
-                                icon: PhosphorIconsRegular.folder,
-                                label: 'Tipo de cita',
-                                value: cita.tipoCita!,
+                                icon: PhosphorIconsRegular.note,
+                                label: 'Detalle especialidad',
+                                value: especialidadDescripcion,
                                 theme: _theme,
                               ),
-                            if (estudioNombre?.isNotEmpty ?? false)
+                            if (tipoServicio != null)
                               CitasDetalleRow(
                                 icon: PhosphorIconsRegular.testTube,
-                                label: 'Servicio',
-                                value: estudioNombre!,
+                                label: 'Tipo de cita',
+                                value: tipoServicio,
                                 theme: _theme,
                               ),
-                            if (lugarNombre?.isNotEmpty ?? false)
+                            if (servicioNombre != null)
+                              CitasDetalleRow(
+                                icon: PhosphorIconsRegular.testTube,
+                                label: etiquetaPrestacion,
+                                value: servicioNombre,
+                                theme: _theme,
+                              ),
+                            if ((servicioDuracion ?? 0) > 0)
+                              CitasDetalleRow(
+                                icon: PhosphorIconsRegular.clock,
+                                label: 'Duración ${etiquetaPrestacion.toLowerCase()}',
+                                value: '${servicioDuracion!} min',
+                                theme: _theme,
+                              ),
+                            if (servicioDescripcion != null)
+                              CitasDetalleRow(
+                                icon: PhosphorIconsRegular.note,
+                                label: 'Detalles',
+                                value: servicioDescripcion,
+                                theme: _theme,
+                              ),
+                          ],
+                        ),
+                        CitasDetalleSection(
+                          title: 'Lugar',
+                          theme: _theme,
+                          children: [
+                            if (lugarNombre != null)
                               CitasDetalleRow(
                                 icon: PhosphorIconsRegular.mapPin,
-                                label: 'Lugar',
-                                value: lugarNombre!,
+                                label: 'Nombre',
+                                value: lugarNombre,
+                                theme: _theme,
+                              ),
+                            if (lugarSigla != null)
+                              CitasDetalleRow(
+                                icon: PhosphorIconsRegular.tag,
+                                label: 'Sigla',
+                                value: lugarSigla,
+                                theme: _theme,
+                              ),
+                            if (lugarTipo != null)
+                              CitasDetalleRow(
+                                icon: PhosphorIconsRegular.buildings,
+                                label: 'Tipo',
+                                value: lugarTipo,
+                                theme: _theme,
+                              ),
+                            if (lugarDireccion != null)
+                              CitasDetalleRow(
+                                icon: PhosphorIconsRegular.mapTrifold,
+                                label: 'Dirección',
+                                value: lugarDireccion,
                                 theme: _theme,
                               ),
                           ],
@@ -4722,39 +4838,44 @@ class _CitasPageState extends State<CitasPage> {
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                           const SizedBox(height: 10),
-                          ...acciones.map(
-                            (accion) => Padding(
-                              padding: const EdgeInsets.only(bottom: 10),
-                              child: SizedBox(
-                                width: double.infinity,
-                                child: accion.isPrimary
-                                    ? FilledButton.icon(
-                                        onPressed: () async {
-                                          Navigator.of(context).pop();
-                                          await accion.onTap();
-                                        },
-                                        icon: Icon(accion.icon),
-                                        label: Text(accion.label),
-                                      )
-                                    : OutlinedButton.icon(
-                                        style: accion.isDestructive
-                                            ? OutlinedButton.styleFrom(
-                                                foregroundColor: Theme.of(
-                                                  context,
-                                                ).colorScheme.error,
-                                              )
-                                            : null,
-                                        onPressed: () async {
-                                          if (accion.cierraModal) {
-                                            Navigator.of(context).pop();
-                                          }
-                                          await accion.onTap();
-                                        },
-                                        icon: Icon(accion.icon),
-                                        label: Text(accion.label),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: acciones.map((accion) {
+                              final style = accion.isDestructive
+                                  ? OutlinedButton.styleFrom(
+                                      foregroundColor: Theme.of(
+                                        context,
+                                      ).colorScheme.error,
+                                      visualDensity: VisualDensity.compact,
+                                    )
+                                  : OutlinedButton.styleFrom(
+                                      visualDensity: VisualDensity.compact,
+                                    );
+                              return accion.isPrimary
+                                  ? FilledButton.icon(
+                                      style: FilledButton.styleFrom(
+                                        visualDensity: VisualDensity.compact,
                                       ),
-                              ),
-                            ),
+                                      onPressed: () async {
+                                        Navigator.of(context).pop();
+                                        await accion.onTap();
+                                      },
+                                      icon: Icon(accion.icon, size: 18),
+                                      label: Text(accion.label),
+                                    )
+                                  : OutlinedButton.icon(
+                                      style: style,
+                                      onPressed: () async {
+                                        if (accion.cierraModal) {
+                                          Navigator.of(context).pop();
+                                        }
+                                        await accion.onTap();
+                                      },
+                                      icon: Icon(accion.icon, size: 18),
+                                      label: Text(accion.label),
+                                    );
+                            }).toList(),
                           ),
                         ],
                       ],
@@ -4767,6 +4888,20 @@ class _CitasPageState extends State<CitasPage> {
         );
       },
     );
+  }
+
+  Future<void> _abrirCitaSegunEstado(CitaMedica cita) async {
+    if (cita.estado == 'BORRADOR') {
+      _abrirFormulario(cita: cita);
+      return;
+    }
+    await _mostrarDetalleCita(cita);
+  }
+
+  String? _valorDetalle(String? value) {
+    final normalized = value?.trim();
+    if (normalized == null || normalized.isEmpty) return null;
+    return normalized;
   }
 }
 

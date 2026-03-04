@@ -8,14 +8,24 @@ class CitaMedica {
   final String? medicoNombre;
   final String? pacienteId;
   final String? pacienteNombre;
+  final String? pacienteNroDocumento;
+  final String? pacienteTelefono;
+  final String? pacienteGenero;
   final String? especialidadId;
   final String? especialidadNombre;
   final String? especialidadColorHex;
+  final String? especialidadDescripcion;
   final String? lugarId;
   final String? lugarNombre;
+  final String? lugarDireccion;
+  final String? lugarSigla;
+  final String? lugarTipo;
   final String? tipoCita;
   final String? servicioId;
   final String? servicioNombre;
+  final String? servicioDescripcion;
+  final String? servicioTipo;
+  final int? servicioDuracionMinutos;
 
   const CitaMedica({
     required this.id,
@@ -27,14 +37,24 @@ class CitaMedica {
     required this.medicoNombre,
     required this.pacienteId,
     required this.pacienteNombre,
+    required this.pacienteNroDocumento,
+    required this.pacienteTelefono,
+    required this.pacienteGenero,
     required this.especialidadId,
     required this.especialidadNombre,
     required this.especialidadColorHex,
+    required this.especialidadDescripcion,
     required this.lugarId,
     required this.lugarNombre,
+    required this.lugarDireccion,
+    required this.lugarSigla,
+    required this.lugarTipo,
     required this.tipoCita,
     required this.servicioId,
     required this.servicioNombre,
+    required this.servicioDescripcion,
+    required this.servicioTipo,
+    required this.servicioDuracionMinutos,
   });
 
   factory CitaMedica.fromJson(Map<String, dynamic> jsonRaw) {
@@ -87,6 +107,15 @@ class CitaMedica {
       pacienteNombre:
           (json['pacienteNombre'] ?? json['nombrePaciente'] ?? pacienteNombre)
               ?.toString(),
+      pacienteNroDocumento: pacienteRaw is Map<String, dynamic>
+          ? pacienteRaw['nroDocumento']?.toString()
+          : json['pacienteNroDocumento']?.toString(),
+      pacienteTelefono: pacienteRaw is Map<String, dynamic>
+          ? pacienteRaw['telefono']?.toString()
+          : json['pacienteTelefono']?.toString(),
+      pacienteGenero: pacienteRaw is Map<String, dynamic>
+          ? pacienteRaw['genero']?.toString()
+          : json['pacienteGenero']?.toString(),
       especialidadId: (json['especialidadId'] ?? json['idEspecialidad'] ?? '')
           .toString()
           .isNotEmpty
@@ -97,6 +126,9 @@ class CitaMedica {
       especialidadNombre: especialidadRaw is Map<String, dynamic>
           ? especialidadRaw['nombre']?.toString()
           : json['especialidadNombre']?.toString(),
+      especialidadDescripcion: especialidadRaw is Map<String, dynamic>
+          ? especialidadRaw['descripcion']?.toString()
+          : json['especialidadDescripcion']?.toString(),
       especialidadColorHex: (json['especialidadColorHex'] ??
               json['colorHex'] ??
               especialidadColor)
@@ -109,6 +141,15 @@ class CitaMedica {
       lugarNombre: lugarRaw is Map<String, dynamic>
           ? lugarRaw['nombre']?.toString()
           : json['lugarNombre']?.toString(),
+      lugarDireccion: lugarRaw is Map<String, dynamic>
+          ? lugarRaw['direccion']?.toString()
+          : json['lugarDireccion']?.toString(),
+      lugarSigla: lugarRaw is Map<String, dynamic>
+          ? lugarRaw['sigla']?.toString()
+          : json['lugarSigla']?.toString(),
+      lugarTipo: lugarRaw is Map<String, dynamic>
+          ? lugarRaw['tipo']?.toString()
+          : json['lugarTipo']?.toString(),
       tipoCita: (json['tipoCita'] ?? json['tipo'] ?? '').toString(),
       servicioId:
           (json['servicioId'] ?? json['idServicio'] ?? json['estudioId'] ?? json['idEstudio'] ?? '').toString().isNotEmpty
@@ -119,6 +160,15 @@ class CitaMedica {
       servicioNombre: servicioRaw is Map<String, dynamic>
           ? servicioRaw['nombre']?.toString()
           : (json['servicioNombre'] ?? json['estudioNombre'])?.toString(),
+      servicioDescripcion: servicioRaw is Map<String, dynamic>
+          ? servicioRaw['descripcion']?.toString()
+          : json['servicioDescripcion']?.toString(),
+      servicioTipo: servicioRaw is Map<String, dynamic>
+          ? servicioRaw['tipo']?.toString()
+          : json['servicioTipo']?.toString(),
+      servicioDuracionMinutos: servicioRaw is Map<String, dynamic>
+          ? _parseInt(servicioRaw['duracionMinutos'] ?? servicioRaw['duracion'])
+          : _parseInt(json['servicioDuracionMinutos'] ?? json['duracionMinutos']),
     );
   }
 
@@ -132,14 +182,24 @@ class CitaMedica {
     String? medicoNombre,
     String? pacienteId,
     String? pacienteNombre,
+    String? pacienteNroDocumento,
+    String? pacienteTelefono,
+    String? pacienteGenero,
     String? especialidadId,
     String? especialidadNombre,
     String? especialidadColorHex,
+    String? especialidadDescripcion,
     String? lugarId,
     String? lugarNombre,
+    String? lugarDireccion,
+    String? lugarSigla,
+    String? lugarTipo,
     String? tipoCita,
     String? servicioId,
     String? servicioNombre,
+    String? servicioDescripcion,
+    String? servicioTipo,
+    int? servicioDuracionMinutos,
   }) {
     return CitaMedica(
       id: id ?? this.id,
@@ -151,16 +211,34 @@ class CitaMedica {
       medicoNombre: medicoNombre ?? this.medicoNombre,
       pacienteId: pacienteId ?? this.pacienteId,
       pacienteNombre: pacienteNombre ?? this.pacienteNombre,
+      pacienteNroDocumento: pacienteNroDocumento ?? this.pacienteNroDocumento,
+      pacienteTelefono: pacienteTelefono ?? this.pacienteTelefono,
+      pacienteGenero: pacienteGenero ?? this.pacienteGenero,
       especialidadId: especialidadId ?? this.especialidadId,
       especialidadNombre: especialidadNombre ?? this.especialidadNombre,
       especialidadColorHex:
           especialidadColorHex ?? this.especialidadColorHex,
+      especialidadDescripcion:
+          especialidadDescripcion ?? this.especialidadDescripcion,
       lugarId: lugarId ?? this.lugarId,
       lugarNombre: lugarNombre ?? this.lugarNombre,
+      lugarDireccion: lugarDireccion ?? this.lugarDireccion,
+      lugarSigla: lugarSigla ?? this.lugarSigla,
+      lugarTipo: lugarTipo ?? this.lugarTipo,
       tipoCita: tipoCita ?? this.tipoCita,
       servicioId: servicioId ?? this.servicioId,
       servicioNombre: servicioNombre ?? this.servicioNombre,
+      servicioDescripcion: servicioDescripcion ?? this.servicioDescripcion,
+      servicioTipo: servicioTipo ?? this.servicioTipo,
+      servicioDuracionMinutos:
+          servicioDuracionMinutos ?? this.servicioDuracionMinutos,
     );
+  }
+
+  static int? _parseInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    return int.tryParse(value.toString());
   }
 
   static DateTime? _parseDate(dynamic value) {
