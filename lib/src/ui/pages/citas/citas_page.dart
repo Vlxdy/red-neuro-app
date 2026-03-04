@@ -4166,6 +4166,21 @@ class _CitasPageState extends State<CitasPage> {
     return _dateFormat.format(parsed.toLocal());
   }
 
+  String _calcularEdadPaciente(String? fechaRaw) {
+    final value = (fechaRaw ?? '').trim();
+    if (value.isEmpty) return '';
+    final parsed = DateTime.tryParse(value);
+    if (parsed == null) return '';
+    final nacimiento = parsed.toLocal();
+    final hoy = DateTime.now();
+    var edad = hoy.year - nacimiento.year;
+    final aunNoCumple = (hoy.month < nacimiento.month) ||
+        (hoy.month == nacimiento.month && hoy.day < nacimiento.day);
+    if (aunNoCumple) edad -= 1;
+    if (edad < 0) return '';
+    return '$edad años';
+  }
+
   String _etiquetaPrestacion(String? tipo) {
     final tipoNormalizado = (tipo ?? '').trim().toUpperCase();
     return tipoNormalizado == 'CONSULTA' ? 'Consulta' : 'Estudio';
@@ -4487,6 +4502,7 @@ class _CitasPageState extends State<CitasPage> {
     final pacienteGenero = _valorDetalle(_formatearGenero(cita.pacienteGenero));
     final pacienteFechaNacimiento =
         _valorDetalle(_formatearFechaPaciente(cita.pacienteFechaNacimiento));
+    final pacienteEdad = _valorDetalle(_calcularEdadPaciente(cita.pacienteFechaNacimiento));
     final especialidadNombre =
         _valorDetalle(cita.especialidadNombre ?? cita.especialidadId);
     final etiquetaPrestacion = _etiquetaPrestacion(cita.servicioTipo ?? cita.tipoCita);
@@ -4498,6 +4514,21 @@ class _CitasPageState extends State<CitasPage> {
     final lugarTipo = _valorDetalle(cita.lugarTipo);
     final lugarDireccion = _valorDetalle(cita.lugarDireccion);
     final especialidadColor = _colorEspecialidad(cita);
+    final personalAsignado = _nombreMedico(cita);
+
+    final tieneDatosServicio = servicioNombre != null ||
+        especialidadNombre != null ||
+        (servicioDuracion ?? 0) > 0 ||
+        servicioDescripcion != null;
+    final tieneDatosLugar =
+        lugarNombre != null || lugarSigla != null || lugarTipo != null || lugarDireccion != null;
+    final tieneDatosPaciente = pacienteNombre.isNotEmpty ||
+        pacienteDocumento != null ||
+        pacienteTelefono != null ||
+        pacienteGenero != null ||
+        pacienteFechaNacimiento != null ||
+        pacienteEdad != null;
+    final tienePersonalAsignado = personalAsignado.isNotEmpty;
 
     final acciones = <_CitaDetalleAccion>[
       if (cita.estado == 'SOLICITADA' && _puedeGestionarSolicitada(cita))
@@ -4676,142 +4707,152 @@ class _CitasPageState extends State<CitasPage> {
                             ),
                           ],
                         ),
-                        CitasDetalleSection(
-                          title: 'Paciente',
-                          theme: _theme,
-                          children: [
-                            if (pacienteNombre.isNotEmpty)
-                              CitasDetalleRow(
-                                icon: PhosphorIconsRegular.userCircle,
-                                label: 'Paciente',
-                                value: pacienteNombre,
-                                theme: _theme,
+                        if (tieneDatosServicio)
+                          CitasDetalleSection(
+                            title: 'Servicio',
+                            theme: _theme,
+                            children: [
+                              CitasDetalleGrid(
+                                children: [
+                                  if (servicioNombre != null)
+                                    CitasDetalleRow(
+                                      icon: PhosphorIconsRegular.testTube,
+                                      label: etiquetaPrestacion,
+                                      value: servicioNombre,
+                                      theme: _theme,
+                                    ),
+                                  if (especialidadNombre != null)
+                                    CitasDetalleRow(
+                                      icon: PhosphorIconsRegular.stethoscope,
+                                      label: 'Especialidad',
+                                      value: especialidadNombre,
+                                      theme: _theme,
+                                    ),
+                                  if ((servicioDuracion ?? 0) > 0)
+                                    CitasDetalleRow(
+                                      icon: PhosphorIconsRegular.clock,
+                                      label: 'Duración ${etiquetaPrestacion.toLowerCase()}',
+                                      value: '${servicioDuracion!} min',
+                                      theme: _theme,
+                                    ),
+                                ],
                               ),
-                            CitasDetalleGrid(
-                              minItemWidth: 170,
-                              columns: 2,
-                              children: [
-                                if (pacienteDocumento != null)
-                                  CitasDetalleRow(
-                                    icon: PhosphorIconsRegular.identificationCard,
-                                    label: 'Documento',
-                                    value: pacienteDocumento,
-                                    theme: _theme,
-                                  ),
-                                if (pacienteTelefono != null)
-                                  CitasDetalleRow(
-                                    icon: PhosphorIconsRegular.phone,
-                                    label: 'Teléfono',
-                                    value: pacienteTelefono,
-                                    theme: _theme,
-                                  ),
-                                if (pacienteGenero != null)
-                                  CitasDetalleRow(
-                                    icon: PhosphorIconsRegular.genderIntersex,
-                                    label: 'Género',
-                                    value: pacienteGenero,
-                                    theme: _theme,
-                                  ),
-                                if (pacienteFechaNacimiento != null)
-                                  CitasDetalleRow(
-                                    icon: PhosphorIconsRegular.cake,
-                                    label: 'Fecha nacimiento',
-                                    value: pacienteFechaNacimiento,
-                                    theme: _theme,
-                                  ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        CitasDetalleSection(
-                          title: 'Personal asignado',
-                          theme: _theme,
-                          children: [
-                            if (_nombreMedico(cita).isNotEmpty)
+                              if (servicioDescripcion != null)
+                                CitasDetalleRow(
+                                  icon: PhosphorIconsRegular.note,
+                                  label: 'Detalles',
+                                  value: servicioDescripcion,
+                                  theme: _theme,
+                                ),
+                            ],
+                          ),
+                        if (tieneDatosLugar)
+                          CitasDetalleSection(
+                            title: 'Lugar',
+                            theme: _theme,
+                            children: [
+                              CitasDetalleGrid(
+                                children: [
+                                  if (lugarNombre != null)
+                                    CitasDetalleRow(
+                                      icon: PhosphorIconsRegular.mapPin,
+                                      label: 'Nombre',
+                                      value: lugarNombre,
+                                      theme: _theme,
+                                    ),
+                                  if (lugarSigla != null)
+                                    CitasDetalleRow(
+                                      icon: PhosphorIconsRegular.tag,
+                                      label: 'Sigla',
+                                      value: lugarSigla,
+                                      theme: _theme,
+                                    ),
+                                  if (lugarTipo != null)
+                                    CitasDetalleRow(
+                                      icon: PhosphorIconsRegular.buildings,
+                                      label: 'Tipo',
+                                      value: lugarTipo,
+                                      theme: _theme,
+                                    ),
+                                ],
+                              ),
+                              if (lugarDireccion != null)
+                                CitasDetalleRow(
+                                  icon: PhosphorIconsRegular.mapTrifold,
+                                  label: 'Dirección',
+                                  value: lugarDireccion,
+                                  theme: _theme,
+                                ),
+                            ],
+                          ),
+                        if (tieneDatosPaciente)
+                          CitasDetalleSection(
+                            title: 'Paciente',
+                            theme: _theme,
+                            children: [
+                              if (pacienteNombre.isNotEmpty)
+                                CitasDetalleRow(
+                                  icon: PhosphorIconsRegular.userCircle,
+                                  label: 'Paciente',
+                                  value: pacienteNombre,
+                                  theme: _theme,
+                                ),
+                              CitasDetalleGrid(
+                                minItemWidth: 170,
+                                columns: 2,
+                                children: [
+                                  if (pacienteDocumento != null)
+                                    CitasDetalleRow(
+                                      icon: PhosphorIconsRegular.identificationCard,
+                                      label: 'Documento',
+                                      value: pacienteDocumento,
+                                      theme: _theme,
+                                    ),
+                                  if (pacienteTelefono != null)
+                                    CitasDetalleRow(
+                                      icon: PhosphorIconsRegular.phone,
+                                      label: 'Teléfono',
+                                      value: pacienteTelefono,
+                                      theme: _theme,
+                                    ),
+                                  if (pacienteGenero != null)
+                                    CitasDetalleRow(
+                                      icon: PhosphorIconsRegular.genderIntersex,
+                                      label: 'Género',
+                                      value: pacienteGenero,
+                                      theme: _theme,
+                                    ),
+                                  if (pacienteFechaNacimiento != null)
+                                    CitasDetalleRow(
+                                      icon: PhosphorIconsRegular.cake,
+                                      label: 'Fecha nacimiento',
+                                      value: pacienteFechaNacimiento,
+                                      theme: _theme,
+                                    ),
+                                ],
+                              ),
+                              if (pacienteEdad != null)
+                                CitasDetalleRow(
+                                  icon: PhosphorIconsRegular.hourglass,
+                                  label: 'Edad',
+                                  value: pacienteEdad,
+                                  theme: _theme,
+                                ),
+                            ],
+                          ),
+                        if (tienePersonalAsignado)
+                          CitasDetalleSection(
+                            title: 'Personal asignado',
+                            theme: _theme,
+                            children: [
                               CitasDetalleRow(
                                 icon: PhosphorIconsRegular.stethoscope,
                                 label: 'Personal asignado',
-                                value: _nombreMedico(cita),
+                                value: personalAsignado,
                                 theme: _theme,
                               ),
-                          ],
-                        ),
-                        CitasDetalleSection(
-                          title: 'Servicio',
-                          theme: _theme,
-                          children: [
-                            CitasDetalleGrid(
-                              children: [
-                                if (servicioNombre != null)
-                                  CitasDetalleRow(
-                                    icon: PhosphorIconsRegular.testTube,
-                                    label: etiquetaPrestacion,
-                                    value: servicioNombre,
-                                    theme: _theme,
-                                  ),
-                                if (especialidadNombre != null)
-                                  CitasDetalleRow(
-                                    icon: PhosphorIconsRegular.stethoscope,
-                                    label: 'Especialidad',
-                                    value: especialidadNombre,
-                                    theme: _theme,
-                                  ),
-                                if ((servicioDuracion ?? 0) > 0)
-                                  CitasDetalleRow(
-                                    icon: PhosphorIconsRegular.clock,
-                                    label: 'Duración ${etiquetaPrestacion.toLowerCase()}',
-                                    value: '${servicioDuracion!} min',
-                                    theme: _theme,
-                                  ),
-                              ],
-                            ),
-                            if (servicioDescripcion != null)
-                              CitasDetalleRow(
-                                icon: PhosphorIconsRegular.note,
-                                label: 'Detalles',
-                                value: servicioDescripcion,
-                                theme: _theme,
-                              ),
-                          ],
-                        ),
-                        CitasDetalleSection(
-                          title: 'Lugar',
-                          theme: _theme,
-                          children: [
-                            CitasDetalleGrid(
-                              children: [
-                                if (lugarNombre != null)
-                                  CitasDetalleRow(
-                                    icon: PhosphorIconsRegular.mapPin,
-                                    label: 'Nombre',
-                                    value: lugarNombre,
-                                    theme: _theme,
-                                  ),
-                                if (lugarSigla != null)
-                                  CitasDetalleRow(
-                                    icon: PhosphorIconsRegular.tag,
-                                    label: 'Sigla',
-                                    value: lugarSigla,
-                                    theme: _theme,
-                                  ),
-                                if (lugarTipo != null)
-                                  CitasDetalleRow(
-                                    icon: PhosphorIconsRegular.buildings,
-                                    label: 'Tipo',
-                                    value: lugarTipo,
-                                    theme: _theme,
-                                  ),
-                              ],
-                            ),
-                            if (lugarDireccion != null)
-                              CitasDetalleRow(
-                                icon: PhosphorIconsRegular.mapTrifold,
-                                label: 'Dirección',
-                                value: lugarDireccion,
-                                theme: _theme,
-                              ),
-                          ],
-                        ),
+                            ],
+                          ),
                         if (cita.detalle.trim().isNotEmpty)
                           CitasDetalleSection(
                             title: 'Notas',
