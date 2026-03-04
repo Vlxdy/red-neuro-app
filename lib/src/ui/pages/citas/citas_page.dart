@@ -4574,6 +4574,31 @@ class _CitasPageState extends State<CitasPage> {
         ? detallesPacienteDisponibles.sublist(1)
         : const <({IconData icon, String label, String value})>[];
     var mostrarMasPaciente = false;
+    final detallesServicioExtra = <({
+      IconData icon,
+      String label,
+      String value,
+    })>[
+      if (especialidadNombre != null)
+        (
+          icon: PhosphorIconsRegular.stethoscope,
+          label: 'Especialidad',
+          value: especialidadNombre,
+        ),
+      if ((servicioDuracion ?? 0) > 0)
+        (
+          icon: PhosphorIconsRegular.clock,
+          label: 'Duración ${etiquetaPrestacion.toLowerCase()}',
+          value: '${servicioDuracion!} min',
+        ),
+      if ((cita.servicioDescripcion ?? '').trim().isNotEmpty)
+        (
+          icon: PhosphorIconsRegular.note,
+          label: 'Descripción',
+          value: cita.servicioDescripcion!.trim(),
+        ),
+    ];
+    var mostrarMasServicio = false;
 
     final acciones = <_CitaDetalleAccion>[
       if (cita.estado == 'SOLICITADA' && _puedeGestionarSolicitada(cita))
@@ -4765,28 +4790,71 @@ class _CitasPageState extends State<CitasPage> {
                             title: '',
                             theme: _theme,
                             children: [
-                              CitasDetalleGrid(
+                              Stack(
                                 children: [
-                                  if (servicioNombre != null)
-                                    CitasDetalleRow(
-                                      icon: PhosphorIconsRegular.testTube,
-                                      label: etiquetaPrestacion,
-                                      value: servicioNombre,
-                                      theme: _theme,
+                                  Padding(
+                                    padding: EdgeInsets.only(
+                                      right: detallesServicioExtra.isNotEmpty
+                                          ? 40
+                                          : 0,
                                     ),
-                                  if (especialidadNombre != null)
-                                    CitasDetalleRow(
-                                      icon: PhosphorIconsRegular.stethoscope,
-                                      label: 'Especialidad',
-                                      value: especialidadNombre,
-                                      theme: _theme,
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        if (servicioNombre != null)
+                                          CitasDetalleRow(
+                                            icon: PhosphorIconsRegular.testTube,
+                                            label: etiquetaPrestacion,
+                                            value: servicioNombre,
+                                            theme: _theme,
+                                          ),
+                                        if (mostrarMasServicio &&
+                                            detallesServicioExtra.isNotEmpty)
+                                          CitasDetalleGrid(
+                                            minItemWidth: 170,
+                                            columns: 2,
+                                            children: detallesServicioExtra
+                                                .map(
+                                                  (item) => CitasDetalleRow(
+                                                    icon: item.icon,
+                                                    label: item.label,
+                                                    value: item.value,
+                                                    theme: _theme,
+                                                  ),
+                                                )
+                                                .toList(),
+                                          ),
+                                      ],
                                     ),
-                                  if ((servicioDuracion ?? 0) > 0)
-                                    CitasDetalleRow(
-                                      icon: PhosphorIconsRegular.clock,
-                                      label: 'Duración ${etiquetaPrestacion.toLowerCase()}',
-                                      value: '${servicioDuracion!} min',
-                                      theme: _theme,
+                                  ),
+                                  if (detallesServicioExtra.isNotEmpty)
+                                    Positioned(
+                                      top: 0,
+                                      right: 0,
+                                      child: IconButton(
+                                        tooltip: mostrarMasServicio
+                                            ? 'Ver menos servicio'
+                                            : 'Ver más servicio',
+                                        visualDensity: VisualDensity.compact,
+                                        constraints: const BoxConstraints(
+                                          minWidth: 32,
+                                          minHeight: 32,
+                                        ),
+                                        padding: EdgeInsets.zero,
+                                        icon: Icon(
+                                          mostrarMasServicio
+                                              ? Icons.expand_less_rounded
+                                              : Icons.expand_more_rounded,
+                                          size: 20,
+                                        ),
+                                        onPressed: () {
+                                          setStateSheet(
+                                            () => mostrarMasServicio =
+                                                !mostrarMasServicio,
+                                          );
+                                        },
+                                      ),
                                     ),
                                 ],
                               ),
