@@ -4686,15 +4686,18 @@ class _CitasPageState extends State<CitasPage> {
       backgroundColor: Colors.transparent,
       builder: (context) {
         return StatefulBuilder(
-          builder: (context, setStateSheet) => FractionallySizedBox(
-            heightFactor: 0.94,
+          builder: (context, setStateSheet) => ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.94,
+            ),
             child: DecoratedBox(
               decoration: BoxDecoration(
                 color: Theme.of(context).scaffoldBackgroundColor,
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
               ),
               child: Column(
-              children: [
+                mainAxisSize: MainAxisSize.min,
+                children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 12, 12, 6),
                   child: Row(
@@ -4745,7 +4748,8 @@ class _CitasPageState extends State<CitasPage> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Expanded(
+                Flexible(
+                  fit: FlexFit.loose,
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
                     child: Column(
