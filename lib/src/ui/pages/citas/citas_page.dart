@@ -1179,6 +1179,7 @@ class _CitasPageState extends State<CitasPage> {
       useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
+        final modalContext = context;
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             Future<void> cargarEspecialidades({
@@ -2690,7 +2691,7 @@ class _CitasPageState extends State<CitasPage> {
                                     IconButton(
                                       tooltip: 'Cerrar',
                                       onPressed: () =>
-                                          Navigator.pop(context, false),
+                                          Navigator.pop(modalContext, false),
                                       icon: const Icon(Icons.close_rounded),
                                     ),
                                   ],
@@ -2703,7 +2704,7 @@ class _CitasPageState extends State<CitasPage> {
                                     Expanded(
                                       child: OutlinedButton(
                                         onPressed: () =>
-                                            Navigator.pop(context, false),
+                                            Navigator.pop(modalContext, false),
                                         child: const Text('Cancelar'),
                                       ),
                                     ),
@@ -2775,7 +2776,7 @@ class _CitasPageState extends State<CitasPage> {
                                             accionFormulario = 'ENVIAR';
                                           }
                                           if (!context.mounted) return;
-                                          Navigator.pop(context, true);
+                                          Navigator.pop(modalContext, true);
                                         },
                                         child: Text(
                                           cita == null
@@ -4127,51 +4128,133 @@ class _CitasPageState extends State<CitasPage> {
   }
 
   Future<String?> _solicitarMotivoRechazo() async {
-    final controller = TextEditingController();
-    final motivo = await showDialog<String>(
+    var motivo = '';
+    return showDialog<String>(
       context: context,
+      useRootNavigator: true,
+      barrierDismissible: false,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Motivo de rechazo'),
         content: TextFormField(
-          controller: controller,
+          initialValue: motivo,
           maxLines: 3,
           maxLength: 255,
           decoration: const InputDecoration(labelText: 'Motivo'),
+          onChanged: (value) => motivo = value,
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
+            onPressed: () => Navigator.of(dialogContext, rootNavigator: true).pop(),
             child: const Text('Cancelar'),
           ),
           FilledButton(
             onPressed: () {
-              final value = controller.text.trim();
-              Navigator.pop(dialogContext, value);
+              final motivoNormalizado = motivo.trim();
+              if (motivoNormalizado.isEmpty) {
+                return;
+              }
+              FocusScope.of(dialogContext).unfocus();
+              Navigator.of(
+                dialogContext,
+                rootNavigator: true,
+              ).pop(motivoNormalizado);
             },
             child: const Text('Rechazar'),
           ),
         ],
       ),
     );
-    controller.dispose();
-    return motivo;
+  }
+
+  Future<bool?> _solicitarMotivoRechazoYEnviar(CitaMedica cita) async {
+    var motivo = '';
+    var enviando = false;
+    return showDialog<bool>(
+      context: context,
+      useRootNavigator: true,
+      barrierDismissible: false,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setStateDialog) => AlertDialog(
+          title: const Text('Motivo de rechazo'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              TextFormField(
+                initialValue: motivo,
+                enabled: !enviando,
+                maxLines: 3,
+                maxLength: 255,
+                decoration: const InputDecoration(labelText: 'Motivo'),
+                onChanged: (value) => motivo = value,
+              ),
+              if (enviando) ...[
+                const SizedBox(height: 8),
+                const LinearProgressIndicator(minHeight: 2),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: enviando
+                  ? null
+                  : () => Navigator.of(dialogContext, rootNavigator: true).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: enviando
+                  ? null
+                  : () async {
+                      FocusScope.of(dialogContext).unfocus();
+                      final motivoNormalizado = motivo.trim();
+                      if (motivoNormalizado.isEmpty) {
+                        await showErrorDialog(
+                          context,
+                          'Debes ingresar un motivo de rechazo.',
+                        );
+                        return;
+                      }
+
+                      setStateDialog(() => enviando = true);
+                      final ok = await _handleResponseError(
+                        await _service.rechazarCita(
+                          cita.id,
+                          motivoRechazo: motivoNormalizado,
+                        ),
+                        'No se pudo rechazar la cita.',
+                      );
+                      if (!dialogContext.mounted) return;
+                      if (!ok) {
+                        setStateDialog(() => enviando = false);
+                        return;
+                      }
+                      Navigator.of(dialogContext, rootNavigator: true).pop(true);
+                    },
+              child: const Text('Rechazar'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<bool> _rechazarCitaSolicitadaConConfirmacion(CitaMedica cita) async {
     if (!_puedeGestionarSolicitada(cita)) return false;
-    final motivo = await _solicitarMotivoRechazo();
-    if (motivo == null) return false;
-    final ok = await _handleResponseError(
-      await _service.rechazarCita(cita.id, motivoRechazo: motivo),
-      'No se pudo rechazar la cita.',
-    );
-    if (!ok) return false;
+    final resultado = await _solicitarMotivoRechazoYEnviar(cita);
+    if (resultado != true) {
+      if (resultado == false && mounted) {
+        await _mostrarDetalleCita(cita);
+      }
+      return false;
+    }
+
     if (mounted) {
       await _cargarCitasCalendario();
       if (_currentTabIndex == 2) await _cargarCitasListado();
     }
     return true;
   }
+
 
   Future<bool> _confirmarCitaSolicitadaConOpciones(CitaMedica cita) async {
     if (!_puedeGestionarSolicitada(cita)) return false;
@@ -4799,7 +4882,12 @@ class _CitasPageState extends State<CitasPage> {
                                           if (accion.cierraModal) {
                                             Navigator.of(context).pop();
                                           }
-                                          await accion.onTap();
+                                          final ok = await accion.onTap();
+                                          if (!accion.cierraModal &&
+                                              ok &&
+                                              context.mounted) {
+                                            Navigator.of(context).pop();
+                                          }
                                         },
                                         icon: Icon(accion.icon, size: 18),
                                         label: Text(accion.label),
