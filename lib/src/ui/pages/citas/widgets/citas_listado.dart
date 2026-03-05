@@ -166,10 +166,10 @@ class CitasListado extends StatelessWidget {
           : onRefresh != null
           ? const AlwaysScrollableScrollPhysics()
           : null,
-      padding: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.only(top: 4),
       shrinkWrap: embedInScroll,
       itemCount: citas.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 12),
+      separatorBuilder: (_, _) => const SizedBox(height: 8),
       itemBuilder: (context, index) {
         final cita = citas[index];
         final estadoColor = colorEstado(cita.estado);
@@ -182,10 +182,10 @@ class CitasListado extends StatelessWidget {
         final tipoIcono = iconoTipoCita(cita);
 
         return Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: theme.bgCard,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: especialidadColor.withValues(alpha: 0.25),
               width: 1.2,
@@ -195,8 +195,8 @@ class CitasListado extends StatelessWidget {
                 color: theme.black.withValues(
                   alpha: theme.isLight ? 0.04 : 0.2,
                 ),
-                blurRadius: 8,
-                offset: const Offset(0, 4),
+                blurRadius: 6,
+                offset: const Offset(0, 3),
               ),
             ],
           ),
@@ -205,8 +205,8 @@ class CitasListado extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  width: 4,
-                  margin: const EdgeInsets.only(right: 12, top: 4),
+                  width: 3,
+                  margin: const EdgeInsets.only(right: 8, top: 2),
                   decoration: BoxDecoration(
                     color: especialidadColor,
                     borderRadius: BorderRadius.circular(8),
@@ -221,15 +221,18 @@ class CitasListado extends StatelessWidget {
                           Expanded(
                             child: Row(
                               children: [
-                                Icon(tipoIcono, size: 20, color: theme.primary),
-                                const SizedBox(width: 8),
+                                Icon(tipoIcono, size: 18, color: theme.primary),
+                                const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
                                     titulo,
                                     style: Theme.of(context)
                                         .textTheme
                                         .titleMedium
-                                        ?.copyWith(fontWeight: FontWeight.bold),
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 15,
+                                        ),
                                   ),
                                 ),
                               ],
@@ -241,10 +244,10 @@ class CitasListado extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 6),
                       Wrap(
-                        spacing: 16,
-                        runSpacing: 8,
+                        spacing: 12,
+                        runSpacing: 6,
                         children: [
                           InfoPill(
                             icon: PhosphorIconsRegular.calendar,
@@ -268,7 +271,7 @@ class CitasListado extends StatelessWidget {
                             ),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
@@ -284,13 +287,23 @@ class CitasListado extends StatelessWidget {
                           const Spacer(),
                           IconButton(
                             onPressed: onVerDetalle(cita),
-                            icon: const Icon(Icons.info_outline),
+                            icon: const Icon(Icons.info_outline, size: 20),
+                            visualDensity: VisualDensity.compact,
+                            constraints: const BoxConstraints.tightFor(
+                              width: 36,
+                              height: 36,
+                            ),
                             tooltip: 'Ver detalles',
                           ),
                           if (puedeEditar(cita))
                             IconButton(
                               onPressed: onEditar(cita),
-                              icon: const Icon(Icons.edit),
+                              icon: const Icon(Icons.edit, size: 20),
+                              visualDensity: VisualDensity.compact,
+                              constraints: const BoxConstraints.tightFor(
+                                width: 36,
+                                height: 36,
+                              ),
                               tooltip: 'Editar',
                             ),
                         ],
