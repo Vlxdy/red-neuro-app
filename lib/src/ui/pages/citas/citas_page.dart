@@ -31,6 +31,8 @@ import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_filters_fields.da
 import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_autocomplete_selector_field.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/fecha_selector.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_confirmacion_dialog.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_modo_mis_citas_banner.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
 final GlobalKey<ScaffoldMessengerState> citasMessenger =
@@ -114,44 +116,6 @@ class _CitasPageState extends State<CitasPage> {
       perfil.segundoApellido,
     ].where((valor) => valor.trim().isNotEmpty).join(' ').trim();
     return nombreCompleto.isNotEmpty ? nombreCompleto : 'Mi agenda';
-  }
-
-  Widget _buildModoMisCitasBanner(BuildContext context) {
-    if (!_usarSoloMisCitas) return const SizedBox.shrink();
-
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            _theme.primary.withValues(alpha: 0.18),
-            _theme.secondary.withValues(alpha: 0.18),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _theme.primary.withValues(alpha: 0.45)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.person_pin_circle_rounded, color: _theme.primary),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              'Mostrando solo citas asignadas a ti • $_nombreMedicoActual',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: _theme.primary,
-                fontWeight: FontWeight.w500,
-                letterSpacing: 0,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -377,268 +341,27 @@ class _CitasPageState extends State<CitasPage> {
     String? lugarNombre,
     String? lugarDireccion,
     String? detalle,
-  }) async {
-    Widget resumenFila({
-      required IconData icon,
-      required String label,
-      required String value,
-    }) {
-      return Container(
-        width: double.infinity,
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: _theme.grey.withValues(alpha: .12),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: _theme.grey.withValues(alpha: .2)),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, size: 18, color: _theme.primary),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: _theme.grey,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(value, style: Theme.of(context).textTheme.bodyMedium),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    final lugarDetalle = [
-      if ((lugarNombre ?? '').trim().isNotEmpty) lugarNombre!.trim(),
-      if ((lugarDireccion ?? '').trim().isNotEmpty) lugarDireccion!.trim(),
-    ].join(' • ');
-
-    final tipoNormalizado = tipoCita.trim().toUpperCase();
-    final esConsulta = tipoNormalizado == 'CONSULTA';
-    final etiquetaPrestacion = esConsulta ? 'Consulta' : 'Estudio';
-
-    final mostrarPaciente =
-        (pacienteNombre ?? '').trim().isNotEmpty ||
-        (pacienteDocumento ?? '').trim().isNotEmpty ||
-        (pacienteTelefono ?? '').trim().isNotEmpty ||
-        (pacienteGenero ?? '').trim().isNotEmpty;
-
-    final pacienteItems = <Widget>[
-      if ((pacienteNombre ?? '').trim().isNotEmpty)
-        Text('Nombre: ${pacienteNombre!.trim()}'),
-      if ((pacienteDocumento ?? '').trim().isNotEmpty)
-        Text('Documento: ${pacienteDocumento!.trim()}'),
-      if ((pacienteTelefono ?? '').trim().isNotEmpty)
-        Text('Teléfono: ${pacienteTelefono!.trim()}'),
-      if ((pacienteGenero ?? '').trim().isNotEmpty)
-        Text('Género: ${_formatearGenero(pacienteGenero)}'),
-    ];
-
-    int segundosConfirmar = 2;
-    Timer? countdownTimer;
-    bool countdownIniciado = false;
-
-    return showDialog<String>(
+  }) {
+    return showCitaConfirmacionDialog(
       context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (dialogContext, setStateDialog) {
-            void cerrar([String? resultado]) {
-              countdownTimer?.cancel();
-              Navigator.pop(dialogContext, resultado);
-            }
-
-            if (!countdownIniciado) {
-              countdownIniciado = true;
-              countdownTimer = Timer.periodic(const Duration(seconds: 1), (
-                timer,
-              ) {
-                if (!dialogContext.mounted) {
-                  timer.cancel();
-                  return;
-                }
-                setStateDialog(() {
-                  if (segundosConfirmar > 0) {
-                    segundosConfirmar -= 1;
-                  }
-                  if (segundosConfirmar == 0) {
-                    timer.cancel();
-                  }
-                });
-              });
-            }
-
-            return AlertDialog(
-              titlePadding: const EdgeInsets.fromLTRB(20, 16, 8, 8),
-              title: Row(
-                children: [
-                  Expanded(
-                    child: Text(esNueva ? 'Confirmar cita' : 'Confirmar cambios'),
-                  ),
-                  IconButton(
-                    tooltip: 'Cerrar',
-                    onPressed: () => cerrar(),
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
-              ),
-              content: SizedBox(
-                width: 440,
-                child: SingleChildScrollView(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: double.infinity,
-                        margin: const EdgeInsets.only(bottom: 10),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          color: _theme.grey.withValues(alpha: .12),
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: _theme.grey.withValues(alpha: .2)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(
-                                  Icons.medical_services_outlined,
-                                  size: 18,
-                                  color: _theme.primary,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  etiquetaPrestacion,
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(
-                                        color: _theme.grey,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(servicioNombre),
-                            if ((duracionMinutos ?? 0) > 0)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 4),
-                                child: Text(
-                                  'Duración ${etiquetaPrestacion.toLowerCase()}: $duracionMinutos min',
-                                ),
-                              ),
-                            if ((especialidadNombre ?? '').trim().isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 4),
-                                child: Text(
-                                  'Especialidad: ${especialidadNombre!.trim()}',
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                      resumenFila(
-                        icon: Icons.event_outlined,
-                        label: 'Fecha y hora',
-                        value: _dateTimeFormat.format(fechaInicio),
-                      ),
-                      if (mostrarPaciente)
-                        Container(
-                          width: double.infinity,
-                          margin: const EdgeInsets.only(bottom: 10),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _theme.primary.withValues(alpha: .08),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: _theme.primary.withValues(alpha: .2),
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.person_outline,
-                                    size: 18,
-                                    color: _theme.primary,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Paciente',
-                                    style: Theme.of(context).textTheme.bodySmall
-                                        ?.copyWith(
-                                          color: _theme.grey,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 6),
-                              ...pacienteItems,
-                            ],
-                          ),
-                        ),
-                      if ((medicoNombre ?? '').trim().isNotEmpty)
-                        resumenFila(
-                          icon: Icons.badge_outlined,
-                          label: 'Personal asignado',
-                          value: medicoNombre!.trim(),
-                        ),
-                      if (lugarDetalle.isNotEmpty)
-                        resumenFila(
-                          icon: Icons.place_outlined,
-                          label: 'Lugar',
-                          value: lugarDetalle,
-                        ),
-                      if ((detalle ?? '').trim().isNotEmpty)
-                        resumenFila(
-                          icon: Icons.notes_outlined,
-                          label: 'Detalle',
-                          value: detalle!.trim(),
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => cerrar('GUARDAR'),
-                  child: const Text('Guardar'),
-                ),
-                FilledButton(
-                  onPressed: segundosConfirmar == 0
-                      ? () => cerrar('ENVIAR')
-                      : null,
-                  child: Text(
-                    segundosConfirmar == 0
-                        ? 'Confirmar'
-                        : 'Confirmar (${segundosConfirmar}s)',
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
+      data: CitaAccionConfirmacionData(
+        esNueva: esNueva,
+        tipoCita: tipoCita,
+        servicioNombre: servicioNombre,
+        fechaInicio: fechaInicio,
+        duracionMinutos: duracionMinutos,
+        pacienteNombre: pacienteNombre,
+        especialidadNombre: especialidadNombre,
+        medicoNombre: medicoNombre,
+        pacienteDocumento: pacienteDocumento,
+        pacienteTelefono: pacienteTelefono,
+        pacienteGenero: pacienteGenero,
+        lugarNombre: lugarNombre,
+        lugarDireccion: lugarDireccion,
+        detalle: detalle,
+      ),
+      dateTimeFormat: _dateTimeFormat,
+      formatearGenero: _formatearGenero,
     );
   }
 
@@ -4018,7 +3741,7 @@ class _CitasPageState extends State<CitasPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildModoMisCitasBanner(context),
+                          CitasModoMisCitasBanner(visible: _usarSoloMisCitas, nombreMedicoActual: _nombreMedicoActual),
                           CitasActiveFiltersRibbon(
                                   theme: _theme,
                                   buscarTexto: _buscarTexto,
