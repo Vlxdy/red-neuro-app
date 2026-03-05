@@ -484,7 +484,7 @@ List<ChildrenItem> _itemsByRole({
   final perfilNav = ChildrenItem(
     iconoImagen: SolarIconsOutline.user,
     iconoImagenSeleccionada: SolarIconsBold.user,
-    titulo: 'Configuración',
+    titulo: 'Perfil',
     color: theme.primary,
     children: const KeepAlivePage(child: Perfil()),
   );

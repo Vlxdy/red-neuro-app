@@ -423,7 +423,7 @@ class _PerfilState extends State<Perfil> {
           child: Scaffold(
             backgroundColor: theme.background,
             appBar: TrayModuleHeader(
-              titulo: 'Configuración',
+              titulo: 'Perfil',
               subtitulo: 'Administra tu perfil y seguridad de tu cuenta.',
               isCompact: MediaQuery.of(context).size.width < 560,
             ),

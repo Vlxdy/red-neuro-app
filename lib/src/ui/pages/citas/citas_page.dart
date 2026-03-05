@@ -55,7 +55,6 @@ class CitasPage extends StatefulWidget {
 }
 
 class _CitasPageState extends State<CitasPage> {
-  static const _viewPreferenceKey = 'citas_view_index';
   static const _soloMisCitasPreferenceKey = 'citas_solo_mis_asignadas';
   final ThemeController _theme = ThemeController.instance;
   late final CitasService _service;
@@ -71,7 +70,6 @@ class _CitasPageState extends State<CitasPage> {
   Map<DateTime, int> _cantidadCitasCalendarioPorDia = {};
 
   bool _loading = false;
-  bool _dayLoading = false;
   bool _agendaLoading = false;
   int _dayRequestId = 0;
   int _agendaRequestId = 0;
@@ -79,9 +77,9 @@ class _CitasPageState extends State<CitasPage> {
   DateTime? _selectedDay;
   late DateTime _agendaDay;
   late DateTime _agendaFocusedDay;
-  CalendarFormat _calendarFormat = CalendarFormat.week;
+  final CalendarFormat _calendarFormat = CalendarFormat.week;
   CalendarFormat _agendaCalendarFormat = CalendarFormat.week;
-  int _currentTabIndex = 0;
+  final int _currentTabIndex = 0;
   bool _soloCitasAsignadas = false;
 
   String _buscarTexto = '';
@@ -99,7 +97,7 @@ class _CitasPageState extends State<CitasPage> {
   int _listPage = 1;
   int _listLimit = 10;
   int _listTotal = 0;
-  bool _listLoadingMore = false;
+
   bool get _listHasNext => _listTotal > 0
       ? (_listPage * _listLimit) < _listTotal
       : _citasListado.length == _listLimit;
@@ -223,7 +221,6 @@ class _CitasPageState extends State<CitasPage> {
       _listLimit = result.limit;
       _listTotal = result.total;
       _loading = false;
-      _listLoadingMore = false;
     });
   }
 
@@ -362,43 +359,6 @@ class _CitasPageState extends State<CitasPage> {
       ),
       dateTimeFormat: _dateTimeFormat,
       formatearGenero: _formatearGenero,
-    );
-  }
-
-  Future<bool> _aplicarCambioEstadoCita(
-    CitaMedica cita,
-    String estado,
-  ) async {
-    if (estado == 'CANCELADA') {
-      return _handleResponseError(
-        await _service.cancelarCita(cita.id),
-        'No se pudo cancelar la cita.',
-      );
-    }
-    if (estado == 'COMPLETADA') {
-      return _handleResponseError(
-        await _service.completarCita(cita.id),
-        'No se pudo completar la cita.',
-      );
-    }
-    if (estado == 'CONFIRMADA') {
-      return _handleResponseError(
-        await _service.confirmarCita(cita.id),
-        'No se pudo confirmar la cita.',
-      );
-    }
-    if (estado == 'RECHAZADA') {
-      final motivo = await _solicitarMotivoRechazo();
-      if (motivo == null) return false;
-      return _handleResponseError(
-        await _service.rechazarCita(cita.id, motivoRechazo: motivo),
-        'No se pudo rechazar la cita.',
-      );
-    }
-
-    return _handleResponseError(
-      await _service.actualizarCita(cita.id, {'estado': estado}),
-      'No se pudo actualizar el estado de la cita.',
     );
   }
 
@@ -556,17 +516,6 @@ class _CitasPageState extends State<CitasPage> {
     } catch (_) {
       return null;
     }
-  }
-
-  Map<DateTime, List<CitaMedica>> get _citasPorDia {
-    final Map<DateTime, List<CitaMedica>> data = {};
-    for (final cita in _citasCalendario) {
-      final fecha = cita.fechaInicio;
-      if (fecha == null) continue;
-      final key = DateTime(fecha.year, fecha.month, fecha.day);
-      data.putIfAbsent(key, () => []).add(cita);
-    }
-    return data;
   }
 
   Map<DateTime, List<CitaMedica>> get _citasAgendaPorDia {
@@ -806,29 +755,6 @@ class _CitasPageState extends State<CitasPage> {
     return _DateRange(start: firstDay, end: lastDay);
   }
 
-  Future<void> _setViewIndex(int index) async {
-    if (_currentTabIndex == index) return;
-    setState(() => _currentTabIndex = index);
-    await PreferencesService.instance.setInt(_viewPreferenceKey, index);
-    if (index == 0) {
-      _cargarCitasAgendaSemana();
-      _cargarCitasAgendaDay(day: _agendaDay);
-    } else if (index == 1) {
-      _cargarCitasCalendario();
-    } else {
-      _cargarCitasListado();
-    }
-  }
-
-  void _handleListScroll() {
-    if (_currentTabIndex != 2 || _listLoadingMore || !_listHasNext) return;
-    if (_listScrollController.position.pixels >=
-        _listScrollController.position.maxScrollExtent - 240) {
-      setState(() => _listLoadingMore = true);
-      _cargarCitasListado(page: _listPage + 1);
-    }
-  }
-
   void _handleAgendaScroll() {
     if (!_agendaScrollController.hasClients) return;
     final position = _agendaScrollController.position;
@@ -841,26 +767,10 @@ class _CitasPageState extends State<CitasPage> {
     }
   }
 
-  Future<void> _refreshCalendario() async {
-    await _cargarCitasCalendario();
-  }
-
   Future<void> _refreshAgenda() async {
     await Future.wait<void>([
       _cargarCitasAgendaSemana(),
       _cargarCitasAgendaDay(day: _agendaDay),
-      _recargarConteoCitasCalendario(),
-    ]);
-  }
-
-  Future<void> _refreshListado() async {
-    _listPage = 1;
-    _listLoadingMore = false;
-    if (_listScrollController.hasClients) {
-      _listScrollController.jumpTo(0);
-    }
-    await Future.wait<void>([
-      _cargarCitasListado(page: 1),
       _recargarConteoCitasCalendario(),
     ]);
   }
@@ -1085,7 +995,6 @@ class _CitasPageState extends State<CitasPage> {
       _buscarController.clear();
       _medicoFiltroController.clear();
       _listPage = 1;
-      _listLoadingMore = false;
     });
     _cargarCitasAgendaSemana();
     _cargarCitasAgendaDay(day: _agendaDay);
@@ -1101,12 +1010,10 @@ class _CitasPageState extends State<CitasPage> {
     if (fecha == null) {
       setState(() {
         _citasSeleccionadas = [];
-        _dayLoading = false;
       });
       return;
     }
     final requestId = ++_dayRequestId;
-    setState(() => _dayLoading = true);
     final filtros = _buildDayFiltersQuery(fecha);
     final citas = await _service.obtenerCitas(
       soloMisCitas: _usarSoloMisCitas,
@@ -1115,7 +1022,6 @@ class _CitasPageState extends State<CitasPage> {
     if (!mounted || requestId != _dayRequestId) return;
     setState(() {
       _citasSeleccionadas = citas;
-      _dayLoading = false;
     });
   }
 
@@ -1205,7 +1111,8 @@ class _CitasPageState extends State<CitasPage> {
         nombre: cita.servicioNombre ?? 'Servicio ${cita.servicioId}',
         descripcion: '',
         duracionMinutos:
-            cita.servicioDuracionMinutos ?? Constantes.citasDuracionDefectoMinutos,
+            cita.servicioDuracionMinutos ??
+            Constantes.citasDuracionDefectoMinutos,
         estado: 'ACTIVO',
         especialidades: const [],
       );
@@ -1413,9 +1320,7 @@ class _CitasPageState extends State<CitasPage> {
               onUpdated?.call();
             }
 
-            Future<void> cargarLugares({
-              bool reset = false,
-            }) async {
+            Future<void> cargarLugares({bool reset = false}) async {
               if (lugaresLoading) return;
               setStateDialog(() => lugaresLoading = true);
               if (reset) {
@@ -1942,14 +1847,23 @@ class _CitasPageState extends State<CitasPage> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Padding(
-                                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                                padding: const EdgeInsets.fromLTRB(
+                                  20,
+                                  16,
+                                  20,
+                                  8,
+                                ),
                                 child: Text(
                                   'Selecciona un lugar',
-                                  style: Theme.of(context).textTheme.titleMedium,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium,
                                 ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 20),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                ),
                                 child: CustomTextInput(
                                   controller: searchController,
                                   title: 'Buscar lugar',
@@ -1967,7 +1881,8 @@ class _CitasPageState extends State<CitasPage> {
                               Flexible(
                                 child: Builder(
                                   builder: (context) {
-                                    if (lugaresDisponibles.isEmpty && lugaresLoading) {
+                                    if (lugaresDisponibles.isEmpty &&
+                                        lugaresLoading) {
                                       return const Center(
                                         child: CircularProgressIndicator(),
                                       );
@@ -1981,13 +1896,16 @@ class _CitasPageState extends State<CitasPage> {
                                       shrinkWrap: true,
                                       itemCount: lugaresDisponibles.length,
                                       itemBuilder: (context, index) {
-                                        final option = lugaresDisponibles[index];
+                                        final option =
+                                            lugaresDisponibles[index];
                                         return ListTile(
                                           title: Text(option.nombre),
-                                          subtitle: option.direccion.trim().isNotEmpty
+                                          subtitle:
+                                              option.direccion.trim().isNotEmpty
                                               ? Text(option.direccion)
                                               : null,
-                                          onTap: () => Navigator.pop(context, option),
+                                          onTap: () =>
+                                              Navigator.pop(context, option),
                                         );
                                       },
                                     );
@@ -2349,7 +2267,8 @@ class _CitasPageState extends State<CitasPage> {
             }
 
             bool validarFormulario() {
-              final servicioValido = servicioFieldKey.currentState?.validate() ??
+              final servicioValido =
+                  servicioFieldKey.currentState?.validate() ??
                   servicioSeleccionado != null;
               final fechaValida = fechaInicio != null;
               return servicioValido && fechaValida;
@@ -2379,7 +2298,8 @@ class _CitasPageState extends State<CitasPage> {
                         if (nuevo == null) return;
                         setStateDialog(() {
                           pacienteSeleccionado = nuevo;
-                          pacienteAutocompleteController.text = nuevo.nombreCompleto;
+                          pacienteAutocompleteController.text =
+                              nuevo.nombreCompleto;
                           pacientesDisponibles.insert(0, nuevo);
                         });
                         pacienteFieldKey.currentState?.didChange(nuevo);
@@ -2421,11 +2341,19 @@ class _CitasPageState extends State<CitasPage> {
                               ),
                             ],
                           ),
-                          if ((pacienteSeleccionado!.nroDocumento ?? '').trim().isNotEmpty)
-                            Text('Documento: ${pacienteSeleccionado!.nroDocumento}'),
-                          if ((pacienteSeleccionado!.telefono ?? '').trim().isNotEmpty)
+                          if ((pacienteSeleccionado!.nroDocumento ?? '')
+                              .trim()
+                              .isNotEmpty)
+                            Text(
+                              'Documento: ${pacienteSeleccionado!.nroDocumento}',
+                            ),
+                          if ((pacienteSeleccionado!.telefono ?? '')
+                              .trim()
+                              .isNotEmpty)
                             Text('Teléfono: ${pacienteSeleccionado!.telefono}'),
-                          if ((pacienteSeleccionado!.genero ?? '').trim().isNotEmpty)
+                          if ((pacienteSeleccionado!.genero ?? '')
+                              .trim()
+                              .isNotEmpty)
                             Text(
                               'Género: ${_formatearGenero(pacienteSeleccionado!.genero)}',
                             ),
@@ -2464,7 +2392,9 @@ class _CitasPageState extends State<CitasPage> {
                           'Consulta',
                           style: TextStyle(
                             fontSize: 12,
-                            color: tipoCita == 'CONSULTA' ? _theme.white : _theme.grey,
+                            color: tipoCita == 'CONSULTA'
+                                ? _theme.white
+                                : _theme.grey,
                           ),
                         ),
                         selectedColor: _theme.primary,
@@ -2492,7 +2422,9 @@ class _CitasPageState extends State<CitasPage> {
                           'Estudio',
                           style: TextStyle(
                             fontSize: 12,
-                            color: tipoCita == 'ESTUDIO' ? _theme.white : _theme.grey,
+                            color: tipoCita == 'ESTUDIO'
+                                ? _theme.white
+                                : _theme.grey,
                           ),
                         ),
                         selectedColor: _theme.primary,
@@ -2550,8 +2482,9 @@ class _CitasPageState extends State<CitasPage> {
                   const SizedBox(height: 8),
                   FormField<Servicio>(
                     key: servicioFieldKey,
-                    validator: (_) =>
-                        servicioSeleccionado == null ? 'Selecciona un servicio' : null,
+                    validator: (_) => servicioSeleccionado == null
+                        ? 'Selecciona un servicio'
+                        : null,
                     builder: (state) {
                       return CitasAutocompleteSelectorField(
                         controller: servicioController,
@@ -2657,28 +2590,40 @@ class _CitasPageState extends State<CitasPage> {
                         ),
                       ),
                     ),
-                  if (cita != null && (cita.estado == 'SOLICITADA' || cita.estado == 'CONFIRMADA'))
+                  if (cita != null &&
+                      (cita.estado == 'SOLICITADA' ||
+                          cita.estado == 'CONFIRMADA'))
                     const SizedBox(height: 12),
-                  if (cita != null && (cita.estado == 'SOLICITADA' || cita.estado == 'CONFIRMADA'))
+                  if (cita != null &&
+                      (cita.estado == 'SOLICITADA' ||
+                          cita.estado == 'CONFIRMADA'))
                     DropdownButtonFormField<String?>(
                       initialValue: estado,
                       decoration: CustomTextInputStyles.decoration(
                         label: 'Estado',
                       ),
-                      items: [
-                        cita.estado,
-                        if (cita.estado == 'SOLICITADA') ...['CONFIRMADA', 'RECHAZADA'],
-                        if (cita.estado == 'CONFIRMADA') 'CANCELADA',
-                      ].toSet().map((estadoItem) {
-                        final requierePermiso = estadoItem == 'CONFIRMADA' || estadoItem == 'RECHAZADA';
-                        final habilitado =
-                            !requierePermiso || _puedeGestionarSolicitada(cita) || estadoItem == cita.estado;
-                        return DropdownMenuItem(
-                          value: estadoItem,
-                          enabled: habilitado,
-                          child: Text(estadoItem),
-                        );
-                      }).toList(),
+                      items:
+                          {
+                            cita.estado,
+                            if (cita.estado == 'SOLICITADA') ...[
+                              'CONFIRMADA',
+                              'RECHAZADA',
+                            ],
+                            if (cita.estado == 'CONFIRMADA') 'CANCELADA',
+                          }.map((estadoItem) {
+                            final requierePermiso =
+                                estadoItem == 'CONFIRMADA' ||
+                                estadoItem == 'RECHAZADA';
+                            final habilitado =
+                                !requierePermiso ||
+                                _puedeGestionarSolicitada(cita) ||
+                                estadoItem == cita.estado;
+                            return DropdownMenuItem(
+                              value: estadoItem,
+                              enabled: habilitado,
+                              child: Text(estadoItem),
+                            );
+                          }).toList(),
                       onChanged: (value) {
                         setStateDialog(() => estado = value);
                       },
@@ -2694,7 +2639,9 @@ class _CitasPageState extends State<CitasPage> {
                   alignment: Alignment.bottomCenter,
                   child: Container(
                     width: double.infinity,
-                    constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * .92),
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.of(context).size.height * .92,
+                    ),
                     decoration: BoxDecoration(
                       color: _theme.background,
                       borderRadius: const BorderRadius.vertical(
@@ -2720,7 +2667,9 @@ class _CitasPageState extends State<CitasPage> {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 Text(
-                                  cita == null ? 'Registro de cita' : 'Actualizar cita',
+                                  cita == null
+                                      ? 'Registro de cita'
+                                      : 'Actualizar cita',
                                   style: Theme.of(context).textTheme.titleLarge,
                                 ),
                                 const SizedBox(height: 12),
@@ -2730,46 +2679,78 @@ class _CitasPageState extends State<CitasPage> {
                                   children: [
                                     Expanded(
                                       child: OutlinedButton(
-                                        onPressed: () => Navigator.pop(context, false),
+                                        onPressed: () =>
+                                            Navigator.pop(context, false),
                                         child: const Text('Cancelar'),
                                       ),
                                     ),
                                     const SizedBox(width: 12),
                                     Expanded(
                                       child: FilledButton(
-                                      onPressed: () async {
-                                        setStateDialog(() => intentoEnvio = true);
-                                        if (!validarFormulario()) {
-                                          return;
-                                        }
-                                        if (cita == null || cita.estado == 'BORRADOR') {
-                                          final accion = await _confirmarAccionCita(
-                                            esNueva: cita == null,
-                                            tipoCita: _formatearTipoCita(tipoCita),
-                                            pacienteNombre: pacienteSeleccionado?.nombreCompleto,
-                                            especialidadNombre: especialidadSeleccionada?.nombre,
-                                            servicioNombre: servicioSeleccionado?.nombre ?? 'Sin servicio',
-                                            medicoNombre: medicoController.text.trim(),
-                                            pacienteDocumento: pacienteSeleccionado?.nroDocumento,
-                                            pacienteTelefono: pacienteSeleccionado?.telefono,
-                                            pacienteGenero: pacienteSeleccionado?.genero,
-                                            lugarNombre: lugarSeleccionado?.nombre,
-                                            lugarDireccion: lugarSeleccionado?.direccion,
-                                            detalle: detalleController.text.trim(),
-                                            fechaInicio: fechaInicio!,
-                                            duracionMinutos: servicioSeleccionado?.duracionMinutos,
+                                        onPressed: () async {
+                                          setStateDialog(
+                                            () => intentoEnvio = true,
                                           );
-                                          if (accion == null) return;
-                                          accionFormulario = accion;
-                                        }
-                                        Navigator.pop(context, true);
-                                      },
-                                      child: Text(
-                                        cita == null
-                                            ? 'Crear cita'
-                                            : (cita.estado == 'BORRADOR' ? 'Guardar' : 'Actualizar cita'),
+                                          if (!validarFormulario()) {
+                                            return;
+                                          }
+                                          if (cita == null ||
+                                              cita.estado == 'BORRADOR') {
+                                            final accion =
+                                                await _confirmarAccionCita(
+                                                  esNueva: cita == null,
+                                                  tipoCita: _formatearTipoCita(
+                                                    tipoCita,
+                                                  ),
+                                                  pacienteNombre:
+                                                      pacienteSeleccionado
+                                                          ?.nombreCompleto,
+                                                  especialidadNombre:
+                                                      especialidadSeleccionada
+                                                          ?.nombre,
+                                                  servicioNombre:
+                                                      servicioSeleccionado
+                                                          ?.nombre ??
+                                                      'Sin servicio',
+                                                  medicoNombre: medicoController
+                                                      .text
+                                                      .trim(),
+                                                  pacienteDocumento:
+                                                      pacienteSeleccionado
+                                                          ?.nroDocumento,
+                                                  pacienteTelefono:
+                                                      pacienteSeleccionado
+                                                          ?.telefono,
+                                                  pacienteGenero:
+                                                      pacienteSeleccionado
+                                                          ?.genero,
+                                                  lugarNombre:
+                                                      lugarSeleccionado?.nombre,
+                                                  lugarDireccion:
+                                                      lugarSeleccionado
+                                                          ?.direccion,
+                                                  detalle: detalleController
+                                                      .text
+                                                      .trim(),
+                                                  fechaInicio: fechaInicio!,
+                                                  duracionMinutos:
+                                                      servicioSeleccionado
+                                                          ?.duracionMinutos,
+                                                );
+                                            if (accion == null) return;
+                                            accionFormulario = accion;
+                                          }
+                                          if (!context.mounted) return;
+                                          Navigator.pop(context, true);
+                                        },
+                                        child: Text(
+                                          cita == null
+                                              ? 'Crear cita'
+                                              : (cita.estado == 'BORRADOR'
+                                                    ? 'Guardar'
+                                                    : 'Actualizar cita'),
+                                        ),
                                       ),
-                                    ),
                                     ),
                                   ],
                                 ),
@@ -2816,7 +2797,10 @@ class _CitasPageState extends State<CitasPage> {
         if (servicioSeleccionado != null)
           'idServicio': servicioSeleccionado!.id,
       });
-      final ok = await _handleResponseError(response, 'No se pudo crear la cita.');
+      final ok = await _handleResponseError(
+        response,
+        'No se pudo crear la cita.',
+      );
       if (!ok) return;
 
       showSnackBar(
@@ -2990,7 +2974,8 @@ class _CitasPageState extends State<CitasPage> {
           'No se pudo reprogramar la cita.',
         );
         if (!ok) return;
-      } else if (estadoSeleccionado != null && estadoSeleccionado != estadoActual) {
+      } else if (estadoSeleccionado != null &&
+          estadoSeleccionado != estadoActual) {
         showSnackBar(
           citasMessenger,
           'En CONFIRMADA solo puedes cancelar o reprogramar.',
@@ -3105,21 +3090,11 @@ class _CitasPageState extends State<CitasPage> {
 
   bool _esAdministrador() => _tieneRol('ADMINISTRADOR');
 
-  bool _esPersonalSaludSupervisor() {
-    return _tieneRol('PERSONAL_SALUD') && Auth.instance.profile.esSupervisor;
-  }
-
   bool _esMedicoAsignado(CitaMedica cita) {
     final medicoId = cita.medicoId.trim();
     final idUsuarioRol = (Auth.instance.profile.idUsuarioRol ?? '').trim();
     if (medicoId.isEmpty || idUsuarioRol.isEmpty) return false;
     return medicoId == idUsuarioRol;
-  }
-
-  bool _puedeAprobarRechazar(CitaMedica cita) {
-    return _esMedicoAsignado(cita) ||
-        _esAdministrador() ||
-        _esPersonalSaludSupervisor();
   }
 
   bool _puedeGestionarSolicitada(CitaMedica cita) {
@@ -3663,7 +3638,6 @@ class _CitasPageState extends State<CitasPage> {
     fechaFinController.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
     final isCompactHeader = MediaQuery.sizeOf(context).width < 980;
@@ -3718,117 +3692,104 @@ class _CitasPageState extends State<CitasPage> {
                 ),
               IconButton(
                 onPressed: _toggleFilters,
-                icon: Icon(
-                  Icons.filter_list_rounded,
-                  color: _theme.white,
-                ),
+                icon: Icon(Icons.filter_list_rounded, color: _theme.white),
                 style: IconButton.styleFrom(
                   minimumSize: const Size(36, 36),
-                  side: BorderSide(
-                    color: _theme.white.withValues(alpha: 0.35),
-                  ),
+                  side: BorderSide(color: _theme.white.withValues(alpha: 0.35)),
                 ),
               ),
             ],
           ),
           body: LayoutBuilder(
-              builder: (context, constraints) {
-                final isCompact = constraints.maxWidth < 980;
-                return Stack(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          CitasModoMisCitasBanner(visible: _usarSoloMisCitas, nombreMedicoActual: _nombreMedicoActual),
-                          CitasActiveFiltersRibbon(
-                                  theme: _theme,
-                                  buscarTexto: _buscarTexto,
-                                  estadoFiltro: _estadoFiltro,
-                                  medicoFiltroNombre: _medicoFiltroNombre,
-                                  fechaInicioFiltro: _fechaInicioFiltro,
-                                  fechaFinFiltro: _fechaFinFiltro,
-                                  formatter: _dateFormat,
-                                  onClearBuscar: _limpiarFiltroBuscar,
-                                  onClearEstado: _limpiarFiltroEstado,
-                                  onClearMedico: _limpiarFiltroMedico,
-                                  onClearRango: _limpiarFiltroRango,
-                                  onClearAll: _limpiarFiltros,
-                                ),
-                                Expanded(
-                                  child: CitasAgendaSection(
-                                    citas: _filtrarCitasLocal(_citasAgenda),
-                                    isCompact: isCompact,
-                                    theme: _theme,
-                                    dateFormat: _dateFormat,
-                                    agendaDay: _agendaDay,
-                                    agendaFocusedDay: _agendaFocusedDay,
-                                    agendaCalendarFormat:
-                                        _agendaCalendarFormat,
-                                    agendaCalendarCollapsed:
-                                        _agendaCalendarCollapsed,
-                                    citasAgendaPorDia: _citasAgendaPorDia,
-                                    onAgendaDaySelected:
-                                        (selectedDay, focusedDay) {
-                                          setState(
-                                            () => _agendaFocusedDay = focusedDay,
-                                          );
-                                          _seleccionarAgendaDay(
-                                            selectedDay,
-                                          );
-                                        },
-                                    onPageChanged: (focusedDay) {
-                                      setState(
-                                        () => _agendaFocusedDay = focusedDay,
-                                      );
-                                      _cargarCitasAgendaSemana();
-                                    },
-                                    onAgendaFormatChanged: (format) {
-                                      if (_agendaCalendarFormat != format) {
-                                        setState(
-                                          () => _agendaCalendarFormat = format,
-                                        );
-                                      }
-                                    },
-                                    onExpandCalendar: () => setState(
-                                      () => _agendaCalendarCollapsed = false,
-                                    ),
-                                    isLoading: _agendaLoading,
-                                    scrollController: _agendaScrollController,
-                                    colorEstado: _colorEstado,
-                                    formatoHoraAgenda: _formatoHoraAgenda,
-                                    formatoHorarioCita: _formatoHorarioCita,
-                                    tituloCita: _tituloCita,
-                                    nombrePaciente: _nombrePaciente,
-                                    nombreMedico: _nombreMedico,
-                                    iconoTipoCita: _iconoTipoCita,
-                                    colorEspecialidad: _colorEspecialidad,
-                                    onTapCita: (cita) =>
-                                        () => _abrirCitaSegunEstado(cita),
-                                    onRefresh: _refreshAgenda,
-                                  ),
-                                ),
-                              ],
+            builder: (context, constraints) {
+              final isCompact = constraints.maxWidth < 980;
+              return Stack(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CitasModoMisCitasBanner(
+                          visible: _usarSoloMisCitas,
+                          nombreMedicoActual: _nombreMedicoActual,
+                        ),
+                        CitasActiveFiltersRibbon(
+                          theme: _theme,
+                          buscarTexto: _buscarTexto,
+                          estadoFiltro: _estadoFiltro,
+                          medicoFiltroNombre: _medicoFiltroNombre,
+                          fechaInicioFiltro: _fechaInicioFiltro,
+                          fechaFinFiltro: _fechaFinFiltro,
+                          formatter: _dateFormat,
+                          onClearBuscar: _limpiarFiltroBuscar,
+                          onClearEstado: _limpiarFiltroEstado,
+                          onClearMedico: _limpiarFiltroMedico,
+                          onClearRango: _limpiarFiltroRango,
+                          onClearAll: _limpiarFiltros,
+                        ),
+                        Expanded(
+                          child: CitasAgendaSection(
+                            citas: _filtrarCitasLocal(_citasAgenda),
+                            isCompact: isCompact,
+                            theme: _theme,
+                            dateFormat: _dateFormat,
+                            agendaDay: _agendaDay,
+                            agendaFocusedDay: _agendaFocusedDay,
+                            agendaCalendarFormat: _agendaCalendarFormat,
+                            agendaCalendarCollapsed: _agendaCalendarCollapsed,
+                            citasAgendaPorDia: _citasAgendaPorDia,
+                            onAgendaDaySelected: (selectedDay, focusedDay) {
+                              setState(() => _agendaFocusedDay = focusedDay);
+                              _seleccionarAgendaDay(selectedDay);
+                            },
+                            onPageChanged: (focusedDay) {
+                              setState(() => _agendaFocusedDay = focusedDay);
+                              _cargarCitasAgendaSemana();
+                            },
+                            onAgendaFormatChanged: (format) {
+                              if (_agendaCalendarFormat != format) {
+                                setState(() => _agendaCalendarFormat = format);
+                              }
+                            },
+                            onExpandCalendar: () => setState(
+                              () => _agendaCalendarCollapsed = false,
                             ),
+                            isLoading: _agendaLoading,
+                            scrollController: _agendaScrollController,
+                            colorEstado: _colorEstado,
+                            formatoHoraAgenda: _formatoHoraAgenda,
+                            formatoHorarioCita: _formatoHorarioCita,
+                            tituloCita: _tituloCita,
+                            nombrePaciente: _nombrePaciente,
+                            nombreMedico: _nombreMedico,
+                            iconoTipoCita: _iconoTipoCita,
+                            colorEspecialidad: _colorEspecialidad,
+                            onTapCita: (cita) =>
+                                () => _abrirCitaSegunEstado(cita),
+                            onRefresh: _refreshAgenda,
                           ),
-                    Positioned(
-                      bottom: 24,
-                      right: 24,
-                      child: FloatingActionButton(
-                        onPressed: () =>
-                            _abrirFormulario(fechaBase: _selectedDay),
-                        backgroundColor: _theme.primary,
-                        child: Icon(Icons.add, color: _theme.white),
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                );
-              },
-            ),
+                  ),
+                  Positioned(
+                    bottom: 24,
+                    right: 24,
+                    child: FloatingActionButton(
+                      onPressed: () =>
+                          _abrirFormulario(fechaBase: _selectedDay),
+                      backgroundColor: _theme.primary,
+                      child: Icon(Icons.add, color: _theme.white),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
-      );
+      ),
+    );
   }
 
   String _formatoHoraAgenda(DateTime? inicio, int hour) {
@@ -3897,7 +3858,8 @@ class _CitasPageState extends State<CitasPage> {
     final nacimiento = parsed.toLocal();
     final hoy = DateTime.now();
     var edad = hoy.year - nacimiento.year;
-    final aunNoCumple = (hoy.month < nacimiento.month) ||
+    final aunNoCumple =
+        (hoy.month < nacimiento.month) ||
         (hoy.month == nacimiento.month && hoy.day < nacimiento.day);
     if (aunNoCumple) edad -= 1;
     if (edad < 0) return '';
@@ -4005,11 +3967,14 @@ class _CitasPageState extends State<CitasPage> {
   }
 
   Future<void> _reprogramarCitaConConfirmacion(CitaMedica cita) async {
-    final nuevaFecha = await _seleccionarFechaHoraReprogramacion(cita.fechaInicio);
+    final nuevaFecha = await _seleccionarFechaHoraReprogramacion(
+      cita.fechaInicio,
+    );
     if (nuevaFecha == null) return;
     final confirmar = await _confirmarAccionSimple(
       titulo: 'Reprogramar cita',
-      mensaje: '¿Confirmas reprogramar la cita para ${_dateTimeFormat.format(nuevaFecha)}?',
+      mensaje:
+          '¿Confirmas reprogramar la cita para ${_dateTimeFormat.format(nuevaFecha)}?',
       accion: 'Sí, reprogramar',
     );
     if (!confirmar) return;
@@ -4017,7 +3982,8 @@ class _CitasPageState extends State<CitasPage> {
       await _service.reprogramarCita(cita.id, {
         'fechaInicio': nuevaFecha.toUtc().toIso8601String(),
         'tipoCita': cita.tipoCita,
-        if ((cita.servicioId ?? '').trim().isNotEmpty) 'idServicio': cita.servicioId,
+        if ((cita.servicioId ?? '').trim().isNotEmpty)
+          'idServicio': cita.servicioId,
       }),
       'No se pudo reprogramar la cita.',
     );
@@ -4027,7 +3993,6 @@ class _CitasPageState extends State<CitasPage> {
       if (_currentTabIndex == 2) await _cargarCitasListado();
     }
   }
-
 
   bool _citaYaIniciada(CitaMedica cita) {
     final fechaInicio = cita.fechaInicio;
@@ -4089,7 +4054,6 @@ class _CitasPageState extends State<CitasPage> {
       if (_currentTabIndex == 2) await _cargarCitasListado();
     }
   }
-
 
   Future<String?> _solicitarMotivoRechazo() async {
     final controller = TextEditingController();
@@ -4165,9 +4129,7 @@ class _CitasPageState extends State<CitasPage> {
                 TextFormField(
                   controller: detalleController,
                   maxLines: 2,
-                  decoration: const InputDecoration(
-                    labelText: 'Detalle',
-                  ),
+                  decoration: const InputDecoration(labelText: 'Detalle'),
                 ),
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
@@ -4223,13 +4185,21 @@ class _CitasPageState extends State<CitasPage> {
     final pacienteDocumento = _valorDetalle(cita.pacienteNroDocumento);
     final pacienteTelefono = _valorDetalle(cita.pacienteTelefono);
     final pacienteGenero = _valorDetalle(_formatearGenero(cita.pacienteGenero));
-    final pacienteFechaNacimiento =
-        _valorDetalle(_formatearFechaPaciente(cita.pacienteFechaNacimiento));
-    final pacienteEdad = _valorDetalle(_calcularEdadPaciente(cita.pacienteFechaNacimiento));
-    final especialidadNombre =
-        _valorDetalle(cita.especialidadNombre ?? cita.especialidadId);
-    final etiquetaPrestacion = _etiquetaPrestacion(cita.servicioTipo ?? cita.tipoCita);
-    final servicioNombre = _valorDetalle(cita.servicioNombre ?? cita.servicioId);
+    final pacienteFechaNacimiento = _valorDetalle(
+      _formatearFechaPaciente(cita.pacienteFechaNacimiento),
+    );
+    final pacienteEdad = _valorDetalle(
+      _calcularEdadPaciente(cita.pacienteFechaNacimiento),
+    );
+    final especialidadNombre = _valorDetalle(
+      cita.especialidadNombre ?? cita.especialidadId,
+    );
+    final etiquetaPrestacion = _etiquetaPrestacion(
+      cita.servicioTipo ?? cita.tipoCita,
+    );
+    final servicioNombre = _valorDetalle(
+      cita.servicioNombre ?? cita.servicioId,
+    );
     final servicioDuracion = cita.servicioDuracionMinutos;
     final lugarNombre = _valorDetalle(cita.lugarNombre ?? cita.lugarId);
     final lugarSigla = _valorDetalle(cita.lugarSigla);
@@ -4241,12 +4211,17 @@ class _CitasPageState extends State<CitasPage> {
     final especialidadColor = _colorEspecialidad(cita);
     final personalAsignado = _nombreMedico(cita);
 
-    final tieneDatosServicio = servicioNombre != null ||
+    final tieneDatosServicio =
+        servicioNombre != null ||
         especialidadNombre != null ||
         (servicioDuracion ?? 0) > 0;
     final tieneDatosLugar =
-        lugarNombre != null || lugarSigla != null || lugarTipo != null || lugarDireccion != null;
-    final tieneDatosPaciente = pacienteNombre.isNotEmpty ||
+        lugarNombre != null ||
+        lugarSigla != null ||
+        lugarTipo != null ||
+        lugarDireccion != null;
+    final tieneDatosPaciente =
+        pacienteNombre.isNotEmpty ||
         pacienteDocumento != null ||
         pacienteTelefono != null ||
         pacienteGenero != null ||
@@ -4254,42 +4229,39 @@ class _CitasPageState extends State<CitasPage> {
         pacienteEdad != null;
     final tienePersonalAsignado = personalAsignado.isNotEmpty;
 
-    final detallesPacienteDisponibles = <({
-      IconData icon,
-      String label,
-      String value,
-    })>[
-      if (pacienteTelefono != null)
-        (
-          icon: PhosphorIconsRegular.phone,
-          label: 'Teléfono',
-          value: pacienteTelefono,
-        ),
-      if (pacienteDocumento != null)
-        (
-          icon: PhosphorIconsRegular.identificationCard,
-          label: 'Documento',
-          value: pacienteDocumento,
-        ),
-      if (pacienteGenero != null)
-        (
-          icon: PhosphorIconsRegular.genderIntersex,
-          label: 'Género',
-          value: pacienteGenero,
-        ),
-      if (pacienteFechaNacimiento != null)
-        (
-          icon: PhosphorIconsRegular.cake,
-          label: 'Fecha nacimiento',
-          value: pacienteFechaNacimiento,
-        ),
-      if (pacienteEdad != null)
-        (
-          icon: PhosphorIconsRegular.hourglass,
-          label: 'Edad',
-          value: pacienteEdad,
-        ),
-    ];
+    final detallesPacienteDisponibles =
+        <({IconData icon, String label, String value})>[
+          if (pacienteTelefono != null)
+            (
+              icon: PhosphorIconsRegular.phone,
+              label: 'Teléfono',
+              value: pacienteTelefono,
+            ),
+          if (pacienteDocumento != null)
+            (
+              icon: PhosphorIconsRegular.identificationCard,
+              label: 'Documento',
+              value: pacienteDocumento,
+            ),
+          if (pacienteGenero != null)
+            (
+              icon: PhosphorIconsRegular.genderIntersex,
+              label: 'Género',
+              value: pacienteGenero,
+            ),
+          if (pacienteFechaNacimiento != null)
+            (
+              icon: PhosphorIconsRegular.cake,
+              label: 'Fecha nacimiento',
+              value: pacienteFechaNacimiento,
+            ),
+          if (pacienteEdad != null)
+            (
+              icon: PhosphorIconsRegular.hourglass,
+              label: 'Edad',
+              value: pacienteEdad,
+            ),
+        ];
     final detallePacienteVisible = detallesPacienteDisponibles.isNotEmpty
         ? detallesPacienteDisponibles.first
         : null;
@@ -4297,30 +4269,27 @@ class _CitasPageState extends State<CitasPage> {
         ? detallesPacienteDisponibles.sublist(1)
         : const <({IconData icon, String label, String value})>[];
     var mostrarMasPaciente = false;
-    final detallesServicioExtra = <({
-      IconData icon,
-      String label,
-      String value,
-    })>[
-      if (especialidadNombre != null)
-        (
-          icon: PhosphorIconsRegular.stethoscope,
-          label: 'Especialidad',
-          value: especialidadNombre,
-        ),
-      if ((servicioDuracion ?? 0) > 0)
-        (
-          icon: PhosphorIconsRegular.clock,
-          label: 'Duración ${etiquetaPrestacion.toLowerCase()}',
-          value: '${servicioDuracion!} min',
-        ),
-      if ((cita.servicioDescripcion ?? '').trim().isNotEmpty)
-        (
-          icon: PhosphorIconsRegular.note,
-          label: 'Descripción',
-          value: cita.servicioDescripcion!.trim(),
-        ),
-    ];
+    final detallesServicioExtra =
+        <({IconData icon, String label, String value})>[
+          if (especialidadNombre != null)
+            (
+              icon: PhosphorIconsRegular.stethoscope,
+              label: 'Especialidad',
+              value: especialidadNombre,
+            ),
+          if ((servicioDuracion ?? 0) > 0)
+            (
+              icon: PhosphorIconsRegular.clock,
+              label: 'Duración ${etiquetaPrestacion.toLowerCase()}',
+              value: '${servicioDuracion!} min',
+            ),
+          if ((cita.servicioDescripcion ?? '').trim().isNotEmpty)
+            (
+              icon: PhosphorIconsRegular.note,
+              label: 'Descripción',
+              value: cita.servicioDescripcion!.trim(),
+            ),
+        ];
     var mostrarMasServicio = false;
 
     final acciones = <_CitaDetalleAccion>[
@@ -4416,357 +4385,362 @@ class _CitasPageState extends State<CitasPage> {
             child: DecoratedBox(
               decoration: BoxDecoration(
                 color: Theme.of(context).scaffoldBackgroundColor,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 12, 6),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _tituloCita(cita),
-                              style: Theme.of(context).textTheme.titleLarge,
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        tooltip: 'Ver historial',
-                        onPressed: () => _mostrarHistorialCita(cita),
-                        icon: const Icon(Icons.history_outlined),
-                      ),
-                      IconButton(
-                        tooltip: 'Cerrar',
-                        onPressed: () => Navigator.of(context).pop(),
-                        icon: const Icon(Icons.close_rounded),
-                      ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 12, 6),
+                    child: Row(
                       children: [
-                        CitasEstadoBadge(
-                          estado: cita.estado,
-                          color: _colorEstado(cita.estado),
-                        ),
-                        if (especialidadNombre?.isNotEmpty ?? false)
-                          CitasEspecialidadTag(
-                            label: especialidadNombre!,
-                            color: especialidadColor,
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Flexible(
-                  fit: FlexFit.loose,
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CitasDetalleSection(
-                          title: '',
-                          theme: _theme,
-                          children: [
-                            CitasDetalleGrid(
-                              minItemWidth: 150,
-                              columns: 2,
-                              children: [
-                                CitasDetalleRow(
-                                  icon: PhosphorIconsRegular.calendar,
-                                  label: 'Fecha',
-                                  value: _formatoFechaCita(cita.fechaInicio),
-                                  theme: _theme,
-                                ),
-                                CitasDetalleRow(
-                                  icon: PhosphorIconsRegular.clock,
-                                  label: 'Hora',
-                                  value: _formatoHorarioCita(
-                                    cita.fechaInicio,
-                                    cita.fechaFin,
-                                  ),
-                                  theme: _theme,
-                                ),
-                              ],
-                            ),
-                            if (cita.detalle.trim().isNotEmpty)
-                              CitasDetalleRow(
-                                icon: PhosphorIconsRegular.note,
-                                label: 'Detalle',
-                                value: cita.detalle.trim(),
-                                theme: _theme,
-                              ),
-                          ],
-                        ),
-                        if (tieneDatosServicio)
-                          CitasDetalleSection(
-                            title: '',
-                            theme: _theme,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Stack(
-                                children: [
-                                  Padding(
-                                    padding: EdgeInsets.only(
-                                      right: detallesServicioExtra.isNotEmpty
-                                          ? 40
-                                          : 0,
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        if (servicioNombre != null)
-                                          CitasDetalleRow(
-                                            icon: PhosphorIconsRegular.testTube,
-                                            label: etiquetaPrestacion,
-                                            value: servicioNombre,
-                                            theme: _theme,
-                                          ),
-                                        if (mostrarMasServicio &&
-                                            detallesServicioExtra.isNotEmpty)
-                                          CitasDetalleGrid(
-                                            minItemWidth: 170,
-                                            columns: 2,
-                                            children: detallesServicioExtra
-                                                .map(
-                                                  (item) => CitasDetalleRow(
-                                                    icon: item.icon,
-                                                    label: item.label,
-                                                    value: item.value,
-                                                    theme: _theme,
-                                                  ),
-                                                )
-                                                .toList(),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                  if (detallesServicioExtra.isNotEmpty)
-                                    Positioned(
-                                      top: 0,
-                                      right: 0,
-                                      child: IconButton(
-                                        tooltip: mostrarMasServicio
-                                            ? 'Ver menos servicio'
-                                            : 'Ver más servicio',
-                                        visualDensity: VisualDensity.compact,
-                                        constraints: const BoxConstraints(
-                                          minWidth: 32,
-                                          minHeight: 32,
-                                        ),
-                                        padding: EdgeInsets.zero,
-                                        icon: Icon(
-                                          mostrarMasServicio
-                                              ? Icons.expand_less_rounded
-                                              : Icons.expand_more_rounded,
-                                          size: 20,
-                                        ),
-                                        onPressed: () {
-                                          setStateSheet(
-                                            () => mostrarMasServicio =
-                                                !mostrarMasServicio,
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                ],
+                              Text(
+                                _tituloCita(cita),
+                                style: Theme.of(context).textTheme.titleLarge,
                               ),
                             ],
                           ),
-                        if (tieneDatosLugar)
+                        ),
+                        IconButton(
+                          tooltip: 'Ver historial',
+                          onPressed: () => _mostrarHistorialCita(cita),
+                          icon: const Icon(Icons.history_outlined),
+                        ),
+                        IconButton(
+                          tooltip: 'Cerrar',
+                          onPressed: () => Navigator.of(context).pop(),
+                          icon: const Icon(Icons.close_rounded),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          CitasEstadoBadge(
+                            estado: cita.estado,
+                            color: _colorEstado(cita.estado),
+                          ),
+                          if (especialidadNombre?.isNotEmpty ?? false)
+                            CitasEspecialidadTag(
+                              label: especialidadNombre!,
+                              color: especialidadColor,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Flexible(
+                    fit: FlexFit.loose,
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           CitasDetalleSection(
                             title: '',
                             theme: _theme,
                             children: [
                               CitasDetalleGrid(
+                                minItemWidth: 110,
+                                columns: 2,
                                 children: [
-                                  if (lugarDisplay != null)
-                                    CitasDetalleRow(
-                                      icon: PhosphorIconsRegular.mapPin,
-                                      label: 'Lugar',
-                                      value: lugarDisplay,
-                                      theme: _theme,
+                                  CitasDetalleRow(
+                                    icon: PhosphorIconsRegular.calendar,
+                                    label: 'Fecha',
+                                    value: _formatoFechaCita(cita.fechaInicio),
+                                    theme: _theme,
+                                  ),
+                                  CitasDetalleRow(
+                                    icon: PhosphorIconsRegular.clock,
+                                    label: 'Hora',
+                                    value: _formatoHorarioCita(
+                                      cita.fechaInicio,
+                                      cita.fechaFin,
                                     ),
-                                  if (lugarTipo != null)
-                                    CitasDetalleRow(
-                                      icon: PhosphorIconsRegular.buildings,
-                                      label: 'Tipo',
-                                      value: lugarTipo,
-                                      theme: _theme,
-                                    ),
+                                    theme: _theme,
+                                  ),
                                 ],
                               ),
-                              if (lugarDireccion != null)
+                              if (cita.detalle.trim().isNotEmpty)
                                 CitasDetalleRow(
-                                  icon: PhosphorIconsRegular.mapTrifold,
-                                  label: 'Dirección',
-                                  value: lugarDireccion,
+                                  icon: PhosphorIconsRegular.note,
+                                  label: 'Detalle',
+                                  value: cita.detalle.trim(),
                                   theme: _theme,
                                 ),
                             ],
                           ),
-                        if (tieneDatosPaciente)
-                          CitasDetalleSection(
-                            title: '',
-                            theme: _theme,
-                            children: [
-                              Stack(
-                                children: [
-                                  Padding(
-                                    padding: EdgeInsets.only(
-                                      right: detallesPacienteExtra.isNotEmpty
-                                          ? 40
-                                          : 0,
+                          if (tieneDatosServicio)
+                            CitasDetalleSection(
+                              title: '',
+                              theme: _theme,
+                              children: [
+                                Stack(
+                                  children: [
+                                    Padding(
+                                      padding: EdgeInsets.only(
+                                        right: detallesServicioExtra.isNotEmpty
+                                            ? 40
+                                            : 0,
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          if (servicioNombre != null)
+                                            CitasDetalleRow(
+                                              icon:
+                                                  PhosphorIconsRegular.testTube,
+                                              label: etiquetaPrestacion,
+                                              value: servicioNombre,
+                                              theme: _theme,
+                                            ),
+                                          if (mostrarMasServicio &&
+                                              detallesServicioExtra.isNotEmpty)
+                                            CitasDetalleGrid(
+                                              minItemWidth: 170,
+                                              columns: 2,
+                                              children: detallesServicioExtra
+                                                  .map(
+                                                    (item) => CitasDetalleRow(
+                                                      icon: item.icon,
+                                                      label: item.label,
+                                                      value: item.value,
+                                                      theme: _theme,
+                                                    ),
+                                                  )
+                                                  .toList(),
+                                            ),
+                                        ],
+                                      ),
                                     ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        if (pacienteNombre.isNotEmpty)
-                                          CitasDetalleRow(
-                                            icon:
-                                                PhosphorIconsRegular.userCircle,
-                                            label: 'Paciente',
-                                            value: pacienteNombre,
-                                            theme: _theme,
+                                    if (detallesServicioExtra.isNotEmpty)
+                                      Positioned(
+                                        top: 0,
+                                        right: 0,
+                                        child: IconButton(
+                                          tooltip: mostrarMasServicio
+                                              ? 'Ver menos servicio'
+                                              : 'Ver más servicio',
+                                          visualDensity: VisualDensity.compact,
+                                          constraints: const BoxConstraints(
+                                            minWidth: 32,
+                                            minHeight: 32,
                                           ),
-                                        if (detallePacienteVisible != null)
-                                          CitasDetalleRow(
-                                            icon: detallePacienteVisible.icon,
-                                            label: detallePacienteVisible.label,
-                                            value: detallePacienteVisible.value,
-                                            theme: _theme,
+                                          padding: EdgeInsets.zero,
+                                          icon: Icon(
+                                            mostrarMasServicio
+                                                ? Icons.expand_less_rounded
+                                                : Icons.expand_more_rounded,
+                                            size: 20,
                                           ),
-                                        if (mostrarMasPaciente &&
-                                            detallesPacienteExtra.isNotEmpty)
-                                          CitasDetalleGrid(
-                                            minItemWidth: 170,
-                                            columns: 2,
-                                            children: detallesPacienteExtra
-                                                .map(
-                                                  (item) => CitasDetalleRow(
-                                                    icon: item.icon,
-                                                    label: item.label,
-                                                    value: item.value,
-                                                    theme: _theme,
-                                                  ),
-                                                )
-                                                .toList(),
-                                          ),
-                                      ],
-                                    ),
+                                          onPressed: () {
+                                            setStateSheet(
+                                              () => mostrarMasServicio =
+                                                  !mostrarMasServicio,
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          if (tieneDatosLugar)
+                            CitasDetalleSection(
+                              title: '',
+                              theme: _theme,
+                              children: [
+                                CitasDetalleGrid(
+                                  children: [
+                                    if (lugarDisplay != null)
+                                      CitasDetalleRow(
+                                        icon: PhosphorIconsRegular.mapPin,
+                                        label: 'Lugar',
+                                        value: lugarDisplay,
+                                        theme: _theme,
+                                      ),
+                                    if (lugarTipo != null)
+                                      CitasDetalleRow(
+                                        icon: PhosphorIconsRegular.buildings,
+                                        label: 'Tipo',
+                                        value: lugarTipo,
+                                        theme: _theme,
+                                      ),
+                                  ],
+                                ),
+                                if (lugarDireccion != null)
+                                  CitasDetalleRow(
+                                    icon: PhosphorIconsRegular.mapTrifold,
+                                    label: 'Dirección',
+                                    value: lugarDireccion,
+                                    theme: _theme,
                                   ),
-                                  if (detallesPacienteExtra.isNotEmpty)
-                                    Positioned(
-                                      top: 0,
-                                      right: 0,
-                                      child: IconButton(
-                                        tooltip: mostrarMasPaciente
-                                            ? 'Ver menos paciente'
-                                            : 'Ver más paciente',
-                                        visualDensity: VisualDensity.compact,
-                                        constraints: const BoxConstraints(
-                                          minWidth: 32,
-                                          minHeight: 32,
-                                        ),
-                                        padding: EdgeInsets.zero,
-                                        icon: Icon(
-                                          mostrarMasPaciente
-                                              ? Icons.expand_less_rounded
-                                              : Icons.expand_more_rounded,
-                                          size: 20,
-                                        ),
-                                        onPressed: () {
-                                          setStateSheet(
-                                            () => mostrarMasPaciente =
-                                                !mostrarMasPaciente,
-                                          );
-                                        },
+                              ],
+                            ),
+                          if (tieneDatosPaciente)
+                            CitasDetalleSection(
+                              title: '',
+                              theme: _theme,
+                              children: [
+                                Stack(
+                                  children: [
+                                    Padding(
+                                      padding: EdgeInsets.only(
+                                        right: detallesPacienteExtra.isNotEmpty
+                                            ? 40
+                                            : 0,
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          if (pacienteNombre.isNotEmpty)
+                                            CitasDetalleRow(
+                                              icon: PhosphorIconsRegular
+                                                  .userCircle,
+                                              label: 'Paciente',
+                                              value: pacienteNombre,
+                                              theme: _theme,
+                                            ),
+                                          if (detallePacienteVisible != null)
+                                            CitasDetalleRow(
+                                              icon: detallePacienteVisible.icon,
+                                              label:
+                                                  detallePacienteVisible.label,
+                                              value:
+                                                  detallePacienteVisible.value,
+                                              theme: _theme,
+                                            ),
+                                          if (mostrarMasPaciente &&
+                                              detallesPacienteExtra.isNotEmpty)
+                                            CitasDetalleGrid(
+                                              minItemWidth: 170,
+                                              columns: 2,
+                                              children: detallesPacienteExtra
+                                                  .map(
+                                                    (item) => CitasDetalleRow(
+                                                      icon: item.icon,
+                                                      label: item.label,
+                                                      value: item.value,
+                                                      theme: _theme,
+                                                    ),
+                                                  )
+                                                  .toList(),
+                                            ),
+                                        ],
                                       ),
                                     ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        if (tienePersonalAsignado)
-                          CitasDetalleSection(
-                            title: '',
-                            theme: _theme,
-                            children: [
-                              CitasDetalleRow(
-                                icon: PhosphorIconsRegular.stethoscope,
-                                label: 'Personal asignado',
-                                value: personalAsignado,
-                                theme: _theme,
-                              ),
-                            ],
-                          ),
-                        if (acciones.isNotEmpty) ...[
-                          const SizedBox(height: 12),
-                          Text(
-                            'Acciones',
-                            style: Theme.of(context).textTheme.titleMedium,
-                          ),
-                          const SizedBox(height: 10),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: acciones.map((accion) {
-                              final style = accion.isDestructive
-                                  ? OutlinedButton.styleFrom(
-                                      foregroundColor: Theme.of(
-                                        context,
-                                      ).colorScheme.error,
-                                      visualDensity: VisualDensity.compact,
-                                    )
-                                  : OutlinedButton.styleFrom(
-                                      visualDensity: VisualDensity.compact,
-                                    );
-                              return accion.isPrimary
-                                  ? FilledButton.icon(
-                                      style: FilledButton.styleFrom(
-                                        visualDensity: VisualDensity.compact,
+                                    if (detallesPacienteExtra.isNotEmpty)
+                                      Positioned(
+                                        top: 0,
+                                        right: 0,
+                                        child: IconButton(
+                                          tooltip: mostrarMasPaciente
+                                              ? 'Ver menos paciente'
+                                              : 'Ver más paciente',
+                                          visualDensity: VisualDensity.compact,
+                                          constraints: const BoxConstraints(
+                                            minWidth: 32,
+                                            minHeight: 32,
+                                          ),
+                                          padding: EdgeInsets.zero,
+                                          icon: Icon(
+                                            mostrarMasPaciente
+                                                ? Icons.expand_less_rounded
+                                                : Icons.expand_more_rounded,
+                                            size: 20,
+                                          ),
+                                          onPressed: () {
+                                            setStateSheet(
+                                              () => mostrarMasPaciente =
+                                                  !mostrarMasPaciente,
+                                            );
+                                          },
+                                        ),
                                       ),
-                                      onPressed: () async {
-                                        Navigator.of(context).pop();
-                                        await accion.onTap();
-                                      },
-                                      icon: Icon(accion.icon, size: 18),
-                                      label: Text(accion.label),
-                                    )
-                                  : OutlinedButton.icon(
-                                      style: style,
-                                      onPressed: () async {
-                                        if (accion.cierraModal) {
+                                  ],
+                                ),
+                              ],
+                            ),
+                          if (tienePersonalAsignado)
+                            CitasDetalleSection(
+                              title: '',
+                              theme: _theme,
+                              children: [
+                                CitasDetalleRow(
+                                  icon: PhosphorIconsRegular.stethoscope,
+                                  label: 'Personal asignado',
+                                  value: personalAsignado,
+                                  theme: _theme,
+                                ),
+                              ],
+                            ),
+                          if (acciones.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            Text(
+                              'Acciones',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 10),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: acciones.map((accion) {
+                                final style = accion.isDestructive
+                                    ? OutlinedButton.styleFrom(
+                                        foregroundColor: Theme.of(
+                                          context,
+                                        ).colorScheme.error,
+                                        visualDensity: VisualDensity.compact,
+                                      )
+                                    : OutlinedButton.styleFrom(
+                                        visualDensity: VisualDensity.compact,
+                                      );
+                                return accion.isPrimary
+                                    ? FilledButton.icon(
+                                        style: FilledButton.styleFrom(
+                                          visualDensity: VisualDensity.compact,
+                                        ),
+                                        onPressed: () async {
                                           Navigator.of(context).pop();
-                                        }
-                                        await accion.onTap();
-                                      },
-                                      icon: Icon(accion.icon, size: 18),
-                                      label: Text(accion.label),
-                                    );
-                            }).toList(),
-                          ),
+                                          await accion.onTap();
+                                        },
+                                        icon: Icon(accion.icon, size: 18),
+                                        label: Text(accion.label),
+                                      )
+                                    : OutlinedButton.icon(
+                                        style: style,
+                                        onPressed: () async {
+                                          if (accion.cierraModal) {
+                                            Navigator.of(context).pop();
+                                          }
+                                          await accion.onTap();
+                                        },
+                                        icon: Icon(accion.icon, size: 18),
+                                        label: Text(accion.label),
+                                      );
+                              }).toList(),
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
               ),
             ),
           ),
