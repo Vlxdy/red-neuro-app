@@ -34,6 +34,7 @@ class CitasAgendaSection extends StatelessWidget {
   final Color Function(CitaMedica cita) colorEspecialidad;
   final Color Function(String estado) colorEstado;
   final VoidCallback Function(CitaMedica cita) onTapCita;
+  final ValueChanged<int> onTapHora;
 
   const CitasAgendaSection({
     super.key,
@@ -62,6 +63,7 @@ class CitasAgendaSection extends StatelessWidget {
     required this.colorEspecialidad,
     required this.colorEstado,
     required this.onTapCita,
+    required this.onTapHora,
   });
 
   @override
@@ -194,6 +196,7 @@ class CitasAgendaSection extends StatelessWidget {
                     colorEspecialidad: colorEspecialidad,
                     colorEstado: colorEstado,
                     onTapCita: onTapCita,
+                    onTapHora: onTapHora,
                   ),
                 ),
         ),
@@ -364,6 +367,7 @@ class _AgendaTimeline extends StatelessWidget {
   final Color Function(CitaMedica cita) colorEspecialidad;
   final Color Function(String estado) colorEstado;
   final VoidCallback Function(CitaMedica cita) onTapCita;
+  final ValueChanged<int> onTapHora;
 
   const _AgendaTimeline({
     required this.citasPorHora,
@@ -380,6 +384,7 @@ class _AgendaTimeline extends StatelessWidget {
     required this.colorEspecialidad,
     required this.colorEstado,
     required this.onTapCita,
+    required this.onTapHora,
   });
 
   @override
@@ -434,7 +439,8 @@ class _AgendaTimeline extends StatelessWidget {
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.only(bottom: 16),
       itemCount: filas.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 2),
+      separatorBuilder: (_, _) =>
+          _DashedSeparator(color: theme.grey.withValues(alpha: 0.24)),
       itemBuilder: (context, index) {
         final fila = filas[index];
         final citas = fila.citas;
@@ -442,6 +448,7 @@ class _AgendaTimeline extends StatelessWidget {
           return _AgendaRow(
             label: fila.label,
             theme: theme,
+            onTapLabel: fila.hour == null ? null : () => onTapHora(fila.hour!),
             child: Text(
               'Sin citas',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -461,6 +468,9 @@ class _AgendaTimeline extends StatelessWidget {
                           ? formatoHorarioCita(citas[i].fechaInicio, citas[i].fechaFin)
                           : formatoHoraAgenda(citas[i].fechaInicio, fila.hour!)),
                 theme: theme,
+                onTapLabel: (i == 0 && fila.hour != null)
+                    ? () => onTapHora(fila.hour!)
+                    : null,
                 child: Padding(
                   padding: EdgeInsets.only(
                     bottom: i == citas.length - 1 ? 0 : 2,
@@ -490,11 +500,13 @@ class _AgendaRow extends StatelessWidget {
   final String label;
   final ThemeController theme;
   final Widget child;
+  final VoidCallback? onTapLabel;
 
   const _AgendaRow({
     required this.label,
     required this.theme,
     required this.child,
+    this.onTapLabel,
   });
 
   @override
@@ -505,19 +517,25 @@ class _AgendaRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 60,
+            width: 52,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  label,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: theme.primary,
+                InkWell(
+                  onTap: onTapLabel,
+                  borderRadius: BorderRadius.circular(6),
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 1, bottom: 5),
+                    child: Text(
+                      label,
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: theme.primary,
+                      ),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 6),
-                Container(height: 1, color: theme.grey.withValues(alpha: 0.2)),
               ],
             ),
           ),
@@ -525,6 +543,38 @@ class _AgendaRow extends StatelessWidget {
           Expanded(child: child),
         ],
       ),
+    );
+  }
+}
+
+class _DashedSeparator extends StatelessWidget {
+  final Color color;
+
+  const _DashedSeparator({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const dashWidth = 6.0;
+        const dashSpace = 4.0;
+        final dashCount = (constraints.maxWidth / (dashWidth + dashSpace))
+            .floor();
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(
+            dashCount,
+            (_) => SizedBox(
+              width: dashWidth,
+              child: Divider(
+                color: color,
+                height: 10,
+                thickness: 1,
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

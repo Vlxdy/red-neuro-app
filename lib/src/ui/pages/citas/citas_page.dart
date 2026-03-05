@@ -1076,7 +1076,19 @@ class _CitasPageState extends State<CitasPage> {
     DateTime? fechaInicio = cita?.fechaInicio;
     final baseSeleccionada = fechaBase ?? _selectedDay;
     if (cita == null && baseSeleccionada != null) {
-      fechaInicio ??= _resolveDefaultStartTime(baseSeleccionada);
+      final tieneHoraExplicita =
+          baseSeleccionada.hour != 0 || baseSeleccionada.minute != 0;
+      if (tieneHoraExplicita) {
+        fechaInicio ??= DateTime(
+          baseSeleccionada.year,
+          baseSeleccionada.month,
+          baseSeleccionada.day,
+          baseSeleccionada.hour,
+          baseSeleccionada.minute,
+        );
+      } else {
+        fechaInicio ??= _resolveDefaultStartTime(baseSeleccionada);
+      }
     }
     String? estado = cita?.estado;
     String tipoCita = (cita?.tipoCita?.isNotEmpty ?? false)
@@ -3839,6 +3851,15 @@ class _CitasPageState extends State<CitasPage> {
                             colorEspecialidad: _colorEspecialidad,
                             onTapCita: (cita) =>
                                 () => _abrirCitaSegunEstado(cita),
+                            onTapHora: (hour) {
+                              final fechaBase = DateTime(
+                                _agendaDay.year,
+                                _agendaDay.month,
+                                _agendaDay.day,
+                                hour,
+                              );
+                              _abrirFormulario(fechaBase: fechaBase);
+                            },
                             onRefresh: _refreshAgenda,
                           ),
                         ),
