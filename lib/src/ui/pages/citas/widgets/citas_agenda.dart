@@ -517,7 +517,7 @@ class _AgendaRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 52,
+            width: 35,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
