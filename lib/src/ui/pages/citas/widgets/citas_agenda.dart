@@ -21,7 +21,7 @@ class CitasAgendaSection extends StatelessWidget {
   onAgendaDaySelected;
   final ValueChanged<DateTime> onPageChanged;
   final ValueChanged<CalendarFormat> onAgendaFormatChanged;
-  final VoidCallback onExpandCalendar;
+  final VoidCallback onToggleDailyInfoRibbon;
   final bool isLoading;
   final Future<void> Function() onRefresh;
   final ScrollController? scrollController;
@@ -50,7 +50,7 @@ class CitasAgendaSection extends StatelessWidget {
     required this.onAgendaDaySelected,
     required this.onPageChanged,
     required this.onAgendaFormatChanged,
-    required this.onExpandCalendar,
+    required this.onToggleDailyInfoRibbon,
     required this.isLoading,
     required this.onRefresh,
     required this.scrollController,
@@ -95,29 +95,29 @@ class CitasAgendaSection extends StatelessWidget {
       citasPorHora.putIfAbsent(inicio.hour, () => []).add(cita);
     }
 
-    final header = GestureDetector(
-      onTap: agendaCalendarCollapsed ? onExpandCalendar : null,
-      child: Wrap(
-        spacing: 12,
-        runSpacing: 12,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          SizedBox(
-            width: isCompact ? double.infinity : 320,
-            child: _AgendaWeekCalendar(
-              theme: theme,
-              agendaFocusedDay: agendaFocusedDay,
-              agendaDay: agendaDay,
-              agendaCalendarFormat: agendaCalendarFormat,
-              isCollapsed: agendaCalendarCollapsed,
-              citasAgendaPorDia: citasAgendaPorDia,
-              onAgendaDaySelected: onAgendaDaySelected,
-              onPageChanged: onPageChanged,
-              onAgendaFormatChanged: onAgendaFormatChanged,
-            ),
+    final header = Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        SizedBox(
+          width: isCompact ? double.infinity : 320,
+          child: _AgendaWeekCalendar(
+            theme: theme,
+            agendaFocusedDay: agendaFocusedDay,
+            agendaDay: agendaDay,
+            agendaCalendarFormat: agendaCalendarFormat,
+            isCollapsed: agendaCalendarCollapsed,
+            citasAgendaPorDia: citasAgendaPorDia,
+            onAgendaDaySelected: onAgendaDaySelected,
+            onPageChanged: onPageChanged,
+            onAgendaFormatChanged: onAgendaFormatChanged,
           ),
-          SizedBox(
-            width: double.infinity,
+        ),
+        SizedBox(
+          width: double.infinity,
+          child: GestureDetector(
+            onTap: onToggleDailyInfoRibbon,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               decoration: BoxDecoration(
@@ -161,8 +161,8 @@ class CitasAgendaSection extends StatelessWidget {
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
 
     return Column(

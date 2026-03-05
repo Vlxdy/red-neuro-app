@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:red_neuro_app/src/config/service_config.dart';
@@ -127,7 +126,6 @@ class _CitasPageState extends State<CitasPage> {
     _buscarController = TextEditingController();
     _medicoFiltroController = TextEditingController();
     _service = CitasService(context);
-    _agendaScrollController.addListener(_handleAgendaScroll);
     _socketClient = _CitasSocketClient(
       onCreated: _onSocketCreated,
       onEstadoActualizado: _onSocketEstadoActualizado,
@@ -143,9 +141,7 @@ class _CitasPageState extends State<CitasPage> {
     _medicoFiltroController.dispose();
     _filtersScrollController.dispose();
     _listScrollController.dispose();
-    _agendaScrollController
-      ..removeListener(_handleAgendaScroll)
-      ..dispose();
+    _agendaScrollController.dispose();
     _socketClient.dispose();
     super.dispose();
   }
@@ -755,16 +751,8 @@ class _CitasPageState extends State<CitasPage> {
     return _DateRange(start: firstDay, end: lastDay);
   }
 
-  void _handleAgendaScroll() {
-    if (!_agendaScrollController.hasClients) return;
-    final position = _agendaScrollController.position;
-    final direction = position.userScrollDirection;
-    if (direction == ScrollDirection.reverse && !_agendaCalendarCollapsed) {
-      setState(() => _agendaCalendarCollapsed = true);
-    } else if (_agendaCalendarCollapsed &&
-        position.pixels <= position.minScrollExtent + 1) {
-      setState(() => _agendaCalendarCollapsed = false);
-    }
+  void _toggleAgendaCalendarCollapsed() {
+    setState(() => _agendaCalendarCollapsed = !_agendaCalendarCollapsed);
   }
 
   Future<void> _refreshAgenda() async {
@@ -3836,9 +3824,8 @@ class _CitasPageState extends State<CitasPage> {
                                 setState(() => _agendaCalendarFormat = format);
                               }
                             },
-                            onExpandCalendar: () => setState(
-                              () => _agendaCalendarCollapsed = false,
-                            ),
+                            onToggleDailyInfoRibbon:
+                                _toggleAgendaCalendarCollapsed,
                             isLoading: _agendaLoading,
                             scrollController: _agendaScrollController,
                             colorEstado: _colorEstado,
