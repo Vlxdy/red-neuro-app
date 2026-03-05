@@ -1155,6 +1155,7 @@ class _CitasPageState extends State<CitasPage> {
     Timer? pacientesDebounce;
     Timer? medicosDebounce;
     Timer? lugaresDebounce;
+    bool mostrarMasDatosPaciente = false;
     bool inicializado = false;
     if ((cita?.pacienteId ?? '').trim().isNotEmpty) {
       pacienteSeleccionado = Paciente(
@@ -1530,6 +1531,7 @@ class _CitasPageState extends State<CitasPage> {
               if (seleccion == null) return;
               setStateDialog(() {
                 pacienteSeleccionado = seleccion;
+                mostrarMasDatosPaciente = false;
                 pacienteAutocompleteController.text = seleccion.nombreCompleto;
               });
               pacienteFieldKey.currentState?.didChange(seleccion);
@@ -2299,6 +2301,7 @@ class _CitasPageState extends State<CitasPage> {
                         if (nuevo == null) return;
                         setStateDialog(() {
                           pacienteSeleccionado = nuevo;
+                          mostrarMasDatosPaciente = false;
                           pacienteAutocompleteController.text =
                               nuevo.nombreCompleto;
                           pacientesDisponibles.insert(0, nuevo);
@@ -2309,57 +2312,248 @@ class _CitasPageState extends State<CitasPage> {
                       label: const Text('Registrar paciente'),
                     ),
                   ] else ...[
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: _theme.primary.withValues(alpha: .08),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: _theme.primary.withValues(alpha: .2),
-                        ),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                  pacienteSeleccionado!.nombreCompleto,
-                                  style: Theme.of(context).textTheme.titleSmall,
+                    Builder(
+                      builder: (context) {
+                        final paciente = pacienteSeleccionado!;
+                        final telefono = (paciente.telefono ?? '').trim();
+                        final documento = (paciente.nroDocumento ?? '').trim();
+                        final edad = _calcularEdadPaciente(
+                          paciente.fechaNacimiento,
+                        );
+                        final nacimiento = _formatearFechaPaciente(
+                          paciente.fechaNacimiento,
+                        );
+                        final genero = _formatearGenero(paciente.genero).trim();
+
+                        final detallesPrioritarios = <({
+                          IconData icon,
+                          String label,
+                          String value,
+                        })>[
+                          if (paciente.nombreCompleto.trim().isNotEmpty)
+                            (
+                              icon: Icons.person_outline,
+                              label: 'Paciente',
+                              value: paciente.nombreCompleto.trim(),
+                            ),
+                          if (telefono.isNotEmpty)
+                            (
+                              icon: Icons.phone_outlined,
+                              label: 'Teléfono',
+                              value: telefono,
+                            ),
+                          if (documento.isNotEmpty)
+                            (
+                              icon: Icons.badge_outlined,
+                              label: 'Documento',
+                              value: documento,
+                            ),
+                          if (edad.isNotEmpty)
+                            (
+                              icon: Icons.access_time_outlined,
+                              label: 'Edad',
+                              value: edad,
+                            ),
+                          if (nacimiento.isNotEmpty)
+                            (
+                              icon: Icons.cake_outlined,
+                              label: 'Nacimiento',
+                              value: nacimiento,
+                            ),
+                          if (genero.isNotEmpty)
+                            (
+                              icon: Icons.wc_outlined,
+                              label: 'Género',
+                              value: genero,
+                            ),
+                        ];
+
+                        final detallesExtras = <({
+                          IconData icon,
+                          String label,
+                          String value,
+                        })>[
+                          ...detallesPrioritarios.skip(3),
+                          if ((paciente.observacion ?? '').trim().isNotEmpty)
+                            (
+                              icon: Icons.sticky_note_2_outlined,
+                              label: 'Observaciones',
+                              value: paciente.observacion!.trim(),
+                            ),
+                        ];
+
+                        final detallesVisibles =
+                            detallesPrioritarios.take(3).toList();
+
+                        return Stack(
+                          children: [
+                            Container(
+                              width: double.infinity,
+                              padding: EdgeInsets.fromLTRB(
+                                12,
+                                12,
+                                detallesExtras.isNotEmpty ? 44 : 12,
+                                8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _theme.primary.withValues(alpha: .08),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: _theme.primary.withValues(alpha: .2),
                                 ),
                               ),
-                              IconButton(
-                                tooltip: 'Cambiar paciente',
-                                onPressed: () {
-                                  setStateDialog(() {
-                                    pacienteSeleccionado = null;
-                                    pacienteAutocompleteController.clear();
-                                  });
-                                },
-                                icon: const Icon(Icons.swap_horiz),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Wrap(
+                                    spacing: 12,
+                                    runSpacing: 8,
+                                    children: [
+                                      ...detallesVisibles.map(
+                                        (item) => SizedBox(
+                                          width: 190,
+                                          child: Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Icon(
+                                                item.icon,
+                                                size: 16,
+                                                color: _theme.grey,
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Expanded(
+                                                child: RichText(
+                                                  text: TextSpan(
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodySmall,
+                                                    children: [
+                                                      TextSpan(
+                                                        text: '${item.label}: ',
+                                                        style: const TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                      ),
+                                                      TextSpan(text: item.value),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  if (mostrarMasDatosPaciente &&
+                                      detallesExtras.isNotEmpty) ...[
+                                    const SizedBox(height: 8),
+                                    Wrap(
+                                      spacing: 12,
+                                      runSpacing: 8,
+                                      children: detallesExtras
+                                          .map(
+                                            (item) => SizedBox(
+                                              width: 190,
+                                              child: Row(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Icon(
+                                                    item.icon,
+                                                    size: 16,
+                                                    color: _theme.grey,
+                                                  ),
+                                                  const SizedBox(width: 6),
+                                                  Expanded(
+                                                    child: RichText(
+                                                      text: TextSpan(
+                                                        style: Theme.of(context)
+                                                            .textTheme
+                                                            .bodySmall,
+                                                        children: [
+                                                          TextSpan(
+                                                            text:
+                                                                '${item.label}: ',
+                                                            style:
+                                                                const TextStyle(
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w600,
+                                                                ),
+                                                          ),
+                                                          TextSpan(
+                                                            text: item.value,
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          )
+                                          .toList(),
+                                    ),
+                                  ],
+                                ],
                               ),
-                            ],
-                          ),
-                          if ((pacienteSeleccionado!.nroDocumento ?? '')
-                              .trim()
-                              .isNotEmpty)
-                            Text(
-                              'Documento: ${pacienteSeleccionado!.nroDocumento}',
                             ),
-                          if ((pacienteSeleccionado!.telefono ?? '')
-                              .trim()
-                              .isNotEmpty)
-                            Text('Teléfono: ${pacienteSeleccionado!.telefono}'),
-                          if ((pacienteSeleccionado!.genero ?? '')
-                              .trim()
-                              .isNotEmpty)
-                            Text(
-                              'Género: ${_formatearGenero(pacienteSeleccionado!.genero)}',
+                            Positioned(
+                              top: 0,
+                              right: 0,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (detallesExtras.isNotEmpty)
+                                    IconButton(
+                                      tooltip: mostrarMasDatosPaciente
+                                          ? 'Ver menos paciente'
+                                          : 'Ver más paciente',
+                                      visualDensity: VisualDensity.compact,
+                                      constraints: const BoxConstraints(
+                                        minWidth: 32,
+                                        minHeight: 32,
+                                      ),
+                                      padding: EdgeInsets.zero,
+                                      icon: Icon(
+                                        mostrarMasDatosPaciente
+                                            ? Icons.expand_less_rounded
+                                            : Icons.expand_more_rounded,
+                                        size: 20,
+                                      ),
+                                      onPressed: () {
+                                        setStateDialog(
+                                          () => mostrarMasDatosPaciente =
+                                              !mostrarMasDatosPaciente,
+                                        );
+                                      },
+                                    ),
+                                  IconButton(
+                                    tooltip: 'Cambiar paciente',
+                                    visualDensity: VisualDensity.compact,
+                                    constraints: const BoxConstraints(
+                                      minWidth: 32,
+                                      minHeight: 32,
+                                    ),
+                                    padding: EdgeInsets.zero,
+                                    icon: const Icon(Icons.swap_horiz),
+                                    onPressed: () {
+                                      setStateDialog(() {
+                                        pacienteSeleccionado = null;
+                                        mostrarMasDatosPaciente = false;
+                                        pacienteAutocompleteController.clear();
+                                      });
+                                    },
+                                  ),
+                                ],
+                              ),
                             ),
-                        ],
-                      ),
+                          ],
+                        );
+                      },
                     ),
                   ],
                   const SizedBox(height: 12),
