@@ -2666,11 +2666,34 @@ class _CitasPageState extends State<CitasPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                Text(
-                                  cita == null
-                                      ? 'Registro de cita'
-                                      : 'Actualizar cita',
-                                  style: Theme.of(context).textTheme.titleLarge,
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        cita == null
+                                            ? 'Registro de cita'
+                                            : 'Actualizar cita',
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.titleLarge,
+                                      ),
+                                    ),
+                                    if (cita?.estado == 'RECHAZADA')
+                                      IconButton(
+                                        tooltip: 'Ver historial',
+                                        onPressed: () =>
+                                            _mostrarHistorialCita(cita!),
+                                        icon: const Icon(
+                                          Icons.history_outlined,
+                                        ),
+                                      ),
+                                    IconButton(
+                                      tooltip: 'Cerrar',
+                                      onPressed: () =>
+                                          Navigator.pop(context, false),
+                                      icon: const Icon(Icons.close_rounded),
+                                    ),
+                                  ],
                                 ),
                                 const SizedBox(height: 12),
                                 buildFormularioCompleto(),
@@ -2739,6 +2762,17 @@ class _CitasPageState extends State<CitasPage> {
                                                 );
                                             if (accion == null) return;
                                             accionFormulario = accion;
+                                          } else if (cita.estado ==
+                                              'RECHAZADA') {
+                                            final confirmar =
+                                                await _confirmarAccionSimple(
+                                                  titulo: 'Confirmar envío',
+                                                  mensaje:
+                                                      'Se enviarán los cambios de la cita rechazada para nueva revisión.',
+                                                  accion: 'Confirmar',
+                                                );
+                                            if (!confirmar) return;
+                                            accionFormulario = 'ENVIAR';
                                           }
                                           if (!context.mounted) return;
                                           Navigator.pop(context, true);
@@ -2748,6 +2782,9 @@ class _CitasPageState extends State<CitasPage> {
                                               ? 'Crear cita'
                                               : (cita.estado == 'BORRADOR'
                                                     ? 'Guardar'
+                                                    : cita.estado ==
+                                                          'RECHAZADA'
+                                                    ? 'Confirmar'
                                                     : 'Actualizar cita'),
                                         ),
                                       ),
@@ -2865,6 +2902,40 @@ class _CitasPageState extends State<CitasPage> {
         );
         if (!ok) return;
       }
+    } else if (estadoActual == 'RECHAZADA') {
+      final updates = <String, dynamic>{};
+      if (cambioDetalle) updates['detalle'] = detalle;
+      if (cambioMedico) updates['idMedico'] = medicoId;
+      if (cambioPaciente) {
+        updates['idPaciente'] = pacienteId.isEmpty ? null : pacienteId;
+      }
+      if (cambioEspecialidad) {
+        updates['idEspecialidad'] = especialidadId;
+      }
+      if (cambioTipoCita) updates['tipoCita'] = tipoCita;
+      if (cambioLugar) {
+        updates['idLugar'] = lugarId.isEmpty ? null : lugarId;
+      }
+      if (cambioServicio) {
+        updates['idServicio'] = servicioSeleccionado?.id;
+      }
+      if (cambioFecha) {
+        updates['fechaInicio'] = fechaInicio!.toUtc().toIso8601String();
+      }
+
+      if (updates.isNotEmpty) {
+        final ok = await _handleResponseError(
+          await _service.editarBorradorCita(cita.id, updates),
+          'No se pudo actualizar la cita rechazada.',
+        );
+        if (!ok) return;
+      }
+
+      final ok = await _handleResponseError(
+        await _service.enviarCita(cita.id, idMedico: medicoId),
+        'No se pudo enviar la cita.',
+      );
+      if (!ok) return;
     } else if (estadoActual == 'SOLICITADA') {
       if (cambioMedico ||
           cambioPaciente ||
@@ -4750,7 +4821,7 @@ class _CitasPageState extends State<CitasPage> {
   }
 
   Future<void> _abrirCitaSegunEstado(CitaMedica cita) async {
-    if (cita.estado == 'BORRADOR') {
+    if (cita.estado == 'BORRADOR' || cita.estado == 'RECHAZADA') {
       _abrirFormulario(cita: cita);
       return;
     }
