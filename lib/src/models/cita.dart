@@ -27,6 +27,7 @@ class CitaMedica {
   final String? servicioDescripcion;
   final String? servicioTipo;
   final int? servicioDuracionMinutos;
+  final String? idUsuarioProgramo;
 
   String get medicoId => idPersonal;
   String? get medicoNombre => personalNombre;
@@ -60,6 +61,7 @@ class CitaMedica {
     required this.servicioDescripcion,
     required this.servicioTipo,
     required this.servicioDuracionMinutos,
+    required this.idUsuarioProgramo,
   });
 
   factory CitaMedica.fromJson(Map<String, dynamic> jsonRaw) {
@@ -177,6 +179,8 @@ class CitaMedica {
       servicioDuracionMinutos: servicioRaw is Map<String, dynamic>
           ? _parseInt(servicioRaw['duracionMinutos'] ?? servicioRaw['duracion'])
           : _parseInt(json['servicioDuracionMinutos'] ?? json['duracionMinutos']),
+      idUsuarioProgramo:
+          (json['idUsuarioProgramo'] ?? json['usuarioProgramoId'] ?? json['creadoPor'] ?? json['createdBy'])?.toString(),
     );
   }
 
@@ -209,6 +213,7 @@ class CitaMedica {
     String? servicioDescripcion,
     String? servicioTipo,
     int? servicioDuracionMinutos,
+    String? idUsuarioProgramo,
   }) {
     return CitaMedica(
       id: id ?? this.id,
@@ -243,6 +248,7 @@ class CitaMedica {
       servicioTipo: servicioTipo ?? this.servicioTipo,
       servicioDuracionMinutos:
           servicioDuracionMinutos ?? this.servicioDuracionMinutos,
+      idUsuarioProgramo: idUsuarioProgramo ?? this.idUsuarioProgramo,
     );
   }
 
