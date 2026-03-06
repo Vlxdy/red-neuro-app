@@ -59,7 +59,7 @@ class CitasPage extends StatefulWidget {
   State<CitasPage> createState() => _CitasPageState();
 }
 
-class _CitasPageState extends State<CitasPage> {
+class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   static const _soloMisCitasPreferenceKey = 'citas_solo_mis_asignadas';
   final ThemeController _theme = ThemeController.instance;
   late final CitasService _service;
@@ -125,6 +125,7 @@ class _CitasPageState extends State<CitasPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     final now = DateTime.now();
     _focusedDay = DateTime(now.year, now.month, now.day);
     _selectedDay = _focusedDay;
@@ -147,6 +148,7 @@ class _CitasPageState extends State<CitasPage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _buscarController.dispose();
     _medicoFiltroController.dispose();
     _estadoFiltroController.dispose();
@@ -156,6 +158,21 @@ class _CitasPageState extends State<CitasPage> {
     _agendaScrollController.dispose();
     _socketClient.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_restaurarConexionSocketYRecargar());
+    }
+  }
+
+  Future<void> _restaurarConexionSocketYRecargar() async {
+    await _socketClient.ensureConnected();
+    if (!mounted) return;
+    await _cargarCitasAgendaSemana();
+    if (!mounted) return;
+    await _cargarCitasAgendaDay(day: _agendaDay);
   }
 
   Future<void> _cargarInicial() async {
@@ -1572,14 +1589,21 @@ class _CitasSocketClient {
   });
 
   Future<void> connect() async {
-    if (_socket != null) return;
+    if (_socket != null) {
+      if (_socket!.connected != true) {
+        _socket!.connect();
+      }
+      return;
+    }
     final token = await Auth.instance.apiToken;
     _socket = io.io(
       '${Constantes.sockets}/citas',
       io.OptionBuilder()
           .setTransports(['websocket'])
           .setAuth({'token': token})
-          .setReconnectionAttempts(0)
+          .setReconnectionAttempts(20)
+          .setReconnectionDelay(1000)
+          .setReconnectionDelayMax(5000)
           .setTimeout(5000)
           .disableAutoConnect()
           .build(),
@@ -1608,6 +1632,12 @@ class _CitasSocketClient {
     _socket!.on('citas:cancelada', onCancelada);
 
     _socket!.connect();
+  }
+
+  Future<void> ensureConnected() async {
+    if (_socket == null || _socket!.connected != true) {
+      await connect();
+    }
   }
 
   void dispose() {

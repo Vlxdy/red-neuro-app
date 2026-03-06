@@ -12,7 +12,12 @@ class SocketService {
 
   /// Conecta el socket usando el userId
   void connect(String userId) {
-    if (_socket != null) return;
+    if (_socket != null) {
+      if (_socket!.connected != true) {
+        _socket!.connect();
+      }
+      return;
+    }
 
     _socket = io.io(
       Constantes.sockets,
@@ -20,7 +25,9 @@ class SocketService {
           .setTransports(['websocket'])
           .setPath(Constantes.socketPath)
           .setQuery({'userId': userId})
-          .setReconnectionAttempts(0)
+          .setReconnectionAttempts(20)
+          .setReconnectionDelay(1000)
+          .setReconnectionDelayMax(5000)
           .setTimeout(5000)
           .disableAutoConnect()
           .build(),
