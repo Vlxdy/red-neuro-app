@@ -258,25 +258,11 @@ class CitasService extends ServiceConfig {
     }
   }
 
-  Future<ResponseApi> actualizarCita(
-    String id,
-    Map<String, dynamic> body,
-  ) async {
-    return fetch('/citas/$id', type: HttpProtocol.patch, body: body);
-  }
-
   Future<ResponseApi> editarBorradorCita(
     String id,
     Map<String, dynamic> body,
   ) async {
     return fetch('/citas/$id/editar-borrador', type: HttpProtocol.patch, body: body);
-  }
-
-  Future<ResponseApi> ajustarSolicitadaCita(
-    String id,
-    Map<String, dynamic> body,
-  ) async {
-    return fetch('/citas/$id/ajustar-solicitada', type: HttpProtocol.patch, body: body);
   }
 
   Future<ResponseApi> enviarCita(
