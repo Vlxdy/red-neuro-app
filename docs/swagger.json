@@ -2026,6 +2026,7 @@
     },
     "/citas/mis-citas": {
       "get": {
+        "deprecated": true,
         "operationId": "CitasController_listarMisCitas",
         "parameters": [
           {
