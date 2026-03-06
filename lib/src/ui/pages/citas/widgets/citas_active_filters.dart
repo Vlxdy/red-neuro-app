@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/active_filter_chip.dart';
 
@@ -8,13 +7,11 @@ class CitasActiveFiltersRibbon extends StatelessWidget {
   final String buscarTexto;
   final String? estadoFiltro;
   final String? medicoFiltroNombre;
-  final DateTime? fechaInicioFiltro;
-  final DateTime? fechaFinFiltro;
-  final DateFormat formatter;
+  final String? lugarFiltroNombre;
   final VoidCallback onClearBuscar;
   final VoidCallback onClearEstado;
   final VoidCallback onClearMedico;
-  final VoidCallback onClearRango;
+  final VoidCallback onClearLugar;
   final VoidCallback onClearAll;
 
   const CitasActiveFiltersRibbon({
@@ -23,13 +20,11 @@ class CitasActiveFiltersRibbon extends StatelessWidget {
     required this.buscarTexto,
     required this.estadoFiltro,
     required this.medicoFiltroNombre,
-    required this.fechaInicioFiltro,
-    required this.fechaFinFiltro,
-    required this.formatter,
+    required this.lugarFiltroNombre,
     required this.onClearBuscar,
     required this.onClearEstado,
     required this.onClearMedico,
-    required this.onClearRango,
+    required this.onClearLugar,
     required this.onClearAll,
   });
 
@@ -37,8 +32,7 @@ class CitasActiveFiltersRibbon extends StatelessWidget {
     return buscarTexto.trim().isNotEmpty ||
         (estadoFiltro?.isNotEmpty ?? false) ||
         (medicoFiltroNombre?.isNotEmpty ?? false) ||
-        fechaInicioFiltro != null ||
-        fechaFinFiltro != null;
+        (lugarFiltroNombre?.isNotEmpty ?? false);
   }
 
   @override
@@ -62,19 +56,17 @@ class CitasActiveFiltersRibbon extends StatelessWidget {
     if (medicoFiltroNombre?.isNotEmpty ?? false) {
       chips.add(
         ActiveFilterChip(
-          label: 'Médico: $medicoFiltroNombre',
+          label: 'Personal asignado: $medicoFiltroNombre',
           onRemove: onClearMedico,
         ),
       );
     }
-    if (fechaInicioFiltro != null || fechaFinFiltro != null) {
-      final inicio = fechaInicioFiltro != null
-          ? formatter.format(fechaInicioFiltro!)
-          : '--';
-      final fin =
-          fechaFinFiltro != null ? formatter.format(fechaFinFiltro!) : '--';
+    if (lugarFiltroNombre?.isNotEmpty ?? false) {
       chips.add(
-        ActiveFilterChip(label: 'Rango: $inicio → $fin', onRemove: onClearRango),
+        ActiveFilterChip(
+          label: 'Lugar: $lugarFiltroNombre',
+          onRemove: onClearLugar,
+        ),
       );
     }
 

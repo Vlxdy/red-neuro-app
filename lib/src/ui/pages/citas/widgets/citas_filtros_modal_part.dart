@@ -9,138 +9,124 @@ extension _CitasPageFiltrosModalPart on _CitasPageState {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom,
-            ),
+        return AnimatedPadding(
+          duration: const Duration(milliseconds: 160),
+          curve: Curves.easeOut,
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: SafeArea(
             child: StatefulBuilder(
               builder: (context, setStateModal) {
                 return Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            'Filtros',
-                            style: Theme.of(context).textTheme.titleMedium,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxHeight: MediaQuery.sizeOf(context).height * 0.62,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'Filtros',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const Spacer(),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Cerrar'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxHeight: MediaQuery.sizeOf(context).height * 0.4,
                           ),
-                          const Spacer(),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: const Text('Cerrar'),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      SizedBox(
-                        height: 320,
-                        child: Scrollbar(
-                          controller: _filtersScrollController,
-                          child: SingleChildScrollView(
+                          child: Scrollbar(
                             controller: _filtersScrollController,
-                            child: CitasFiltersFields(
-                              isCompact: true,
-                              buscarController: _buscarController,
-                              onBuscarChanged: (value) {
-                                setState(() => _buscarTexto = value);
-                                setStateModal(() {});
-                              },
-                              estadoFiltro: _estadoFiltro,
-                              onEstadoChanged: (value) {
-                                setState(() => _estadoFiltro = value);
-                                setStateModal(() {});
-                              },
-                              mostrarFiltroMedico: widget.mostrarFiltroMedico,
-                              medicoController: _medicoFiltroController,
-                              medicoIdSeleccionado: _medicoFiltro,
-                              bloquearFiltroMedico:
-                                  _bloquearFiltroMedicoPorSoloMisCitas,
-                              etiquetaMedicoBloqueado: _nombreMedicoActual,
-                              onTapMedico: () async {
-                                await _abrirSelectorMedicoFiltro();
-                                setStateModal(() {});
-                              },
-                              onClearMedico: () {
-                                setState(() {
-                                  _medicoFiltro = null;
-                                  _medicoFiltroNombre = null;
-                                  _medicoFiltroController.clear();
-                                });
-                                setStateModal(() {});
-                              },
-                              fechaInicio: _fechaInicioFiltro,
-                              fechaFin: _fechaFinFiltro,
-                              formatter: _dateFormat,
-                              onTapFechaInicio: () =>
-                                  _seleccionarFecha(inicio: true),
-                              onTapFechaFin: () =>
-                                  _seleccionarFecha(inicio: false),
+                            child: SingleChildScrollView(
+                              controller: _filtersScrollController,
+                              child: CitasFiltersFields(
+                                isCompact: true,
+                                buscarController: _buscarController,
+                                onBuscarChanged: (value) {
+                                  setState(() => _buscarTexto = value);
+                                  setStateModal(() {});
+                                },
+                                estadoController: _estadoFiltroController,
+                                onTapEstado: () async {
+                                  await _abrirSelectorEstadoFiltro();
+                                  setStateModal(() {});
+                                },
+                                mostrarFiltroMedico: widget.mostrarFiltroMedico,
+                                personalAsignadoController:
+                                    _medicoFiltroController,
+                                personalAsignadoIdSeleccionado: _medicoFiltro,
+                                bloquearFiltroPersonalAsignado:
+                                    _bloquearFiltroMedicoPorSoloMisCitas,
+                                etiquetaPersonalAsignadoBloqueado:
+                                    _nombreMedicoActual,
+                                onTapPersonalAsignado: () async {
+                                  await _abrirSelectorMedicoFiltro();
+                                  setStateModal(() {});
+                                },
+                                onClearPersonalAsignado: () {
+                                  setState(() {
+                                    _medicoFiltro = null;
+                                    _medicoFiltroNombre = null;
+                                    _medicoFiltroController.clear();
+                                  });
+                                  setStateModal(() {});
+                                },
+                                lugarController: _lugarFiltroController,
+                                lugarIdSeleccionado: _lugarFiltro,
+                                onTapLugar: () async {
+                                  await _abrirSelectorLugarFiltro();
+                                  setStateModal(() {});
+                                },
+                                onClearLugar: () {
+                                  setState(() {
+                                    _lugarFiltro = null;
+                                    _lugarFiltroNombre = null;
+                                    _lugarFiltroController.clear();
+                                  });
+                                  setStateModal(() {});
+                                },
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-                      if (_bloquearFiltroMedicoPorSoloMisCitas)
-                        Container(
-                          width: double.infinity,
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: _theme.primary.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: _theme.primary.withValues(alpha: 0.35),
-                            ),
-                          ),
+                        const SizedBox(height: 12),
+                        SafeArea(
+                          top: false,
                           child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              Icon(
-                                Icons.verified_user_rounded,
-                                color: _theme.primary,
+                              TextButton(
+                                onPressed: () {
+                                  _limpiarFiltros();
+                                  setStateModal(() {});
+                                },
+                                child: const Text('Limpiar'),
                               ),
                               const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  'Modo activo: solo mis citas • $_nombreMedicoActual',
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.w500,
-                                        color: _theme.primary,
-                                      ),
-                                ),
+                              ElevatedButton.icon(
+                                onPressed: () {
+                                  _aplicarFiltros();
+                                  Navigator.pop(context);
+                                },
+                                icon: const Icon(Icons.sync),
+                                label: const Text('Aplicar'),
                               ),
                             ],
                           ),
                         ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton(
-                            onPressed: () {
-                              _limpiarFiltros();
-                              setStateModal(() {});
-                            },
-                            child: const Text('Limpiar'),
-                          ),
-                          const SizedBox(width: 8),
-                          ElevatedButton.icon(
-                            onPressed: () {
-                              _aplicarFiltros();
-                              Navigator.pop(context);
-                            },
-                            icon: const Icon(Icons.sync),
-                            label: const Text('Aplicar'),
-                          ),
-                        ],
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               },
@@ -150,6 +136,4 @@ extension _CitasPageFiltrosModalPart on _CitasPageState {
       },
     );
   }
-
-
 }
