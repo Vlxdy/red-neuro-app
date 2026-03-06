@@ -117,19 +117,57 @@ class CitasAgendaSection extends StatelessWidget {
                 onPageChanged: onPageChanged,
                 onAgendaFormatChanged: onAgendaFormatChanged,
               ),
-              if (isCalendarLoading)
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: SizedBox(
-                    height: 14,
-                    width: 14,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: theme.primary.withValues(alpha: 0.7),
+              Positioned(
+                top: 2,
+                left: 116,
+                child: IgnorePointer(
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeInOut,
+                    opacity: isCalendarLoading ? 1 : 0,
+                    child: AnimatedScale(
+                      duration: const Duration(milliseconds: 180),
+                      curve: Curves.easeOutCubic,
+                      scale: isCalendarLoading ? 1 : 0.95,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: theme.bgCard.withValues(alpha: 0.92),
+                          borderRadius: BorderRadius.circular(99),
+                          border: Border.all(
+                            color: theme.primary.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              height: 10,
+                              width: 10,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: theme.primary.withValues(alpha: 0.8),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Actualizando',
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
+                                    color: theme.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),
+              ),
             ],
           ),
         ),
@@ -190,34 +228,85 @@ class CitasAgendaSection extends StatelessWidget {
         header,
         const SizedBox(height: 16),
         Expanded(
-          child: isLoading
-              ? Center(
-                  child: SizedBox(
-                    height: 28,
-                    width: 28,
-                    child: CircularProgressIndicator(color: theme.primary),
-                  ),
-                )
-              : RefreshIndicator(
-                  onRefresh: onRefresh,
-                  child: _AgendaTimeline(
-                    citasPorHora: citasPorHora,
-                    citasAntesDeLasOcho: citasAntesDeLasOcho,
-                    citasDespuesDeLasVeinte: citasDespuesDeLasVeinte,
-                    theme: theme,
-                    scrollController: scrollController,
-                    formatoHoraAgenda: formatoHoraAgenda,
-                    formatoHorarioCita: formatoHorarioCita,
-                    tituloCita: tituloCita,
-                    nombreMedico: nombreMedico,
-                    nombrePaciente: nombrePaciente,
-                    iconoTipoCita: iconoTipoCita,
-                    colorEspecialidad: colorEspecialidad,
-                    colorEstado: colorEstado,
-                    onTapCita: onTapCita,
-                    onTapHora: onTapHora,
+          child: Stack(
+            children: [
+              RefreshIndicator(
+                onRefresh: onRefresh,
+                child: _AgendaTimeline(
+                  citasPorHora: citasPorHora,
+                  citasAntesDeLasOcho: citasAntesDeLasOcho,
+                  citasDespuesDeLasVeinte: citasDespuesDeLasVeinte,
+                  theme: theme,
+                  scrollController: scrollController,
+                  formatoHoraAgenda: formatoHoraAgenda,
+                  formatoHorarioCita: formatoHorarioCita,
+                  tituloCita: tituloCita,
+                  nombreMedico: nombreMedico,
+                  nombrePaciente: nombrePaciente,
+                  iconoTipoCita: iconoTipoCita,
+                  colorEspecialidad: colorEspecialidad,
+                  colorEstado: colorEstado,
+                  onTapCita: onTapCita,
+                  onTapHora: onTapHora,
+                ),
+              ),
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: AnimatedOpacity(
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeInOut,
+                    opacity: isLoading ? 1 : 0,
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: Container(
+                        margin: const EdgeInsets.only(top: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: theme.bgCard.withValues(alpha: 0.94),
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(
+                            color: theme.primary.withValues(alpha: 0.2),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: theme.grey.withValues(alpha: 0.16),
+                              blurRadius: 10,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              height: 12,
+                              width: 12,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: theme.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Cargando agenda...',
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
+                                    color: theme.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
                 ),
+              ),
+            ],
+          ),
         ),
       ],
     );
