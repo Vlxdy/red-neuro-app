@@ -1928,19 +1928,19 @@
         "parameters": [
           {
             "name": "fechaInicio",
-            "required": true,
+            "required": false,
             "in": "query",
-            "description": "Fecha de inicio del rango (ISO)",
+            "description": "Fecha de inicio (ISO)",
             "schema": {
-              "example": "2024-06-01T00:00:00Z",
+              "example": "2024-06-01T08:00:00Z",
               "type": "string"
             }
           },
           {
             "name": "fechaFin",
-            "required": true,
+            "required": false,
             "in": "query",
-            "description": "Fecha de fin del rango (ISO)",
+            "description": "Fecha de fin (ISO)",
             "schema": {
               "example": "2024-06-30T23:59:59Z",
               "type": "string"
@@ -1950,7 +1950,7 @@
             "name": "idMedico",
             "required": false,
             "in": "query",
-            "description": "Identificador del médico para filtrar la cantidad",
+            "description": "Identificador del médico",
             "schema": {
               "example": "12",
               "type": "string"
@@ -1960,7 +1960,7 @@
             "name": "idLugar",
             "required": false,
             "in": "query",
-            "description": "Identificador del lugar para filtrar la cantidad",
+            "description": "Identificador del lugar",
             "schema": {
               "example": "2",
               "type": "string"
@@ -1970,7 +1970,7 @@
             "name": "estado",
             "required": false,
             "in": "query",
-            "description": "Filtrar por estado de la cita",
+            "description": "Filtrar por estado",
             "schema": {
               "type": "string",
               "enum": [
