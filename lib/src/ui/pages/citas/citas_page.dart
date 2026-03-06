@@ -90,6 +90,8 @@ class _CitasPageState extends State<CitasPage> {
   String _buscarTexto = '';
   late final TextEditingController _buscarController;
   late final TextEditingController _medicoFiltroController;
+  late final TextEditingController _estadoFiltroController;
+  late final TextEditingController _lugarFiltroController;
   final ScrollController _filtersScrollController = ScrollController();
   final ScrollController _listScrollController = ScrollController();
   final ScrollController _agendaScrollController = ScrollController();
@@ -97,8 +99,8 @@ class _CitasPageState extends State<CitasPage> {
   String? _estadoFiltro;
   String? _medicoFiltro;
   String? _medicoFiltroNombre;
-  DateTime? _fechaInicioFiltro;
-  DateTime? _fechaFinFiltro;
+  String? _lugarFiltro;
+  String? _lugarFiltroNombre;
   int _listPage = 1;
   int _listLimit = 10;
   int _listTotal = 0;
@@ -131,6 +133,8 @@ class _CitasPageState extends State<CitasPage> {
     _agendaFocusedDay = _agendaDay;
     _buscarController = TextEditingController();
     _medicoFiltroController = TextEditingController();
+    _estadoFiltroController = TextEditingController(text: _estadoLabelNatural(null));
+    _lugarFiltroController = TextEditingController();
     _service = CitasService(context);
     _socketClient = _CitasSocketClient(
       onCreated: _onSocketCreated,
@@ -145,6 +149,8 @@ class _CitasPageState extends State<CitasPage> {
   void dispose() {
     _buscarController.dispose();
     _medicoFiltroController.dispose();
+    _estadoFiltroController.dispose();
+    _lugarFiltroController.dispose();
     _filtersScrollController.dispose();
     _listScrollController.dispose();
     _agendaScrollController.dispose();
@@ -261,12 +267,6 @@ class _CitasPageState extends State<CitasPage> {
         filtros['idMedico'] = medicoId;
       }
     }
-    if (_fechaInicioFiltro != null) {
-      filtros['fechaInicio'] = _fechaInicioFiltro!.toUtc().toIso8601String();
-    }
-    if (_fechaFinFiltro != null) {
-      filtros['fechaFin'] = _fechaFinFiltro!.toUtc().toIso8601String();
-    }
     return filtros;
   }
 
@@ -288,6 +288,9 @@ class _CitasPageState extends State<CitasPage> {
     }
     if (_medicoFiltro != null && _medicoFiltro!.isNotEmpty) {
       filtros['idMedico'] = _medicoFiltro!;
+    }
+    if (_lugarFiltro != null && _lugarFiltro!.isNotEmpty) {
+      filtros['idLugar'] = _lugarFiltro!;
     }
 
     return filtros;
@@ -619,21 +622,66 @@ class _CitasPageState extends State<CitasPage> {
     ]);
   }
 
-  Future<void> _seleccionarFecha({required bool inicio}) async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2100),
-    );
-    if (picked == null) return;
 
+
+  String _estadoLabelNatural(String? estado) {
+    if (estado == null || estado.trim().isEmpty) return 'Todos';
+    const etiquetas = {
+      'BORRADOR': 'Borrador',
+      'SOLICITADA': 'Solicitada',
+      'CONFIRMADA': 'Confirmada',
+      'COMPLETADA': 'Completada',
+      'NO_ASISTIO': 'No asistió',
+      'CANCELADA': 'Cancelada',
+      'RECHAZADA': 'Rechazada',
+      'REPROGRAMADA': 'Reprogramada',
+    };
+    return etiquetas[estado] ??
+        estado
+            .toLowerCase()
+            .split('_')
+            .where((segmento) => segmento.isNotEmpty)
+            .map(
+              (segmento) =>
+                  '${segmento[0].toUpperCase()}${segmento.substring(1)}',
+            )
+            .join(' ');
+  }
+
+  Future<void> _abrirSelectorEstadoFiltro() async {
+    final seleccionado = await showModalBottomSheet<String?>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        final opciones = <String?>[null, ...CitaEstado.values];
+        return SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.sizeOf(context).height * 0.7,
+            ),
+            child: ListView.builder(
+              shrinkWrap: true,
+              itemCount: opciones.length,
+              itemBuilder: (context, index) {
+                final estado = opciones[index];
+                final seleccionadoActual = _estadoFiltro == estado;
+                return ListTile(
+                  title: Text(_estadoLabelNatural(estado)),
+                  trailing: seleccionadoActual
+                      ? Icon(Icons.check_rounded, color: _theme.primary)
+                      : null,
+                  onTap: () => Navigator.pop(context, estado),
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+    if (!mounted) return;
     setState(() {
-      if (inicio) {
-        _fechaInicioFiltro = picked;
-      } else {
-        _fechaFinFiltro = picked;
-      }
+      _estadoFiltro = seleccionado;
+      _estadoFiltroController.text = _estadoLabelNatural(seleccionado);
     });
   }
 
@@ -650,7 +698,10 @@ class _CitasPageState extends State<CitasPage> {
   }
 
   void _limpiarFiltroEstado() {
-    setState(() => _estadoFiltro = null);
+    setState(() {
+      _estadoFiltro = null;
+      _estadoFiltroController.text = _estadoLabelNatural(null);
+    });
     _aplicarFiltrosTrasCambiosRapidos();
   }
 
@@ -663,24 +714,29 @@ class _CitasPageState extends State<CitasPage> {
     _aplicarFiltrosTrasCambiosRapidos();
   }
 
-  void _limpiarFiltroRango() {
+  void _limpiarFiltroLugar() {
     setState(() {
-      _fechaInicioFiltro = null;
-      _fechaFinFiltro = null;
+      _lugarFiltro = null;
+      _lugarFiltroNombre = null;
+      _lugarFiltroController.clear();
     });
     _aplicarFiltrosTrasCambiosRapidos();
   }
 
+
+
   void _limpiarFiltros() {
     setState(() {
       _estadoFiltro = null;
+      _estadoFiltroController.text = _estadoLabelNatural(null);
       _medicoFiltro = null;
       _medicoFiltroNombre = null;
-      _fechaInicioFiltro = null;
-      _fechaFinFiltro = null;
+      _lugarFiltro = null;
+      _lugarFiltroNombre = null;
       _buscarTexto = '';
       _buscarController.clear();
       _medicoFiltroController.clear();
+      _lugarFiltroController.clear();
       _listPage = 1;
     });
     _cargarCitasAgendaSemana();
@@ -819,15 +875,13 @@ class _CitasPageState extends State<CitasPage> {
                         CitasActiveFiltersRibbon(
                           theme: _theme,
                           buscarTexto: _buscarTexto,
-                          estadoFiltro: _estadoFiltro,
+                          estadoFiltro: _estadoFiltro == null ? null : _estadoLabelNatural(_estadoFiltro),
                           medicoFiltroNombre: _medicoFiltroNombre,
-                          fechaInicioFiltro: _fechaInicioFiltro,
-                          fechaFinFiltro: _fechaFinFiltro,
-                          formatter: _dateFormat,
+                          lugarFiltroNombre: _lugarFiltroNombre,
                           onClearBuscar: _limpiarFiltroBuscar,
                           onClearEstado: _limpiarFiltroEstado,
                           onClearMedico: _limpiarFiltroMedico,
-                          onClearRango: _limpiarFiltroRango,
+                          onClearLugar: _limpiarFiltroLugar,
                           onClearAll: _limpiarFiltros,
                         ),
                         Expanded(

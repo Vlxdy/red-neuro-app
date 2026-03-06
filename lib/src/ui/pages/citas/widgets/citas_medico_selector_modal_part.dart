@@ -159,4 +159,158 @@ extension _CitasPageMedicoSelectorModalPart on _CitasPageState {
   }
 
 
+  Future<void> _abrirSelectorLugarFiltro() async {
+    final List<Lugar> lugaresDisponibles = [];
+    bool lugaresLoading = false;
+    bool lugaresHasMore = true;
+    int lugaresPage = 1;
+    String lugaresFiltro = '';
+    Timer? lugaresDebounce;
+
+    Future<void> cargarLugares({
+      required bool reset,
+      VoidCallback? onUpdated,
+    }) async {
+      if (lugaresLoading) return;
+      lugaresLoading = true;
+      onUpdated?.call();
+      if (reset) {
+        lugaresPage = 1;
+        lugaresHasMore = true;
+        lugaresDisponibles.clear();
+      }
+      final result = await _service.obtenerLugares(
+        page: lugaresPage,
+        limit: 10,
+        filtro: lugaresFiltro,
+      );
+      if (!mounted) return;
+      if (result.items.isNotEmpty) {
+        lugaresDisponibles.addAll(result.items);
+      }
+      lugaresHasMore = lugaresDisponibles.length < result.total;
+      lugaresPage += 1;
+      lugaresLoading = false;
+      onUpdated?.call();
+    }
+
+    await cargarLugares(reset: true);
+    if (!mounted) return;
+
+    final seleccionado = await showModalBottomSheet<Lugar>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        final searchController = TextEditingController(text: lugaresFiltro);
+        return StatefulBuilder(
+          builder: (context, setStateSheet) {
+            Future<void> cargar({required bool reset}) async {
+              await cargarLugares(
+                reset: reset,
+                onUpdated: () => setStateSheet(() {}),
+              );
+            }
+
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: SafeArea(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                      child: Text(
+                        'Selecciona lugar',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: TextField(
+                        controller: searchController,
+                        decoration: const InputDecoration(
+                          labelText: 'Buscar lugar',
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (value) {
+                          lugaresFiltro = value;
+                          lugaresDebounce?.cancel();
+                          lugaresDebounce = Timer(
+                            const Duration(milliseconds: 300),
+                            () => cargar(reset: true),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Flexible(
+                      child: Builder(
+                        builder: (context) {
+                          if (lugaresDisponibles.isEmpty && lugaresLoading) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          }
+                          if (lugaresDisponibles.isEmpty) {
+                            return const Center(child: Text('Sin resultados'));
+                          }
+                          return ListView.builder(
+                            shrinkWrap: true,
+                            itemCount:
+                                lugaresDisponibles.length +
+                                (lugaresHasMore ? 1 : 0),
+                            itemBuilder: (context, index) {
+                              if (index == lugaresDisponibles.length &&
+                                  lugaresHasMore) {
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8,
+                                  ),
+                                  child: Center(
+                                    child: TextButton.icon(
+                                      onPressed: lugaresLoading
+                                          ? null
+                                          : () => cargar(reset: false),
+                                      icon: const Icon(Icons.expand_more),
+                                      label: const Text('Cargar más'),
+                                    ),
+                                  ),
+                                );
+                              }
+                              final option = lugaresDisponibles[index];
+                              return ListTile(
+                                title: Text(option.nombre),
+                                subtitle: option.direccion.trim().isNotEmpty
+                                    ? Text(option.direccion)
+                                    : null,
+                                onTap: () => Navigator.pop(context, option),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    lugaresDebounce?.cancel();
+    if (seleccionado == null) return;
+    setState(() {
+      _lugarFiltro = seleccionado.id;
+      _lugarFiltroNombre = seleccionado.nombre;
+      _lugarFiltroController.text = seleccionado.nombre;
+    });
+  }
+
+
 }
