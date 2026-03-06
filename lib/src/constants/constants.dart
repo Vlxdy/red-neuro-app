@@ -11,7 +11,10 @@ class Constantes {
   static const appId = 'bo.gob.agetic.lince2';
   // static final mapsApiUrl = dotenv.get('MAPS_API_URL');
   // static final mapsApiKey = dotenv.get('MAPS_API_KEY');
-  static final sockets = dotenv.get('SOCKETS');
+  static final String sockets = dotenv.get('SOCKETS');
+
+  static final String socketPath = dotenv.get('SOCKET_PATH');
+
   static int get chatMaxFiles {
     final raw = dotenv.maybeGet('CHAT_MAX_FILES');
     return int.tryParse(raw ?? '') ?? 5;
