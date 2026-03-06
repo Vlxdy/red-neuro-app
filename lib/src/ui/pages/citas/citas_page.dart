@@ -137,6 +137,7 @@ class _CitasPageState extends State<CitasPage> {
     _service = CitasService(context);
     _socketClient = _CitasSocketClient(
       onCreated: _onSocketCreated,
+      onActualizada: _onSocketActualizada,
       onEstadoActualizado: _onSocketEstadoActualizado,
       onReprogramada: _onSocketReprogramada,
       onCancelada: _onSocketCancelada,
@@ -351,7 +352,7 @@ class _CitasPageState extends State<CitasPage> {
   void _onSocketCreated(dynamic data) {
     final cita = _parseSocketCita(data);
     if (cita == null) return;
-    _upsertCita(cita);
+    _syncSocketCita(cita);
     unawaited(_recargarConteoCitasCalendario());
   }
 
@@ -360,7 +361,7 @@ class _CitasPageState extends State<CitasPage> {
       final id = (data['id'] ?? data['citaId'] ?? '').toString();
       final estado = (data['estado'] ?? '').toString();
       if (id.isEmpty) return;
-      _actualizarCitaLocal(
+      _patchSocketCitaById(
         id,
         (cita) =>
             cita.copyWith(estado: estado.isNotEmpty ? estado : cita.estado),
@@ -370,22 +371,29 @@ class _CitasPageState extends State<CitasPage> {
     }
     final cita = _parseSocketCita(data);
     if (cita != null) {
-      _upsertCita(cita);
+      _syncSocketCita(cita);
       unawaited(_recargarConteoCitasCalendario());
     }
+  }
+
+  void _onSocketActualizada(dynamic data) {
+    final cita = _parseSocketCita(data);
+    if (cita == null) return;
+    _syncSocketCita(cita);
+    unawaited(_recargarConteoCitasCalendario());
   }
 
   void _onSocketReprogramada(dynamic data) {
     final cita = _parseSocketCita(data);
     if (cita != null) {
-      _upsertCita(cita);
+      _syncSocketCita(cita);
       unawaited(_recargarConteoCitasCalendario());
       return;
     }
     if (data is Map<String, dynamic>) {
       final id = (data['id'] ?? '').toString();
       if (id.isEmpty) return;
-      _actualizarCitaLocal(
+      _patchSocketCitaById(
         id,
         (cita) => cita.copyWith(
           fechaInicio: _parseDate(data['fechaInicio']),
@@ -400,98 +408,211 @@ class _CitasPageState extends State<CitasPage> {
     if (data is Map<String, dynamic>) {
       final id = (data['id'] ?? '').toString();
       if (id.isEmpty) return;
-      _actualizarCitaLocal(id, (cita) => cita.copyWith(estado: 'CANCELADA'));
+      _patchSocketCitaById(id, (cita) => cita.copyWith(estado: 'CANCELADA'));
       unawaited(_recargarConteoCitasCalendario());
       return;
     }
     final cita = _parseSocketCita(data);
     if (cita != null) {
-      _upsertCita(cita.copyWith(estado: 'CANCELADA'));
+      _syncSocketCita(cita.copyWith(estado: 'CANCELADA'));
       unawaited(_recargarConteoCitasCalendario());
     }
   }
 
   CitaMedica? _parseSocketCita(dynamic data) {
-    if (data is Map<String, dynamic>) {
-      return CitaMedica.fromJson(data);
+    final map = _normalizeSocketMap(data);
+    if (map != null) {
+      return CitaMedica.fromJson(map);
     }
     return null;
   }
 
-  void _upsertCita(CitaMedica cita) {
+  Map<String, dynamic>? _normalizeSocketMap(dynamic data) {
+    if (data is! Map) return null;
+    return data.map(
+      (key, value) => MapEntry(key.toString(), value),
+    );
+  }
+
+  void _syncSocketCita(CitaMedica cita) {
     setState(() {
-      _citasCalendario = _upsertCitaEnLista(_citasCalendario, cita);
-      _citasListado = _upsertCitaEnLista(_citasListado, cita);
-      _citasAgenda = _upsertAgendaList(_citasAgenda, cita);
+      _citasCalendario = _upsertOrRemoveCitaEnLista(
+        _citasCalendario,
+        cita,
+        _shouldIncludeInCalendario,
+      );
+      _citasListado = _upsertOrRemoveCitaEnLista(
+        _citasListado,
+        cita,
+        _shouldIncludeInListado,
+      );
+      _citasAgenda = _upsertOrRemoveCitaEnAgenda(_citasAgenda, cita);
     });
   }
 
-  void _actualizarCitaLocal(
+  void _patchSocketCitaById(
     String id,
     CitaMedica Function(CitaMedica) updater,
   ) {
     setState(() {
-      _citasCalendario = _actualizarCitaEnLista(_citasCalendario, id, updater);
-      _citasListado = _actualizarCitaEnLista(_citasListado, id, updater);
-      _citasAgenda = _actualizarAgendaList(_citasAgenda, id, updater);
+      _citasCalendario = _actualizarCitaConFiltro(
+        _citasCalendario,
+        id,
+        updater,
+        _shouldIncludeInCalendario,
+      );
+      _citasListado = _actualizarCitaConFiltro(
+        _citasListado,
+        id,
+        updater,
+        _shouldIncludeInListado,
+      );
+      _citasAgenda = _actualizarAgendaConFiltro(_citasAgenda, id, updater);
     });
   }
 
-  List<CitaMedica> _upsertAgendaList(List<CitaMedica> lista, CitaMedica cita) {
+  bool _matchesBaseSocketFilters(CitaMedica cita) {
+    final estado = cita.estado.trim();
+    if (_estadoFiltro != null && _estadoFiltro!.isNotEmpty && estado != _estadoFiltro) {
+      return false;
+    }
+
+    final medicoFiltro = (_medicoFiltro?.isNotEmpty ?? false)
+        ? _medicoFiltro!
+        : _usarSoloMisCitas
+        ? (Auth.instance.profile.idUsuarioRol ?? '')
+        : '';
+
+    if (medicoFiltro.isNotEmpty && cita.idPersonal != medicoFiltro) {
+      return false;
+    }
+
+    if ((_lugarFiltro?.isNotEmpty ?? false) && cita.lugarId != _lugarFiltro) {
+      return false;
+    }
+
+    if ((estado == 'BORRADOR' || estado == 'RECHAZADA') && !_canViewRestrictedDraftStatus(cita)) {
+      return false;
+    }
+
+    return true;
+  }
+
+  bool _canViewRestrictedDraftStatus(CitaMedica cita) {
+    if (Auth.instance.profile.esSupervisor) return true;
+    final idUsuarioRol = (Auth.instance.profile.idUsuarioRol ?? '').trim();
+    if (idUsuarioRol.isEmpty) return false;
+    final idCreador = (cita.idUsuarioProgramo ?? '').trim();
+    return idCreador.isNotEmpty && idCreador == idUsuarioRol;
+  }
+
+  bool _isInCalendarRange(CitaMedica cita) {
     final fecha = cita.fechaInicio;
+    if (fecha == null) return false;
+    final range = _resolveCalendarRange();
+    return !fecha.isBefore(range.start) && !fecha.isAfter(range.end);
+  }
+
+  bool _shouldIncludeInCalendario(CitaMedica cita) {
+    return _matchesBaseSocketFilters(cita) && _isInCalendarRange(cita);
+  }
+
+  bool _shouldIncludeInListado(CitaMedica cita) {
+    return _matchesBaseSocketFilters(cita);
+  }
+
+  bool _shouldIncludeInAgenda(CitaMedica cita) {
+    if (!_matchesBaseSocketFilters(cita)) return false;
+    final fecha = cita.fechaInicio;
+    return fecha != null && isSameDay(fecha, _agendaDay);
+  }
+
+  List<CitaMedica> _upsertOrRemoveCitaEnLista(
+    List<CitaMedica> lista,
+    CitaMedica cita,
+    bool Function(CitaMedica cita) shouldInclude,
+  ) {
+    final include = shouldInclude(cita);
     final index = lista.indexWhere((item) => item.id == cita.id);
-    final mismaFecha = fecha != null && isSameDay(fecha, _agendaDay);
-    if (!mismaFecha) {
+
+    if (!include) {
       if (index < 0) return lista;
       final updated = [...lista]..removeAt(index);
       return updated;
     }
+
     if (index >= 0) {
       final updated = [...lista];
       updated[index] = cita;
       return updated;
     }
-    return [...lista, cita];
-  }
 
-  List<CitaMedica> _actualizarAgendaList(
-    List<CitaMedica> lista,
-    String id,
-    CitaMedica Function(CitaMedica) updater,
-  ) {
-    final index = lista.indexWhere((item) => item.id == id);
-    if (index < 0) return lista;
-    final updated = [...lista];
-    updated[index] = updater(lista[index]);
-    final fecha = updated[index].fechaInicio;
-    if (fecha == null || !isSameDay(fecha, _agendaDay)) {
-      updated.removeAt(index);
-    }
-    return updated;
-  }
-
-  List<CitaMedica> _upsertCitaEnLista(List<CitaMedica> lista, CitaMedica cita) {
-    final index = lista.indexWhere((item) => item.id == cita.id);
-    if (index >= 0) {
-      final updated = [...lista];
-      updated[index] = cita;
-      return updated;
-    }
     if (_currentTabIndex == 2 && _listPage > 1) {
       return lista;
     }
+
     return [cita, ...lista];
   }
 
-  List<CitaMedica> _actualizarCitaEnLista(
+  List<CitaMedica> _upsertOrRemoveCitaEnAgenda(List<CitaMedica> lista, CitaMedica cita) {
+    final index = lista.indexWhere((item) => item.id == cita.id);
+    final include = _shouldIncludeInAgenda(cita);
+
+    if (!include) {
+      if (index < 0) return lista;
+      final updated = [...lista]..removeAt(index);
+      return updated;
+    }
+
+    if (index >= 0) {
+      final updated = [...lista];
+      updated[index] = cita;
+      return updated;
+    }
+
+    return [...lista, cita];
+  }
+
+  List<CitaMedica> _actualizarCitaConFiltro(
+    List<CitaMedica> lista,
+    String id,
+    CitaMedica Function(CitaMedica) updater,
+    bool Function(CitaMedica cita) shouldInclude,
+  ) {
+    final index = lista.indexWhere((item) => item.id == id);
+    if (index < 0) return lista;
+
+    final updatedCita = updater(lista[index]);
+    final include = shouldInclude(updatedCita);
+    final updated = [...lista];
+
+    if (!include) {
+      updated.removeAt(index);
+      return updated;
+    }
+
+    updated[index] = updatedCita;
+    return updated;
+  }
+
+  List<CitaMedica> _actualizarAgendaConFiltro(
     List<CitaMedica> lista,
     String id,
     CitaMedica Function(CitaMedica) updater,
   ) {
     final index = lista.indexWhere((item) => item.id == id);
     if (index < 0) return lista;
+
+    final updatedCita = updater(lista[index]);
+    final include = _shouldIncludeInAgenda(updatedCita);
     final updated = [...lista];
-    updated[index] = updater(lista[index]);
+
+    if (!include) {
+      updated.removeAt(index);
+      return updated;
+    }
+
+    updated[index] = updatedCita;
     return updated;
   }
 
@@ -1437,12 +1558,14 @@ class _CitasSocketClient {
   final ValueNotifier<bool> connectionNotifier = ValueNotifier(false);
 
   final void Function(dynamic data) onCreated;
+  final void Function(dynamic data) onActualizada;
   final void Function(dynamic data) onEstadoActualizado;
   final void Function(dynamic data) onReprogramada;
   final void Function(dynamic data) onCancelada;
 
   _CitasSocketClient({
     required this.onCreated,
+    required this.onActualizada,
     required this.onEstadoActualizado,
     required this.onReprogramada,
     required this.onCancelada,
@@ -1479,6 +1602,7 @@ class _CitasSocketClient {
     });
 
     _socket!.on('citas:created', onCreated);
+    _socket!.on('citas:actualizada', onActualizada);
     _socket!.on('citas:estado-actualizado', onEstadoActualizado);
     _socket!.on('citas:reprogramada', onReprogramada);
     _socket!.on('citas:cancelada', onCancelada);
@@ -1486,29 +1610,10 @@ class _CitasSocketClient {
     _socket!.connect();
   }
 
-  void emitCreate(Map<String, dynamic> payload) {
-    Logger.info('Emit citas:create $payload');
-    _socket?.emit('citas:create', payload);
-  }
-
-  void emitEstado(Map<String, dynamic> payload) {
-    Logger.info('Emit citas:estado $payload');
-    _socket?.emit('citas:estado', payload);
-  }
-
-  void emitReprogramar(Map<String, dynamic> payload) {
-    Logger.info('Emit citas:reprogramar $payload');
-    _socket?.emit('citas:reprogramar', payload);
-  }
-
-  void emitCancelar(Map<String, dynamic> payload) {
-    Logger.info('Emit citas:cancelar $payload');
-    _socket?.emit('citas:cancelar', payload);
-  }
-
   void dispose() {
     if (_socket == null) return;
     _socket?.off('citas:created');
+    _socket?.off('citas:actualizada');
     _socket?.off('citas:estado-actualizado');
     _socket?.off('citas:reprogramada');
     _socket?.off('citas:cancelada');
