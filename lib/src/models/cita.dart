@@ -4,8 +4,8 @@ class CitaMedica {
   final DateTime? fechaInicio;
   final DateTime? fechaFin;
   final String estado;
-  final String medicoId;
-  final String? medicoNombre;
+  final String idPersonal;
+  final String? personalNombre;
   final String? pacienteId;
   final String? pacienteNombre;
   final String? pacienteNroDocumento;
@@ -28,14 +28,17 @@ class CitaMedica {
   final String? servicioTipo;
   final int? servicioDuracionMinutos;
 
+  String get medicoId => idPersonal;
+  String? get medicoNombre => personalNombre;
+
   const CitaMedica({
     required this.id,
     required this.detalle,
     required this.fechaInicio,
     required this.fechaFin,
     required this.estado,
-    required this.medicoId,
-    required this.medicoNombre,
+    required this.idPersonal,
+    required this.personalNombre,
     required this.pacienteId,
     required this.pacienteNombre,
     required this.pacienteNroDocumento,
@@ -66,16 +69,16 @@ class CitaMedica {
     final especialidadRaw = json['especialidad'];
     final lugarRaw = json['lugar'];
     final servicioRaw = json['servicio'] ?? json['estudio'];
-    final medicoRaw = json['medico'];
+    final personalRaw = json['personal'] ?? json['medico'];
     final pacienteRaw = json['paciente'];
     final especialidadColor = especialidadRaw is Map<String, dynamic>
         ? especialidadRaw['colorHex']?.toString()
         : null;
-    final medicoNombre = medicoRaw is Map<String, dynamic>
+    final personalNombre = personalRaw is Map<String, dynamic>
         ? [
-            medicoRaw['nombres'],
-            medicoRaw['primerApellido'],
-            medicoRaw['segundoApellido'],
+            personalRaw['nombres'],
+            personalRaw['primerApellido'],
+            personalRaw['segundoApellido'],
           ].whereType<String>().where((value) => value.trim().isNotEmpty).join(
               ' ',
             )
@@ -97,9 +100,9 @@ class CitaMedica {
       fechaInicio: _parseDate(json['fechaInicio']),
       fechaFin: _parseDate(json['fechaFin']),
       estado: (json['estado'] ?? '').toString(),
-      medicoId: (json['medicoId'] ?? json['idMedico'] ?? '').toString(),
-      medicoNombre:
-          (json['medicoNombre'] ?? json['nombreMedico'] ?? medicoNombre)
+      idPersonal: (json['idPersonal'] ?? json['medicoId'] ?? json['idMedico'] ?? '').toString(),
+      personalNombre:
+          (json['personalNombre'] ?? json['medicoNombre'] ?? json['nombreMedico'] ?? personalNombre)
               ?.toString(),
       pacienteId: (pacienteId?.isNotEmpty ?? false)
           ? pacienteId
@@ -183,8 +186,8 @@ class CitaMedica {
     DateTime? fechaInicio,
     DateTime? fechaFin,
     String? estado,
-    String? medicoId,
-    String? medicoNombre,
+    String? idPersonal,
+    String? personalNombre,
     String? pacienteId,
     String? pacienteNombre,
     String? pacienteNroDocumento,
@@ -213,8 +216,8 @@ class CitaMedica {
       fechaInicio: fechaInicio ?? this.fechaInicio,
       fechaFin: fechaFin ?? this.fechaFin,
       estado: estado ?? this.estado,
-      medicoId: medicoId ?? this.medicoId,
-      medicoNombre: medicoNombre ?? this.medicoNombre,
+      idPersonal: idPersonal ?? this.idPersonal,
+      personalNombre: personalNombre ?? this.personalNombre,
       pacienteId: pacienteId ?? this.pacienteId,
       pacienteNombre: pacienteNombre ?? this.pacienteNombre,
       pacienteNroDocumento: pacienteNroDocumento ?? this.pacienteNroDocumento,

@@ -108,7 +108,7 @@ class HistorialCambio {
         beforeDetalleEstudio = HistorialDetalleEstudio.fromJson(
           beforeDetalleRaw,
         );
-      } else if (field == 'idMedico' || field == 'idPaciente') {
+      } else if (field == 'idPersonal' || field == 'idPaciente') {
         beforeDetallePersona = HistorialDetallePersona.fromJson(
           beforeDetalleRaw,
         );
@@ -120,7 +120,7 @@ class HistorialCambio {
         afterDetalleEstudio = HistorialDetalleEstudio.fromJson(
           afterDetalleRaw,
         );
-      } else if (field == 'idMedico' || field == 'idPaciente') {
+      } else if (field == 'idPersonal' || field == 'idPaciente') {
         afterDetallePersona = HistorialDetallePersona.fromJson(
           afterDetalleRaw,
         );

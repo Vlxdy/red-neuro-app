@@ -1,11 +1,11 @@
-class PersonalMedico {
+class Personal {
   final String id;
   final String nombres;
   final String? primerApellido;
   final String? segundoApellido;
   final String? nroDocumento;
 
-  const PersonalMedico({
+  const Personal({
     required this.id,
     required this.nombres,
     required this.primerApellido,
@@ -13,8 +13,8 @@ class PersonalMedico {
     required this.nroDocumento,
   });
 
-  factory PersonalMedico.fromJson(Map<String, dynamic> json) {
-    return PersonalMedico(
+  factory Personal.fromJson(Map<String, dynamic> json) {
+    return Personal(
       id: (json['id'] ?? '').toString(),
       nombres: (json['nombres'] ?? '').toString(),
       primerApellido: json['primerApellido']?.toString(),
@@ -36,5 +36,25 @@ class PersonalMedico {
     final nombre = nombreCompleto;
     if ((nroDocumento ?? '').trim().isEmpty) return nombre;
     return '$nombre · ${nroDocumento!.trim()}';
+  }
+}
+
+class PersonalMedico extends Personal {
+  const PersonalMedico({
+    required super.id,
+    required super.nombres,
+    required super.primerApellido,
+    required super.segundoApellido,
+    required super.nroDocumento,
+  });
+
+  factory PersonalMedico.fromJson(Map<String, dynamic> json) {
+    return PersonalMedico(
+      id: (json['id'] ?? '').toString(),
+      nombres: (json['nombres'] ?? '').toString(),
+      primerApellido: json['primerApellido']?.toString(),
+      segundoApellido: json['segundoApellido']?.toString(),
+      nroDocumento: json['nroDocumento']?.toString(),
+    );
   }
 }

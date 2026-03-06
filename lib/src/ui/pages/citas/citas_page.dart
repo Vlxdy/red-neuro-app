@@ -267,7 +267,7 @@ class _CitasPageState extends State<CitasPage> {
         : '';
 
     if (medicoFiltro.isNotEmpty) {
-      filtros['idMedico'] = medicoFiltro;
+      filtros['idPersonal'] = medicoFiltro;
     }
 
     if (_lugarFiltro != null && _lugarFiltro!.isNotEmpty) {

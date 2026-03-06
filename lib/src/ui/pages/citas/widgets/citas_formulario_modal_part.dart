@@ -1979,7 +1979,7 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
         'accion': accion,
         'detalle': detalle,
         'fechaInicio': fechaInicio!.toUtc().toIso8601String(),
-        if (medicoId.isNotEmpty) 'idMedico': medicoId,
+        if (medicoId.isNotEmpty) 'idPersonal': medicoId,
         if (pacienteSeleccionado != null)
           'idPaciente': pacienteSeleccionado?.id,
         if (especialidadId.isNotEmpty) 'idEspecialidad': especialidadId,
@@ -2023,7 +2023,7 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
     if (estadoActual == 'BORRADOR') {
       final updates = <String, dynamic>{};
       if (cambioDetalle) updates['detalle'] = detalle;
-      if (cambioMedico) updates['idMedico'] = medicoId;
+      if (cambioMedico) updates['idPersonal'] = medicoId;
       if (cambioPaciente) {
         updates['idPaciente'] = pacienteId.isEmpty ? null : pacienteId;
       }
@@ -2051,7 +2051,7 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
 
       if (accionFormulario == 'ENVIAR') {
         final ok = await _handleResponseError(
-          await _service.enviarCita(cita.id, idMedico: medicoId),
+          await _service.enviarCita(cita.id, idPersonal: medicoId),
           'No se pudo enviar la cita.',
         );
         if (!ok) return;
@@ -2059,7 +2059,7 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
     } else if (estadoActual == 'RECHAZADA') {
       final updates = <String, dynamic>{};
       if (cambioDetalle) updates['detalle'] = detalle;
-      if (cambioMedico) updates['idMedico'] = medicoId;
+      if (cambioMedico) updates['idPersonal'] = medicoId;
       if (cambioPaciente) {
         updates['idPaciente'] = pacienteId.isEmpty ? null : pacienteId;
       }
@@ -2086,7 +2086,7 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
       }
 
       final ok = await _handleResponseError(
-        await _service.enviarCita(cita.id, idMedico: medicoId),
+        await _service.enviarCita(cita.id, idPersonal: medicoId),
         'No se pudo enviar la cita.',
       );
       if (!ok) return;
@@ -2476,7 +2476,7 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
       'tipoCita': 'Tipo de cita',
       'esEstudio': 'Tipo de cita',
       'idEspecialidad': 'Especialidad',
-      'idMedico': 'Personal asignado',
+      'idPersonal': 'Personal asignado',
       'idPaciente': 'Paciente',
       'idConsultorio': 'Consultorio',
       'idLugar': 'Lugar',
@@ -2526,7 +2526,7 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
       'tipoCita': 'Tipo de cita',
       'esEstudio': 'Tipo de cita',
       'idEspecialidad': 'Especialidad',
-      'idMedico': 'Personal asignado',
+      'idPersonal': 'Personal asignado',
       'idPaciente': 'Paciente',
       'idConsultorio': 'Consultorio',
       'idLugar': 'Lugar',
@@ -2538,7 +2538,7 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
     final beforeValue = _normalizarValorHistorial(cambio.before ?? '');
     final afterValue = _normalizarValorHistorial(cambio.after ?? '');
 
-    if (field == 'idMedico' || field == 'idPaciente') {
+    if (field == 'idPersonal' || field == 'idPaciente') {
       return _formatearCambioPersona(
         label: label,
         beforeValue: beforeValue,
