@@ -71,6 +71,7 @@ class CustomTextInput extends StatefulWidget {
   final RegExp? textFiltering;
   final bool obscure;
   final int? lines;
+  final bool expandsWithContent;
   final bool disable;
   final bool disablePointer;
   final int? maxLength;
@@ -92,6 +93,7 @@ class CustomTextInput extends StatefulWidget {
     this.onTap,
     this.onChange,
     this.lines = 1,
+    this.expandsWithContent = false,
     this.linesLabel = 1,
     this.placeholder = '',
     this.textFiltering,
@@ -126,9 +128,13 @@ class _CustomTextInputState extends State<CustomTextInput> {
     return TextFormField(
       focusNode: _focusNode,
       enabled: !(widget.disable || widget.disablePointer),
-      maxLines: widget.lines,
-      keyboardType:
-          widget.onlyNumbers ? TextInputType.number : TextInputType.text,
+      minLines: widget.lines,
+      maxLines: widget.expandsWithContent ? null : widget.lines,
+      keyboardType: widget.onlyNumbers
+          ? TextInputType.number
+          : ((widget.expandsWithContent || (widget.lines ?? 1) > 1)
+                ? TextInputType.multiline
+                : TextInputType.text),
       inputFormatters: [
         if (widget.maxLength != null)
           LengthLimitingTextInputFormatter(widget.maxLength),
