@@ -78,14 +78,10 @@ class CitasService extends ServiceConfig {
   }
 
   Future<List<CitaMedica>> obtenerCitas({
-    bool soloMisCitas = false,
     Map<String, String>? filtros,
   }) async {
     try {
-      final response = await fetch(
-        soloMisCitas ? '/citas/mis-citas' : '/citas',
-        params: filtros,
-      );
+      final response = await fetch('/citas', params: filtros);
       if (!context.mounted) return [];
 
       if (response.status != StatusNetwork.connected) {
@@ -120,7 +116,6 @@ class CitasService extends ServiceConfig {
   }
 
   Future<CitasPageResult> obtenerCitasPaginadas({
-    bool soloMisCitas = false,
     int page = 1,
     int limit = 10,
     Map<String, String>? filtros,

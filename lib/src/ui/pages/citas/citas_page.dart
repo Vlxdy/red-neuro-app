@@ -71,7 +71,6 @@ class _CitasPageState extends State<CitasPage> {
   List<CitaMedica> _citasListado = [];
   List<CitaMedica> _citasSeleccionadas = [];
   List<CitaMedica> _citasAgenda = [];
-  List<CitaMedica> _citasAgendaCalendario = [];
   Map<DateTime, int> _cantidadCitasCalendarioPorDia = {};
 
   bool _loading = false;
@@ -196,15 +195,7 @@ class _CitasPageState extends State<CitasPage> {
   }
 
   Future<void> _cargarCitasAgendaSemana() async {
-    final filtros = _buildAgendaWeekFiltersQuery();
-    final citas = await _service.obtenerCitas(
-      soloMisCitas: _usarSoloMisCitas,
-      filtros: filtros.isNotEmpty ? filtros : null,
-    );
-    if (!mounted) return;
-    setState(() {
-      _citasAgendaCalendario = citas;
-    });
+    await _recargarConteoCitasCalendario();
   }
 
   Future<void> _cargarCitasListado({int? page}) async {
@@ -214,7 +205,6 @@ class _CitasPageState extends State<CitasPage> {
     }
     final filtros = _buildListFiltersQuery();
     final result = await _service.obtenerCitasPaginadas(
-      soloMisCitas: _usarSoloMisCitas,
       page: page ?? _listPage,
       limit: _listLimit,
       filtros: filtros.isNotEmpty ? filtros : null,
@@ -234,40 +224,14 @@ class _CitasPageState extends State<CitasPage> {
 
   Map<String, String> _buildCalendarFiltersQuery() {
     final filtros = _buildBaseFiltersQuery();
-    if (_usarSoloMisCitas) {
-      final medicoId = Auth.instance.profile.id ?? '';
-      if (medicoId.isNotEmpty &&
-          (_medicoFiltro?.isNotEmpty ?? false) == false) {
-        filtros['idMedico'] = medicoId;
-      }
-    }
     final range = _resolveCalendarRange();
     filtros['fechaInicio'] = range.start.toUtc().toIso8601String();
     filtros['fechaFin'] = range.end.toUtc().toIso8601String();
     return filtros;
   }
 
-  Map<String, String> _buildAgendaWeekFiltersQuery() {
-    final filtros = _buildBaseFiltersQuery();
-    final start = _agendaFocusedDay.subtract(
-      Duration(days: _agendaFocusedDay.weekday - 1),
-    );
-    final end = start.add(const Duration(days: 6, hours: 23, minutes: 59));
-    filtros['fechaInicio'] = start.toUtc().toIso8601String();
-    filtros['fechaFin'] = end.toUtc().toIso8601String();
-    return filtros;
-  }
-
   Map<String, String> _buildListFiltersQuery() {
-    final filtros = _buildBaseFiltersQuery();
-    if (_usarSoloMisCitas) {
-      final medicoId = Auth.instance.profile.id ?? '';
-      if (medicoId.isNotEmpty &&
-          (_medicoFiltro?.isNotEmpty ?? false) == false) {
-        filtros['idMedico'] = medicoId;
-      }
-    }
-    return filtros;
+    return _buildBaseFiltersQuery();
   }
 
   Map<String, String> _buildDayFiltersQuery(DateTime day) {
@@ -286,9 +250,17 @@ class _CitasPageState extends State<CitasPage> {
     if (_estadoFiltro != null && _estadoFiltro!.isNotEmpty) {
       filtros['estado'] = _estadoFiltro!;
     }
-    if (_medicoFiltro != null && _medicoFiltro!.isNotEmpty) {
-      filtros['idMedico'] = _medicoFiltro!;
+
+    final medicoFiltro = (_medicoFiltro?.isNotEmpty ?? false)
+        ? _medicoFiltro!
+        : _usarSoloMisCitas
+        ? (Auth.instance.profile.idUsuarioRol ?? '')
+        : '';
+
+    if (medicoFiltro.isNotEmpty) {
+      filtros['idMedico'] = medicoFiltro;
     }
+
     if (_lugarFiltro != null && _lugarFiltro!.isNotEmpty) {
       filtros['idLugar'] = _lugarFiltro!;
     }
@@ -523,17 +495,6 @@ class _CitasPageState extends State<CitasPage> {
     }
   }
 
-  Map<DateTime, List<CitaMedica>> get _citasAgendaPorDia {
-    final Map<DateTime, List<CitaMedica>> data = {};
-    for (final cita in _citasAgendaCalendario) {
-      final fecha = cita.fechaInicio;
-      if (fecha == null) continue;
-      final key = DateTime(fecha.year, fecha.month, fecha.day);
-      data.putIfAbsent(key, () => []).add(cita);
-    }
-    return data;
-  }
-
   List<CitaMedica> _obtenerCitasDelDiaParaDefault(DateTime baseDay) {
     final key = DateTime(baseDay.year, baseDay.month, baseDay.day);
     final acumuladas = <String, CitaMedica>{};
@@ -551,7 +512,6 @@ class _CitasPageState extends State<CitasPage> {
     agregar(_citasSeleccionadas);
     agregar(_citasAgenda);
     agregar(_citasCalendario);
-    agregar(_citasAgendaCalendario);
 
     final citas = acumuladas.values.toList();
     citas.sort((a, b) {
@@ -618,7 +578,6 @@ class _CitasPageState extends State<CitasPage> {
     await Future.wait<void>([
       _cargarCitasAgendaSemana(),
       _cargarCitasAgendaDay(day: _agendaDay),
-      _recargarConteoCitasCalendario(),
     ]);
   }
 
@@ -759,7 +718,6 @@ class _CitasPageState extends State<CitasPage> {
     final requestId = ++_dayRequestId;
     final filtros = _buildDayFiltersQuery(fecha);
     final citas = await _service.obtenerCitas(
-      soloMisCitas: _usarSoloMisCitas,
       filtros: filtros.isNotEmpty ? filtros : null,
     );
     if (!mounted || requestId != _dayRequestId) return;
@@ -774,7 +732,6 @@ class _CitasPageState extends State<CitasPage> {
     setState(() => _agendaLoading = true);
     final filtros = _buildDayFiltersQuery(fecha);
     final citas = await _service.obtenerCitas(
-      soloMisCitas: _usarSoloMisCitas,
       filtros: filtros.isNotEmpty ? filtros : null,
     );
     if (!mounted || requestId != _agendaRequestId) return;
@@ -794,7 +751,6 @@ class _CitasPageState extends State<CitasPage> {
       _focusedDay = fecha;
     });
     await _cargarCitasAgendaDay(day: _agendaDay);
-    await _cargarCitasDelDia(day: _selectedDay);
   }
 
   Widget build(BuildContext context) {
@@ -894,13 +850,16 @@ class _CitasPageState extends State<CitasPage> {
                             agendaFocusedDay: _agendaFocusedDay,
                             agendaCalendarFormat: _agendaCalendarFormat,
                             agendaCalendarCollapsed: _agendaCalendarCollapsed,
-                            citasAgendaPorDia: _citasAgendaPorDia,
+                            citasAgendaPorDia: _cantidadCitasCalendarioPorDia,
                             onAgendaDaySelected: (selectedDay, focusedDay) {
                               setState(() => _agendaFocusedDay = focusedDay);
                               _seleccionarAgendaDay(selectedDay);
                             },
                             onPageChanged: (focusedDay) {
-                              setState(() => _agendaFocusedDay = focusedDay);
+                              setState(() {
+                                _agendaFocusedDay = focusedDay;
+                                _focusedDay = focusedDay;
+                              });
                               _cargarCitasAgendaSemana();
                             },
                             onAgendaFormatChanged: (format) {
