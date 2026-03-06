@@ -16,7 +16,7 @@ class CitasAgendaSection extends StatelessWidget {
   final DateTime agendaFocusedDay;
   final CalendarFormat agendaCalendarFormat;
   final bool agendaCalendarCollapsed;
-  final Map<DateTime, List<CitaMedica>> citasAgendaPorDia;
+  final Map<DateTime, int> citasAgendaPorDia;
   final void Function(DateTime selectedDay, DateTime focusedDay)
   onAgendaDaySelected;
   final ValueChanged<DateTime> onPageChanged;
@@ -211,7 +211,7 @@ class _AgendaWeekCalendar extends StatelessWidget {
   final DateTime agendaDay;
   final CalendarFormat agendaCalendarFormat;
   final bool isCollapsed;
-  final Map<DateTime, List<CitaMedica>> citasAgendaPorDia;
+  final Map<DateTime, int> citasAgendaPorDia;
   final void Function(DateTime selectedDay, DateTime focusedDay)
   onAgendaDaySelected;
   final ValueChanged<DateTime> onPageChanged;
@@ -238,7 +238,7 @@ class _AgendaWeekCalendar extends StatelessWidget {
         child: Align(
           alignment: Alignment.topCenter,
           heightFactor: isCollapsed ? 0 : 1,
-          child: TableCalendar<CitaMedica>(
+          child: TableCalendar<int>(
             locale: 'es_ES',
             firstDay: DateTime.utc(2020, 1, 1),
             lastDay: DateTime.utc(2100, 12, 31),
@@ -255,7 +255,8 @@ class _AgendaWeekCalendar extends StatelessWidget {
             daysOfWeekHeight: 20,
             eventLoader: (day) {
               final key = DateTime(day.year, day.month, day.day);
-              return citasAgendaPorDia[key] ?? [];
+              final cantidad = citasAgendaPorDia[key] ?? 0;
+              return List<int>.filled(cantidad, 1);
             },
             headerStyle: HeaderStyle(
               titleTextStyle:
