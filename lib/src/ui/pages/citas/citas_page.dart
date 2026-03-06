@@ -1345,7 +1345,9 @@ class _CitasPageState extends State<CitasPage> {
               children: [
                 TextFormField(
                   controller: detalleController,
-                  maxLines: 2,
+                  minLines: 2,
+                  maxLines: null,
+                  keyboardType: TextInputType.multiline,
                   decoration: const InputDecoration(labelText: 'Detalle'),
                 ),
                 const SizedBox(height: 12),

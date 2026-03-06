@@ -1682,6 +1682,7 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
                     controller: detalleController,
                     title: 'Detalle',
                     lines: 2,
+                    expandsWithContent: true,
                   ),
                   const SizedBox(height: 12),
                   FormField<PersonalMedico>(
