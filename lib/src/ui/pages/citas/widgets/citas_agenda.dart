@@ -23,6 +23,7 @@ class CitasAgendaSection extends StatelessWidget {
   final ValueChanged<CalendarFormat> onAgendaFormatChanged;
   final VoidCallback onToggleDailyInfoRibbon;
   final bool isLoading;
+  final bool isCalendarLoading;
   final Future<void> Function() onRefresh;
   final ScrollController? scrollController;
   final String Function(DateTime? inicio, int hour) formatoHoraAgenda;
@@ -52,6 +53,7 @@ class CitasAgendaSection extends StatelessWidget {
     required this.onAgendaFormatChanged,
     required this.onToggleDailyInfoRibbon,
     required this.isLoading,
+    required this.isCalendarLoading,
     required this.onRefresh,
     required this.scrollController,
     required this.formatoHoraAgenda,
@@ -102,16 +104,33 @@ class CitasAgendaSection extends StatelessWidget {
       children: [
         SizedBox(
           width: isCompact ? double.infinity : 320,
-          child: _AgendaWeekCalendar(
-            theme: theme,
-            agendaFocusedDay: agendaFocusedDay,
-            agendaDay: agendaDay,
-            agendaCalendarFormat: agendaCalendarFormat,
-            isCollapsed: agendaCalendarCollapsed,
-            citasAgendaPorDia: citasAgendaPorDia,
-            onAgendaDaySelected: onAgendaDaySelected,
-            onPageChanged: onPageChanged,
-            onAgendaFormatChanged: onAgendaFormatChanged,
+          child: Stack(
+            children: [
+              _AgendaWeekCalendar(
+                theme: theme,
+                agendaFocusedDay: agendaFocusedDay,
+                agendaDay: agendaDay,
+                agendaCalendarFormat: agendaCalendarFormat,
+                isCollapsed: agendaCalendarCollapsed,
+                citasAgendaPorDia: citasAgendaPorDia,
+                onAgendaDaySelected: onAgendaDaySelected,
+                onPageChanged: onPageChanged,
+                onAgendaFormatChanged: onAgendaFormatChanged,
+              ),
+              if (isCalendarLoading)
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: SizedBox(
+                    height: 14,
+                    width: 14,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: theme.primary.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
         SizedBox(
