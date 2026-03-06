@@ -75,13 +75,13 @@ class _CitasPageState extends State<CitasPage> {
 
   bool _loading = false;
   bool _agendaLoading = false;
+  bool _agendaCalendarLoading = false;
   int _dayRequestId = 0;
   int _agendaRequestId = 0;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   late DateTime _agendaDay;
   late DateTime _agendaFocusedDay;
-  final CalendarFormat _calendarFormat = CalendarFormat.week;
   CalendarFormat _agendaCalendarFormat = CalendarFormat.week;
   final int _currentTabIndex = 0;
   bool _soloCitasAsignadas = false;
@@ -184,14 +184,23 @@ class _CitasPageState extends State<CitasPage> {
   }
 
   Future<void> _recargarConteoCitasCalendario() async {
-    final filtros = _buildCalendarFiltersQuery();
-    final cantidadPorDia = await _service.obtenerCantidadCitasPorDia(
-      filtros: filtros,
-    );
-    if (!mounted) return;
-    setState(() {
-      _cantidadCitasCalendarioPorDia = cantidadPorDia;
-    });
+    if (mounted) {
+      setState(() => _agendaCalendarLoading = true);
+    }
+    try {
+      final filtros = _buildCalendarFiltersQuery();
+      final cantidadPorDia = await _service.obtenerCantidadCitasPorDia(
+        filtros: filtros,
+      );
+      if (!mounted) return;
+      setState(() {
+        _cantidadCitasCalendarioPorDia = cantidadPorDia;
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _agendaCalendarLoading = false);
+      }
+    }
   }
 
   Future<void> _cargarCitasAgendaSemana() async {
@@ -552,17 +561,18 @@ class _CitasPageState extends State<CitasPage> {
   }
 
   _DateRange _resolveCalendarRange() {
-    if (_calendarFormat == CalendarFormat.week) {
-      final start = _focusedDay.subtract(
-        Duration(days: _focusedDay.weekday - 1),
+    final focusedDay = _agendaFocusedDay;
+    if (_agendaCalendarFormat == CalendarFormat.week) {
+      final start = focusedDay.subtract(
+        Duration(days: focusedDay.weekday - 1),
       );
       final end = start.add(const Duration(days: 6, hours: 23, minutes: 59));
       return _DateRange(start: start, end: end);
     }
-    final firstDay = DateTime(_focusedDay.year, _focusedDay.month, 1);
+    final firstDay = DateTime(focusedDay.year, focusedDay.month, 1);
     final lastDay = DateTime(
-      _focusedDay.year,
-      _focusedDay.month + 1,
+      focusedDay.year,
+      focusedDay.month + 1,
       0,
       23,
       59,
@@ -865,11 +875,13 @@ class _CitasPageState extends State<CitasPage> {
                             onAgendaFormatChanged: (format) {
                               if (_agendaCalendarFormat != format) {
                                 setState(() => _agendaCalendarFormat = format);
+                                _cargarCitasAgendaSemana();
                               }
                             },
                             onToggleDailyInfoRibbon:
                                 _toggleAgendaCalendarCollapsed,
                             isLoading: _agendaLoading,
+                            isCalendarLoading: _agendaCalendarLoading,
                             scrollController: _agendaScrollController,
                             colorEstado: _colorEstado,
                             formatoHoraAgenda: _formatoHoraAgenda,
