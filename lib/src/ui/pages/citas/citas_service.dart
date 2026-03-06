@@ -282,12 +282,14 @@ class CitasService extends ServiceConfig {
   Future<ResponseApi> enviarCita(
     String id, {
     String? idPersonal,
+    Map<String, dynamic>? body,
   }) async {
-    final body = <String, dynamic>{
+    final payload = <String, dynamic>{
+      if (body != null) ...body,
       if (idPersonal != null && idPersonal.trim().isNotEmpty)
         'idPersonal': idPersonal.trim(),
     };
-    return fetch('/citas/$id/enviar', type: HttpProtocol.post, body: body);
+    return fetch('/citas/$id/enviar', type: HttpProtocol.post, body: payload);
   }
 
   Future<ResponseApi> confirmarCita(

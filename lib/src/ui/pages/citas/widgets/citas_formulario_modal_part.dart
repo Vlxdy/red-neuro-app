@@ -2077,16 +2077,12 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
         updates['fechaInicio'] = fechaInicio!.toUtc().toIso8601String();
       }
 
-      if (updates.isNotEmpty) {
-        final ok = await _handleResponseError(
-          await _service.editarBorradorCita(cita.id, updates),
-          'No se pudo actualizar la cita rechazada.',
-        );
-        if (!ok) return;
-      }
-
       final ok = await _handleResponseError(
-        await _service.enviarCita(cita.id, idPersonal: medicoId),
+        await _service.enviarCita(
+          cita.id,
+          idPersonal: medicoId,
+          body: updates,
+        ),
         'No se pudo enviar la cita.',
       );
       if (!ok) return;
