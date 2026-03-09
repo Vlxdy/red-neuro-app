@@ -41,59 +41,70 @@ class _CredencialesState extends State<Credenciales> {
   Widget build(BuildContext context) {
     final LoadingAnimation listener = context.watch<LoadingAnimation>();
     final ThemeController theme = ThemeController.instance;
+    final Size screenSize = MediaQuery.sizeOf(context);
+    final double formMaxWidth = screenSize.width < 420 ? screenSize.width - 24 : 420;
+    final double responsiveTextScale = (screenSize.width / 390).clamp(0.90, 1.06);
 
     return Stack(
       children: <Widget>[
         Center(
-          child: Card(
-            elevation: 6,
-            margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.zero, // sin bordes redondeados
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-              child: Form(
-                key: _scaffoldingFormKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    CustomTextInput(
-                      disable: listener.isLoading,
-                      requiredData: true,
-                      controller: _email,
-                      title: 'Usuario',
-                      onChange: (String value) =>
-                          service.store.form.username = value,
-                      validate: (String? value, String alias) =>
-                          service.validateData(context, value, alias),
-                    ),
-                    const SizedBox(height: 16),
-                    CustomTextInput(
-                      disable: listener.isLoading,
-                      requiredData: true,
-                      obscure: true,
-                      controller: _password,
-                      title: 'Contraseña',
-                      onChange: (String value) =>
-                          service.store.form.password = Encode.toBase64(value),
-                      validate: (String? value, String alias) =>
-                          service.validateData(context, value, alias),
-                    ),
-                    const SizedBox(height: 12),
-                    SimpleButton(
-                      disabled: listener.isLoading,
-                      title: 'Iniciar sesión',
-                      background: theme.primary,
-                      textColor: theme.white,
-                      onTap: () {
-                        if (service.validateForm(_scaffoldingFormKey)) {
-                          service.login();
-                        }
-                      },
-                    ),
-                  ],
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: formMaxWidth),
+            child: MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: TextScaler.linear(responsiveTextScale),
+              ),
+              child: Card(
+              elevation: 6,
+              margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.zero, // sin bordes redondeados
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+                child: Form(
+                  key: _scaffoldingFormKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      CustomTextInput(
+                        disable: listener.isLoading,
+                        requiredData: true,
+                        controller: _email,
+                        title: 'Usuario',
+                        onChange: (String value) =>
+                            service.store.form.username = value,
+                        validate: (String? value, String alias) =>
+                            service.validateData(context, value, alias),
+                      ),
+                      const SizedBox(height: 16),
+                      CustomTextInput(
+                        disable: listener.isLoading,
+                        requiredData: true,
+                        obscure: true,
+                        controller: _password,
+                        title: 'Contraseña',
+                        onChange: (String value) => service.store.form.password =
+                            Encode.toBase64(value),
+                        validate: (String? value, String alias) =>
+                            service.validateData(context, value, alias),
+                      ),
+                      const SizedBox(height: 12),
+                      SimpleButton(
+                        disabled: listener.isLoading,
+                        title: 'Iniciar sesión',
+                        background: theme.primary,
+                        textColor: theme.white,
+                        onTap: () {
+                          if (service.validateForm(_scaffoldingFormKey)) {
+                            service.login();
+                          }
+                        },
+                      ),
+                    ],
+                  ),
                 ),
+              ),
               ),
             ),
           ),

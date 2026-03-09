@@ -71,12 +71,27 @@ extension _CitasPageHistorialModalPart on _CitasPageState {
               unawaited(cargarHistorial(setStateDialog, reset: true));
             }
             final hasMore = historial.length < total;
+            final Size screenSize = MediaQuery.sizeOf(context);
+            final bool isNarrow = screenSize.width < 680;
+            final double dialogWidth = (screenSize.width - 32).clamp(300.0, 520.0);
+            final double dialogHeight =
+                (screenSize.height * 0.72).clamp(360.0, 560.0);
+            final double responsiveTextScale = (screenSize.width / 390).clamp(
+              0.90,
+              1.08,
+            );
+
             return AlertDialog(
+              insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
               title: const Text('Historial de la cita'),
-              content: SizedBox(
-                width: 520,
-                height: 460,
-                child: Column(
+              content: MediaQuery(
+                data: MediaQuery.of(context).copyWith(
+                  textScaler: TextScaler.linear(responsiveTextScale),
+                ),
+                child: SizedBox(
+                  width: dialogWidth,
+                  height: dialogHeight,
+                  child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     ExpansionTile(
@@ -86,10 +101,10 @@ extension _CitasPageHistorialModalPart on _CitasPageState {
                         style: Theme.of(context).textTheme.titleSmall,
                       ),
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextFormField(
+                        if (isNarrow)
+                          Column(
+                            children: [
+                              TextFormField(
                                 controller: fechaInicioController,
                                 readOnly: true,
                                 decoration: const InputDecoration(
@@ -111,10 +126,8 @@ extension _CitasPageHistorialModalPart on _CitasPageState {
                                   });
                                 },
                               ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: TextFormField(
+                              const SizedBox(height: 12),
+                              TextFormField(
                                 controller: fechaFinController,
                                 readOnly: true,
                                 decoration: const InputDecoration(
@@ -136,9 +149,62 @@ extension _CitasPageHistorialModalPart on _CitasPageState {
                                   });
                                 },
                               ),
-                            ),
-                          ],
-                        ),
+                            ],
+                          )
+                        else
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextFormField(
+                                  controller: fechaInicioController,
+                                  readOnly: true,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Fecha inicio',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  onTap: () async {
+                                    final picked = await showDatePicker(
+                                      context: context,
+                                      firstDate: DateTime(2020),
+                                      lastDate: DateTime(2100),
+                                      initialDate: fechaInicio ?? DateTime.now(),
+                                    );
+                                    if (picked == null) return;
+                                    setStateDialog(() {
+                                      fechaInicio = picked;
+                                      fechaInicioController.text = _dateFormat
+                                          .format(picked);
+                                    });
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: TextFormField(
+                                  controller: fechaFinController,
+                                  readOnly: true,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Fecha fin',
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  onTap: () async {
+                                    final picked = await showDatePicker(
+                                      context: context,
+                                      firstDate: DateTime(2020),
+                                      lastDate: DateTime(2100),
+                                      initialDate: fechaFin ?? DateTime.now(),
+                                    );
+                                    if (picked == null) return;
+                                    setStateDialog(() {
+                                      fechaFin = picked;
+                                      fechaFinController.text = _dateFormat
+                                          .format(picked);
+                                    });
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
                         const SizedBox(height: 12),
                         DropdownButtonFormField<String?>(
                           initialValue: estadoAnterior,
@@ -167,7 +233,9 @@ extension _CitasPageHistorialModalPart on _CitasPageState {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        Row(
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
                           children: [
                             TextButton(
                               onPressed: () {
@@ -185,7 +253,6 @@ extension _CitasPageHistorialModalPart on _CitasPageState {
                               },
                               child: const Text('Limpiar'),
                             ),
-                            const SizedBox(width: 8),
                             ElevatedButton(
                               onPressed: () {
                                 unawaited(
@@ -265,6 +332,7 @@ extension _CitasPageHistorialModalPart on _CitasPageState {
                         ),
                       ),
                   ],
+                  ),
                 ),
               ),
               actions: [

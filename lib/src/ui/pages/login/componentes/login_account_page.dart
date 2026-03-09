@@ -18,6 +18,11 @@ class _LoginState extends State<LoginAccount> {
   @override
   Widget build(BuildContext context) {
     final theme = ThemeController.instance;
+    final Size screenSize = MediaQuery.sizeOf(context);
+    final bool compactHeight = screenSize.height < 700;
+    final double logoWidth = (screenSize.width * 0.72).clamp(190.0, 350.0);
+    final double logoHeight = (screenSize.height * 0.28).clamp(130.0, 250.0);
+
     return TemplatePage(
       page: ScaffoldMessenger(
         key: loginAccountMessenger,
@@ -47,11 +52,12 @@ class _LoginState extends State<LoginAccount> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: <Widget>[
-                        const SizedBox(height: 70),
+                        SizedBox(height: compactHeight ? 24 : 70),
                         Image.asset(
                           Recursos.iconoFor(isDark: theme.isDark),
-                          height: 250,
-                          width: 350,
+                          height: logoHeight,
+                          width: logoWidth,
+                          fit: BoxFit.contain,
                         ),
                         const SizedBox(height: 5),
                         const Credenciales(),

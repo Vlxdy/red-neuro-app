@@ -145,7 +145,18 @@ Future<String?> showCitaConfirmacionDialog({
             });
           }
 
+          final Size screenSize = MediaQuery.sizeOf(dialogContext);
+          final double dialogContentWidth = (screenSize.width - 32).clamp(
+            280.0,
+            440.0,
+          );
+          final double responsiveTextScale = (screenSize.width / 390).clamp(
+            0.90,
+            1.08,
+          );
+
           return AlertDialog(
+            insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
             titlePadding: const EdgeInsets.fromLTRB(20, 16, 8, 8),
             title: Row(
               children: [
@@ -161,9 +172,13 @@ Future<String?> showCitaConfirmacionDialog({
                 ),
               ],
             ),
-            content: SizedBox(
-              width: 440,
-              child: SingleChildScrollView(
+            content: MediaQuery(
+              data: MediaQuery.of(dialogContext).copyWith(
+                textScaler: TextScaler.linear(responsiveTextScale),
+              ),
+              child: SizedBox(
+                width: dialogContentWidth,
+                child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -285,6 +300,7 @@ Future<String?> showCitaConfirmacionDialog({
                         value: data.detalle!.trim(),
                       ),
                   ],
+                  ),
                 ),
               ),
             ),
