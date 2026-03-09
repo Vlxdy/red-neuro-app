@@ -50,7 +50,7 @@ class TemplatePage extends StatelessWidget {
             backgroundColor: theme.background,
             body: Stack(
               children: <Widget>[
-                background ?? const SizedBox(),
+                background ?? _TemplateDecorBackground(theme: theme),
                 appBar(typeAppBar),
                 page ?? const SizedBox(),
                 cargando
@@ -78,6 +78,88 @@ class TemplatePage extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _TemplateDecorBackground extends StatelessWidget {
+  const _TemplateDecorBackground({required this.theme});
+
+  final ThemeController theme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned.fill(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: <Color>[
+              theme.background,
+              theme.primary.withOpacity(theme.isDark ? 0.045 : 0.04),
+              theme.background,
+            ],
+          ),
+        ),
+        child: Stack(
+          children: <Widget>[
+            _TemplateDecorBubble(
+              top: -64,
+              right: -36,
+              size: 210,
+              color: theme.primary.withOpacity(theme.isDark ? 0.08 : 0.09),
+            ),
+            _TemplateDecorBubble(
+              top: 180,
+              left: -72,
+              size: 170,
+              color: theme.secondary.withOpacity(theme.isDark ? 0.07 : 0.08),
+            ),
+            _TemplateDecorBubble(
+              bottom: -88,
+              right: -30,
+              size: 230,
+              color: theme.accent500.withOpacity(theme.isDark ? 0.07 : 0.08),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TemplateDecorBubble extends StatelessWidget {
+  const _TemplateDecorBubble({
+    required this.size,
+    required this.color,
+    this.top,
+    this.right,
+    this.bottom,
+    this.left,
+  });
+
+  final double size;
+  final Color color;
+  final double? top;
+  final double? right;
+  final double? bottom;
+  final double? left;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: top,
+      right: right,
+      bottom: bottom,
+      left: left,
+      child: IgnorePointer(
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+      ),
     );
   }
 }

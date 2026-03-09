@@ -318,41 +318,55 @@ class _HomePageState extends State<HomePage> {
               _showMenu(itemsSubmenu, index, label),
             }
           : () => _onItemTapped(label, index),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              iconWidget,
-              const SizedBox(width: 2),
-              itemsSubmenu != null
-                  ? Transform.rotate(
-                      angle: 3.14 / 2,
-                      child: Icon(
-                        isSelected
-                            ? SolarIconsBold.roundDoubleAltArrowLeft
-                            : SolarIconsOutline.menuDots,
-                        size: 15,
-                        color: navColor ?? (isSelected ? theme.primary : null),
-                      ),
-                    )
-                  : const SizedBox(),
-            ],
-          ),
-          Flexible(
-            child: Text(
-              label,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: navColor ?? (isSelected ? theme.primary : null),
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                fontSize: 11,
-                overflow: TextOverflow.ellipsis,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? (_usePrimaryTrayShell
+                    ? theme.white.withValues(alpha: 0.14)
+                    : theme.primary.withValues(alpha: 0.10))
+              : theme.transparent,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                iconWidget,
+                const SizedBox(width: 2),
+                itemsSubmenu != null
+                    ? Transform.rotate(
+                        angle: 3.14 / 2,
+                        child: Icon(
+                          isSelected
+                              ? SolarIconsBold.roundDoubleAltArrowLeft
+                              : SolarIconsOutline.menuDots,
+                          size: 15,
+                          color: navColor ?? (isSelected ? theme.primary : null),
+                        ),
+                      )
+                    : const SizedBox(),
+              ],
+            ),
+            const SizedBox(height: 2),
+            Flexible(
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: navColor ?? (isSelected ? theme.primary : null),
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  fontSize: 11,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -442,27 +456,49 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
-          bottomNavigationBar: BottomAppBar(
-            color: _usePrimaryTrayShell ? theme.primary : theme.background,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: _itemsMenu.asMap().entries.map((
-                MapEntry<int, ChildrenItem> entry,
-              ) {
-                int index = entry.key;
-                ChildrenItem item = entry.value;
-                return buildNavItem(
-                  context,
-                  index == _selectedIndex
-                      ? item.iconoImagenSeleccionada
-                      : item.iconoImagen,
-                  item.titulo,
-                  index,
-                  item.itemsSubmenu,
-                  item.color,
-                  badgeCount: item.badgeCount,
-                );
-              }).toList(),
+          bottomNavigationBar: Container(
+            decoration: BoxDecoration(
+              color: _usePrimaryTrayShell ? theme.primary900 : theme.background,
+              border: Border(
+                top: BorderSide(
+                  color: _usePrimaryTrayShell
+                      ? theme.white.withValues(alpha: 0.12)
+                      : theme.monochromatic200.withValues(alpha: 0.35),
+                ),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: theme.black.withValues(alpha: theme.isDark ? 0.26 : 0.08),
+                  blurRadius: 16,
+                  offset: const Offset(0, -4),
+                ),
+              ],
+            ),
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: _itemsMenu.asMap().entries.map((
+                    MapEntry<int, ChildrenItem> entry,
+                  ) {
+                    int index = entry.key;
+                    ChildrenItem item = entry.value;
+                    return buildNavItem(
+                      context,
+                      index == _selectedIndex
+                          ? item.iconoImagenSeleccionada
+                          : item.iconoImagen,
+                      item.titulo,
+                      index,
+                      item.itemsSubmenu,
+                      item.color,
+                      badgeCount: item.badgeCount,
+                    );
+                  }).toList(),
+                ),
+              ),
             ),
           ),
         ),
