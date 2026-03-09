@@ -92,12 +92,12 @@ class _TemplateDecorBackground extends StatelessWidget {
     return Positioned.fill(
       child: DecoratedBox(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: <Color>[
-              theme.background,
-              theme.primary.withOpacity(theme.isDark ? 0.010 : 0.008),
+          gradient: RadialGradient(
+            center: const Alignment(0, 1), // fondo exacto
+            radius: 1.5,
+            stops: const [0.0, 0.7],
+            colors: [
+              theme.primary.withValues(alpha: theme.isDark ? 0.05 : 0.002),
               theme.background,
             ],
           ),
@@ -108,19 +108,25 @@ class _TemplateDecorBackground extends StatelessWidget {
               top: -64,
               right: -36,
               size: 210,
-              color: theme.primary.withOpacity(theme.isDark ? 0.060 : 0.048),
+              color: theme.primary.withValues(
+                alpha: theme.isDark ? 0.060 : 0.048,
+              ),
             ),
             _TemplateDecorBubble(
               top: 180,
               left: -72,
               size: 170,
-              color: theme.secondary.withOpacity(theme.isDark ? 0.054 : 0.044),
+              color: theme.secondary.withValues(
+                alpha: theme.isDark ? 0.054 : 0.044,
+              ),
             ),
             _TemplateDecorBubble(
               bottom: -88,
               right: -30,
               size: 230,
-              color: theme.accent500.withOpacity(theme.isDark ? 0.058 : 0.046),
+              color: theme.accent500.withValues(
+                alpha: theme.isDark ? 0.058 : 0.046,
+              ),
             ),
           ],
         ),
