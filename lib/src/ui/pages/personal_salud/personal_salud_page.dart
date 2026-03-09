@@ -16,6 +16,7 @@ import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
 import 'package:red_neuro_app/src/ui/common/customdatatable/custom_datatable.dart';
 import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
+import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/common/form_stepper/step_form_dialog_layout.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/common/text_inputs/autocomplete_field.dart';
@@ -1570,11 +1571,13 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
   Widget build(BuildContext context) {
     final isCompact = MediaQuery.of(context).size.width < 840;
     final isNarrowHeader = MediaQuery.of(context).size.width < 560;
-    return ScaffoldMessenger(
-      key: personalSaludMessenger,
-      child: Scaffold(
-        backgroundColor: _theme.background,
-        appBar: TrayModuleHeader(
+    return TemplatePage(
+      showEnvironmentBanner: false,
+      page: ScaffoldMessenger(
+        key: personalSaludMessenger,
+        child: Scaffold(
+          backgroundColor: _theme.transparent,
+          appBar: TrayModuleHeader(
           titulo: 'Personal de salud',
           subtitulo:
               'Administra perfiles, especialidades y permisos administrativos.',
@@ -1726,6 +1729,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                 ),
               ),
           ],
+          ),
         ),
       ),
     );

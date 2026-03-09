@@ -15,6 +15,7 @@ import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
 import 'package:red_neuro_app/src/ui/pages/perfil/componentes/perfil_info_card.dart';
+import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/pages/perfil/perfil_service.dart';
 
 GlobalKey<ScaffoldMessengerState> perfilMessenger =
@@ -405,10 +406,13 @@ class _PerfilState extends State<Perfil> {
         final Usuario profile = _profile ?? Auth.instance.profile;
 
         if (_loading && _profile == null) {
-          return Scaffold(
-            backgroundColor: theme.background,
-            body: Center(
-              child: CircularProgressIndicator(color: theme.primary),
+          return TemplatePage(
+            showEnvironmentBanner: false,
+            page: Scaffold(
+              backgroundColor: theme.transparent,
+              body: Center(
+                child: CircularProgressIndicator(color: theme.primary),
+              ),
             ),
           );
         }
@@ -418,11 +422,13 @@ class _PerfilState extends State<Perfil> {
         final bool showRemoteAvatar =
             avatarUrl != null && avatarUrl != _avatarFailedUrl;
 
-        return ScaffoldMessenger(
-          key: perfilMessenger,
-          child: Scaffold(
-            backgroundColor: theme.background,
-            appBar: TrayModuleHeader(
+        return TemplatePage(
+          showEnvironmentBanner: false,
+          page: ScaffoldMessenger(
+            key: perfilMessenger,
+            child: Scaffold(
+              backgroundColor: theme.transparent,
+              appBar: TrayModuleHeader(
               titulo: 'Perfil',
               subtitulo: 'Administra tu perfil y seguridad de tu cuenta.',
               isCompact: MediaQuery.of(context).size.width < 560,
@@ -624,6 +630,7 @@ class _PerfilState extends State<Perfil> {
                   ],
                 ),
               ),
+            ),
             ),
           ),
         );

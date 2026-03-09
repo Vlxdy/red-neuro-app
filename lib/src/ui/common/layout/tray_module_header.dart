@@ -18,28 +18,22 @@ class TrayModuleHeader extends StatelessWidget implements PreferredSizeWidget {
   @override
   Size get preferredSize => Size.fromHeight(isCompact ? 58 : 54);
 
-  Widget _buildInfoAction(BuildContext context, ThemeController theme) {
-    return _HeaderActionButton(
-      tooltip: 'Información de esta bandeja',
-      icon: Icons.info_outline_rounded,
-      onPressed: () {
-        showDialog<void>(
-          context: context,
-          builder: (dialogContext) {
-            return AlertDialog(
-              title: Text(titulo),
-              content: Text(subtitulo),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
-                  child: const Text('Entendido'),
-                ),
-              ],
-            );
-          },
+  void _showInfoDialog(BuildContext context) {
+    if (subtitulo.trim().isEmpty) return;
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: Text(titulo),
+          content: Text(subtitulo),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Entendido'),
+            ),
+          ],
         );
       },
-      theme: theme,
     );
   }
 
@@ -81,20 +75,22 @@ class TrayModuleHeader extends StatelessWidget implements PreferredSizeWidget {
           ),
         ),
       ),
-      title: Text(
-        titulo,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.1,
-          color: theme.white,
+      title: GestureDetector(
+        onDoubleTap: () => _showInfoDialog(context),
+        child: Text(
+          titulo,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.1,
+            color: theme.white,
+          ),
         ),
       ),
       actions: [
         _buildNotificationsAction(theme),
         const SizedBox(width: 8),
-        _buildInfoAction(context, theme),
         ...actions,
         const SizedBox(width: 12),
       ],
