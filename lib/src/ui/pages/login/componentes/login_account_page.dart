@@ -28,46 +28,33 @@ class _LoginState extends State<LoginAccount> {
         key: loginAccountMessenger,
         child: Scaffold(
           backgroundColor: theme.transparent,
-          body: Stack(
-            children: <Widget>[
-              Positioned.fill(
-                child: Opacity(
-                  opacity: 0.3, // Adjust the opacity value as needed
-                  child: Image.asset(
-                    Recursos.logoPrincipalFor(isDark: theme.isDark),
-                    fit: BoxFit.cover,
-                  ),
+          body: SafeArea(
+            child: Center(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 5,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: <Widget>[
+                    SizedBox(height: compactHeight ? 24 : 70),
+                    Image.asset(
+                      Recursos.iconoFor(isDark: theme.isDark),
+                      height: logoHeight,
+                      width: logoWidth,
+                      fit: BoxFit.contain,
+                    ),
+                    const SizedBox(height: 5),
+                    const Credenciales(),
+                    const SizedBox(height: 20),
+                  ],
                 ),
               ),
-              SafeArea(
-                child: Center(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 5,
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: <Widget>[
-                        SizedBox(height: compactHeight ? 24 : 70),
-                        Image.asset(
-                          Recursos.iconoFor(isDark: theme.isDark),
-                          height: logoHeight,
-                          width: logoWidth,
-                          fit: BoxFit.contain,
-                        ),
-                        const SizedBox(height: 5),
-                        const Credenciales(),
-                        const SizedBox(height: 20),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
