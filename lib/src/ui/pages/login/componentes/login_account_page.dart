@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/pages/login/componentes/credenciales.dart';
+import 'package:red_neuro_app/src/ui/pages/login/componentes/login_decor_background.dart';
 
 GlobalKey<ScaffoldMessengerState> loginAccountMessenger =
     GlobalKey<ScaffoldMessengerState>();
@@ -24,10 +25,11 @@ class _LoginState extends State<LoginAccount> {
     final double logoHeight = (screenSize.height * 0.28).clamp(130.0, 250.0);
 
     return TemplatePage(
+      background: const LoginDecorBackground(),
       page: ScaffoldMessenger(
         key: loginAccountMessenger,
         child: Scaffold(
-          backgroundColor: theme.transparent,
+          backgroundColor: Colors.transparent,
           body: SafeArea(
             child: Center(
               child: SingleChildScrollView(

@@ -561,15 +561,21 @@ class _LugaresPageState extends State<LugaresPage> {
       page: ScaffoldMessenger(
         key: lugaresMessenger,
         child: Scaffold(
-          backgroundColor: _theme.background,
+          backgroundColor: _theme.transparent,
           appBar: TrayModuleHeader(
             titulo: 'Lugares',
-            subtitulo: '',
+            subtitulo: 'Gestiona instituciones y lugares de atención disponibles.',
             actions: [
               IconButton(
                 tooltip: 'Filtrar',
                 onPressed: _abrirFiltros,
                 icon: Icon(Icons.filter_alt_rounded, color: _theme.white),
+                style: IconButton.styleFrom(
+                  minimumSize: const Size(36, 36),
+                  side: BorderSide(
+                    color: _theme.white.withValues(alpha: 0.35),
+                  ),
+                ),
               ),
             ],
           ),
