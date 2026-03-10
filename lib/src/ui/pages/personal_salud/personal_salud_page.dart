@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:red_neuro_app/src/config/form_controller.dart';
@@ -18,6 +20,7 @@ import 'package:red_neuro_app/src/ui/common/customdatatable/custom_datatable.dar
 import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/common/form_stepper/step_form_dialog_layout.dart';
+import 'package:red_neuro_app/src/ui/common/components/tray_ui_helpers.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/common/text_inputs/autocomplete_field.dart';
 import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
@@ -182,7 +185,12 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
             bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: EdgeInsets.fromLTRB(
+              16,
+              16,
+              16,
+              16 + MediaQuery.of(context).padding.bottom,
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -454,6 +462,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
   }
 
   void _mostrarDetallesPersonal(PersonalSalud persona) {
+    final esUsuarioActual = _esUsuarioActual(persona);
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -461,83 +470,219 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return Padding(
+        String? copiedField;
+        final especialidades = persona.especialidades;
+        final contacto = [
+          if ((persona.correoElectronico ?? '').trim().isNotEmpty)
+            persona.correoElectronico!.trim(),
+          if ((persona.telefono ?? '').trim().isNotEmpty)
+            'Tel: ${persona.telefono!.trim()}',
+        ].join(' · ');
+        return StatefulBuilder(
+          builder: (context, setStateSheet) => Padding(
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom,
           ),
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  'Detalles del personal',
-                  style: Theme.of(context).textTheme.titleMedium,
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Información del personal',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close),
+                      tooltip: 'Cerrar',
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                Center(child: _buildAvatar(persona, radius: 36)),
-                const SizedBox(height: 12),
+                const SizedBox(height: 6),
                 ListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Nombre completo'),
-                  subtitle: Text(persona.nombreCompleto),
-                ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Documento'),
-                  subtitle: Text(persona.nroDocumento ?? 'Sin documento'),
-                ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Correo'),
-                  subtitle: Text(
-                    persona.correoElectronico ?? 'Sin correo registrado',
-                  ),
-                ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Teléfono'),
-                  subtitle: Text(persona.telefono ?? 'Sin teléfono registrado'),
-                ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Fecha de nacimiento'),
-                  subtitle: Text(
-                    _formatearFechaInicial(persona.fechaNacimiento),
-                  ),
-                ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Género'),
-                  subtitle: Text(persona.genero ?? 'No especificado'),
-                ),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('Permisos administrativos'),
-                  subtitle: Text(persona.esSupervisor ? 'Sí' : 'No'),
+                  dense: true,
+                  leading: _buildAvatar(persona, radius: 28),
+                  title: Text(persona.nombreCompleto),
+                  subtitle: contacto.isEmpty ? null : Text(contacto),
+                  trailing: _buildEstadoChip(persona.estaActivo),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  'Especialidades',
-                  style: Theme.of(context).textTheme.titleSmall,
+                _buildTipoPersonalChip(persona.esSupervisor),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    if ((persona.correoElectronico ?? '').trim().isNotEmpty)
+                      CopyableInfoPill(
+                        icon: Icons.alternate_email,
+                        label: 'Correo',
+                        value: persona.correoElectronico!.trim(),
+                        copied: copiedField == 'correo',
+                        onTap: () async {
+                          await _copiarDato(persona.correoElectronico!.trim());
+                          if (!mounted) return;
+                          setStateSheet(() => copiedField = 'correo');
+                        },
+                      ),
+                    if ((persona.telefono ?? '').trim().isNotEmpty)
+                      CopyableInfoPill(
+                        icon: Icons.phone_outlined,
+                        label: 'Celular',
+                        value: persona.telefono!.trim(),
+                        copied: copiedField == 'celular',
+                        onTap: () async {
+                          await _copiarDato(persona.telefono!.trim());
+                          if (!mounted) return;
+                          setStateSheet(() => copiedField = 'celular');
+                        },
+                      ),
+                    if ((persona.nroDocumento ?? '').trim().isNotEmpty)
+                      CopyableInfoPill(
+                        icon: Icons.badge_outlined,
+                        label: 'Documento',
+                        value: persona.nroDocumento!.trim(),
+                      ),
+                    if ((persona.genero ?? '').trim().isNotEmpty)
+                      CopyableInfoPill(
+                        icon: Icons.wc_outlined,
+                        label: 'Género',
+                        value: _textoGenero(persona.genero!.trim()),
+                      ),
+                    if (_formatearFechaInicial(persona.fechaNacimiento).trim().isNotEmpty)
+                      CopyableInfoPill(
+                        icon: Icons.cake_outlined,
+                        label: 'Nacimiento',
+                        value: _formatearFechaInicial(persona.fechaNacimiento),
+                      ),
+                    if (persona.esSupervisor)
+                      CopyableInfoPill(
+                        icon: Icons.admin_panel_settings_outlined,
+                        label: 'Rol',
+                        value: 'Administrador',
+                      ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                _buildEspecialidadesCell(persona),
-                const SizedBox(height: 16),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Cerrar'),
+                if (especialidades.isNotEmpty) ...[
+                  const SizedBox(height: 14),
+                  Text(
+                    'Especialidades',
+                    style: Theme.of(context).textTheme.titleSmall,
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  _buildEspecialidadesCell(persona),
+                ],
+                if (!esUsuarioActual) ...[
+                  const SizedBox(height: 18),
+                  SafeArea(
+                    top: false,
+                    child: Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: [
+                        FilledButton.tonalIcon(
+                          onPressed: _processingAction
+                              ? null
+                              : () {
+                                  Navigator.pop(context);
+                                  _abrirFormulario(personal: persona);
+                                },
+                          style: FilledButton.styleFrom(
+                            backgroundColor: _theme.primary,
+                            foregroundColor: _theme.white,
+                          ),
+                          icon: const Icon(Icons.edit_outlined),
+                          label: const Text('Editar'),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: _processingAction
+                              ? null
+                              : () {
+                                  Navigator.pop(context);
+                                  _confirmarCambioEstado(persona);
+                                },
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(
+                              color: persona.estaActivo
+                                  ? _theme.primary
+                                  : Colors.green.shade700,
+                            ),
+                            foregroundColor: persona.estaActivo
+                                ? _theme.primary
+                                : Colors.green.shade700,
+                          ),
+                          icon: Icon(
+                            persona.estaActivo
+                                ? Icons.person_off_outlined
+                                : Icons.person_add_alt_1_outlined,
+                          ),
+                          label: Text(
+                            persona.estaActivo ? 'Desactivar' : 'Activar',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
-        );
+        ));
       },
     );
+  }
+
+  Future<void> _copiarDato(String valor) async {
+    await Clipboard.setData(ClipboardData(text: valor));
+  }
+
+  String _textoGenero(String genero) {
+    final normalizado = genero.trim().toUpperCase();
+    if (normalizado == 'F') return 'Femenino';
+    if (normalizado == 'M') return 'Masculino';
+    return genero;
+  }
+
+  Widget _buildEstadoChip(bool estaActivo) {
+    final color = estaActivo ? Colors.green : Colors.grey;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .14),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: .35)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            estaActivo ? Icons.check_circle : Icons.pause_circle_filled,
+            size: 14,
+            color: color.shade700,
+          ),
+          const SizedBox(width: 6),
+          Text(
+            estaActivo ? 'Activo' : 'Inactivo',
+            style: TextStyle(
+              color: color.shade800,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTipoPersonalChip(bool esSupervisor) {
+    if (!esSupervisor) return const SizedBox.shrink();
+    return const TrayAdminBadge();
   }
 
   void _abrirFormulario({PersonalSalud? personal}) {
@@ -909,10 +1054,6 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                           value: 'M',
                           child: Text('Masculino'),
                         ),
-                        DropdownMenuItem(
-                          value: 'O',
-                          child: Text('Otro'),
-                        ),
                       ],
                       onChanged: (value) {
                         setStateDialog(() {
@@ -1149,7 +1290,12 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                     maxHeight: MediaQuery.of(context).size.height * .9,
                   ),
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
+                    padding: EdgeInsets.fromLTRB(
+                      16,
+                      16,
+                      16,
+                      16 + MediaQuery.of(context).padding.bottom,
+                    ),
                     child: Form(
                       key: formKey,
                       child: AbsorbPointer(
@@ -1441,6 +1587,44 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     );
   }
 
+  Widget _buildEspecialidadesResumen(PersonalSalud personal) {
+    if (personal.especialidades.isEmpty) {
+      return Text(
+        'Sin especialidades asignadas',
+        style: Theme.of(context).textTheme.bodySmall,
+      );
+    }
+
+    final top = personal.especialidades.take(2).map((e) => e.nombre).toList();
+    final extras = personal.especialidades.length - top.length;
+    final resumen = extras > 0 ? '${top.join(' · ')}  +$extras' : top.join(' · ');
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: _theme.primary.withValues(alpha: .08),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.local_hospital_outlined, size: 15, color: _theme.primary),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              resumen,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildCompactList() {
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
@@ -1467,103 +1651,81 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
               separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final persona = _personal[index];
-                final esUsuarioActual = _esUsuarioActual(persona);
-                return Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            _buildAvatar(persona, radius: 20),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                persona.nombreCompleto,
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
+                final detallePrincipal = [
+                  persona.nroDocumento ?? 'Sin documento',
+                  if (persona.especialidades.isNotEmpty)
+                    '${persona.especialidades.length} especialidades',
+                ].join(' · ');
+                return ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () => _mostrarDetallesPersonal(persona),
+                      borderRadius: BorderRadius.circular(18),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: _theme.white.withValues(alpha: 0.72),
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(
+                              color: _theme.white.withValues(alpha: 0.55),
                             ),
-                            if (persona.esSupervisor)
-                              Chip(
-                                label: const Text('Admin'),
-                                backgroundColor: _theme.primary.withValues(
-                                  alpha: .15,
-                                ),
-                                labelStyle: TextStyle(
-                                  color: _theme.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Chip(
-                          label: Text(
-                            persona.estaActivo ? 'Activo' : 'Inactivo',
                           ),
-                          backgroundColor: (persona.estaActivo
-                                  ? Colors.green
-                                  : Colors.grey)
-                              .withValues(alpha: .15),
-                          labelStyle: TextStyle(
-                            color: persona.estaActivo
-                                ? Colors.green.shade700
-                                : Colors.grey.shade700,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          persona.nroDocumento ?? 'Sin documento',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        const SizedBox(height: 8),
-                        _buildEspecialidadesCell(persona),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          children: [
-                            if (!esUsuarioActual)
-                              TextButton.icon(
-                                onPressed: _processingAction
-                                    ? null
-                                    : () => _abrirFormulario(personal: persona),
-                                icon: const Icon(Icons.edit_outlined),
-                                label: const Text('Editar'),
-                              ),
-                            TextButton.icon(
-                              onPressed: () =>
-                                  _mostrarDetallesPersonal(persona),
-                              icon: const Icon(Icons.visibility_outlined),
-                              label: const Text('Detalles'),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  dense: true,
+                                  horizontalTitleGap: 10,
+                                  leading: _buildAvatar(persona, radius: 18),
+                                  title: Text(
+                                    persona.nombreCompleto,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(context).textTheme.titleMedium,
+                                  ),
+                                  subtitle: Text(
+                                    detallePrincipal,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  trailing: _buildEstadoChip(persona.estaActivo),
+                                ),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: [
+                                    if (persona.esSupervisor)
+                                      _buildTipoPersonalChip(
+                                        persona.esSupervisor,
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                _buildEspecialidadesResumen(persona),
+                              ],
                             ),
-                            if (!esUsuarioActual)
-                              TextButton.icon(
-                                onPressed: _processingAction
-                                    ? null
-                                    : () => _confirmarCambioEstado(persona),
-                                icon: Icon(
-                                  persona.estaActivo
-                                      ? Icons.person_off_outlined
-                                      : Icons.person_add_alt_1_outlined,
-                                ),
-                                label: Text(
-                                  persona.estaActivo ? 'Inactivar' : 'Activar',
-                                ),
-                              ),
-                          ],
+                          ),
                         ),
-                        if (_loadingMore && index == _personal.length - 1) ...[
-                          const SizedBox(height: 12),
-                          const Center(child: CircularProgressIndicator()),
-                        ],
-                      ],
+                      ),
                     ),
                   ),
                 );
               },
             ),
+      );
+  }
+
+  Widget _buildLoadingMoreIndicator() {
+    if (!_loadingMore) return const SizedBox.shrink();
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 12),
+      child: Center(child: CircularProgressIndicator()),
     );
   }
 
@@ -1716,7 +1878,14 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                     )
                   else ...[
                     const SizedBox(height: 12),
-                    Expanded(child: _buildCompactList()),
+                    Expanded(
+                      child: Column(
+                        children: [
+                          Expanded(child: _buildCompactList()),
+                          _buildLoadingMoreIndicator(),
+                        ],
+                      ),
+                    ),
                   ],
                 ],
               ),

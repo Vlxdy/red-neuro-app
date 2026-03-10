@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:red_neuro_app/src/config/service_config.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/constants.dart';
@@ -12,6 +13,7 @@ import 'package:red_neuro_app/src/models/user.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth_service.dart';
 import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
+import 'package:red_neuro_app/src/ui/common/components/tray_ui_helpers.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
 import 'package:red_neuro_app/src/ui/pages/perfil/componentes/perfil_info_card.dart';
@@ -126,6 +128,13 @@ class _PerfilState extends State<Perfil> {
         });
       }
     }
+  }
+
+  Future<void> _copyField(String field, String value) async {
+    if (value.trim().isEmpty) return;
+    await Clipboard.setData(ClipboardData(text: value.trim()));
+    if (!mounted) return;
+    showCopiedMessage(perfilMessenger, field.toLowerCase());
   }
 
   Future<void> _pickAndUploadPhoto() async {
@@ -594,14 +603,17 @@ class _PerfilState extends State<Perfil> {
                       borderColor: theme.grey.withValues(alpha: .4),
                       headerIcon: Icons.contact_page_outlined,
                       headerTitle: 'Datos de contacto',
+                      onCopy: _copyField,
                       items: <Map<String, dynamic>>[
                         <String, dynamic>{
                           "clave": "Celular",
                           "valor": profile.telefono,
+                          "copiable": true,
                         },
                         <String, dynamic>{
                           "clave": "Correo electrónico",
                           "valor": profile.correoElectronico,
+                          "copiable": true,
                         },
                       ],
                     ),
