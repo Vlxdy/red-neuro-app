@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/constants/network.dart';
+import 'package:red_neuro_app/src/ui/pages/notificaciones/notificaciones_service.dart';
+import 'package:red_neuro_app/src/ui/pages/notificaciones/notificaciones_page.dart';
 
-class TrayModuleHeader extends StatelessWidget implements PreferredSizeWidget {
+class TrayModuleHeader extends StatefulWidget implements PreferredSizeWidget {
   final String titulo;
   final String subtitulo;
   final List<Widget> actions;
   final bool isCompact;
+  final bool showNotificationsAction;
 
   const TrayModuleHeader({
     super.key,
@@ -13,19 +17,42 @@ class TrayModuleHeader extends StatelessWidget implements PreferredSizeWidget {
     required this.subtitulo,
     this.actions = const [],
     this.isCompact = false,
+    this.showNotificationsAction = true,
   });
 
   @override
   Size get preferredSize => Size.fromHeight(isCompact ? 58 : 54);
 
+  @override
+  State<TrayModuleHeader> createState() => _TrayModuleHeaderState();
+}
+
+class _TrayModuleHeaderState extends State<TrayModuleHeader> {
+  late Future<int> _unreadCountFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _unreadCountFuture = _loadUnreadCount();
+  }
+
+  Future<int> _loadUnreadCount() async {
+    final service = NotificacionesService(context);
+    final response = await service.obtenerNotificaciones(page: 1, limit: 50);
+    if (response.status != StatusNetwork.connected) {
+      return 0;
+    }
+    return response.notificaciones.where((item) => !item.visto).length;
+  }
+
   void _showInfoDialog(BuildContext context) {
-    if (subtitulo.trim().isEmpty) return;
+    if (widget.subtitulo.trim().isEmpty) return;
     showDialog<void>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text(titulo),
-          content: Text(subtitulo),
+          title: Text(widget.titulo),
+          content: Text(widget.subtitulo),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
@@ -37,13 +64,49 @@ class TrayModuleHeader extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
+  Future<void> _openNotifications() async {
+    if (!mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      builder: (sheetContext) {
+        final height = MediaQuery.of(sheetContext).size.height;
+        return SizedBox(
+          height: height,
+          child: DecoratedBox(
+            decoration: const BoxDecoration(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            ),
+            child: const NotificacionesPage(),
+          ),
+        );
+      },
+    );
+    if (!mounted) return;
+    setState(() {
+      _unreadCountFuture = _loadUnreadCount();
+    });
+  }
+
   Widget _buildNotificationsAction(ThemeController theme) {
-    return _HeaderActionButton(
-      tooltip: 'Notificaciones (próximamente)',
-      icon: Icons.notifications_none_rounded,
-      onPressed: null,
-      theme: theme,
-      showComingSoonDot: true,
+    return FutureBuilder<int>(
+      future: _unreadCountFuture,
+      builder: (context, snapshot) {
+        final unreadCount = snapshot.data ?? 0;
+        return _HeaderActionButton(
+          tooltip: 'Notificaciones',
+          icon: Icons.notifications_none_rounded,
+          onPressed: _openNotifications,
+          theme: theme,
+          badgeCount: unreadCount,
+        );
+      },
     );
   }
 
@@ -57,7 +120,7 @@ class TrayModuleHeader extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: theme.primary,
       surfaceTintColor: theme.transparent,
       titleSpacing: 16,
-      toolbarHeight: isCompact ? 52 : 48,
+      toolbarHeight: widget.isCompact ? 52 : 48,
       flexibleSpace: DecoratedBox(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -78,20 +141,22 @@ class TrayModuleHeader extends StatelessWidget implements PreferredSizeWidget {
       title: GestureDetector(
         onDoubleTap: () => _showInfoDialog(context),
         child: Text(
-          titulo,
+          widget.titulo,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.1,
-            color: theme.white,
-          ),
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.1,
+                color: theme.white,
+              ),
         ),
       ),
       actions: [
-        _buildNotificationsAction(theme),
-        const SizedBox(width: 8),
-        ...actions,
+        if (widget.showNotificationsAction) ...[
+          _buildNotificationsAction(theme),
+          const SizedBox(width: 8),
+        ],
+        ...widget.actions,
         const SizedBox(width: 12),
       ],
     );
@@ -104,14 +169,14 @@ class _HeaderActionButton extends StatelessWidget {
     required this.icon,
     required this.onPressed,
     required this.theme,
-    this.showComingSoonDot = false,
+    this.badgeCount = 0,
   });
 
   final String tooltip;
   final IconData icon;
   final VoidCallback? onPressed;
   final ThemeController theme;
-  final bool showComingSoonDot;
+  final int badgeCount;
 
   @override
   Widget build(BuildContext context) {
@@ -142,17 +207,27 @@ class _HeaderActionButton extends StatelessWidget {
               ),
             ),
           ),
-          if (showComingSoonDot)
+          if (badgeCount > 0)
             Positioned(
-              right: 6,
-              top: 6,
+              right: -4,
+              top: -4,
               child: Container(
-                width: 7,
-                height: 7,
+                constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 4),
                 decoration: BoxDecoration(
-                  color: theme.secondary,
-                  shape: BoxShape.circle,
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: theme.white, width: 1),
+                ),
+                child: Center(
+                  child: Text(
+                    badgeCount > 99 ? '99+' : '$badgeCount',
+                    style: TextStyle(
+                      color: theme.white,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
               ),
             ),

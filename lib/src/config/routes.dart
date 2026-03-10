@@ -6,6 +6,7 @@ import 'package:red_neuro_app/src/ui/pages/seguridad/configuracion_pin_seguridad
 import 'package:red_neuro_app/src/ui/pages/home/home.dart';
 import 'package:red_neuro_app/src/ui/pages/informacion_personal/informacion_personal.dart';
 import 'package:red_neuro_app/src/ui/pages/mi_cuenta/mi_cuenta.dart';
+import 'package:red_neuro_app/src/ui/pages/notificaciones/notificaciones_page.dart';
 import 'package:red_neuro_app/src/ui/pages/perfil/perfil.dart';
 import 'package:red_neuro_app/src/ui/pages/procesar_sesion.dart';
 import 'package:red_neuro_app/src/ui/pages/recuperar_contrasena/recuperar_contrasena.dart';
@@ -40,6 +41,7 @@ class RouteNames {
   static const configurarPinSeguridad = 'configurar_pin_seguridad';
   static const configurarDesbloqueo = 'configurar_desbloqueo';
   static const modificarPin = 'modificar_pin';
+  static const notificaciones = 'notificaciones';
   static const controlScreen = 'control_screen';
   static const resumenDia = 'resumen_dia';
   static const registrarVenta = 'registrar_venta';
@@ -107,6 +109,12 @@ List<RouteBase> routes = [
     name: RouteNames.home,
     path: '/${RouteNames.home}',
     builder: (context, state) => const ThemeRebuild(child: HomePage()),
+  ),
+
+  GoRoute(
+    name: RouteNames.notificaciones,
+    path: '/${RouteNames.notificaciones}',
+    builder: (context, state) => const ThemeRebuild(child: NotificacionesPage()),
   ),
   GoRoute(
     name: RouteNames.procesarSesion,

@@ -3,6 +3,7 @@ import 'package:red_neuro_app/src/constants/constants.dart';
 import 'package:red_neuro_app/src/plugins/seguridad/seguridad.dart';
 import 'package:red_neuro_app/src/plugins/utils/connection.dart';
 import 'package:flutter/foundation.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:red_neuro_app/src/constants/keys.dart';
 import 'package:red_neuro_app/src/models/user.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
@@ -58,6 +59,7 @@ class Auth {
   bool isLocked = true;
 
   final PreferencesService _preferencesService = PreferencesService.instance;
+  bool _fcmInitialized = false;
 
   Future<void> login(Map<String, dynamic> json) async {
     final user = Usuario.fromJson(json);
@@ -108,6 +110,21 @@ class Auth {
 
   Future<String?> logout() async {
     try {
+      final storedPushToken = await _preferencesService.getString(Keys.pushToken);
+      if (storedPushToken.isNotEmpty) {
+        try {
+          await http.delete(
+            Uri.parse('${Constantes.apiUrl}/dispositivos-push/$storedPushToken'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ${(await apiToken).replaceAll('"', '')}',
+            },
+          );
+        } catch (e) {
+          Logger.error('No se pudo inactivar token push en logout: $e');
+        }
+        await _preferencesService.remove(Keys.pushToken);
+      }
       await clearCredentials();
       await seguridad.clearLocalSecurity();
       _store.isLogged = false;
@@ -226,39 +243,57 @@ class Auth {
 
   Future<void> registrarTokenFCM() async {
     try {
-      // Logger.info("🔐 Verificando inicialización de Firebase...");
-      // await Firebase.initializeApp(); // 🔹 Asegura la inicialización
-      //
-      // Logger.info("🔐 Solicitando permisos FCM...");
-      // await FirebaseMessaging.instance.requestPermission();
-      //
-      // final tokenFCM = await FirebaseMessaging.instance.getToken();
-      // Logger.info("📱 Token FCM obtenido: $tokenFCM");
-      //
-      // if (tokenFCM != null && tokenFCM.isNotEmpty) {
-      // final userId = await idUsuario;
-      // Logger.info("🧾 ID Usuario: $userId");
-      // TODO: implementación de notifiaciones push pendiente
-      // final url = '${Constantes.apiUrl}/notificaciones/registrar-token';
-      // Logger.info("📡 Enviando token a $url");
-      //
-      // final response = await http.post(
-      // Uri.parse(url),
-      // headers: {
-      // 'Content-Type': 'application/json',
-      // 'Authorization': 'Bearer ${await apiToken}',
-      // },
-      // body: jsonEncode({'token': tokenFCM, 'idUsuario': userId}),
-      // );
-      //
-      // Logger.info("✅ Token enviado. Status: ${response.statusCode}");
-      // Logger.info("🧾 Respuesta: ${response.body}");
-      // } else {
-      // Logger.error("❌ Token FCM vacío o null.");
-      // }
+      final messaging = FirebaseMessaging.instance;
+      await messaging.requestPermission(alert: true, badge: true, sound: true);
+      await messaging.setForegroundNotificationPresentationOptions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+
+      final tokenFCM = await messaging.getToken();
+      if (tokenFCM == null || tokenFCM.isEmpty) return;
+
+      final authToken = (await apiToken).replaceAll('"', '');
+      if (authToken.isEmpty) return;
+
+      await _preferencesService.setString(Keys.pushToken, tokenFCM);
+
+      final response = await http.post(
+        Uri.parse('${Constantes.apiUrl}/dispositivos-push'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $authToken',
+        },
+        body: jsonEncode({
+          'token': tokenFCM,
+          'plataforma': defaultTargetPlatform.name.toUpperCase(),
+        }),
+      );
+      Logger.info('Registro token push status: ${response.statusCode}');
+
+      if (!_fcmInitialized) {
+        _fcmInitialized = true;
+        FirebaseMessaging.instance.onTokenRefresh.listen((newToken) async {
+          await _preferencesService.setString(Keys.pushToken, newToken);
+          final token = (await apiToken).replaceAll('"', '');
+          if (token.isEmpty) return;
+          await http.post(
+            Uri.parse('${Constantes.apiUrl}/dispositivos-push'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({
+              'token': newToken,
+              'plataforma': defaultTargetPlatform.name.toUpperCase(),
+            }),
+          );
+        });
+      }
     } catch (e, stacktrace) {
-      Logger.error("❌ Error registrando token FCM: $e");
-      Logger.error("📌 Stacktrace:\n$stacktrace");
+      Logger.error('Error registrando token FCM: $e');
+      Logger.error('Stacktrace: $stacktrace');
     }
   }
 }
