@@ -6,6 +6,7 @@ import 'package:red_neuro_app/src/extensions/colores_extension.dart';
 import 'package:red_neuro_app/src/models/especialidad.dart';
 import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
 import 'package:red_neuro_app/src/ui/common/customdatatable/custom_datatable.dart';
+import 'package:red_neuro_app/src/ui/common/components/tray_ui_helpers.dart';
 import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
 import 'package:red_neuro_app/src/ui/common/form_stepper/step_form_dialog_layout.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
@@ -488,52 +489,6 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
     );
   }
 
-  Future<void> _confirmarEliminacion(Especialidad especialidad) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Eliminar especialidad'),
-          content: Text(
-            '¿Deseas eliminar la especialidad "${especialidad.nombre}"?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancelar'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Eliminar'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (result != true) return;
-
-    final response = await _service.eliminarEspecialidad(especialidad.id);
-
-    if (!mounted) return;
-    if (response.status == StatusNetwork.connected) {
-      showSnackBar(
-        especialidadesMessenger,
-        response.message,
-        state: StatusSnackBar.success,
-        colorText: _theme.white,
-      );
-      _cargarEspecialidades();
-    } else {
-      showSnackBar(
-        especialidadesMessenger,
-        response.message,
-        state: StatusSnackBar.error,
-        colorText: _theme.white,
-      );
-    }
-  }
-
   Future<void> _cambiarEstado(Especialidad especialidad) async {
     final response = await _service.cambiarEstadoEspecialidad(especialidad.id);
 
@@ -641,21 +596,9 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
                               ],
                             ),
                             Text('${especialidad.estudios.length} asociados'),
-                            Chip(
-                              label: Text(especialidad.estado.toUpperCase()),
-                              backgroundColor:
-                                  (especialidad.estado).toUpperCase() ==
-                                      'ACTIVO'
-                                  ? _theme.success.withValues(alpha: .15)
-                                  : _theme.error.withValues(alpha: .15),
-                              labelStyle: TextStyle(
-                                color:
-                                    (especialidad.estado).toUpperCase() ==
-                                            'ACTIVO'
-                                        ? _theme.success
-                                        : _theme.error,
-                                fontWeight: FontWeight.w600,
-                              ),
+                            TrayStatusBadge(
+                              status: especialidad.estado,
+                              activeColor: _theme.success,
                             ),
                             Wrap(
                               spacing: 4,
@@ -755,14 +698,18 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
       itemBuilder: (context, index) {
         final especialidad = _especialidades[index];
         return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () => _mostrarDetalleEspecialidad(especialidad),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                    leading: Container(
                       width: 16,
                       height: 16,
                       decoration: BoxDecoration(
@@ -770,76 +717,163 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        especialidad.nombre,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
+                    title: Text(
+                      especialidad.nombre,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleMedium,
                     ),
-                    Chip(
-                      label: Text(especialidad.estado.toUpperCase()),
-                      backgroundColor:
-                          (especialidad.estado).toUpperCase() == 'ACTIVO'
-                          ? _theme.success.withValues(alpha: .15)
-                          : _theme.error.withValues(alpha: .15),
-                      labelStyle: TextStyle(
-                        color: (especialidad.estado).toUpperCase() == 'ACTIVO'
-                            ? _theme.success
-                            : _theme.error,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    subtitle: Text(
+                      'Servicios: ${especialidad.estudios.length}',
                     ),
-                  ],
-                ),
+                    trailing: TrayStatusBadge(
+                      status: especialidad.estado,
+                      activeColor: _theme.success,
+                    ),
+                  ),
                 if ((especialidad.descripcion ?? '').isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Text(especialidad.descripcion ?? '-'),
+                  Text(
+                    especialidad.descripcion ?? '-',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
                 const SizedBox(height: 8),
-                Text(
-                  'Color: ${especialidad.colorHex}',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Servicios asociados: ${especialidad.estudios.length}',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
+                Row(
                   children: [
-                    TextButton.icon(
-                      onPressed: () =>
-                          _abrirFormulario(especialidad: especialidad),
-                      icon: const Icon(Icons.edit_outlined),
-                      label: const Text('Editar'),
+                    Icon(Icons.palette_outlined, size: 16, color: _theme.primary),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Color asignado',
+                      style: Theme.of(context).textTheme.bodySmall,
                     ),
-                    TextButton.icon(
-                      onPressed: () => _confirmarEliminacion(especialidad),
-                      icon: const Icon(Icons.delete_outline),
-                      label: const Text('Eliminar'),
-                    ),
-                    TextButton.icon(
-                      onPressed: () => _cambiarEstado(especialidad),
-                      icon: Icon(
-                        especialidad.estado.toUpperCase() == 'ACTIVO'
-                            ? Icons.toggle_off
-                            : Icons.toggle_on,
-                      ),
-                      label: Text(
-                        especialidad.estado.toUpperCase() == 'ACTIVO'
-                            ? 'Desactivar'
-                            : 'Activar',
+                    const SizedBox(width: 8),
+                    Container(
+                      width: 14,
+                      height: 14,
+                      decoration: BoxDecoration(
+                        color: HexColor.fromHex(especialidad.colorHex),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(
+                          color: _theme.grey.withValues(alpha: .35),
+                        ),
                       ),
                     ),
                   ],
                 ),
+                const SizedBox(height: 4),
                 if (_loadingMore && index == _especialidades.length - 1) ...[
                   const SizedBox(height: 12),
                   const Center(child: CircularProgressIndicator()),
                 ],
+              ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _mostrarDetalleEspecialidad(Especialidad especialidad) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Detalle de especialidad',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                Text(especialidad.nombre,
+                    style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 8),
+                TrayStatusBadge(
+                  status: especialidad.estado,
+                  activeColor: _theme.success,
+                ),
+                const SizedBox(height: 8),
+                if ((especialidad.descripcion ?? '').isNotEmpty)
+                  Text(especialidad.descripcion!),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Text('Color asignado:'),
+                    const SizedBox(width: 8),
+                    Container(
+                      width: 16,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: HexColor.fromHex(especialidad.colorHex),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(
+                          color: _theme.grey.withValues(alpha: .35),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Text('Servicios asociados: ${especialidad.estudios.length}'),
+                const SizedBox(height: 14),
+                SafeArea(
+                  top: false,
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      FilledButton.tonalIcon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: _theme.primary,
+                          foregroundColor: _theme.white,
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _abrirFormulario(especialidad: especialidad);
+                        },
+                        icon: const Icon(Icons.edit_outlined),
+                        label: const Text('Editar'),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _cambiarEstado(especialidad);
+                        },
+                        icon: Icon(
+                          especialidad.estado.toUpperCase() == 'ACTIVO'
+                              ? Icons.toggle_off
+                              : Icons.toggle_on,
+                        ),
+                        label: Text(
+                          especialidad.estado.toUpperCase() == 'ACTIVO'
+                              ? 'Desactivar'
+                              : 'Activar',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),

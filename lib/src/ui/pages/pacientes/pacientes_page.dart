@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:red_neuro_app/src/config/form_controller.dart';
@@ -8,6 +9,7 @@ import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/models/paciente.dart';
 import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
 import 'package:red_neuro_app/src/ui/common/customdatatable/custom_datatable.dart';
+import 'package:red_neuro_app/src/ui/common/components/tray_ui_helpers.dart';
 import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
@@ -215,6 +217,21 @@ class _PacientesPageState extends State<PacientesPage> with FormController {
       default:
         return '-';
     }
+  }
+
+  String _edadPaciente(String? fechaNacimiento) {
+    final value = _formatearFechaInicial(fechaNacimiento).trim();
+    if (value.isEmpty) return 'Sin edad';
+    final fecha = _parseFechaNacimiento(value);
+    if (fecha == null) return 'Sin edad';
+    final hoy = DateTime.now();
+    int edad = hoy.year - fecha.year;
+    if (hoy.month < fecha.month ||
+        (hoy.month == fecha.month && hoy.day < fecha.day)) {
+      edad--;
+    }
+    if (edad < 0) return 'Sin edad';
+    return '$edad años';
   }
 
   Future<void> _seleccionarFecha(TextEditingController controller) async {
@@ -624,51 +641,6 @@ class _PacientesPageState extends State<PacientesPage> with FormController {
     }
   }
 
-  Future<void> _confirmarEliminacion(Paciente paciente) async {
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Eliminar paciente'),
-          content:
-              Text('¿Deseas eliminar a "${paciente.nombreCompleto}"?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancelar'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Eliminar'),
-            ),
-          ],
-        );
-      },
-    );
-
-    if (result != true) return;
-
-    final response = await _service.eliminarPaciente(paciente.id);
-
-    if (!mounted) return;
-    if (response.status == StatusNetwork.connected) {
-      showSnackBar(
-        pacientesMessenger,
-        response.message,
-        state: StatusSnackBar.success,
-        colorText: _theme.white,
-      );
-      _cargarPacientes();
-    } else {
-      showSnackBar(
-        pacientesMessenger,
-        response.message,
-        state: StatusSnackBar.error,
-        colorText: _theme.white,
-      );
-    }
-  }
-
   Future<void> _cambiarEstado(Paciente paciente) async {
     final response = await _service.cambiarEstadoPaciente(paciente.id);
 
@@ -692,68 +664,165 @@ class _PacientesPageState extends State<PacientesPage> with FormController {
   }
 
   void _verDetalle(Paciente paciente) {
-    showDialog<void>(
+    showModalBottomSheet<void>(
       context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) {
+        String? copiedField;
         final theme = Theme.of(context);
-        return AlertDialog(
-          title: const Text('Detalle del paciente'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  paciente.nombreCompleto,
-                  style: theme.textTheme.titleMedium,
+        return StatefulBuilder(
+          builder: (context, setStateSheet) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Detalle del paciente',
+                        style: theme.textTheme.titleMedium,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
                 ),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  dense: true,
+                  leading: Icon(
+                    PhosphorIconsRegular.userCircle,
+                    color: _theme.primary,
+                  ),
+                  title: Text(
+                    paciente.nombreCompleto,
+                    style: theme.textTheme.titleMedium,
+                  ),
+                  trailing: TrayStatusBadge(
+                    status: paciente.estado,
+                    activeColor: _theme.success,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    if ((paciente.nroDocumento ?? '').trim().isNotEmpty)
+                      CopyableInfoPill(
+                        icon: Icons.badge_outlined,
+                        label: 'Documento',
+                        value: paciente.nroDocumento!.trim(),
+                        copied: copiedField == 'documento',
+                        onTap: () async {
+                          await _copiarDatoPaciente(
+                            paciente.nroDocumento!.trim(),
+                          );
+                          if (!mounted) return;
+                          setStateSheet(() => copiedField = 'documento');
+                        },
+                      ),
+                    if ((paciente.telefono ?? '').trim().isNotEmpty)
+                      CopyableInfoPill(
+                        icon: Icons.phone_outlined,
+                        label: 'Celular',
+                        value: paciente.telefono!.trim(),
+                        copied: copiedField == 'celular',
+                        onTap: () async {
+                          await _copiarDatoPaciente(
+                            paciente.telefono!.trim(),
+                          );
+                          if (!mounted) return;
+                          setStateSheet(() => copiedField = 'celular');
+                        },
+                      ),
+                    if (_formatearFechaInicial(paciente.fechaNacimiento)
+                        .trim()
+                        .isNotEmpty)
+                      CopyableInfoPill(
+                        icon: Icons.cake_outlined,
+                        label: 'Nacimiento',
+                        value: _formatearFechaInicial(paciente.fechaNacimiento),
+                      ),
+                    if (_formatearGenero(paciente.genero).trim().isNotEmpty)
+                      CopyableInfoPill(
+                        icon: Icons.wc_outlined,
+                        label: 'Género',
+                        value: _formatearGenero(paciente.genero),
+                      ),
+                  ],
+                ),
+                if ((paciente.observacion ?? '').trim().isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    'Observación',
+                    style: theme.textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(paciente.observacion!.trim()),
+                ],
                 const SizedBox(height: 12),
-                _buildDetailRow('Documento', paciente.nroDocumento),
-                _buildDetailRow(
-                  'Fecha de nacimiento',
-                  _formatearFechaInicial(paciente.fechaNacimiento),
+                    SafeArea(
+                      top: false,
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          FilledButton.tonalIcon(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: _theme.primary,
+                              foregroundColor: _theme.white,
+                            ),
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _abrirFormulario(paciente: paciente);
+                            },
+                            icon: const Icon(Icons.edit_outlined),
+                            label: const Text('Editar'),
+                          ),
+                          OutlinedButton.icon(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _cambiarEstado(paciente);
+                            },
+                            icon: Icon(
+                              paciente.estado.toUpperCase() == 'ACTIVO'
+                                  ? Icons.toggle_off
+                                  : Icons.toggle_on,
+                            ),
+                            label: Text(
+                              paciente.estado.toUpperCase() == 'ACTIVO'
+                                  ? 'Desactivar'
+                                  : 'Activar',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                _buildDetailRow('Celular', paciente.telefono),
-                _buildDetailRow('Género', _formatearGenero(paciente.genero)),
-                _buildDetailRow('Estado', paciente.estado),
-                _buildDetailRow('Observación', paciente.observacion),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cerrar'),
-            ),
-          ],
+              ),
+            );
+          },
         );
       },
     );
   }
 
-  Widget _buildDetailRow(String label, String? value) {
-    final safeValue = (value ?? '').trim().isEmpty ? '-' : value!.trim();
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 140,
-            child: Text(
-              label,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ),
-          Expanded(
-            child: Text(
-              safeValue,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
-          ),
-        ],
-      ),
-    );
+  Future<void> _copiarDatoPaciente(String valor) async {
+    await Clipboard.setData(ClipboardData(text: valor));
   }
 
   @override
@@ -826,19 +895,9 @@ class _PacientesPageState extends State<PacientesPage> with FormController {
                             Text(paciente.nroDocumento ?? '-'),
                             Text(paciente.telefono ?? '-'),
                             Text(_formatearGenero(paciente.genero)),
-                            Chip(
-                              label: Text(paciente.estado.toUpperCase()),
-                              backgroundColor:
-                                  (paciente.estado).toUpperCase() == 'ACTIVO'
-                                      ? _theme.success.withValues(alpha: .15)
-                                      : _theme.error.withValues(alpha: .15),
-                              labelStyle: TextStyle(
-                                color: (paciente.estado).toUpperCase() ==
-                                        'ACTIVO'
-                                    ? _theme.success
-                                    : _theme.error,
-                                fontWeight: FontWeight.w600,
-                              ),
+                            TrayStatusBadge(
+                              status: paciente.estado,
+                              activeColor: _theme.success,
                             ),
                             Row(
                               children: [
@@ -853,12 +912,6 @@ class _PacientesPageState extends State<PacientesPage> with FormController {
                                   onPressed: () => _abrirFormulario(
                                     paciente: paciente,
                                   ),
-                                ),
-                                IconButton(
-                                  tooltip: 'Eliminar',
-                                  icon: const Icon(Icons.delete_outline),
-                                  onPressed: () =>
-                                      _confirmarEliminacion(paciente),
                                 ),
                                 IconButton(
                                   tooltip: paciente.estado.toUpperCase() ==
@@ -960,101 +1013,65 @@ class _PacientesPageState extends State<PacientesPage> with FormController {
         itemBuilder: (context, index) {
           final paciente = _pacientes[index];
           return Card(
-            child: Padding(
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () => _verDetalle(paciente),
+              child: Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Icon(
-                        PhosphorIconsRegular.userCircle,
-                        color: _theme.primary,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          paciente.nombreCompleto,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                      ),
-                      Chip(
-                        label: Text(paciente.estado.toUpperCase()),
-                        backgroundColor:
-                            (paciente.estado).toUpperCase() == 'ACTIVO'
-                                ? _theme.success.withValues(alpha: .15)
-                                : _theme.error.withValues(alpha: .15),
-                        labelStyle: TextStyle(
-                          color: (paciente.estado).toUpperCase() == 'ACTIVO'
-                              ? _theme.success
-                              : _theme.error,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                  if ((paciente.nroDocumento ?? '').isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Text('Documento: ${paciente.nroDocumento}'),
-                  ],
-                  if ((paciente.telefono ?? '').isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text('Celular: ${paciente.telefono}'),
-                  ],
-                  if ((paciente.fechaNacimiento ?? '').isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      'Nacimiento: ${_formatearFechaInicial(paciente.fechaNacimiento)}',
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                    leading: Icon(
+                      PhosphorIconsRegular.userCircle,
+                      color: _theme.primary,
                     ),
-                  ],
-                  const SizedBox(height: 4),
-                  Text(
-                    'Género: ${_formatearGenero(paciente.genero)}',
-                    style: Theme.of(context).textTheme.bodySmall,
+                    title: Text(
+                      paciente.nombreCompleto,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    subtitle: Text(
+                      [
+                        if ((paciente.nroDocumento ?? '').trim().isNotEmpty)
+                          paciente.nroDocumento!.trim(),
+                        if ((paciente.telefono ?? '').trim().isNotEmpty)
+                          paciente.telefono!.trim(),
+                      ].join(' · '),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: TrayStatusBadge(
+                      status: paciente.estado,
+                      activeColor: _theme.success,
+                    ),
                   ),
-                  if ((paciente.observacion ?? '').isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Text(paciente.observacion ?? ''),
-                  ],
-                  const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
+                    runSpacing: 8,
                     children: [
-                      TextButton.icon(
-                        onPressed: () => _verDetalle(paciente),
-                        icon: const Icon(Icons.visibility_outlined),
-                        label: const Text('Ver detalle'),
+                      CopyableInfoPill(
+                        icon: Icons.wc_outlined,
+                        label: 'Género',
+                        value: _formatearGenero(paciente.genero),
                       ),
-                      TextButton.icon(
-                        onPressed: () => _abrirFormulario(paciente: paciente),
-                        icon: const Icon(Icons.edit_outlined),
-                        label: const Text('Editar'),
-                      ),
-                      TextButton.icon(
-                        onPressed: () => _confirmarEliminacion(paciente),
-                        icon: const Icon(Icons.delete_outline),
-                        label: const Text('Eliminar'),
-                      ),
-                      TextButton.icon(
-                        onPressed: () => _cambiarEstado(paciente),
-                        icon: Icon(
-                          paciente.estado.toUpperCase() == 'ACTIVO'
-                              ? Icons.toggle_off
-                              : Icons.toggle_on,
-                        ),
-                        label: Text(
-                          paciente.estado.toUpperCase() == 'ACTIVO'
-                              ? 'Desactivar'
-                              : 'Activar',
-                        ),
+                      CopyableInfoPill(
+                        icon: Icons.cake_outlined,
+                        label: 'Edad',
+                        value: _edadPaciente(paciente.fechaNacimiento),
                       ),
                     ],
                   ),
+                  const SizedBox(height: 4),
                   if (_loadingMore && index == _pacientes.length - 1) ...[
                     const SizedBox(height: 12),
                     const Center(child: CircularProgressIndicator()),
                   ],
                 ],
+              ),
               ),
             ),
           );

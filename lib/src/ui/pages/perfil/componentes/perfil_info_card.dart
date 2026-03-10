@@ -7,6 +7,7 @@ class PerfilInfoCard extends StatelessWidget {
   final IconData headerIcon;
   final String headerTitle;
   final List<Map<String, dynamic>> items;
+  final void Function(String field, String value)? onCopy;
   const PerfilInfoCard({
     super.key,
     required this.bgColor,
@@ -14,6 +15,7 @@ class PerfilInfoCard extends StatelessWidget {
     required this.headerIcon,
     required this.headerTitle,
     required this.items,
+    this.onCopy,
   });
 
   @override
@@ -71,7 +73,24 @@ class PerfilInfoCard extends StatelessWidget {
                           items[i]['clave'],
                           style: TextStyle(color: theme.grey),
                         ),
-                        Text(items[i]['valor']),
+                        GestureDetector(
+                          onTap: () {
+                            final value = (items[i]['valor'] ?? '').toString().trim();
+                            final copyable = items[i]['copiable'] == true;
+                            if (!copyable || value.isEmpty || onCopy == null) return;
+                            onCopy!(items[i]['clave'].toString(), value);
+                          },
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Flexible(child: Text(items[i]['valor'])),
+                              if (items[i]['copiable'] == true) ...[
+                                const SizedBox(width: 6),
+                                Icon(Icons.copy_rounded, size: 14, color: theme.primary),
+                              ],
+                            ],
+                          ),
+                        ),
                       ],
                     ),
                   ),
