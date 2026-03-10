@@ -15,6 +15,7 @@ import 'package:red_neuro_app/src/ui/pages/estudios/estudios_page.dart';
 import 'package:red_neuro_app/src/ui/pages/lugares/lugares_page.dart';
 import 'package:red_neuro_app/src/ui/pages/pacientes/pacientes_page.dart';
 import 'package:red_neuro_app/src/ui/pages/personal_salud/personal_salud_page.dart';
+import 'package:red_neuro_app/src/ui/pages/notificaciones/notificaciones_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:solar_icons/solar_icons.dart';
@@ -607,6 +608,7 @@ List<ChildrenItem> _submodulesFromRole({
   required ThemeController theme,
 }) {
   const adminRoutesOrder = [
+    '/admin/notificaciones',
     '/admin/citas',
     '/admin/pacientes',
     '/admin/personal_medico',
@@ -701,12 +703,17 @@ ChildrenItem _submoduleToItem(
       normalizedUrl.contains('lugares') || normalizedName == 'lugares';
   final isCitasModule =
       normalizedUrl == '/admin/citas' || normalizedName == 'citas';
+  final isNotificacionesModule =
+      normalizedUrl.contains('notificaciones') ||
+      normalizedName == 'notificaciones';
   final isPacientesModule =
       normalizedUrl.contains('pacientes') || normalizedName == 'pacientes';
   final isPersonalMedicoModule = normalizedUrl.contains('personal_medico') ||
       normalizedName.contains('personal');
 
-  final resolvedIconName = isCitasModule
+  final resolvedIconName = isNotificacionesModule
+      ? 'notificaciones'
+      : isCitasModule
       ? 'citas'
       : isPacientesModule
       ? 'pacientes'
@@ -733,6 +740,8 @@ ChildrenItem _submoduleToItem(
     children: KeepAlivePage(
       child: isUsuariosModule
           ? const UsuariosPage()
+          : isNotificacionesModule
+          ? const NotificacionesPage()
           : isEspecialidadesModule
           ? const EspecialidadesPage()
           : isLugaresModule
@@ -800,6 +809,9 @@ IconData _moduleIconData(String? iconName, {bool filled = false}) {
           : PhosphorIconsRegular.userSwitch;
     case 'server':
       return filled ? SolarIconsBold.server : SolarIconsOutline.server;
+    case 'notifications':
+    case 'notificaciones':
+      return filled ? Icons.notifications : Icons.notifications_none_rounded;
     default:
       return filled
           ? PhosphorIconsFill.gridFour
@@ -808,6 +820,14 @@ IconData _moduleIconData(String? iconName, {bool filled = false}) {
 }
 
 List<ChildrenItem> _adminMenu(ThemeController theme) => [
+  ChildrenItem(
+    iconoImagen: Icons.notifications_none_rounded,
+    iconoImagenSeleccionada: Icons.notifications,
+    titulo: 'Notificaciones',
+    children: const KeepAlivePage(
+      child: NotificacionesPage(),
+    ),
+  ),
   ChildrenItem(
     iconoImagen: PhosphorIconsRegular.calendarCheck,
     iconoImagenSeleccionada: PhosphorIconsFill.calendarCheck,
@@ -873,6 +893,14 @@ List<ChildrenItem> _adminMenu(ThemeController theme) => [
 
 List<ChildrenItem> _personalSaludAdminMenu(ThemeController theme) => [
   ChildrenItem(
+    iconoImagen: Icons.notifications_none_rounded,
+    iconoImagenSeleccionada: Icons.notifications,
+    titulo: 'Notificaciones',
+    children: const KeepAlivePage(
+      child: NotificacionesPage(),
+    ),
+  ),
+  ChildrenItem(
     iconoImagen: PhosphorIconsRegular.users,
     iconoImagenSeleccionada: PhosphorIconsFill.users,
     titulo: 'Usuarios',
@@ -893,6 +921,14 @@ List<ChildrenItem> _personalSaludAdminMenu(ThemeController theme) => [
 ];
 
 List<ChildrenItem> _personalSaludMenu(ThemeController theme) => [
+  ChildrenItem(
+    iconoImagen: Icons.notifications_none_rounded,
+    iconoImagenSeleccionada: Icons.notifications,
+    titulo: 'Notificaciones',
+    children: const KeepAlivePage(
+      child: NotificacionesPage(),
+    ),
+  ),
   ChildrenItem(
     iconoImagen: SolarIconsOutline.calendarSearch,
     iconoImagenSeleccionada: SolarIconsBold.calendarSearch,
@@ -1083,6 +1119,28 @@ _TrayBlueprint _resolveTrayBlueprint(SubModulo subModule) {
         'Asignar o revocar roles disponibles',
       ],
       icon: _moduleIconData('manage_accounts'),
+    ),
+    '/admin/notificaciones': _TrayBlueprint(
+      title: 'Notificaciones',
+      description:
+          'Consulta la bandeja de avisos y el resumen diario de citas por rol.',
+      actions: const [
+        'Ver notificaciones por fecha y estado de lectura',
+        'Marcar notificaciones individuales o todas como vistas',
+        'Revisar resumen diario de citas',
+      ],
+      icon: _moduleIconData('notificaciones'),
+    ),
+    'notificaciones': _TrayBlueprint(
+      title: 'Notificaciones',
+      description:
+          'Consulta la bandeja de avisos y el resumen diario de citas por rol.',
+      actions: const [
+        'Ver notificaciones por fecha y estado de lectura',
+        'Marcar notificaciones individuales o todas como vistas',
+        'Revisar resumen diario de citas',
+      ],
+      icon: _moduleIconData('notificaciones'),
     ),
     '/admin/citas': _TrayBlueprint(
       title: 'Citas',
