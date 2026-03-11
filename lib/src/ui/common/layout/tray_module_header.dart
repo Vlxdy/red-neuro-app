@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
-import 'package:red_neuro_app/src/constants/network.dart';
-import 'package:red_neuro_app/src/ui/pages/notificaciones/notificaciones_service.dart';
 import 'package:red_neuro_app/src/ui/pages/notificaciones/notificaciones_page.dart';
 
 class TrayModuleHeader extends StatefulWidget implements PreferredSizeWidget {
@@ -28,22 +26,6 @@ class TrayModuleHeader extends StatefulWidget implements PreferredSizeWidget {
 }
 
 class _TrayModuleHeaderState extends State<TrayModuleHeader> {
-  late Future<int> _unreadCountFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _unreadCountFuture = _loadUnreadCount();
-  }
-
-  Future<int> _loadUnreadCount() async {
-    final service = NotificacionesService(context);
-    final response = await service.obtenerNotificaciones(page: 1, limit: 50);
-    if (response.status != StatusNetwork.connected) {
-      return 0;
-    }
-    return response.notificaciones.where((item) => !item.visto).length;
-  }
 
   void _showInfoDialog(BuildContext context) {
     if (widget.subtitulo.trim().isEmpty) return;
@@ -66,39 +48,13 @@ class _TrayModuleHeaderState extends State<TrayModuleHeader> {
 
   Future<void> _openNotifications() async {
     if (!mounted) return;
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: Colors.transparent,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      clipBehavior: Clip.antiAlias,
-      builder: (sheetContext) {
-        final height = MediaQuery.of(sheetContext).size.height;
-        return SizedBox(
-          height: height,
-          child: DecoratedBox(
-            decoration: const BoxDecoration(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-            ),
-            child: const NotificacionesPage(),
-          ),
-        );
-      },
-    );
-    if (!mounted) return;
-    setState(() {
-      _unreadCountFuture = _loadUnreadCount();
-    });
+    await abrirBandejaNotificaciones(context);
   }
 
   Widget _buildNotificationsAction(ThemeController theme) {
-    return FutureBuilder<int>(
-      future: _unreadCountFuture,
-      builder: (context, snapshot) {
-        final unreadCount = snapshot.data ?? 0;
+    return ValueListenableBuilder<int>(
+      valueListenable: notificacionesNoLeidasNotifier,
+      builder: (context, unreadCount, _) {
         return _HeaderActionButton(
           tooltip: 'Notificaciones',
           icon: Icons.notifications_none_rounded,
