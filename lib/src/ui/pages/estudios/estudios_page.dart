@@ -7,6 +7,7 @@ import 'package:red_neuro_app/src/models/especialidad.dart';
 import 'package:red_neuro_app/src/models/estudio.dart';
 import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
 import 'package:red_neuro_app/src/ui/common/customdatatable/custom_datatable.dart';
+import 'package:red_neuro_app/src/ui/common/components/tray_ui_helpers.dart';
 import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
@@ -645,19 +646,9 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                             Text('${servicio.duracionMinutos} min'),
                             Text('Bs ${servicio.costo.toStringAsFixed(2)}'),
                             _buildEspecialidadesCell(servicio),
-                            Chip(
-                              label: Text(servicio.estado.toUpperCase()),
-                              backgroundColor:
-                                  (servicio.estado).toUpperCase() == 'ACTIVO'
-                                  ? _theme.success.withValues(alpha: .15)
-                                  : _theme.error.withValues(alpha: .15),
-                              labelStyle: TextStyle(
-                                color:
-                                    (servicio.estado).toUpperCase() == 'ACTIVO'
-                                    ? _theme.success
-                                    : _theme.error,
-                                fontWeight: FontWeight.w600,
-                              ),
+                            TrayStatusBadge(
+                              status: servicio.estado,
+                              activeColor: _theme.success,
                             ),
                             Wrap(
                               spacing: 4,
@@ -758,57 +749,52 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
         itemBuilder: (context, index) {
           final servicio = _servicios[index];
           return Card(
-            child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () => _mostrarDetalleServicio(servicio),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                    title: Text(
+                      servicio.nombre,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    subtitle: Text('Tipo: ${servicio.tipo.toUpperCase()}'),
+                    trailing: TrayStatusBadge(
+                      status: servicio.estado,
+                      activeColor: _theme.success,
+                    ),
+                  ),
+                  Text(
+                    servicio.descripcion,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
-                      Expanded(
-                        child: Text(
-                          servicio.nombre,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
+                      CopyableInfoPill(
+                        icon: Icons.schedule_outlined,
+                        label: 'Duración',
+                        value: '${servicio.duracionMinutos} min',
                       ),
-                      Chip(
-                        label: Text(servicio.estado.toUpperCase()),
-                        backgroundColor:
-                            (servicio.estado).toUpperCase() == 'ACTIVO'
-                            ? _theme.success.withValues(alpha: .15)
-                            : _theme.error.withValues(alpha: .15),
-                        labelStyle: TextStyle(
-                          color: (servicio.estado).toUpperCase() == 'ACTIVO'
-                              ? _theme.success
-                              : _theme.error,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      CopyableInfoPill(
+                        icon: Icons.payments_outlined,
+                        label: 'Costo',
+                        value: 'Bs ${servicio.costo.toStringAsFixed(2)}',
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Text(servicio.descripcion),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Tipo: ${servicio.tipo.toUpperCase()}',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Duración: ${servicio.duracionMinutos} min',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Costo: Bs ${servicio.costo.toStringAsFixed(2)}',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Especialidades',
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  const SizedBox(height: 6),
                   if (servicio.especialidades.isEmpty)
                     Text(
                       'Sin especialidades asignadas.',
@@ -829,17 +815,105 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                           )
                           .toList(),
                     ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 4),
+                  if (_loadingMore && index == _servicios.length - 1) ...[
+                    const SizedBox(height: 12),
+                    const Center(child: CircularProgressIndicator()),
+                  ],
+                ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _mostrarDetalleServicio(Servicio servicio) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Detalle del servicio',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                Text(servicio.nombre,
+                    style: Theme.of(context).textTheme.titleMedium),
+                const SizedBox(height: 8),
+                TrayStatusBadge(
+                  status: servicio.estado,
+                  activeColor: _theme.success,
+                ),
+                const SizedBox(height: 8),
+                Text(servicio.descripcion),
+                Text('Tipo: ${servicio.tipo.toUpperCase()}'),
+                Text('Duración: ${servicio.duracionMinutos} min'),
+                Text('Costo: Bs ${servicio.costo.toStringAsFixed(2)}'),
+                const SizedBox(height: 8),
+                if (servicio.especialidades.isNotEmpty)
                   Wrap(
                     spacing: 8,
+                    runSpacing: 8,
+                    children: servicio.especialidades
+                        .map(
+                          (especialidad) => Chip(
+                            label: Text(especialidad.nombre),
+                            backgroundColor: HexColor.fromHex(
+                              especialidad.colorHex,
+                            ).withValues(alpha: .15),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                const SizedBox(height: 12),
+                SafeArea(
+                  top: false,
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
                     children: [
-                      TextButton.icon(
-                        onPressed: () => _abrirFormulario(servicio: servicio),
+                      FilledButton.tonalIcon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: _theme.primary,
+                          foregroundColor: _theme.white,
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _abrirFormulario(servicio: servicio);
+                        },
                         icon: const Icon(Icons.edit_outlined),
                         label: const Text('Editar'),
                       ),
-                      TextButton.icon(
-                        onPressed: () => _cambiarEstado(servicio),
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _cambiarEstado(servicio);
+                        },
                         icon: Icon(
                           servicio.estado.toUpperCase() == 'ACTIVO'
                               ? Icons.toggle_off
@@ -853,16 +927,12 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                       ),
                     ],
                   ),
-                  if (_loadingMore && index == _servicios.length - 1) ...[
-                    const SizedBox(height: 12),
-                    const Center(child: CircularProgressIndicator()),
-                  ],
-                ],
-              ),
+                ),
+              ],
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }

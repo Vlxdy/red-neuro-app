@@ -4,6 +4,7 @@ import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/models/lugar.dart';
 import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
+import 'package:red_neuro_app/src/ui/common/components/tray_ui_helpers.dart';
 import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
@@ -434,20 +435,9 @@ class _LugaresPageState extends State<LugaresPage> {
   }
 
   Widget _estadoBadge(String estado) {
-    final isActivo = estado.toUpperCase() == 'ACTIVO';
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: (isActivo ? _theme.success : _theme.error).withValues(alpha: .2),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        estado,
-        style: TextStyle(
-          fontWeight: FontWeight.w700,
-          color: isActivo ? _theme.success : _theme.error,
-        ),
-      ),
+    return TrayStatusBadge(
+      status: estado,
+      activeColor: _theme.success,
     );
   }
 
@@ -463,7 +453,7 @@ class _LugaresPageState extends State<LugaresPage> {
       ),
       child: Row(
         children: [
-          const Icon(Icons.filter_alt_rounded, size: 18),
+          const Icon(Icons.filter_list, size: 18),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -487,70 +477,160 @@ class _LugaresPageState extends State<LugaresPage> {
   Widget _buildLugarCard(Lugar lugar) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    lugar.nombre.isEmpty ? '-' : lugar.nombre,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => _mostrarDetalleLugar(lugar),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+                leading: Icon(Icons.location_city_outlined, color: _theme.primary),
+                title: Text(
+                  lugar.nombre.isEmpty ? '-' : lugar.nombre,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                _estadoBadge(lugar.estado),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                Chip(label: Text('Tipo: ${lugar.tipo.replaceAll('_', ' ')}')),
-                if (lugar.sigla.trim().isNotEmpty)
-                  Chip(label: Text('Sigla: ${lugar.sigla}')),
-              ],
-            ),
-            if (lugar.direccion.trim().isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(Icons.location_on_outlined, size: 18),
-                  const SizedBox(width: 6),
-                  Expanded(child: Text(lugar.direccion)),
-                ],
+                subtitle: Text(
+                  [
+                    'Tipo: ${lugar.tipo.replaceAll('_', ' ')}',
+                    if (lugar.sigla.trim().isNotEmpty) 'Sigla: ${lugar.sigla}',
+                  ].join(' · '),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: _estadoBadge(lugar.estado),
               ),
-            ],
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                IconButton(
-                  tooltip: 'Editar',
-                  onPressed: () => _abrirFormulario(lugar: lugar),
-                  icon: const Icon(Icons.edit_outlined),
-                ),
-                IconButton(
-                  tooltip: lugar.estado.toUpperCase() == 'ACTIVO'
-                      ? 'Inactivar'
-                      : 'Activar',
-                  onPressed: () => _cambiarEstado(lugar),
-                  icon: Icon(
-                    lugar.estado.toUpperCase() == 'ACTIVO'
-                        ? Icons.toggle_on
-                        : Icons.toggle_off,
+              if (lugar.direccion.trim().isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Text(
+                    lugar.direccion,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  void _mostrarDetalleLugar(Lugar lugar) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Detalle del lugar',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                Text(
+                  lugar.nombre.isEmpty ? '-' : lugar.nombre,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                _estadoBadge(lugar.estado),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    CopyableInfoPill(
+                      icon: Icons.location_city_outlined,
+                      label: 'Tipo',
+                      value: lugar.tipo.replaceAll('_', ' '),
+                    ),
+                    if (lugar.sigla.trim().isNotEmpty)
+                      CopyableInfoPill(
+                        icon: Icons.short_text,
+                        label: 'Sigla',
+                        value: lugar.sigla,
+                      ),
+                  ],
+                ),
+                if (lugar.direccion.trim().isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    'Dirección',
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(lugar.direccion),
+                ],
+                const SizedBox(height: 14),
+                SafeArea(
+                  top: false,
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      FilledButton.tonalIcon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: _theme.primary,
+                          foregroundColor: _theme.white,
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _abrirFormulario(lugar: lugar);
+                        },
+                        icon: const Icon(Icons.edit_outlined),
+                        label: const Text('Editar'),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _cambiarEstado(lugar);
+                        },
+                        icon: Icon(
+                          lugar.estado.toUpperCase() == 'ACTIVO'
+                              ? Icons.toggle_on
+                              : Icons.toggle_off,
+                        ),
+                        label: Text(
+                          lugar.estado.toUpperCase() == 'ACTIVO'
+                              ? 'Inactivar'
+                              : 'Activar',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -569,7 +649,18 @@ class _LugaresPageState extends State<LugaresPage> {
               IconButton(
                 tooltip: 'Filtrar',
                 onPressed: _abrirFiltros,
-                icon: Icon(Icons.filter_alt_rounded, color: _theme.white),
+                icon: Icon(Icons.filter_list, color: _theme.white),
+                style: IconButton.styleFrom(
+                  minimumSize: const Size(36, 36),
+                  side: BorderSide(
+                    color: _theme.white.withValues(alpha: 0.35),
+                  ),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Nuevo lugar',
+                onPressed: () => _abrirFormulario(),
+                icon: Icon(Icons.add, color: _theme.white),
                 style: IconButton.styleFrom(
                   minimumSize: const Size(36, 36),
                   side: BorderSide(
@@ -578,13 +669,6 @@ class _LugaresPageState extends State<LugaresPage> {
                 ),
               ),
             ],
-          ),
-          floatingActionButton: FloatingActionButton.extended(
-            onPressed: () => _abrirFormulario(),
-            backgroundColor: _theme.primary,
-            foregroundColor: _theme.white,
-            icon: const Icon(Icons.add),
-            label: const Text('Nuevo lugar'),
           ),
           body: RefreshIndicator(
             onRefresh: () => _cargarLugares(page: 1, append: false),

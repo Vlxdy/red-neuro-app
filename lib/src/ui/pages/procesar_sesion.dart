@@ -73,13 +73,13 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
 
       if (!autenticado) return;
 
-      final String? idUsuario = await Auth.instance.idUsuario;
+      final String? idUsuarioRol = Auth.instance.profile.idUsuarioRol;
 
       ctx = navigatorKey.currentContext;
       if (ctx == null || !ctx.mounted) return;
 
-      if (idUsuario != null) {
-        await socketProvider.init(idUsuario, ctx);
+      if (idUsuarioRol != null && idUsuarioRol.isNotEmpty) {
+        await socketProvider.init(idUsuarioRol);
 
         ctx = navigatorKey.currentContext;
         if (ctx == null || !ctx.mounted) return;

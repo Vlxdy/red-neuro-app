@@ -1597,7 +1597,7 @@ class _CitasSocketClient {
     }
     final token = await Auth.instance.apiToken;
     _socket = io.io(
-      '${Constantes.sockets}/citas',
+      '${Constantes.sockets}/realtime',
       io.OptionBuilder()
           .setTransports(['websocket'])
           .setAuth({'token': token})
