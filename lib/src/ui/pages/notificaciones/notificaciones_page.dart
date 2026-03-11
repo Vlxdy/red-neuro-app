@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:red_neuro_app/src/config/socket_service.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/models/notificacion.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
@@ -11,6 +12,35 @@ import 'package:red_neuro_app/src/ui/pages/notificaciones/notificaciones_service
 
 final GlobalKey<ScaffoldMessengerState> notificacionesMessenger =
     GlobalKey<ScaffoldMessengerState>();
+
+final ValueNotifier<int> notificacionesNoLeidasNotifier = ValueNotifier<int>(0);
+final ValueNotifier<bool> notificacionesBandejaAbiertaNotifier =
+    ValueNotifier<bool>(false);
+
+Future<void> abrirBandejaNotificaciones(BuildContext context) async {
+  await showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    backgroundColor: Colors.transparent,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    clipBehavior: Clip.antiAlias,
+    builder: (sheetContext) {
+      final height = MediaQuery.of(sheetContext).size.height;
+      return SizedBox(
+        height: height,
+        child: DecoratedBox(
+          decoration: const BoxDecoration(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: const NotificacionesPage(),
+        ),
+      );
+    },
+  );
+}
 
 class NotificacionesPage extends StatefulWidget {
   const NotificacionesPage({super.key});
@@ -33,6 +63,10 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
   int _total = 0;
   bool _hasMore = true;
 
+  void Function(dynamic)? _onNuevaHandler;
+  void Function(dynamic)? _onVistaHandler;
+  void Function(dynamic)? _onTodasVistasHandler;
+
   int get _noLeidas => _items.where((item) => !item.visto).length;
 
   @override
@@ -40,6 +74,8 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
     super.initState();
     _service = NotificacionesService(context);
     _scrollController.addListener(_onScroll);
+    _bindSocketEvents();
+    notificacionesBandejaAbiertaNotifier.value = true;
     _cargarInicial();
   }
 
@@ -48,7 +84,92 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
     _scrollController
       ..removeListener(_onScroll)
       ..dispose();
+    if (_onNuevaHandler != null) {
+      SocketService.instance.off('notificaciones:nueva', _onNuevaHandler);
+    }
+    if (_onVistaHandler != null) {
+      SocketService.instance.off('notificaciones:vista', _onVistaHandler);
+    }
+    if (_onTodasVistasHandler != null) {
+      SocketService.instance.off(
+        'notificaciones:todas-vistas',
+        _onTodasVistasHandler,
+      );
+    }
+    notificacionesBandejaAbiertaNotifier.value = false;
     super.dispose();
+  }
+
+
+
+  bool _esEventoDelUsuario(Map<String, dynamic> payload) {
+    final notificacion = payload['notificacion'];
+    final idPersonalEvento =
+        payload['idPersonal']?.toString() ??
+        (notificacion is Map ? notificacion['idPersonal']?.toString() : null);
+
+    final profile = Auth.instance.profile;
+    final candidatosUsuario = <String>{
+      if (profile.id != null && profile.id!.isNotEmpty) profile.id!,
+      if (profile.idUsuarioRol != null && profile.idUsuarioRol!.isNotEmpty)
+        profile.idUsuarioRol!,
+      if (profile.idRol != null && profile.idRol!.isNotEmpty) profile.idRol!,
+    };
+
+    if (idPersonalEvento == null || idPersonalEvento.isEmpty) {
+      return true;
+    }
+
+    return candidatosUsuario.contains(idPersonalEvento);
+  }
+
+  void _actualizarBadgeNoLeidas() {
+    notificacionesNoLeidasNotifier.value = _noLeidas;
+  }
+
+  void _bindSocketEvents() {
+    _onNuevaHandler ??= (payload) {
+      if (payload is! Map<String, dynamic>) return;
+      if (!mounted || !_esEventoDelUsuario(payload)) return;
+      final incoming = NotificacionItem.fromJson(payload);
+      setState(() {
+        final exists = _items.any((item) => item.id == incoming.id);
+        if (!exists) {
+          _items = [incoming, ..._items];
+        }
+        _total = _items.length > _total ? _items.length : _total;
+      });
+      _actualizarBadgeNoLeidas();
+    };
+
+    _onVistaHandler ??= (payload) {
+      if (payload is! Map<String, dynamic>) return;
+      if (!mounted || !_esEventoDelUsuario(payload)) return;
+      final id = payload['id']?.toString();
+      if (id == null || id.isEmpty) return;
+      setState(() {
+        _items = _items
+            .map((e) => e.id == id ? e.copyWith(visto: true) : e)
+            .toList();
+      });
+      _actualizarBadgeNoLeidas();
+    };
+
+    _onTodasVistasHandler ??= (payload) {
+      if (payload is! Map<String, dynamic>) return;
+      if (!mounted || !_esEventoDelUsuario(payload)) return;
+      setState(() {
+        _items = _items.map((e) => e.copyWith(visto: true)).toList();
+      });
+      _actualizarBadgeNoLeidas();
+    };
+
+    SocketService.instance.on('notificaciones:nueva', _onNuevaHandler!);
+    SocketService.instance.on('notificaciones:vista', _onVistaHandler!);
+    SocketService.instance.on(
+      'notificaciones:todas-vistas',
+      _onTodasVistasHandler!,
+    );
   }
 
   Future<void> _cargarInicial() async {
@@ -81,6 +202,7 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
       _hasMore = _items.length < _total;
       _loadingMore = false;
     });
+    _actualizarBadgeNoLeidas();
 
     if (result.status != StatusNetwork.connected) {
       showSnackBar(
@@ -119,6 +241,7 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
           .map((e) => e.id == item.id ? e.copyWith(visto: true) : e)
           .toList();
     });
+    _actualizarBadgeNoLeidas();
   }
 
   Future<void> _marcarTodas() async {
@@ -136,6 +259,7 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
     setState(() {
       _items = _items.map((e) => e.copyWith(visto: true)).toList();
     });
+    _actualizarBadgeNoLeidas();
   }
 
   @override
