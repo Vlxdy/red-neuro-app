@@ -23,8 +23,7 @@ class OcupacionesPage extends StatefulWidget {
   State<OcupacionesPage> createState() => _OcupacionesPageState();
 }
 
-class _OcupacionesPageState extends State<OcupacionesPage>
-    with FormController {
+class _OcupacionesPageState extends State<OcupacionesPage> with FormController {
   final _theme = ThemeController.instance;
   late final OcupacionesService _service;
 
@@ -207,7 +206,9 @@ class _OcupacionesPageState extends State<OcupacionesPage>
 
   Future<void> _abrirFormulario({Ocupacion? ocupacion}) async {
     final formKey = GlobalKey<FormState>();
-    final nombreController = TextEditingController(text: ocupacion?.nombre ?? '');
+    final nombreController = TextEditingController(
+      text: ocupacion?.nombre ?? '',
+    );
     final descripcionController = TextEditingController(
       text: ocupacion?.descripcion ?? '',
     );
@@ -291,7 +292,7 @@ class _OcupacionesPageState extends State<OcupacionesPage>
                               CustomTextInput(
                                 title: 'Grado (opcional)',
                                 controller: gradoController,
-                                hintText: 'Ej: Médico especialista',
+                                placeholder: 'Ej: Médico especialista',
                               ),
                               const SizedBox(height: 8),
                               Align(
@@ -376,7 +377,6 @@ class _OcupacionesPageState extends State<OcupacionesPage>
     );
   }
 
-
   String _textoGrado(String? grado) {
     final value = (grado ?? '').trim();
     return value.isEmpty ? '-' : value;
@@ -424,9 +424,7 @@ class _OcupacionesPageState extends State<OcupacionesPage>
                 icon: Icon(Icons.filter_list, color: _theme.white),
                 style: IconButton.styleFrom(
                   minimumSize: const Size(36, 36),
-                  side: BorderSide(
-                    color: _theme.white.withValues(alpha: 0.35),
-                  ),
+                  side: BorderSide(color: _theme.white.withValues(alpha: 0.35)),
                 ),
               ),
               IconButton(
@@ -434,9 +432,7 @@ class _OcupacionesPageState extends State<OcupacionesPage>
                 icon: Icon(Icons.add, color: _theme.white),
                 style: IconButton.styleFrom(
                   minimumSize: const Size(36, 36),
-                  side: BorderSide(
-                    color: _theme.white.withValues(alpha: 0.35),
-                  ),
+                  side: BorderSide(color: _theme.white.withValues(alpha: 0.35)),
                 ),
               ),
             ],
@@ -489,13 +485,11 @@ class _OcupacionesPageState extends State<OcupacionesPage>
                                 ),
                                 IconButton(
                                   tooltip:
-                                      ocupacion.estado.toUpperCase() ==
-                                              'ACTIVO'
-                                          ? 'Desactivar'
-                                          : 'Activar',
+                                      ocupacion.estado.toUpperCase() == 'ACTIVO'
+                                      ? 'Desactivar'
+                                      : 'Activar',
                                   icon: Icon(
-                                    ocupacion.estado.toUpperCase() ==
-                                            'ACTIVO'
+                                    ocupacion.estado.toUpperCase() == 'ACTIVO'
                                         ? Icons.toggle_off
                                         : Icons.toggle_on,
                                     color: _theme.primary,
@@ -512,9 +506,7 @@ class _OcupacionesPageState extends State<OcupacionesPage>
                   )
                 else ...[
                   const SizedBox(height: 12),
-                  Expanded(
-                    child: _buildCompactList(),
-                  ),
+                  Expanded(child: _buildCompactList()),
                 ],
               ],
             ),
@@ -523,7 +515,6 @@ class _OcupacionesPageState extends State<OcupacionesPage>
       ),
     );
   }
-
 
   Widget _buildPagination() {
     final inicio = _ocupaciones.isEmpty ? 0 : ((_page - 1) * _limit) + 1;
@@ -594,32 +585,30 @@ class _OcupacionesPageState extends State<OcupacionesPage>
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
-                    subtitle: Text(
-                      'Servicios: ${ocupacion.estudios.length}',
-                    ),
+                    subtitle: Text('Servicios: ${ocupacion.estudios.length}'),
                     trailing: TrayStatusBadge(
                       status: ocupacion.estado,
                       activeColor: _theme.success,
                     ),
                   ),
-                if ((ocupacion.descripcion ?? '').isNotEmpty) ...[
+                  if ((ocupacion.descripcion ?? '').isNotEmpty) ...[
+                    Text(
+                      ocupacion.descripcion ?? '-',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                  const SizedBox(height: 8),
                   Text(
-                    ocupacion.descripcion ?? '-',
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                    'Grado: ${_textoGrado(ocupacion.grado)}',
+                    style: Theme.of(context).textTheme.bodySmall,
                   ),
+                  const SizedBox(height: 4),
+                  if (_loadingMore && index == _ocupaciones.length - 1) ...[
+                    const SizedBox(height: 12),
+                    const Center(child: CircularProgressIndicator()),
+                  ],
                 ],
-                const SizedBox(height: 8),
-                Text(
-                  'Grado: ${_textoGrado(ocupacion.grado)}',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                const SizedBox(height: 4),
-                if (_loadingMore && index == _ocupaciones.length - 1) ...[
-                  const SizedBox(height: 12),
-                  const Center(child: CircularProgressIndicator()),
-                ],
-              ],
               ),
             ),
           ),
@@ -660,8 +649,10 @@ class _OcupacionesPageState extends State<OcupacionesPage>
                     ),
                   ],
                 ),
-                Text(ocupacion.nombre,
-                    style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  ocupacion.nombre,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 const SizedBox(height: 8),
                 TrayStatusBadge(
                   status: ocupacion.estado,
