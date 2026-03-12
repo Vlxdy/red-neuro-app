@@ -61,7 +61,7 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
             cita.servicioDuracionMinutos ??
             Constantes.citasDuracionDefectoMinutos,
         estado: 'ACTIVO',
-        ocupaciones: const [],
+        categorias: const [],
       );
     }
     final servicioController = TextEditingController(

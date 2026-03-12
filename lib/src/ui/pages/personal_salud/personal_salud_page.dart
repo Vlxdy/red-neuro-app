@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -10,7 +9,6 @@ import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/constants.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/extensions/colores_extension.dart';
-import 'package:red_neuro_app/src/models/ocupacion.dart';
 import 'package:red_neuro_app/src/models/personal_salud.dart';
 import 'package:red_neuro_app/src/models/rol.dart';
 import 'package:red_neuro_app/src/models/user.dart';
@@ -22,7 +20,6 @@ import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/common/form_stepper/step_form_dialog_layout.dart';
 import 'package:red_neuro_app/src/ui/common/components/tray_ui_helpers.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
-import 'package:red_neuro_app/src/ui/common/text_inputs/autocomplete_field.dart';
 import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
 import 'package:red_neuro_app/src/ui/pages/personal_salud/personal_salud_service.dart';
 
@@ -471,7 +468,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
       ),
       builder: (context) {
         String? copiedField;
-        final ocupaciones = persona.ocupaciones;
+        final ocupacion = persona.ocupacion?.trim() ?? "";
         final contacto = [
           if ((persona.correoElectronico ?? '').trim().isNotEmpty)
             persona.correoElectronico!.trim(),
@@ -570,10 +567,10 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                       ),
                   ],
                 ),
-                if (ocupaciones.isNotEmpty) ...[
+                if (ocupacion.isNotEmpty) ...[
                   const SizedBox(height: 14),
                   Text(
-                    'Ocupaciones',
+                    'Ocupación',
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                   const SizedBox(height: 8),
@@ -716,30 +713,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     final bool isEditing = personal != null;
     final int lastStepIndex = isEditing ? 2 : 3;
 
-    final seleccionInicial = personal?.ocupaciones ?? [];
-    final List<Ocupacion> selectedOcupaciones = seleccionInicial.isNotEmpty
-        ? seleccionInicial
-              .map(
-                (ocupacion) => Ocupacion(
-                  id: ocupacion.id,
-                  nombre: ocupacion.nombre,
-                  descripcion: null,
-                  estado: 'ACTIVO',
-                  grado: ocupacion.grado,
-                  estudios: const [],
-                ),
-              )
-              .toList()
-        : <Ocupacion>[];
-
-    final List<Ocupacion> ocupacionesDisponibles = [];
-    bool ocupacionesLoading = false;
-    bool ocupacionesHasMore = true;
-    int ocupacionesPage = 1;
-    String ocupacionesFiltro = '';
-    Timer? ocupacionesDebounce;
-    bool scrollListenerAttached = false;
-    final ScrollController ocupacionesScrollController = ScrollController();
+    final ocupacion = TextEditingController(text: personal?.ocupacion ?? '');
 
     showModalBottomSheet(
       context: context,
@@ -752,58 +726,6 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
-            Future<void> cargarOcupaciones({
-              bool reset = false,
-              bool clearBeforeLoad = true,
-            }) async {
-              if (ocupacionesLoading || (!ocupacionesHasMore && !reset)) {
-                return;
-              }
-              setStateDialog(() => ocupacionesLoading = true);
-              if (reset) {
-                ocupacionesPage = 1;
-                ocupacionesHasMore = true;
-                if (clearBeforeLoad) {
-                  ocupacionesDisponibles.clear();
-                }
-              }
-              final result = await _service.obtenerOcupacionesPaginadas(
-                page: ocupacionesPage,
-                limit: 20,
-                filtro: ocupacionesFiltro,
-              );
-              if (!mounted) return;
-              setStateDialog(() {
-                if (reset) {
-                  ocupacionesDisponibles
-                    ..clear()
-                    ..addAll(result.items);
-                } else {
-                  ocupacionesDisponibles.addAll(result.items);
-                }
-                ocupacionesHasMore =
-                    ocupacionesDisponibles.length < result.total;
-                ocupacionesPage += 1;
-                ocupacionesLoading = false;
-              });
-            }
-
-            if (!scrollListenerAttached) {
-              scrollListenerAttached = true;
-              ocupacionesScrollController.addListener(() {
-                if (ocupacionesScrollController.position.pixels >=
-                        ocupacionesScrollController
-                                .position
-                                .maxScrollExtent -
-                            120 &&
-                    !ocupacionesLoading &&
-                    ocupacionesHasMore) {
-                  cargarOcupaciones();
-                }
-              });
-              cargarOcupaciones(reset: true);
-            }
-
             Widget stepContent() {
               final isWide = MediaQuery.of(context).size.width >= 720;
 
@@ -1066,116 +988,18 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
               }
 
               if (currentStep == 2) {
-                final selectedIds = selectedOcupaciones.map((e) => e.id).toSet();
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Ocupaciones (opcional)',
+                      'Ocupación (opcional)',
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                     const SizedBox(height: 12),
-                    FormField<List<Ocupacion>>(
-                      initialValue: selectedOcupaciones,
-                      builder: (state) {
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (selectedOcupaciones.isEmpty)
-                              Text(
-                                'Puedes continuar sin ocupaciones y agregarlas después.',
-                                style: Theme.of(context).textTheme.bodySmall,
-                              )
-                            else
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: selectedOcupaciones.map((item) {
-                                  return Chip(
-                                    label: Text(item.nombre),
-                                    backgroundColor: HexColor.fromHex(
-                                      '#64748b',
-                                    ).withValues(alpha: .15),
-                                    deleteIcon: const Icon(Icons.close),
-                                    onDeleted: () {
-                                      setStateDialog(() {
-                                        selectedOcupaciones.removeWhere(
-                                          (ocupacion) =>
-                                              ocupacion.id == item.id,
-                                        );
-                                      });
-                                      state.didChange(selectedOcupaciones);
-                                    },
-                                  );
-                                }).toList(),
-                              ),
-                            const SizedBox(height: 12),
-                            AutocompleteField<Ocupacion>(
-                              optionsBuilder: (textEditingValue) {
-                                final query = textEditingValue.text
-                                    .trim()
-                                    .toLowerCase();
-                                if (query.isEmpty &&
-                                    ocupacionesDisponibles.isEmpty &&
-                                    !ocupacionesLoading) {
-                                  Future.microtask(
-                                    () => cargarOcupaciones(reset: true),
-                                  );
-                                }
-                                if (query.isEmpty) {
-                                  return ocupacionesDisponibles;
-                                }
-                                return ocupacionesDisponibles.where(
-                                  (option) => option.nombre
-                                      .toLowerCase()
-                                      .contains(query),
-                                );
-                              },
-                              displayStringForOption: (option) => option.nombre,
-                              onSelected: (selection) {
-                                if (selectedIds.contains(selection.id)) {
-                                  return;
-                                }
-                                setStateDialog(() {
-                                  selectedOcupaciones.add(selection);
-                                  ocupacionesFiltro = '';
-                                  ocupacionesDisponibles.clear();
-                                  ocupacionesHasMore = true;
-                                  ocupacionesPage = 1;
-                                });
-                                state.didChange(selectedOcupaciones);
-                                FocusScope.of(context).unfocus();
-                                cargarOcupaciones(reset: true);
-                              },
-                              labelText: 'Agregar ocupacion (opcional)',
-                              loading: ocupacionesLoading,
-                              loadingText: 'Cargando ocupaciones...',
-                              emptyText: 'No hay ocupaciones disponibles.',
-                              optionsHeaderText: 'Ocupaciones',
-                              optionsScrollController:
-                                  ocupacionesScrollController,
-                              selectedIconColor: _theme.primary,
-                              isOptionSelected: (option) =>
-                                  selectedIds.contains(option.id),
-                              onChanged: (value) {
-                                ocupacionesFiltro = value.trim();
-                                ocupacionesDebounce?.cancel();
-                                if (ocupacionesFiltro.isEmpty) {
-                                  cargarOcupaciones(
-                                    reset: true,
-                                    clearBeforeLoad: false,
-                                  );
-                                  return;
-                                }
-                                ocupacionesDebounce = Timer(
-                                  const Duration(milliseconds: 400),
-                                  () => cargarOcupaciones(reset: true),
-                                );
-                              },
-                            ),
-                          ],
-                        );
-                      },
+                    CustomTextInput(
+                      title: 'Ocupación',
+                      controller: ocupacion,
+                      placeholder: 'Ej: Cardiología',
                     ),
                     const SizedBox(height: 16),
                     SwitchListTile(
@@ -1384,10 +1208,6 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                               if ((generoSeleccionado ?? '').trim().isNotEmpty)
                                 'genero': generoSeleccionado,
                             };
-                            final idsOcupaciones = selectedOcupaciones
-                                .map((ocupacion) => ocupacion.id)
-                                .toList();
-
                             Map<String, dynamic> body;
                             if (personal == null) {
                               body = {
@@ -1396,16 +1216,16 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                 'contrasena': contrasena.text,
                                 'repetirContrasena': repetirContrasena.text,
                                 'esSupervisor': esSupervisor,
-                                if (idsOcupaciones.isNotEmpty)
-                                  'idOcupaciones': idsOcupaciones,
+                                if (ocupacion.text.trim().isNotEmpty)
+                                  'ocupacion': ocupacion.text.trim(),
                               };
                             } else {
                               body = {
                                 'persona': persona,
                                 'correoElectronico': correo.text.trim(),
                                 'esSupervisor': esSupervisor,
-                                if (idsOcupaciones.isNotEmpty)
-                                  'idOcupaciones': idsOcupaciones,
+                                if (ocupacion.text.trim().isNotEmpty)
+                                  'ocupacion': ocupacion.text.trim(),
                               };
                             }
 
@@ -1435,8 +1255,6 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
         );
       },
     ).whenComplete(() {
-      ocupacionesDebounce?.cancel();
-      ocupacionesScrollController.dispose();
     });
   }
 
@@ -1568,36 +1386,30 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
   }
 
   Widget _buildOcupacionesCell(PersonalSalud personal) {
-    if (personal.ocupaciones.isEmpty) {
-      return const Text('Sin ocupaciones');
+    if ((personal.ocupacion ?? "").trim().isEmpty) {
+      return const Text('Sin ocupación');
     }
     return Wrap(
       spacing: 6,
       runSpacing: 6,
-      children: personal.ocupaciones
-          .map(
-            (ocupacion) => Chip(
-              label: Text(ocupacion.nombre),
-              backgroundColor: HexColor.fromHex(
-                '#64748b',
-              ).withValues(alpha: .15),
-            ),
-          )
-          .toList(),
+      children: [
+        Chip(
+          label: Text(personal.ocupacion!.trim()),
+          backgroundColor: HexColor.fromHex('#64748b').withValues(alpha: .15),
+        ),
+      ],
     );
   }
 
   Widget _buildOcupacionesResumen(PersonalSalud personal) {
-    if (personal.ocupaciones.isEmpty) {
+    if ((personal.ocupacion ?? "").trim().isEmpty) {
       return Text(
-        'Sin ocupaciones asignadas',
+        'Sin ocupación asignada',
         style: Theme.of(context).textTheme.bodySmall,
       );
     }
 
-    final top = personal.ocupaciones.take(2).map((e) => e.nombre).toList();
-    final extras = personal.ocupaciones.length - top.length;
-    final resumen = extras > 0 ? '${top.join(' · ')}  +$extras' : top.join(' · ');
+    final resumen = personal.ocupacion!.trim();
 
     return Container(
       width: double.infinity,
@@ -1653,8 +1465,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                 final persona = _personal[index];
                 final detallePrincipal = [
                   persona.nroDocumento ?? 'Sin documento',
-                  if (persona.ocupaciones.isNotEmpty)
-                    '${persona.ocupaciones.length} ocupaciones',
+                  if ((persona.ocupacion ?? '').trim().isNotEmpty) persona.ocupacion!.trim(),
                 ].join(' · ');
                 return ClipRRect(
                   borderRadius: BorderRadius.circular(18),
@@ -1742,7 +1553,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
           appBar: TrayModuleHeader(
           titulo: 'Personal de salud',
           subtitulo:
-              'Administra perfiles, ocupaciones y permisos administrativos.',
+              'Administra perfiles, ocupación y permisos administrativos.',
           isCompact: isNarrowHeader,
           actions: [
             IconButton(
@@ -1792,7 +1603,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                         CriterioOrdenType(nombre: 'Nombre'),
                         CriterioOrdenType(nombre: 'Documento'),
                         CriterioOrdenType(nombre: 'Estado'),
-                        CriterioOrdenType(nombre: 'Ocupaciones'),
+                        CriterioOrdenType(nombre: 'Ocupación'),
                         CriterioOrdenType(nombre: 'Admin'),
                         CriterioOrdenType(nombre: 'Acciones'),
                       ],

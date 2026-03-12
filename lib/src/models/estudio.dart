@@ -1,19 +1,19 @@
-class OcupacionResumen {
+class CategoriaResumen {
   final String id;
   final String nombre;
-  final String? grado;
+  final String? colorHex;
 
-  const OcupacionResumen({
+  const CategoriaResumen({
     required this.id,
     required this.nombre,
-    required this.grado,
+    required this.colorHex,
   });
 
-  factory OcupacionResumen.fromJson(Map<String, dynamic> json) {
-    return OcupacionResumen(
+  factory CategoriaResumen.fromJson(Map<String, dynamic> json) {
+    return CategoriaResumen(
       id: (json['id'] ?? '').toString(),
       nombre: (json['nombre'] ?? '').toString(),
-      grado: json['grado']?.toString(),
+      colorHex: json['colorHex']?.toString(),
     );
   }
 }
@@ -26,7 +26,7 @@ class Servicio {
   final int duracionMinutos;
   final double costo;
   final String estado;
-  final List<OcupacionResumen> ocupaciones;
+  final List<CategoriaResumen> categorias;
 
   const Servicio({
     required this.id,
@@ -36,14 +36,16 @@ class Servicio {
     required this.duracionMinutos,
     this.costo = 0,
     required this.estado,
-    required this.ocupaciones,
+    required this.categorias,
   });
+
+  @Deprecated('Usar categorias')
+  List<CategoriaResumen> get ocupaciones => categorias;
 
   factory Servicio.fromJson(Map<String, dynamic> json) {
     final rawDuracion = json['duracionMinutos'] ?? json['duracion'] ?? 0;
     final rawCosto = json['costo'] ?? 0;
-    final ocupacionesRaw =
-        json['ocupaciones'] ?? json['ocupacion'] ?? [];
+    final categoriasRaw = json['categorias'] ?? json['ocupaciones'] ?? [];
     return Servicio(
       id: (json['id'] ?? '').toString(),
       nombre: (json['nombre'] ?? '').toString(),
@@ -56,10 +58,10 @@ class Servicio {
           ? rawCosto.toDouble()
           : double.tryParse(rawCosto.toString()) ?? 0,
       estado: (json['estado'] ?? '').toString(),
-      ocupaciones: ocupacionesRaw is List
-          ? ocupacionesRaw
+      categorias: categoriasRaw is List
+          ? categoriasRaw
               .whereType<Map<String, dynamic>>()
-              .map(OcupacionResumen.fromJson)
+              .map(CategoriaResumen.fromJson)
               .toList()
           : [],
     );

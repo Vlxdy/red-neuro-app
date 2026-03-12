@@ -10,7 +10,7 @@ import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/pages/perfil/perfil.dart';
 import 'package:red_neuro_app/src/ui/pages/usuarios/usuarios_page.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_page.dart';
-import 'package:red_neuro_app/src/ui/pages/ocupaciones/ocupaciones_page.dart';
+import 'package:red_neuro_app/src/ui/pages/categorias/categorias_page.dart';
 import 'package:red_neuro_app/src/ui/pages/estudios/estudios_page.dart';
 import 'package:red_neuro_app/src/ui/pages/lugares/lugares_page.dart';
 import 'package:red_neuro_app/src/ui/pages/pacientes/pacientes_page.dart';
@@ -613,7 +613,7 @@ List<ChildrenItem> _submodulesFromRole({
     '/admin/pacientes',
     '/admin/personal_medico',
     '/admin/usuarios',
-    '/admin/ocupaciones',
+    '/admin/categorias',
     '/admin/lugares',
     '/admin/estudios',
     '/admin/servicios',
@@ -692,8 +692,8 @@ ChildrenItem _submoduleToItem(
 
   final isUsuariosModule =
       normalizedUrl.contains('usuarios') || normalizedName == 'usuarios';
-  final isOcupacionesModule = normalizedUrl.contains('ocupaciones') ||
-      normalizedName == 'ocupaciones';
+  final isCategoriasModule = normalizedUrl.contains('categorias') ||
+      normalizedName == 'categorias';
   final isEstudiosModule =
       normalizedUrl.contains('estudios') ||
       normalizedUrl.contains('servicios') ||
@@ -719,8 +719,8 @@ ChildrenItem _submoduleToItem(
       ? 'pacientes'
       : isPersonalMedicoModule
       ? 'personal_medico'
-      : isOcupacionesModule
-      ? 'ocupaciones'
+      : isCategoriasModule
+      ? 'categorias'
       : isLugaresModule
       ? 'lugares'
       : isEstudiosModule
@@ -742,8 +742,8 @@ ChildrenItem _submoduleToItem(
           ? const UsuariosPage()
           : isNotificacionesModule
           ? const NotificacionesPage()
-          : isOcupacionesModule
-          ? const OcupacionesPage()
+          : isCategoriasModule
+          ? const CategoriasPage()
           : isLugaresModule
           ? const LugaresPage()
           : isEstudiosModule
@@ -785,6 +785,7 @@ IconData _moduleIconData(String? iconName, {bool filled = false}) {
       return filled
           ? PhosphorIconsFill.stethoscope
           : PhosphorIconsRegular.stethoscope;
+    case 'categorias':
     case 'ocupaciones':
     case 'medical_services':
       return filled ? Icons.medical_services : Icons.medical_services_outlined;
@@ -874,8 +875,8 @@ List<ChildrenItem> _adminMenu(ThemeController theme) => [
   ChildrenItem(
     iconoImagen: Icons.medical_services_outlined,
     iconoImagenSeleccionada: Icons.medical_services,
-    titulo: 'Ocupaciones',
-    children: const KeepAlivePage(child: OcupacionesPage()),
+    titulo: 'Categorías',
+    children: const KeepAlivePage(child: CategoriasPage()),
   ),
   ChildrenItem(
     iconoImagen: Icons.location_city_outlined,
