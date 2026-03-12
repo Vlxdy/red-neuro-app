@@ -11,7 +11,7 @@ class CitaAccionConfirmacionData {
   final DateTime fechaInicio;
   final int? duracionMinutos;
   final String? pacienteNombre;
-  final String? especialidadNombre;
+  final String? ocupacionNombre;
   final String? medicoNombre;
   final String? pacienteDocumento;
   final String? pacienteTelefono;
@@ -27,7 +27,7 @@ class CitaAccionConfirmacionData {
     required this.fechaInicio,
     this.duracionMinutos,
     this.pacienteNombre,
-    this.especialidadNombre,
+    this.ocupacionNombre,
     this.medicoNombre,
     this.pacienteDocumento,
     this.pacienteTelefono,
@@ -225,11 +225,11 @@ Future<String?> showCitaConfirmacionDialog({
                                 'Duración ${etiquetaPrestacion.toLowerCase()}: ${data.duracionMinutos} min',
                               ),
                             ),
-                          if ((data.especialidadNombre ?? '').trim().isNotEmpty)
+                          if ((data.ocupacionNombre ?? '').trim().isNotEmpty)
                             Padding(
                               padding: const EdgeInsets.only(top: 4),
                               child: Text(
-                                'Especialidad: ${data.especialidadNombre!.trim()}',
+                                'Ocupacion: ${data.ocupacionNombre!.trim()}',
                               ),
                             ),
                         ],

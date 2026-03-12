@@ -10,7 +10,7 @@ import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/constants.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/extensions/colores_extension.dart';
-import 'package:red_neuro_app/src/models/especialidad.dart';
+import 'package:red_neuro_app/src/models/ocupacion.dart';
 import 'package:red_neuro_app/src/models/personal_salud.dart';
 import 'package:red_neuro_app/src/models/rol.dart';
 import 'package:red_neuro_app/src/models/user.dart';
@@ -471,7 +471,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
       ),
       builder: (context) {
         String? copiedField;
-        final especialidades = persona.especialidades;
+        final ocupaciones = persona.ocupaciones;
         final contacto = [
           if ((persona.correoElectronico ?? '').trim().isNotEmpty)
             persona.correoElectronico!.trim(),
@@ -570,14 +570,14 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                       ),
                   ],
                 ),
-                if (especialidades.isNotEmpty) ...[
+                if (ocupaciones.isNotEmpty) ...[
                   const SizedBox(height: 14),
                   Text(
-                    'Especialidades',
+                    'Ocupaciones',
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                   const SizedBox(height: 8),
-                  _buildEspecialidadesCell(persona),
+                  _buildOcupacionesCell(persona),
                 ],
                 if (!esUsuarioActual) ...[
                   const SizedBox(height: 18),
@@ -716,30 +716,30 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     final bool isEditing = personal != null;
     final int lastStepIndex = isEditing ? 2 : 3;
 
-    final seleccionInicial = personal?.especialidades ?? [];
-    final selectedEspecialidades = seleccionInicial.isNotEmpty
+    final seleccionInicial = personal?.ocupaciones ?? [];
+    final List<Ocupacion> selectedOcupaciones = seleccionInicial.isNotEmpty
         ? seleccionInicial
               .map(
-                (especialidad) => Especialidad(
-                  id: especialidad.id,
-                  nombre: especialidad.nombre,
+                (ocupacion) => Ocupacion(
+                  id: ocupacion.id,
+                  nombre: ocupacion.nombre,
                   descripcion: null,
                   estado: 'ACTIVO',
-                  colorHex: especialidad.colorHex,
+                  grado: ocupacion.grado,
                   estudios: const [],
                 ),
               )
               .toList()
-        : <Especialidad>[];
+        : <Ocupacion>[];
 
-    final List<Especialidad> especialidadesDisponibles = [];
-    bool especialidadesLoading = false;
-    bool especialidadesHasMore = true;
-    int especialidadesPage = 1;
-    String especialidadesFiltro = '';
-    Timer? especialidadesDebounce;
+    final List<Ocupacion> ocupacionesDisponibles = [];
+    bool ocupacionesLoading = false;
+    bool ocupacionesHasMore = true;
+    int ocupacionesPage = 1;
+    String ocupacionesFiltro = '';
+    Timer? ocupacionesDebounce;
     bool scrollListenerAttached = false;
-    final ScrollController especialidadesScrollController = ScrollController();
+    final ScrollController ocupacionesScrollController = ScrollController();
 
     showModalBottomSheet(
       context: context,
@@ -752,56 +752,56 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
-            Future<void> cargarEspecialidades({
+            Future<void> cargarOcupaciones({
               bool reset = false,
               bool clearBeforeLoad = true,
             }) async {
-              if (especialidadesLoading || (!especialidadesHasMore && !reset)) {
+              if (ocupacionesLoading || (!ocupacionesHasMore && !reset)) {
                 return;
               }
-              setStateDialog(() => especialidadesLoading = true);
+              setStateDialog(() => ocupacionesLoading = true);
               if (reset) {
-                especialidadesPage = 1;
-                especialidadesHasMore = true;
+                ocupacionesPage = 1;
+                ocupacionesHasMore = true;
                 if (clearBeforeLoad) {
-                  especialidadesDisponibles.clear();
+                  ocupacionesDisponibles.clear();
                 }
               }
-              final result = await _service.obtenerEspecialidadesPaginadas(
-                page: especialidadesPage,
+              final result = await _service.obtenerOcupacionesPaginadas(
+                page: ocupacionesPage,
                 limit: 20,
-                filtro: especialidadesFiltro,
+                filtro: ocupacionesFiltro,
               );
               if (!mounted) return;
               setStateDialog(() {
                 if (reset) {
-                  especialidadesDisponibles
+                  ocupacionesDisponibles
                     ..clear()
                     ..addAll(result.items);
                 } else {
-                  especialidadesDisponibles.addAll(result.items);
+                  ocupacionesDisponibles.addAll(result.items);
                 }
-                especialidadesHasMore =
-                    especialidadesDisponibles.length < result.total;
-                especialidadesPage += 1;
-                especialidadesLoading = false;
+                ocupacionesHasMore =
+                    ocupacionesDisponibles.length < result.total;
+                ocupacionesPage += 1;
+                ocupacionesLoading = false;
               });
             }
 
             if (!scrollListenerAttached) {
               scrollListenerAttached = true;
-              especialidadesScrollController.addListener(() {
-                if (especialidadesScrollController.position.pixels >=
-                        especialidadesScrollController
+              ocupacionesScrollController.addListener(() {
+                if (ocupacionesScrollController.position.pixels >=
+                        ocupacionesScrollController
                                 .position
                                 .maxScrollExtent -
                             120 &&
-                    !especialidadesLoading &&
-                    especialidadesHasMore) {
-                  cargarEspecialidades();
+                    !ocupacionesLoading &&
+                    ocupacionesHasMore) {
+                  cargarOcupaciones();
                 }
               });
-              cargarEspecialidades(reset: true);
+              cargarOcupaciones(reset: true);
             }
 
             Widget stepContent() {
@@ -1066,66 +1066,66 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
               }
 
               if (currentStep == 2) {
-                final selectedIds = selectedEspecialidades.map((e) => e.id).toSet();
+                final selectedIds = selectedOcupaciones.map((e) => e.id).toSet();
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Especialidades (opcional)',
+                      'Ocupaciones (opcional)',
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                     const SizedBox(height: 12),
-                    FormField<List<Especialidad>>(
-                      initialValue: selectedEspecialidades,
+                    FormField<List<Ocupacion>>(
+                      initialValue: selectedOcupaciones,
                       builder: (state) {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (selectedEspecialidades.isEmpty)
+                            if (selectedOcupaciones.isEmpty)
                               Text(
-                                'Puedes continuar sin especialidades y agregarlas después.',
+                                'Puedes continuar sin ocupaciones y agregarlas después.',
                                 style: Theme.of(context).textTheme.bodySmall,
                               )
                             else
                               Wrap(
                                 spacing: 8,
                                 runSpacing: 8,
-                                children: selectedEspecialidades.map((item) {
+                                children: selectedOcupaciones.map((item) {
                                   return Chip(
                                     label: Text(item.nombre),
                                     backgroundColor: HexColor.fromHex(
-                                      item.colorHex,
+                                      '#64748b',
                                     ).withValues(alpha: .15),
                                     deleteIcon: const Icon(Icons.close),
                                     onDeleted: () {
                                       setStateDialog(() {
-                                        selectedEspecialidades.removeWhere(
-                                          (especialidad) =>
-                                              especialidad.id == item.id,
+                                        selectedOcupaciones.removeWhere(
+                                          (ocupacion) =>
+                                              ocupacion.id == item.id,
                                         );
                                       });
-                                      state.didChange(selectedEspecialidades);
+                                      state.didChange(selectedOcupaciones);
                                     },
                                   );
                                 }).toList(),
                               ),
                             const SizedBox(height: 12),
-                            AutocompleteField<Especialidad>(
+                            AutocompleteField<Ocupacion>(
                               optionsBuilder: (textEditingValue) {
                                 final query = textEditingValue.text
                                     .trim()
                                     .toLowerCase();
                                 if (query.isEmpty &&
-                                    especialidadesDisponibles.isEmpty &&
-                                    !especialidadesLoading) {
+                                    ocupacionesDisponibles.isEmpty &&
+                                    !ocupacionesLoading) {
                                   Future.microtask(
-                                    () => cargarEspecialidades(reset: true),
+                                    () => cargarOcupaciones(reset: true),
                                   );
                                 }
                                 if (query.isEmpty) {
-                                  return especialidadesDisponibles;
+                                  return ocupacionesDisponibles;
                                 }
-                                return especialidadesDisponibles.where(
+                                return ocupacionesDisponibles.where(
                                   (option) => option.nombre
                                       .toLowerCase()
                                       .contains(query),
@@ -1137,39 +1137,39 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                   return;
                                 }
                                 setStateDialog(() {
-                                  selectedEspecialidades.add(selection);
-                                  especialidadesFiltro = '';
-                                  especialidadesDisponibles.clear();
-                                  especialidadesHasMore = true;
-                                  especialidadesPage = 1;
+                                  selectedOcupaciones.add(selection);
+                                  ocupacionesFiltro = '';
+                                  ocupacionesDisponibles.clear();
+                                  ocupacionesHasMore = true;
+                                  ocupacionesPage = 1;
                                 });
-                                state.didChange(selectedEspecialidades);
+                                state.didChange(selectedOcupaciones);
                                 FocusScope.of(context).unfocus();
-                                cargarEspecialidades(reset: true);
+                                cargarOcupaciones(reset: true);
                               },
-                              labelText: 'Agregar especialidad (opcional)',
-                              loading: especialidadesLoading,
-                              loadingText: 'Cargando especialidades...',
-                              emptyText: 'No hay especialidades disponibles.',
-                              optionsHeaderText: 'Especialidades',
+                              labelText: 'Agregar ocupacion (opcional)',
+                              loading: ocupacionesLoading,
+                              loadingText: 'Cargando ocupaciones...',
+                              emptyText: 'No hay ocupaciones disponibles.',
+                              optionsHeaderText: 'Ocupaciones',
                               optionsScrollController:
-                                  especialidadesScrollController,
+                                  ocupacionesScrollController,
                               selectedIconColor: _theme.primary,
                               isOptionSelected: (option) =>
                                   selectedIds.contains(option.id),
                               onChanged: (value) {
-                                especialidadesFiltro = value.trim();
-                                especialidadesDebounce?.cancel();
-                                if (especialidadesFiltro.isEmpty) {
-                                  cargarEspecialidades(
+                                ocupacionesFiltro = value.trim();
+                                ocupacionesDebounce?.cancel();
+                                if (ocupacionesFiltro.isEmpty) {
+                                  cargarOcupaciones(
                                     reset: true,
                                     clearBeforeLoad: false,
                                   );
                                   return;
                                 }
-                                especialidadesDebounce = Timer(
+                                ocupacionesDebounce = Timer(
                                   const Duration(milliseconds: 400),
-                                  () => cargarEspecialidades(reset: true),
+                                  () => cargarOcupaciones(reset: true),
                                 );
                               },
                             ),
@@ -1384,8 +1384,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                               if ((generoSeleccionado ?? '').trim().isNotEmpty)
                                 'genero': generoSeleccionado,
                             };
-                            final idsEspecialidades = selectedEspecialidades
-                                .map((especialidad) => especialidad.id)
+                            final idsOcupaciones = selectedOcupaciones
+                                .map((ocupacion) => ocupacion.id)
                                 .toList();
 
                             Map<String, dynamic> body;
@@ -1396,16 +1396,16 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                 'contrasena': contrasena.text,
                                 'repetirContrasena': repetirContrasena.text,
                                 'esSupervisor': esSupervisor,
-                                if (idsEspecialidades.isNotEmpty)
-                                  'idEspecialidades': idsEspecialidades,
+                                if (idsOcupaciones.isNotEmpty)
+                                  'idOcupaciones': idsOcupaciones,
                               };
                             } else {
                               body = {
                                 'persona': persona,
                                 'correoElectronico': correo.text.trim(),
                                 'esSupervisor': esSupervisor,
-                                if (idsEspecialidades.isNotEmpty)
-                                  'idEspecialidades': idsEspecialidades,
+                                if (idsOcupaciones.isNotEmpty)
+                                  'idOcupaciones': idsOcupaciones,
                               };
                             }
 
@@ -1435,8 +1435,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
         );
       },
     ).whenComplete(() {
-      especialidadesDebounce?.cancel();
-      especialidadesScrollController.dispose();
+      ocupacionesDebounce?.cancel();
+      ocupacionesScrollController.dispose();
     });
   }
 
@@ -1567,19 +1567,19 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     );
   }
 
-  Widget _buildEspecialidadesCell(PersonalSalud personal) {
-    if (personal.especialidades.isEmpty) {
-      return const Text('Sin especialidades');
+  Widget _buildOcupacionesCell(PersonalSalud personal) {
+    if (personal.ocupaciones.isEmpty) {
+      return const Text('Sin ocupaciones');
     }
     return Wrap(
       spacing: 6,
       runSpacing: 6,
-      children: personal.especialidades
+      children: personal.ocupaciones
           .map(
-            (especialidad) => Chip(
-              label: Text(especialidad.nombre),
+            (ocupacion) => Chip(
+              label: Text(ocupacion.nombre),
               backgroundColor: HexColor.fromHex(
-                especialidad.colorHex,
+                '#64748b',
               ).withValues(alpha: .15),
             ),
           )
@@ -1587,16 +1587,16 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     );
   }
 
-  Widget _buildEspecialidadesResumen(PersonalSalud personal) {
-    if (personal.especialidades.isEmpty) {
+  Widget _buildOcupacionesResumen(PersonalSalud personal) {
+    if (personal.ocupaciones.isEmpty) {
       return Text(
-        'Sin especialidades asignadas',
+        'Sin ocupaciones asignadas',
         style: Theme.of(context).textTheme.bodySmall,
       );
     }
 
-    final top = personal.especialidades.take(2).map((e) => e.nombre).toList();
-    final extras = personal.especialidades.length - top.length;
+    final top = personal.ocupaciones.take(2).map((e) => e.nombre).toList();
+    final extras = personal.ocupaciones.length - top.length;
     final resumen = extras > 0 ? '${top.join(' · ')}  +$extras' : top.join(' · ');
 
     return Container(
@@ -1653,8 +1653,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                 final persona = _personal[index];
                 final detallePrincipal = [
                   persona.nroDocumento ?? 'Sin documento',
-                  if (persona.especialidades.isNotEmpty)
-                    '${persona.especialidades.length} especialidades',
+                  if (persona.ocupaciones.isNotEmpty)
+                    '${persona.ocupaciones.length} ocupaciones',
                 ].join(' · ');
                 return ClipRRect(
                   borderRadius: BorderRadius.circular(18),
@@ -1707,7 +1707,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                   ],
                                 ),
                                 const SizedBox(height: 6),
-                                _buildEspecialidadesResumen(persona),
+                                _buildOcupacionesResumen(persona),
                               ],
                             ),
                           ),
@@ -1742,7 +1742,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
           appBar: TrayModuleHeader(
           titulo: 'Personal de salud',
           subtitulo:
-              'Administra perfiles, especialidades y permisos administrativos.',
+              'Administra perfiles, ocupaciones y permisos administrativos.',
           isCompact: isNarrowHeader,
           actions: [
             IconButton(
@@ -1792,7 +1792,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                         CriterioOrdenType(nombre: 'Nombre'),
                         CriterioOrdenType(nombre: 'Documento'),
                         CriterioOrdenType(nombre: 'Estado'),
-                        CriterioOrdenType(nombre: 'Especialidades'),
+                        CriterioOrdenType(nombre: 'Ocupaciones'),
                         CriterioOrdenType(nombre: 'Admin'),
                         CriterioOrdenType(nombre: 'Acciones'),
                       ],
@@ -1822,7 +1822,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              _buildEspecialidadesCell(persona),
+                              _buildOcupacionesCell(persona),
                               persona.esSupervisor
                                   ? Chip(
                                       label: const Text('Admin'),

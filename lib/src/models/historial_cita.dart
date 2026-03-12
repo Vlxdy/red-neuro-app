@@ -149,7 +149,7 @@ class HistorialDetallePersona {
   final String? primerApellido;
   final String? segundoApellido;
   final String? nroDocumento;
-  final List<String> especialidades;
+  final List<String> ocupaciones;
 
   const HistorialDetallePersona({
     required this.id,
@@ -157,13 +157,13 @@ class HistorialDetallePersona {
     required this.primerApellido,
     required this.segundoApellido,
     required this.nroDocumento,
-    required this.especialidades,
+    required this.ocupaciones,
   });
 
   factory HistorialDetallePersona.fromJson(Map<String, dynamic> json) {
-    final especialidadesRaw = json['especialidades'];
-    final especialidades = (especialidadesRaw is List)
-        ? especialidadesRaw
+    final ocupacionesRaw = json['ocupaciones'];
+    final ocupaciones = (ocupacionesRaw is List)
+        ? ocupacionesRaw
             .map((item) {
               if (item is Map<String, dynamic>) {
                 return item['nombre']?.toString();
@@ -181,7 +181,7 @@ class HistorialDetallePersona {
       primerApellido: json['primerApellido']?.toString(),
       segundoApellido: json['segundoApellido']?.toString(),
       nroDocumento: json['nroDocumento']?.toString(),
-      especialidades: especialidades,
+      ocupaciones: ocupaciones,
     );
   }
 

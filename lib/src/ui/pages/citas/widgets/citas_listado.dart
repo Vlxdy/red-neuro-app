@@ -12,7 +12,7 @@ class CitasListadoTab extends StatelessWidget {
   final Future<void> Function()? onRefresh;
   final bool isLoadingMore;
   final Color Function(String estado) colorEstado;
-  final Color Function(CitaMedica cita) colorEspecialidad;
+  final Color Function(CitaMedica cita) colorOcupacion;
   final String Function(DateTime? fecha) formatoFecha;
   final String Function(DateTime? inicio, DateTime? fin) formatoHorario;
   final String Function(CitaMedica cita) tituloCita;
@@ -31,7 +31,7 @@ class CitasListadoTab extends StatelessWidget {
     required this.onRefresh,
     required this.isLoadingMore,
     required this.colorEstado,
-    required this.colorEspecialidad,
+    required this.colorOcupacion,
     required this.formatoFecha,
     required this.formatoHorario,
     required this.tituloCita,
@@ -54,7 +54,7 @@ class CitasListadoTab extends StatelessWidget {
             controller: controller,
             onRefresh: onRefresh,
             colorEstado: colorEstado,
-            colorEspecialidad: colorEspecialidad,
+            colorOcupacion: colorOcupacion,
             formatoFecha: formatoFecha,
             formatoHorario: formatoHorario,
             tituloCita: tituloCita,
@@ -87,7 +87,7 @@ class CitasListado extends StatelessWidget {
   final Future<void> Function()? onRefresh;
   final bool embedInScroll;
   final Color Function(String estado) colorEstado;
-  final Color Function(CitaMedica cita) colorEspecialidad;
+  final Color Function(CitaMedica cita) colorOcupacion;
   final String Function(DateTime? fecha) formatoFecha;
   final String Function(DateTime? inicio, DateTime? fin) formatoHorario;
   final String Function(CitaMedica cita) tituloCita;
@@ -106,7 +106,7 @@ class CitasListado extends StatelessWidget {
     required this.onRefresh,
     this.embedInScroll = false,
     required this.colorEstado,
-    required this.colorEspecialidad,
+    required this.colorOcupacion,
     required this.formatoFecha,
     required this.formatoHorario,
     required this.tituloCita,
@@ -173,7 +173,7 @@ class CitasListado extends StatelessWidget {
       itemBuilder: (context, index) {
         final cita = citas[index];
         final estadoColor = colorEstado(cita.estado);
-        final especialidadColor = colorEspecialidad(cita);
+        final ocupacionColor = colorOcupacion(cita);
         final resumenFecha = formatoFecha(cita.fechaInicio);
         final resumenHorario = formatoHorario(cita.fechaInicio, cita.fechaFin);
         final medicoNombre = nombreMedico(cita);
@@ -187,7 +187,7 @@ class CitasListado extends StatelessWidget {
             color: theme.bgCard,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: especialidadColor.withValues(alpha: 0.25),
+              color: ocupacionColor.withValues(alpha: 0.25),
               width: 1.2,
             ),
             boxShadow: [
@@ -208,7 +208,7 @@ class CitasListado extends StatelessWidget {
                   width: 3,
                   margin: const EdgeInsets.only(right: 8, top: 2),
                   decoration: BoxDecoration(
-                    color: especialidadColor,
+                    color: ocupacionColor,
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
@@ -275,14 +275,14 @@ class CitasListado extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          if ((cita.especialidadNombre ?? cita.especialidadId)
+                          if ((cita.ocupacionNombre ?? cita.ocupacionId)
                                   ?.isNotEmpty ??
                               false)
-                            CitasEspecialidadTag(
+                            CitasOcupacionTag(
                               label:
-                                  cita.especialidadNombre ??
-                                  cita.especialidadId!,
-                              color: especialidadColor,
+                                  cita.ocupacionNombre ??
+                                  cita.ocupacionId!,
+                              color: ocupacionColor,
                             ),
                           const Spacer(),
                           IconButton(

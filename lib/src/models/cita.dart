@@ -12,10 +12,6 @@ class CitaMedica {
   final String? pacienteTelefono;
   final String? pacienteGenero;
   final String? pacienteFechaNacimiento;
-  final String? especialidadId;
-  final String? especialidadNombre;
-  final String? especialidadColorHex;
-  final String? especialidadDescripcion;
   final String? lugarId;
   final String? lugarNombre;
   final String? lugarDireccion;
@@ -32,6 +28,18 @@ class CitaMedica {
   String get medicoId => idPersonal;
   String? get medicoNombre => personalNombre;
 
+  @Deprecated('Las citas ya no están vinculadas a ocupación/ocupacion')
+  String? get ocupacionId => null;
+
+  @Deprecated('Las citas ya no están vinculadas a ocupación/ocupacion')
+  String? get ocupacionNombre => null;
+
+  @Deprecated('Las citas ya no están vinculadas a ocupación/ocupacion')
+  String? get ocupacionColorHex => null;
+
+  @Deprecated('Las citas ya no están vinculadas a ocupación/ocupacion')
+  String? get ocupacionDescripcion => null;
+
   const CitaMedica({
     required this.id,
     required this.detalle,
@@ -46,10 +54,6 @@ class CitaMedica {
     required this.pacienteTelefono,
     required this.pacienteGenero,
     required this.pacienteFechaNacimiento,
-    required this.especialidadId,
-    required this.especialidadNombre,
-    required this.especialidadColorHex,
-    required this.especialidadDescripcion,
     required this.lugarId,
     required this.lugarNombre,
     required this.lugarDireccion,
@@ -68,14 +72,10 @@ class CitaMedica {
     final json = (jsonRaw['datos'] is Map<String, dynamic>)
         ? (jsonRaw['datos'] as Map<String, dynamic>)
         : jsonRaw;
-    final especialidadRaw = json['especialidad'];
     final lugarRaw = json['lugar'];
     final servicioRaw = json['servicio'] ?? json['estudio'];
     final personalRaw = json['personal'] ?? json['medico'];
     final pacienteRaw = json['paciente'];
-    final especialidadColor = especialidadRaw is Map<String, dynamic>
-        ? especialidadRaw['colorHex']?.toString()
-        : null;
     final personalNombre = personalRaw is Map<String, dynamic>
         ? [
             personalRaw['nombres'],
@@ -126,23 +126,6 @@ class CitaMedica {
       pacienteFechaNacimiento: pacienteRaw is Map<String, dynamic>
           ? pacienteRaw['fechaNacimiento']?.toString()
           : json['pacienteFechaNacimiento']?.toString(),
-      especialidadId: (json['especialidadId'] ?? json['idEspecialidad'] ?? '')
-          .toString()
-          .isNotEmpty
-          ? (json['especialidadId'] ?? json['idEspecialidad']).toString()
-          : (especialidadRaw is Map<String, dynamic>
-              ? especialidadRaw['id']?.toString()
-              : null),
-      especialidadNombre: especialidadRaw is Map<String, dynamic>
-          ? especialidadRaw['nombre']?.toString()
-          : json['especialidadNombre']?.toString(),
-      especialidadDescripcion: especialidadRaw is Map<String, dynamic>
-          ? especialidadRaw['descripcion']?.toString()
-          : json['especialidadDescripcion']?.toString(),
-      especialidadColorHex: (json['especialidadColorHex'] ??
-              json['colorHex'] ??
-              especialidadColor)
-          ?.toString(),
       lugarId: (json['lugarId'] ?? json['idLugar'] ?? '').toString().isNotEmpty
           ? (json['lugarId'] ?? json['idLugar']).toString()
           : (lugarRaw is Map<String, dynamic>
@@ -198,10 +181,6 @@ class CitaMedica {
     String? pacienteTelefono,
     String? pacienteGenero,
     String? pacienteFechaNacimiento,
-    String? especialidadId,
-    String? especialidadNombre,
-    String? especialidadColorHex,
-    String? especialidadDescripcion,
     String? lugarId,
     String? lugarNombre,
     String? lugarDireccion,
@@ -230,12 +209,6 @@ class CitaMedica {
       pacienteGenero: pacienteGenero ?? this.pacienteGenero,
       pacienteFechaNacimiento:
           pacienteFechaNacimiento ?? this.pacienteFechaNacimiento,
-      especialidadId: especialidadId ?? this.especialidadId,
-      especialidadNombre: especialidadNombre ?? this.especialidadNombre,
-      especialidadColorHex:
-          especialidadColorHex ?? this.especialidadColorHex,
-      especialidadDescripcion:
-          especialidadDescripcion ?? this.especialidadDescripcion,
       lugarId: lugarId ?? this.lugarId,
       lugarNombre: lugarNombre ?? this.lugarNombre,
       lugarDireccion: lugarDireccion ?? this.lugarDireccion,

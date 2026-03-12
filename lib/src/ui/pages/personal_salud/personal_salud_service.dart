@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:red_neuro_app/src/config/service_config.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
-import 'package:red_neuro_app/src/models/especialidad.dart';
+import 'package:red_neuro_app/src/models/ocupacion.dart';
 import 'package:red_neuro_app/src/models/personal_salud.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 
@@ -91,14 +91,14 @@ class PersonalSaludService extends ServiceConfig {
     }
   }
 
-  Future<EspecialidadPageResult> obtenerEspecialidadesPaginadas({
+  Future<OcupacionPageResult> obtenerOcupacionesPaginadas({
     int page = 1,
     int limit = 20,
     String? filtro,
   }) async {
     try {
       final response = await fetch(
-        '/especialidades',
+        '/ocupaciones',
         params: {
           'pagina': '$page',
           'limite': '$limit',
@@ -106,7 +106,7 @@ class PersonalSaludService extends ServiceConfig {
         },
       );
       if (response.status != StatusNetwork.connected) {
-        return EspecialidadPageResult.empty(response.message);
+        return OcupacionPageResult.empty(response.message);
       }
 
       final data = response.data;
@@ -118,28 +118,28 @@ class PersonalSaludService extends ServiceConfig {
           data['items'] ??
           [];
 
-      final especialidades = (filasRaw is List)
+      final ocupaciones = (filasRaw is List)
           ? filasRaw
               .whereType<Map<String, dynamic>>()
-              .map(Especialidad.fromJson)
+              .map(Ocupacion.fromJson)
               .toList()
-          : <Especialidad>[];
+          : <Ocupacion>[];
 
-      return EspecialidadPageResult(
-        items: especialidades,
+      return OcupacionPageResult(
+        items: ocupaciones,
         total: totalRaw is int
             ? totalRaw
-            : int.tryParse('$totalRaw') ?? especialidades.length,
+            : int.tryParse('$totalRaw') ?? ocupaciones.length,
         page: page,
         limit: limit,
         message: response.message,
         status: response.status,
       );
     } catch (e, stacktrace) {
-      Logger.error('Error al obtener especialidades $e');
+      Logger.error('Error al obtener ocupaciones $e');
       Logger.error('stacktrace $stacktrace');
-      return EspecialidadPageResult.empty(
-        'No se pudieron cargar las especialidades',
+      return OcupacionPageResult.empty(
+        'No se pudieron cargar las ocupaciones',
       );
     }
   }
@@ -178,15 +178,15 @@ class PersonalSaludService extends ServiceConfig {
   }
 }
 
-class EspecialidadPageResult {
-  final List<Especialidad> items;
+class OcupacionPageResult {
+  final List<Ocupacion> items;
   final int total;
   final int page;
   final int limit;
   final String message;
   final StatusNetwork status;
 
-  const EspecialidadPageResult({
+  const OcupacionPageResult({
     required this.items,
     required this.total,
     required this.page,
@@ -195,8 +195,8 @@ class EspecialidadPageResult {
     required this.status,
   });
 
-  factory EspecialidadPageResult.empty(String message) =>
-      EspecialidadPageResult(
+  factory OcupacionPageResult.empty(String message) =>
+      OcupacionPageResult(
         items: const [],
         total: 0,
         page: 1,

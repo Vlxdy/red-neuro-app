@@ -13,7 +13,7 @@ class PersonalSalud {
   final String? correoElectronico;
   final String? genero;
   final String? urlFoto;
-  final List<EspecialidadResumen> especialidades;
+  final List<OcupacionResumen> ocupaciones;
 
   const PersonalSalud({
     required this.id,
@@ -28,7 +28,7 @@ class PersonalSalud {
     required this.correoElectronico,
     required this.genero,
     required this.urlFoto,
-    required this.especialidades,
+    required this.ocupaciones,
   });
 
   factory PersonalSalud.fromJson(Map<String, dynamic> json) {
@@ -40,7 +40,7 @@ class PersonalSalud {
       return value.toString();
     }
 
-    final especialidadesRaw = json['especialidades'] ?? [];
+    final ocupacionesRaw = json['ocupaciones'] ?? [];
 
     return PersonalSalud(
       id: (json['id'] ?? '').toString(),
@@ -72,10 +72,10 @@ class PersonalSalud {
       urlFoto: resolveString('urlFoto').trim().isEmpty
           ? null
           : resolveString('urlFoto'),
-      especialidades: especialidadesRaw is List
-          ? especialidadesRaw
+      ocupaciones: ocupacionesRaw is List
+          ? ocupacionesRaw
               .whereType<Map<String, dynamic>>()
-              .map(EspecialidadResumen.fromJson)
+              .map(OcupacionResumen.fromJson)
               .toList()
           : const [],
     );
