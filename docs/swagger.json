@@ -3624,9 +3624,9 @@
         ]
       }
     },
-    "/servicios/ocupaciones/{id}": {
+    "/servicios/categorias/{id}": {
       "get": {
-        "operationId": "ServicioController_listarPorOcupacion",
+        "operationId": "ServicioController_listarPorCategoria",
         "parameters": [
           {
             "name": "id",
@@ -3728,7 +3728,7 @@
             "bearer": []
           }
         ],
-        "summary": "Lista los servicios paginados por ocupación",
+        "summary": "Lista los servicios paginados por categoría",
         "tags": [
           "Servicios"
         ]
@@ -3932,9 +3932,9 @@
         ]
       }
     },
-    "/ocupaciones": {
+    "/categorias": {
       "get": {
-        "operationId": "OcupacionController_listar",
+        "operationId": "CategoriaController_listar",
         "parameters": [
           {
             "name": "limite",
@@ -3995,7 +3995,7 @@
                             "filas": {
                               "type": "array",
                               "items": {
-                                "$ref": "#/components/schemas/OcupacionResponseDto"
+                                "$ref": "#/components/schemas/CategoriaResponseDto"
                               }
                             }
                           }
@@ -4013,20 +4013,20 @@
             "bearer": []
           }
         ],
-        "summary": "Lista las ocupaciones configuradas",
+        "summary": "Lista las categorías configuradas",
         "tags": [
-          "Ocupaciones"
+          "Categorías"
         ]
       },
       "post": {
-        "operationId": "OcupacionController_crear",
+        "operationId": "CategoriaController_crear",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CrearOcupacionDto"
+                "$ref": "#/components/schemas/CrearCategoriaDto"
               }
             }
           }
@@ -4044,7 +4044,7 @@
                     {
                       "properties": {
                         "datos": {
-                          "$ref": "#/components/schemas/OcupacionResponseDto"
+                          "$ref": "#/components/schemas/CategoriaResponseDto"
                         }
                       }
                     }
@@ -4059,15 +4059,15 @@
             "bearer": []
           }
         ],
-        "summary": "Crea una nueva ocupación",
+        "summary": "Crea una categoría",
         "tags": [
-          "Ocupaciones"
+          "Categorías"
         ]
       }
     },
-    "/ocupaciones/{id}": {
+    "/categorias/{id}": {
       "get": {
-        "operationId": "OcupacionController_obtenerPorId",
+        "operationId": "CategoriaController_obtenerPorId",
         "parameters": [
           {
             "name": "id",
@@ -4092,7 +4092,7 @@
                     {
                       "properties": {
                         "datos": {
-                          "$ref": "#/components/schemas/OcupacionResponseDto"
+                          "$ref": "#/components/schemas/CategoriaResponseDto"
                         }
                       }
                     }
@@ -4107,13 +4107,13 @@
             "bearer": []
           }
         ],
-        "summary": "Obtiene el detalle de una ocupación",
+        "summary": "Obtiene el detalle de una categoría",
         "tags": [
-          "Ocupaciones"
+          "Categorías"
         ]
       },
       "patch": {
-        "operationId": "OcupacionController_actualizar",
+        "operationId": "CategoriaController_actualizar",
         "parameters": [
           {
             "name": "id",
@@ -4130,7 +4130,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ActualizarOcupacionDto"
+                "$ref": "#/components/schemas/ActualizarCategoriaDto"
               }
             }
           }
@@ -4148,7 +4148,7 @@
                     {
                       "properties": {
                         "datos": {
-                          "$ref": "#/components/schemas/OcupacionResponseDto"
+                          "$ref": "#/components/schemas/CategoriaResponseDto"
                         }
                       }
                     }
@@ -4163,61 +4163,15 @@
             "bearer": []
           }
         ],
-        "summary": "Actualiza la información de una ocupación",
+        "summary": "Actualiza una categoría",
         "tags": [
-          "Ocupaciones"
-        ]
-      },
-      "delete": {
-        "operationId": "OcupacionController_eliminar",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "example": "12",
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/BaseResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "datos": {
-                          "$ref": "#/components/schemas/OcupacionResponseDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Elimina una ocupación",
-        "tags": [
-          "Ocupaciones"
+          "Categorías"
         ]
       }
     },
-    "/ocupaciones/{id}/cambiar-estado": {
+    "/categorias/{id}/cambiar-estado": {
       "patch": {
-        "operationId": "OcupacionController_cambiarEstado",
+        "operationId": "CategoriaController_cambiarEstado",
         "parameters": [
           {
             "name": "id",
@@ -4242,7 +4196,7 @@
                     {
                       "properties": {
                         "datos": {
-                          "$ref": "#/components/schemas/OcupacionResponseDto"
+                          "$ref": "#/components/schemas/CategoriaResponseDto"
                         }
                       }
                     }
@@ -4257,9 +4211,9 @@
             "bearer": []
           }
         ],
-        "summary": "Cambiar estado de la ocupación",
+        "summary": "Cambiar estado de la categoría (activar/inactivar)",
         "tags": [
-          "Ocupaciones"
+          "Categorías"
         ]
       }
     },
@@ -6118,36 +6072,6 @@
           "id"
         ]
       },
-      "OcupacionPersonalDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Identificador único de la ocupación",
-            "example": "12"
-          },
-          "nombre": {
-            "type": "string",
-            "description": "Nombre visible de la ocupación",
-            "example": "Cardiología"
-          },
-          "descripcion": {
-            "type": "string",
-            "description": "Descripción opcional de la ocupación",
-            "example": "Perfil ocupacional clínico"
-          },
-          "estado": {
-            "type": "string",
-            "description": "Estado del registro",
-            "example": "ACTIVO"
-          }
-        },
-        "required": [
-          "id",
-          "nombre",
-          "estado"
-        ]
-      },
       "PersonalResponseDto": {
         "type": "object",
         "properties": {
@@ -6211,18 +6135,10 @@
             "description": "URL de la fotografía del profesional",
             "example": "/fotos/mariela.jpg"
           },
-          "ocupaciones": {
-            "description": "Ocupaciones del profesional",
-            "example": [
-              {
-                "id": "1",
-                "nombre": "Pediatría"
-              }
-            ],
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/OcupacionPersonalDto"
-            }
+          "ocupacion": {
+            "type": "object",
+            "description": "Ocupación del profesional",
+            "example": "Cardiología"
           }
         },
         "required": [
@@ -7107,18 +7023,23 @@
           }
         }
       },
-      "OcupacionResumenDto": {
+      "CategoriaResumenDto": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Identificador único de la ocupación",
+            "description": "Identificador único de la categoría",
             "example": "12"
           },
           "nombre": {
             "type": "string",
-            "description": "Nombre visible de la ocupación",
+            "description": "Nombre visible de la categoría",
             "example": "Cardiología"
+          },
+          "colorHex": {
+            "type": "string",
+            "description": "Color identificador de la categoría",
+            "example": "#ef4444"
           }
         },
         "required": [
@@ -7168,11 +7089,11 @@
             "description": "Costo referencial del servicio",
             "example": 120
           },
-          "ocupaciones": {
-            "description": "Ocupaciones asociadas al servicio",
+          "categorias": {
+            "description": "Categorías asociadas al servicio",
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/OcupacionResumenDto"
+              "$ref": "#/components/schemas/CategoriaResumenDto"
             }
           }
         },
@@ -7184,7 +7105,7 @@
           "estado",
           "tipo",
           "costo",
-          "ocupaciones"
+          "categorias"
         ]
       },
       "CrearServicioDto": {
@@ -7219,8 +7140,8 @@
             "description": "Costo referencial del servicio",
             "example": 120
           },
-          "ocupacionIds": {
-            "description": "Identificadores de ocupaciones asociadas (opcional)",
+          "categoriaIds": {
+            "description": "Identificadores de categorías asociadas (opcional)",
             "example": [
               "2",
               "5"
@@ -7271,8 +7192,8 @@
             "description": "Costo referencial del servicio",
             "example": 120
           },
-          "ocupacionIds": {
-            "description": "Identificadores de ocupaciones asociadas (opcional)",
+          "categoriaIds": {
+            "description": "Identificadores de categorías asociadas (opcional)",
             "example": [
               "2",
               "5"
@@ -7289,118 +7210,84 @@
           }
         }
       },
-      "ServicioResumenDto": {
+      "CategoriaResponseDto": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Identificador único del servicio",
-            "example": "5"
+            "description": "Identificador único de la categoría",
+            "example": "1"
           },
           "nombre": {
             "type": "string",
-            "description": "Nombre identificador del servicio",
-            "example": "Radiografía de tórax"
-          },
-          "duracionMinutos": {
-            "type": "number",
-            "description": "Duración estimada del servicio en minutos",
-            "example": 20
-          }
-        },
-        "required": [
-          "id",
-          "nombre",
-          "duracionMinutos"
-        ]
-      },
-      "OcupacionResponseDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Identificador único de la ocupación",
-            "example": "12"
-          },
-          "nombre": {
-            "type": "string",
-            "description": "Nombre visible de la ocupación",
-            "example": "Enfermería"
+            "description": "Nombre visible de la categoría",
+            "example": "Cardiología"
           },
           "descripcion": {
             "type": "string",
-            "description": "Descripción opcional de la ocupación",
-            "example": "Perfil orientado al cuidado integral del paciente"
+            "description": "Descripción opcional de la categoría"
           },
-          "grado": {
+          "colorHex": {
             "type": "string",
-            "description": "Grado o nivel profesional opcional para diferenciar perfiles de una misma ocupación",
-            "example": "Licenciatura"
+            "description": "Color identificador de la categoría",
+            "example": "#ef4444"
           },
           "estado": {
             "type": "string",
-            "description": "Estado actual del registro de ocupación",
+            "description": "Estado del registro",
             "example": "ACTIVO"
-          },
-          "servicios": {
-            "description": "Servicios asociados a la ocupación",
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ServicioResumenDto"
-            }
           }
         },
         "required": [
           "id",
           "nombre",
-          "estado",
-          "servicios"
+          "estado"
         ]
       },
-      "CrearOcupacionDto": {
+      "CrearCategoriaDto": {
         "type": "object",
         "properties": {
           "nombre": {
             "type": "string",
-            "description": "Nombre visible de la ocupación",
-            "example": "Enfermería"
+            "description": "Nombre visible de la categoría",
+            "example": "Cardiología"
           },
           "descripcion": {
             "type": "string",
-            "description": "Descripción opcional de la ocupación",
-            "example": "Perfil orientado al cuidado integral del paciente"
+            "description": "Descripción opcional de la categoría",
+            "example": "Categoría enfocada en corazón y sistema vascular."
           },
-          "grado": {
+          "colorHex": {
             "type": "string",
-            "description": "Grado o nivel profesional opcional para diferenciar perfiles de una misma ocupación",
-            "example": "Licenciatura"
+            "description": "Color identificador de la categoría (hexadecimal)",
+            "example": "#ef4444"
           }
         },
         "required": [
           "nombre"
         ]
       },
-      "ActualizarOcupacionDto": {
+      "ActualizarCategoriaDto": {
         "type": "object",
         "properties": {
           "nombre": {
             "type": "string",
-            "description": "Nombre visible de la ocupación",
-            "example": "Enfermería"
+            "description": "Nombre visible de la categoría",
+            "example": "Cardiología"
           },
           "descripcion": {
             "type": "string",
-            "description": "Descripción opcional de la ocupación",
-            "example": "Perfil orientado al cuidado integral del paciente"
+            "description": "Descripción opcional de la categoría",
+            "example": "Categoría enfocada en corazón y sistema vascular."
           },
-          "grado": {
+          "colorHex": {
             "type": "string",
-            "description": "Grado o nivel profesional opcional para diferenciar perfiles de una misma ocupación",
-            "example": "Licenciatura"
+            "description": "Color identificador de la categoría (hexadecimal)",
+            "example": "#ef4444"
           },
           "estado": {
             "type": "string",
-            "description": "Permite reactivar o desactivar la ocupación",
+            "description": "Permite reactivar o desactivar la categoría",
             "example": "ACTIVO"
           }
         }
@@ -7433,16 +7320,10 @@
             "example": false,
             "description": "Habilita permisos de supervisión para el rol PERSONAL_SALUD."
           },
-          "idOcupaciones": {
-            "description": "Ocupaciones asociadas al profesional de salud",
-            "example": [
-              "1",
-              "2"
-            ],
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+          "ocupacion": {
+            "type": "string",
+            "description": "Ocupación del profesional de salud",
+            "example": "Cardiología"
           }
         },
         "required": [
@@ -7472,16 +7353,10 @@
             "example": false,
             "description": "Habilita permisos de supervisión para el rol PERSONAL_SALUD."
           },
-          "idOcupaciones": {
-            "description": "Ocupaciones asociadas al profesional de salud",
-            "example": [
-              "1",
-              "2"
-            ],
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+          "ocupacion": {
+            "type": "string",
+            "description": "Ocupación del profesional de salud",
+            "example": "Cardiología"
           }
         }
       },
