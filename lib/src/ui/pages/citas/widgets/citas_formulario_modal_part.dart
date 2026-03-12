@@ -41,19 +41,7 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
     String tipoCita = (cita?.tipoCita?.isNotEmpty ?? false)
         ? cita!.tipoCita!
         : 'CONSULTA';
-    Especialidad? especialidadSeleccionada;
     Servicio? servicioSeleccionado;
-    if (cita?.especialidadId != null && cita!.especialidadId!.isNotEmpty) {
-      especialidadSeleccionada = Especialidad(
-        id: cita.especialidadId!,
-        nombre:
-            cita.especialidadNombre ?? 'Especialidad ${cita.especialidadId}',
-        descripcion: null,
-        estado: 'ACTIVO',
-        colorHex: cita.especialidadColorHex ?? '#64748b',
-        estudios: const [],
-      );
-    }
     if ((cita?.lugarId ?? '').trim().isNotEmpty) {
       lugarSeleccionado = Lugar(
         id: cita!.lugarId!.trim(),
@@ -73,43 +61,34 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
             cita.servicioDuracionMinutos ??
             Constantes.citasDuracionDefectoMinutos,
         estado: 'ACTIVO',
-        especialidades: const [],
+        categorias: const [],
       );
     }
-    final especialidadController = TextEditingController(
-      text: especialidadSeleccionada?.nombre ?? '',
-    );
     final servicioController = TextEditingController(
       text: servicioSeleccionado?.nombre ?? '',
     );
     final lugarController = TextEditingController(
       text: lugarSeleccionado?.nombre ?? '',
     );
-    final List<Especialidad> especialidadesDisponibles = [];
     final List<Servicio> serviciosDisponibles = [];
     final List<Paciente> pacientesDisponibles = [];
     final List<PersonalMedico> medicosDisponibles = [];
     final List<Lugar> lugaresDisponibles = [];
-    bool especialidadesLoading = false;
     bool serviciosLoading = false;
     bool pacientesLoading = false;
     bool medicosLoading = false;
     bool lugaresLoading = false;
-    bool especialidadesHasMore = true;
     bool serviciosHasMore = true;
     bool pacientesHasMore = true;
     bool medicosHasMore = true;
-    int especialidadesPage = 1;
     int serviciosPage = 1;
     int pacientesPage = 1;
     int medicosPage = 1;
     int lugaresPage = 1;
-    String especialidadesFiltro = '';
     String serviciosFiltro = '';
     String pacientesFiltro = '';
     String medicosFiltro = '';
     String lugaresFiltro = '';
-    Timer? especialidadesDebounce;
     Timer? serviciosDebounce;
     Timer? pacientesDebounce;
     Timer? medicosDebounce;
@@ -142,65 +121,23 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
         final modalContext = context;
         return StatefulBuilder(
           builder: (context, setStateDialog) {
-            Future<void> cargarEspecialidades({
-              bool reset = false,
-              void Function()? onUpdated,
-            }) async {
-              if (especialidadesLoading) return;
-              setStateDialog(() => especialidadesLoading = true);
-              if (reset) {
-                especialidadesPage = 1;
-                especialidadesHasMore = true;
-                especialidadesDisponibles.clear();
-              }
-              final result = await _service.obtenerEspecialidades(
-                page: especialidadesPage,
-                limit: 10,
-                filtro: especialidadesFiltro,
-              );
-              if (!mounted) return;
-              setStateDialog(() {
-                if (reset) {
-                  especialidadesDisponibles
-                    ..clear()
-                    ..addAll(result.items);
-                } else {
-                  especialidadesDisponibles.addAll(result.items);
-                }
-                especialidadesHasMore =
-                    especialidadesDisponibles.length < result.total;
-                especialidadesPage += 1;
-                especialidadesLoading = false;
-              });
-              onUpdated?.call();
-            }
-
             Future<void> cargarServicios({
               bool reset = false,
               void Function()? onUpdated,
             }) async {
               if (serviciosLoading) return;
-              final especialidadId = especialidadSeleccionada?.id ?? '';
-              setStateDialog(() => serviciosLoading = true);
+                        setStateDialog(() => serviciosLoading = true);
               if (reset) {
                 serviciosPage = 1;
                 serviciosHasMore = true;
                 serviciosDisponibles.clear();
               }
-              final result = especialidadId.isNotEmpty
-                  ? await _service.obtenerServiciosPorEspecialidad(
-                      especialidadId: especialidadId,
-                      tipo: tipoCita,
-                      page: serviciosPage,
-                      limit: 10,
-                      filtro: serviciosFiltro,
-                    )
-                  : await _service.obtenerServicios(
-                      tipo: tipoCita,
-                      page: serviciosPage,
-                      limit: 10,
-                      filtro: serviciosFiltro,
-                    );
+              final result = await _service.obtenerServicios(
+                tipo: tipoCita,
+                page: serviciosPage,
+                limit: 10,
+                filtro: serviciosFiltro,
+              );
               if (!mounted) return;
               setStateDialog(() {
                 if (reset) {
@@ -309,7 +246,6 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
 
             if (!inicializado) {
               inicializado = true;
-              unawaited(cargarEspecialidades(reset: true));
               unawaited(cargarServicios(reset: true));
               unawaited(cargarLugares(reset: true));
             }
@@ -637,257 +573,130 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
               });
             }
 
-            Future<void> abrirSelectorEspecialidad() async {
-              if (especialidadesDisponibles.isEmpty && !especialidadesLoading) {
-                await cargarEspecialidades(reset: true);
-                if (!context.mounted) return;
-              }
-              final seleccion = await showModalBottomSheet<Especialidad>(
+
+            Future<Paciente?> abrirNuevoPaciente() async {
+              final formKey = GlobalKey<FormState>();
+              final nombresController = TextEditingController();
+              final primerApellidoController = TextEditingController();
+              final segundoApellidoController = TextEditingController();
+              final nroDocumentoController = TextEditingController();
+              final telefonoController = TextEditingController();
+              String? genero;
+
+              final crear = await showDialog<bool>(
                 context: context,
-                isScrollControlled: true,
-                builder: (context) {
-                  final searchController = TextEditingController(
-                    text: especialidadesFiltro,
-                  );
-                  return StatefulBuilder(
-                    builder: (context, setStateSheet) {
-                      Future<void> cargar({required bool reset}) async {
-                        await cargarEspecialidades(
-                          reset: reset,
-                          onUpdated: () => setStateSheet(() {}),
-                        );
-                      }
-
-                      return Padding(
-                        padding: EdgeInsets.only(
-                          bottom: MediaQuery.of(context).viewInsets.bottom,
-                        ),
-                        child: SafeArea(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                  20,
-                                  16,
-                                  20,
-                                  8,
-                                ),
-                                child: Text(
-                                  'Selecciona una especialidad',
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.titleMedium,
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                ),
-                                child: CustomTextInput(
-                                  controller: searchController,
-                                  title: 'Buscar especialidad',
-                                  onChange: (value) {
-                                    especialidadesFiltro = value;
-                                    especialidadesDebounce?.cancel();
-                                    especialidadesDebounce = Timer(
-                                      const Duration(milliseconds: 300),
-                                      () => cargar(reset: true),
-                                    );
-                                  },
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Flexible(
-                                child: Builder(
-                                  builder: (context) {
-                                    if (especialidadesDisponibles.isEmpty &&
-                                        especialidadesLoading) {
-                                      return const Center(
-                                        child: CircularProgressIndicator(),
-                                      );
-                                    }
-                                    if (especialidadesDisponibles.isEmpty) {
-                                      return const Center(
-                                        child: Text('Sin resultados'),
-                                      );
-                                    }
-                                    return ListView.builder(
-                                      shrinkWrap: true,
-                                      itemCount:
-                                          especialidadesDisponibles.length +
-                                          (especialidadesHasMore ? 1 : 0),
-                                      itemBuilder: (context, index) {
-                                        if (index ==
-                                                especialidadesDisponibles
-                                                    .length &&
-                                            especialidadesHasMore) {
-                                          return Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              vertical: 8,
-                                            ),
-                                            child: Center(
-                                              child: TextButton.icon(
-                                                onPressed: especialidadesLoading
-                                                    ? null
-                                                    : () =>
-                                                          cargar(reset: false),
-                                                icon: const Icon(
-                                                  Icons.expand_more,
-                                                ),
-                                                label: const Text('Cargar más'),
-                                              ),
-                                            ),
-                                          );
-                                        }
-                                        final option =
-                                            especialidadesDisponibles[index];
-                                        return ListTile(
-                                          title: Text(option.nombre),
-                                          subtitle: option.descripcion != null
-                                              ? Text(option.descripcion!)
-                                              : null,
-                                          onTap: () =>
-                                              Navigator.pop(context, option),
-                                        );
-                                      },
-                                    );
-                                  },
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                            ],
+                builder: (dialogContext) => AlertDialog(
+                  title: const Text('Registrar paciente'),
+                  content: Form(
+                    key: formKey,
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CustomTextInput(
+                            controller: nombresController,
+                            title: 'Nombres',
+                            requiredData: true,
+                            validate: _validarRequerido,
                           ),
-                        ),
-                      );
-                    },
-                  );
-                },
+                          const SizedBox(height: 8),
+                          CustomTextInput(
+                            controller: primerApellidoController,
+                            title: 'Primer apellido',
+                            requiredData: true,
+                            validate: _validarRequerido,
+                          ),
+                          const SizedBox(height: 8),
+                          CustomTextInput(
+                            controller: segundoApellidoController,
+                            title: 'Segundo apellido',
+                          ),
+                          const SizedBox(height: 8),
+                          CustomTextInput(
+                            controller: nroDocumentoController,
+                            title: 'Documento',
+                          ),
+                          const SizedBox(height: 8),
+                          CustomTextInput(
+                            controller: telefonoController,
+                            title: 'Teléfono',
+                          ),
+                          const SizedBox(height: 8),
+                          DropdownButtonFormField<String>(
+                            value: genero,
+                            decoration: const InputDecoration(labelText: 'Género'),
+                            items: const [
+                              DropdownMenuItem(value: 'M', child: Text('Masculino')),
+                              DropdownMenuItem(value: 'F', child: Text('Femenino')),
+                              DropdownMenuItem(value: 'O', child: Text('Otro')),
+                            ],
+                            onChanged: (value) => genero = value,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(dialogContext, false),
+                      child: const Text('Cancelar'),
+                    ),
+                    FilledButton(
+                      onPressed: () {
+                        if (!(formKey.currentState?.validate() ?? false)) return;
+                        Navigator.pop(dialogContext, true);
+                      },
+                      child: const Text('Guardar'),
+                    ),
+                  ],
+                ),
               );
-              if (seleccion == null) return;
-              setStateDialog(() {
-                especialidadSeleccionada = seleccion;
-                especialidadController.text = seleccion.nombre;
-                tipoCita = tipoCita.isNotEmpty ? tipoCita : 'CONSULTA';
-                servicioSeleccionado = null;
-                servicioController.clear();
-                serviciosFiltro = '';
-                serviciosDisponibles.clear();
-                serviciosHasMore = true;
-                serviciosPage = 1;
-              });
-              unawaited(cargarServicios(reset: true));
-            }
 
-            Future<void> abrirSelectorLugar() async {
-              if (lugaresDisponibles.isEmpty && !lugaresLoading) {
-                await cargarLugares(reset: true);
-                if (!context.mounted) return;
+              if (crear != true) return null;
+
+              final payload = <String, dynamic>{
+                'nombres': nombresController.text.trim(),
+                'primerApellido': primerApellidoController.text.trim(),
+                if (segundoApellidoController.text.trim().isNotEmpty)
+                  'segundoApellido': segundoApellidoController.text.trim(),
+                if (nroDocumentoController.text.trim().isNotEmpty)
+                  'nroDocumento': nroDocumentoController.text.trim(),
+                if (telefonoController.text.trim().isNotEmpty)
+                  'telefono': telefonoController.text.trim(),
+                if ((genero ?? '').trim().isNotEmpty) 'genero': genero,
+              };
+
+              final response = await _service.crearPaciente(payload);
+              final ok = await _handleResponseError(
+                response,
+                'No se pudo registrar el paciente.',
+              );
+              if (!ok) return null;
+
+              if (response.data['datos'] is Map<String, dynamic>) {
+                return Paciente.fromJson(response.data['datos'] as Map<String, dynamic>);
               }
-              final seleccion = await showModalBottomSheet<Lugar>(
-                context: context,
-                isScrollControlled: true,
-                builder: (context) {
-                  final searchController = TextEditingController(
-                    text: lugaresFiltro,
-                  );
-                  return StatefulBuilder(
-                    builder: (context, setStateSheet) {
-                      Future<void> cargar({required bool reset}) async {
-                        await cargarLugares(reset: reset);
-                        setStateSheet(() {});
-                      }
-
-                      return Padding(
-                        padding: EdgeInsets.only(
-                          bottom: MediaQuery.of(context).viewInsets.bottom,
-                        ),
-                        child: SafeArea(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                  20,
-                                  16,
-                                  20,
-                                  8,
-                                ),
-                                child: Text(
-                                  'Selecciona un lugar',
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.titleMedium,
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                ),
-                                child: CustomTextInput(
-                                  controller: searchController,
-                                  title: 'Buscar lugar',
-                                  onChange: (value) {
-                                    lugaresFiltro = value;
-                                    lugaresDebounce?.cancel();
-                                    lugaresDebounce = Timer(
-                                      const Duration(milliseconds: 300),
-                                      () => cargar(reset: true),
-                                    );
-                                  },
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Flexible(
-                                child: Builder(
-                                  builder: (context) {
-                                    if (lugaresDisponibles.isEmpty &&
-                                        lugaresLoading) {
-                                      return const Center(
-                                        child: CircularProgressIndicator(),
-                                      );
-                                    }
-                                    if (lugaresDisponibles.isEmpty) {
-                                      return const Center(
-                                        child: Text('Sin resultados'),
-                                      );
-                                    }
-                                    return ListView.builder(
-                                      shrinkWrap: true,
-                                      itemCount: lugaresDisponibles.length,
-                                      itemBuilder: (context, index) {
-                                        final option =
-                                            lugaresDisponibles[index];
-                                        return ListTile(
-                                          title: Text(option.nombre),
-                                          subtitle:
-                                              option.direccion.trim().isNotEmpty
-                                              ? Text(option.direccion)
-                                              : null,
-                                          onTap: () =>
-                                              Navigator.pop(context, option),
-                                        );
-                                      },
-                                    );
-                                  },
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                },
+              if (response.data['data'] is Map<String, dynamic>) {
+                return Paciente.fromJson(response.data['data'] as Map<String, dynamic>);
+              }
+              return Paciente(
+                id: (response.data['id'] ?? '').toString(),
+                nombres: nombresController.text.trim(),
+                primerApellido: primerApellidoController.text.trim(),
+                segundoApellido: segundoApellidoController.text.trim().isEmpty
+                    ? null
+                    : segundoApellidoController.text.trim(),
+                nroDocumento: nroDocumentoController.text.trim().isEmpty
+                    ? null
+                    : nroDocumentoController.text.trim(),
+                telefono: telefonoController.text.trim().isEmpty
+                    ? null
+                    : telefonoController.text.trim(),
+                genero: genero,
+                fechaNacimiento: null,
+                observacion: null,
+                estado: 'ACTIVO',
               );
-              if (seleccion == null) return;
-              setStateDialog(() {
-                lugarSeleccionado = seleccion;
-                lugarController.text = seleccion.nombre;
-              });
             }
 
             Future<void> abrirSelectorServicio() async {
@@ -899,9 +708,7 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
                 context: context,
                 isScrollControlled: true,
                 builder: (context) {
-                  final searchController = TextEditingController(
-                    text: serviciosFiltro,
-                  );
+                  final searchController = TextEditingController(text: serviciosFiltro);
                   return StatefulBuilder(
                     builder: (context, setStateSheet) {
                       Future<void> cargar({required bool reset}) async {
@@ -918,26 +725,9 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
                         child: SafeArea(
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                  20,
-                                  16,
-                                  20,
-                                  8,
-                                ),
-                                child: Text(
-                                  'Selecciona un servicio',
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.titleMedium,
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                ),
+                                padding: const EdgeInsets.all(20),
                                 child: CustomTextInput(
                                   controller: searchController,
                                   title: 'Buscar servicio',
@@ -951,65 +741,20 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
                                   },
                                 ),
                               ),
-                              const SizedBox(height: 12),
                               Flexible(
-                                child: Builder(
-                                  builder: (context) {
-                                    if (serviciosDisponibles.isEmpty &&
-                                        serviciosLoading) {
-                                      return const Center(
-                                        child: CircularProgressIndicator(),
-                                      );
-                                    }
-                                    if (serviciosDisponibles.isEmpty) {
-                                      return const Center(
-                                        child: Text('Sin resultados'),
-                                      );
-                                    }
-                                    return ListView.builder(
-                                      shrinkWrap: true,
-                                      itemCount:
-                                          serviciosDisponibles.length +
-                                          (serviciosHasMore ? 1 : 0),
-                                      itemBuilder: (context, index) {
-                                        if (index ==
-                                                serviciosDisponibles.length &&
-                                            serviciosHasMore) {
-                                          return Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              vertical: 8,
-                                            ),
-                                            child: Center(
-                                              child: TextButton.icon(
-                                                onPressed: serviciosLoading
-                                                    ? null
-                                                    : () =>
-                                                          cargar(reset: false),
-                                                icon: const Icon(
-                                                  Icons.expand_more,
-                                                ),
-                                                label: const Text('Cargar más'),
-                                              ),
-                                            ),
-                                          );
-                                        }
-                                        final option =
-                                            serviciosDisponibles[index];
-                                        return ListTile(
-                                          title: Text(option.nombre),
-                                          subtitle:
-                                              option.descripcion.isNotEmpty
-                                              ? Text(option.descripcion)
-                                              : null,
-                                          onTap: () =>
-                                              Navigator.pop(context, option),
-                                        );
-                                      },
+                                child: ListView.builder(
+                                  shrinkWrap: true,
+                                  itemCount: serviciosDisponibles.length,
+                                  itemBuilder: (context, index) {
+                                    final option = serviciosDisponibles[index];
+                                    return ListTile(
+                                      title: Text(option.nombre),
+                                      subtitle: Text(option.descripcion),
+                                      onTap: () => Navigator.pop(context, option),
                                     );
                                   },
                                 ),
                               ),
-                              const SizedBox(height: 12),
                             ],
                           ),
                         ),
@@ -1023,209 +768,75 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
                 servicioSeleccionado = seleccion;
                 servicioController.text = seleccion.nombre;
               });
-              servicioFieldKey.currentState?.didChange(seleccion);
-              if (intentoEnvio) {
-                servicioFieldKey.currentState?.validate();
-              }
             }
 
-            Future<Paciente?> abrirNuevoPaciente() async {
-              final formKeyPaciente = GlobalKey<FormState>();
-              final nombresController = TextEditingController();
-              final primerApellidoController = TextEditingController();
-              final segundoApellidoController = TextEditingController();
-              final nroDocumentoController = TextEditingController();
-              final fechaNacimientoController = TextEditingController();
-              final telefonoController = TextEditingController();
-              final observacionController = TextEditingController();
-              DateTime? fechaNacimiento;
-              String? generoSeleccionado;
-              bool guardando = false;
-
-              return showDialog<Paciente>(
+            Future<void> abrirSelectorLugar() async {
+              if (lugaresDisponibles.isEmpty && !lugaresLoading) {
+                await cargarLugares(reset: true);
+                if (!context.mounted) return;
+              }
+              final seleccion = await showModalBottomSheet<Lugar>(
                 context: context,
+                isScrollControlled: true,
                 builder: (context) {
+                  final searchController = TextEditingController(text: lugaresFiltro);
                   return StatefulBuilder(
-                    builder: (context, setStatePaciente) {
-                      Future<void> seleccionarFechaNacimiento() async {
-                        final picked = await showDatePicker(
-                          context: context,
-                          initialDate: DateTime.now(),
-                          firstDate: DateTime(1900),
-                          lastDate: DateTime.now(),
-                        );
-                        if (picked == null) return;
-                        setStatePaciente(() {
-                          fechaNacimiento = picked;
-                          fechaNacimientoController.text = DateFormat(
-                            'yyyy-MM-dd',
-                          ).format(picked);
-                        });
+                    builder: (context, setStateSheet) {
+                      Future<void> cargar({required bool reset}) async {
+                        await cargarLugares(reset: reset);
+                        setStateSheet(() {});
                       }
 
-                      Future<void> guardarPaciente() async {
-                        if (!formKeyPaciente.currentState!.validate()) return;
-                        setStatePaciente(() => guardando = true);
-                        final body = <String, dynamic>{
-                          'nombres': nombresController.text.trim(),
-                          if (primerApellidoController.text.trim().isNotEmpty)
-                            'primerApellido': primerApellidoController.text
-                                .trim(),
-                          if (segundoApellidoController.text.trim().isNotEmpty)
-                            'segundoApellido': segundoApellidoController.text
-                                .trim(),
-                          if (nroDocumentoController.text.trim().isNotEmpty)
-                            'nroDocumento': nroDocumentoController.text.trim(),
-                          if (fechaNacimiento != null)
-                            'fechaNacimiento': DateFormat(
-                              'yyyy-MM-dd',
-                            ).format(fechaNacimiento!),
-                          if (telefonoController.text.trim().isNotEmpty)
-                            'telefono': telefonoController.text.trim(),
-                          if (generoSeleccionado?.trim().isNotEmpty ?? false)
-                            'genero': generoSeleccionado,
-                          if (observacionController.text.trim().isNotEmpty)
-                            'observacion': observacionController.text.trim(),
-                        };
-                        final response = await _service.crearPaciente(body);
-                        if (!context.mounted) return;
-                        final ok = await _handleResponseError(
-                          response,
-                          'No se pudo registrar el paciente.',
-                        );
-                        if (!context.mounted) return;
-                        if (!ok) {
-                          setStatePaciente(() => guardando = false);
-                          return;
-                        }
-                        final raw =
-                            response.data['datos'] ??
-                            response.data['data'] ??
-                            response.data;
-                        if (raw is Map<String, dynamic>) {
-                          final paciente = Paciente.fromJson(raw);
-                          showSnackBar(
-                            citasMessenger,
-                            'Paciente creado correctamente',
-                            state: StatusSnackBar.success,
-                            colorText: _theme.white,
-                          );
-                          Navigator.pop(context, paciente);
-                          return;
-                        }
-                        Navigator.pop(context);
-                      }
-
-                      return AlertDialog(
-                        title: const Text('Nuevo paciente'),
-                        content: SingleChildScrollView(
-                          child: Form(
-                            key: formKeyPaciente,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                CustomTextInput(
-                                  controller: nombresController,
-                                  title: 'Nombres',
-                                  requiredData: true,
-                                  validate: (value, alias) =>
-                                      _validarRequerido(value, alias),
-                                ),
-                                const SizedBox(height: 12),
-                                CustomTextInput(
-                                  controller: primerApellidoController,
-                                  title: 'Primer apellido',
-                                ),
-                                const SizedBox(height: 12),
-                                CustomTextInput(
-                                  controller: segundoApellidoController,
-                                  title: 'Segundo apellido',
-                                ),
-                                const SizedBox(height: 12),
-                                CustomTextInput(
-                                  controller: nroDocumentoController,
-                                  title: 'Número de documento',
-                                ),
-                                const SizedBox(height: 12),
-                                TextFormField(
-                                  controller: fechaNacimientoController,
-                                  readOnly: true,
-                                  decoration: CustomTextInputStyles.decoration(
-                                    label: 'Fecha de nacimiento',
-                                    suffixIcon: IconButton(
-                                      icon: const Icon(Icons.event),
-                                      onPressed: seleccionarFechaNacimiento,
-                                    ),
-                                  ),
-                                  onTap: seleccionarFechaNacimiento,
-                                ),
-                                const SizedBox(height: 12),
-                                CustomTextInput(
-                                  controller: telefonoController,
-                                  title: 'Teléfono',
-                                  onlyNumbers: true,
-                                ),
-                                const SizedBox(height: 12),
-                                DropdownButtonFormField<String>(
-                                  initialValue: generoSeleccionado,
-                                  decoration: CustomTextInputStyles.decoration(
-                                    label: 'Género',
-                                  ),
-                                  items: const [
-                                    DropdownMenuItem(
-                                      value: 'F',
-                                      child: Text('Femenino'),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: 'M',
-                                      child: Text('Masculino'),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: 'O',
-                                      child: Text('Otro'),
-                                    ),
-                                  ],
-                                  onChanged: (value) {
-                                    setStatePaciente(
-                                      () => generoSeleccionado = value,
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          bottom: MediaQuery.of(context).viewInsets.bottom,
+                        ),
+                        child: SafeArea(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(20),
+                                child: CustomTextInput(
+                                  controller: searchController,
+                                  title: 'Buscar lugar',
+                                  onChange: (value) {
+                                    lugaresFiltro = value;
+                                    lugaresDebounce?.cancel();
+                                    lugaresDebounce = Timer(
+                                      const Duration(milliseconds: 300),
+                                      () => cargar(reset: true),
                                     );
                                   },
                                 ),
-                                const SizedBox(height: 12),
-                                CustomTextInput(
-                                  controller: observacionController,
-                                  title: 'Observaciones',
-                                  lines: 2,
+                              ),
+                              Flexible(
+                                child: ListView.builder(
+                                  shrinkWrap: true,
+                                  itemCount: lugaresDisponibles.length,
+                                  itemBuilder: (context, index) {
+                                    final option = lugaresDisponibles[index];
+                                    return ListTile(
+                                      title: Text(option.nombre),
+                                      subtitle: Text(option.direccion),
+                                      onTap: () => Navigator.pop(context, option),
+                                    );
+                                  },
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
-                        actions: [
-                          TextButton(
-                            onPressed: guardando
-                                ? null
-                                : () => Navigator.pop(context),
-                            child: const Text('Cancelar'),
-                          ),
-                          ElevatedButton(
-                            onPressed: guardando ? null : guardarPaciente,
-                            child: guardando
-                                ? const SizedBox(
-                                    height: 18,
-                                    width: 18,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : const Text('Guardar'),
-                          ),
-                        ],
                       );
                     },
                   );
                 },
               );
+              if (seleccion == null) return;
+              setStateDialog(() {
+                lugarSeleccionado = seleccion;
+                lugarController.text = seleccion.nombre;
+              });
             }
 
             bool validarFormulario() {
@@ -1604,36 +1215,6 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  FormField<Especialidad>(
-                    builder: (state) {
-                      return CitasAutocompleteSelectorField(
-                        controller: especialidadController,
-                        labelText: 'Especialidad',
-                        hintText: 'Selecciona una especialidad',
-                        errorText: state.errorText,
-                        onClear: especialidadSeleccionada == null
-                            ? null
-                            : () {
-                                setStateDialog(() {
-                                  especialidadSeleccionada = null;
-                                  especialidadController.clear();
-                                  servicioSeleccionado = null;
-                                  servicioController.clear();
-                                  serviciosDisponibles.clear();
-                                  serviciosHasMore = true;
-                                  serviciosPage = 1;
-                                });
-                                state.didChange(null);
-                                unawaited(cargarServicios(reset: true));
-                              },
-                        onTap: () async {
-                          await abrirSelectorEspecialidad();
-                          state.didChange(especialidadSeleccionada);
-                        },
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 8),
                   FormField<Servicio>(
                     key: servicioFieldKey,
                     validator: (_) => servicioSeleccionado == null
@@ -1883,9 +1464,6 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
                                                   pacienteNombre:
                                                       pacienteSeleccionado
                                                           ?.nombreCompleto,
-                                                  especialidadNombre:
-                                                      especialidadSeleccionada
-                                                          ?.nombre,
                                                   servicioNombre:
                                                       servicioSeleccionado
                                                           ?.nombre ??
@@ -1961,7 +1539,6 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
       },
     );
 
-    especialidadesDebounce?.cancel();
     serviciosDebounce?.cancel();
     pacientesDebounce?.cancel();
     medicosDebounce?.cancel();
@@ -1971,7 +1548,6 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
     final detalle = detalleController.text.trim();
     final medicoId = (medicoIdSeleccionado ?? '').trim();
     final pacienteId = (pacienteSeleccionado?.id ?? '').trim();
-    final especialidadId = especialidadSeleccionada?.id ?? '';
     final lugarId = (lugarSeleccionado?.id ?? '').trim();
 
     if (cita == null) {
@@ -1983,7 +1559,6 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
         if (medicoId.isNotEmpty) 'idPersonal': medicoId,
         if (pacienteSeleccionado != null)
           'idPaciente': pacienteSeleccionado?.id,
-        if (especialidadId.isNotEmpty) 'idEspecialidad': especialidadId,
         if (lugarId.isNotEmpty) 'idLugar': lugarId,
         'tipoCita': tipoCita,
         if (servicioSeleccionado != null)
@@ -2016,7 +1591,6 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
     final cambioFecha = fechaInicio != cita.fechaInicio;
     final cambioMedico = medicoId != cita.medicoId;
     final cambioPaciente = pacienteId != (cita.pacienteId ?? '');
-    final cambioEspecialidad = especialidadId != (cita.especialidadId ?? '');
     final cambioTipoCita = tipoCita != (cita.tipoCita ?? '');
     final cambioLugar = lugarId != (cita.lugarId ?? '');
     final cambioServicio = servicioSeleccionado?.id != (cita.servicioId ?? '');
@@ -2027,9 +1601,6 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
       if (cambioMedico) updates['idPersonal'] = medicoId;
       if (cambioPaciente) {
         updates['idPaciente'] = pacienteId.isEmpty ? null : pacienteId;
-      }
-      if (cambioEspecialidad) {
-        updates['idEspecialidad'] = especialidadId;
       }
       if (cambioTipoCita) updates['tipoCita'] = tipoCita;
       if (cambioLugar) {
@@ -2064,9 +1635,6 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
       if (cambioPaciente) {
         updates['idPaciente'] = pacienteId.isEmpty ? null : pacienteId;
       }
-      if (cambioEspecialidad) {
-        updates['idEspecialidad'] = especialidadId;
-      }
       if (cambioTipoCita) updates['tipoCita'] = tipoCita;
       if (cambioLugar) {
         updates['idLugar'] = lugarId.isEmpty ? null : lugarId;
@@ -2090,7 +1658,6 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
     } else if (estadoActual == 'SOLICITADA') {
       if (cambioMedico ||
           cambioPaciente ||
-          cambioEspecialidad ||
           cambioTipoCita ||
           cambioServicio ||
           cambioLugar) {
@@ -2167,7 +1734,6 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
       if (cambioDetalle ||
           cambioMedico ||
           cambioPaciente ||
-          cambioEspecialidad ||
           cambioTipoCita ||
           cambioServicio ||
           cambioLugar) {
@@ -2210,7 +1776,6 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
       if (cambioDetalle ||
           cambioMedico ||
           cambioPaciente ||
-          cambioEspecialidad ||
           cambioTipoCita ||
           cambioServicio ||
           (estadoSeleccionado != null && estadoSeleccionado != estadoActual)) {
@@ -2387,7 +1952,7 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
       if (nombre.trim().isNotEmpty) nombre,
       if ((detalle.nroDocumento ?? '').trim().isNotEmpty)
         detalle.nroDocumento!.trim(),
-      if (detalle.especialidades.isNotEmpty) detalle.especialidades.join(', '),
+      if (detalle.ocupaciones.isNotEmpty) detalle.ocupaciones.join(', '),
     ];
     return parts.isEmpty ? '--' : parts.join(' · ');
   }
@@ -2472,7 +2037,6 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
       'estado': 'Estado',
       'tipoCita': 'Tipo de cita',
       'esEstudio': 'Tipo de cita',
-      'idEspecialidad': 'Especialidad',
       'idPersonal': 'Personal asignado',
       'idPaciente': 'Paciente',
       'idConsultorio': 'Consultorio',
@@ -2522,7 +2086,6 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
       'estado': 'Estado',
       'tipoCita': 'Tipo de cita',
       'esEstudio': 'Tipo de cita',
-      'idEspecialidad': 'Especialidad',
       'idPersonal': 'Personal asignado',
       'idPaciente': 'Paciente',
       'idConsultorio': 'Consultorio',

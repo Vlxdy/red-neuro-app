@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:red_neuro_app/src/config/service_config.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
-import 'package:red_neuro_app/src/models/especialidad.dart';
+import 'package:red_neuro_app/src/models/categoria.dart';
 import 'package:red_neuro_app/src/models/estudio.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 
@@ -32,15 +32,15 @@ class ServicioPageResult {
       );
 }
 
-class EspecialidadPageResult {
-  final List<Especialidad> items;
+class CategoriaPageResult {
+  final List<Categoria> items;
   final int total;
   final int page;
   final int limit;
   final String message;
   final StatusNetwork status;
 
-  const EspecialidadPageResult({
+  const CategoriaPageResult({
     required this.items,
     required this.total,
     required this.page,
@@ -49,7 +49,7 @@ class EspecialidadPageResult {
     required this.status,
   });
 
-  factory EspecialidadPageResult.empty(String message) => EspecialidadPageResult(
+  factory CategoriaPageResult.empty(String message) => CategoriaPageResult(
         items: const [],
         total: 0,
         page: 1,
@@ -58,6 +58,8 @@ class EspecialidadPageResult {
         status: StatusNetwork.noContent,
       );
 }
+
+typedef OcupacionPageResult = CategoriaPageResult;
 
 class EstudiosService extends ServiceConfig {
   EstudiosService(BuildContext context) : super('', context);
@@ -129,14 +131,14 @@ class EstudiosService extends ServiceConfig {
         tipo: tipo,
       );
 
-  Future<EspecialidadPageResult> obtenerEspecialidadesPaginadas({
+  Future<CategoriaPageResult> obtenerCategoriasPaginadas({
     int page = 1,
     int limit = 20,
     String? filtro,
   }) async {
     try {
       final response = await fetch(
-        '/especialidades',
+        '/categorias',
         params: {
           'pagina': '$page',
           'limite': '$limit',
@@ -145,7 +147,7 @@ class EstudiosService extends ServiceConfig {
       );
 
       if (response.status != StatusNetwork.connected) {
-        return EspecialidadPageResult.empty(response.message);
+        return CategoriaPageResult.empty(response.message);
       }
 
       final data = response.data;
@@ -157,34 +159,44 @@ class EstudiosService extends ServiceConfig {
           data['items'] ??
           [];
 
-      final especialidades = (filasRaw is List)
+      final categorias = (filasRaw is List)
           ? filasRaw
               .whereType<Map<String, dynamic>>()
-              .map(Especialidad.fromJson)
+              .map(Categoria.fromJson)
               .toList()
-          : <Especialidad>[];
+          : <Categoria>[];
 
-      return EspecialidadPageResult(
-        items: especialidades,
+      return CategoriaPageResult(
+        items: categorias,
         total: totalRaw is int
             ? totalRaw
-            : int.tryParse('$totalRaw') ?? especialidades.length,
+            : int.tryParse('$totalRaw') ?? categorias.length,
         page: page,
         limit: limit,
         message: response.message,
         status: response.status,
       );
     } catch (e, stacktrace) {
-      Logger.error('Error al obtener especialidades $e');
+      Logger.error('Error al obtener categorías $e');
       Logger.error('stacktrace $stacktrace');
-      return EspecialidadPageResult.empty(
-        'No se pudieron cargar las especialidades',
+      return CategoriaPageResult.empty(
+        'No se pudieron cargar las categorías',
       );
     }
   }
 
-  Future<List<Especialidad>> obtenerEspecialidades() async {
-    final result = await obtenerEspecialidadesPaginadas(page: 1, limit: 50);
+  @Deprecated('Usar obtenerCategoriasPaginadas')
+  Future<CategoriaPageResult> obtenerOcupacionesPaginadas({
+    int page = 1,
+    int limit = 20,
+    String? filtro,
+  }) => obtenerCategoriasPaginadas(page: page, limit: limit, filtro: filtro);
+
+  @Deprecated('Usar obtenerCategorias')
+  Future<List<Categoria>> obtenerOcupaciones() => obtenerCategorias();
+
+  Future<List<Categoria>> obtenerCategorias() async {
+    final result = await obtenerCategoriasPaginadas(page: 1, limit: 50);
     return result.items;
   }
 

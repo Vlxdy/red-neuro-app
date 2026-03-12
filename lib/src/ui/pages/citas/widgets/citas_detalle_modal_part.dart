@@ -12,8 +12,8 @@ extension _CitasPageDetalleModalPart on _CitasPageState {
     final pacienteEdad = _valorDetalle(
       _calcularEdadPaciente(cita.pacienteFechaNacimiento),
     );
-    final especialidadNombre = _valorDetalle(
-      cita.especialidadNombre ?? cita.especialidadId,
+    final ocupacionNombre = _valorDetalle(
+      cita.ocupacionNombre ?? cita.ocupacionId,
     );
     final etiquetaPrestacion = _etiquetaPrestacion(
       cita.servicioTipo ?? cita.tipoCita,
@@ -29,12 +29,12 @@ extension _CitasPageDetalleModalPart on _CitasPageState {
     final lugarDisplay = (lugarSigla != null && lugarNombre != null)
         ? '${lugarSigla.toUpperCase()} • $lugarNombre'
         : lugarNombre;
-    final especialidadColor = _colorEspecialidad(cita);
+    final ocupacionColor = _colorOcupacion(cita);
     final personalAsignado = _nombreMedico(cita);
 
     final tieneDatosServicio =
         servicioNombre != null ||
-        especialidadNombre != null ||
+        ocupacionNombre != null ||
         (servicioDuracion ?? 0) > 0;
     final tieneDatosLugar =
         lugarNombre != null ||
@@ -92,11 +92,11 @@ extension _CitasPageDetalleModalPart on _CitasPageState {
     var mostrarMasPaciente = false;
     final detallesServicioExtra =
         <({IconData icon, String label, String value})>[
-          if (especialidadNombre != null)
+          if (ocupacionNombre != null)
             (
               icon: PhosphorIconsRegular.stethoscope,
-              label: 'Especialidad',
-              value: especialidadNombre,
+              label: 'Ocupacion',
+              value: ocupacionNombre,
             ),
           if ((servicioDuracion ?? 0) > 0)
             (
@@ -253,10 +253,10 @@ extension _CitasPageDetalleModalPart on _CitasPageState {
                             estado: cita.estado,
                             color: _colorEstado(cita.estado),
                           ),
-                          if (especialidadNombre?.isNotEmpty ?? false)
-                            CitasEspecialidadTag(
-                              label: especialidadNombre!,
-                              color: especialidadColor,
+                          if (ocupacionNombre?.isNotEmpty ?? false)
+                            CitasOcupacionTag(
+                              label: ocupacionNombre!,
+                              color: ocupacionColor,
                             ),
                         ],
                       ),

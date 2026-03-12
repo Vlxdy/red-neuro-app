@@ -21,32 +21,32 @@ class EstudioResumen {
   }
 }
 
-class Especialidad {
+class Ocupacion {
   final String id;
   final String nombre;
   final String? descripcion;
   final String estado;
-  final String colorHex;
+  final String? grado;
   final List<EstudioResumen> estudios;
 
-  const Especialidad({
+  const Ocupacion({
     required this.id,
     required this.nombre,
     required this.descripcion,
     required this.estado,
-    required this.colorHex,
+    required this.grado,
     required this.estudios,
   });
 
-  factory Especialidad.fromJson(Map<String, dynamic> json) {
+  factory Ocupacion.fromJson(Map<String, dynamic> json) {
     final estudiosRaw =
         json['servicios'] ?? json['estudios'] ?? json['study'] ?? [];
-    return Especialidad(
+    return Ocupacion(
       id: (json['id'] ?? '').toString(),
       nombre: (json['nombre'] ?? '').toString(),
       descripcion: json['descripcion']?.toString(),
       estado: (json['estado'] ?? '').toString(),
-      colorHex: (json['colorHex'] ?? '#64748b').toString(),
+      grado: json['grado']?.toString(),
       estudios: estudiosRaw is List
           ? estudiosRaw
               .whereType<Map<String, dynamic>>()

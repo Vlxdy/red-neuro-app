@@ -31,11 +31,11 @@ class CitasEstadoBadge extends StatelessWidget {
   }
 }
 
-class CitasEspecialidadTag extends StatelessWidget {
+class CitasOcupacionTag extends StatelessWidget {
   final String label;
   final Color color;
 
-  const CitasEspecialidadTag({
+  const CitasOcupacionTag({
     super.key,
     required this.label,
     required this.color,

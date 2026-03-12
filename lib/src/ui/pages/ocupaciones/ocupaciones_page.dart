@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:red_neuro_app/src/config/form_controller.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
-import 'package:red_neuro_app/src/extensions/colores_extension.dart';
-import 'package:red_neuro_app/src/models/especialidad.dart';
+import 'package:red_neuro_app/src/models/ocupacion.dart';
 import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
 import 'package:red_neuro_app/src/ui/common/customdatatable/custom_datatable.dart';
 import 'package:red_neuro_app/src/ui/common/components/tray_ui_helpers.dart';
@@ -12,24 +11,23 @@ import 'package:red_neuro_app/src/ui/common/form_stepper/step_form_dialog_layout
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
-import 'package:red_neuro_app/src/ui/pages/especialidades/especialidades_service.dart';
+import 'package:red_neuro_app/src/ui/pages/ocupaciones/ocupaciones_service.dart';
 
-final GlobalKey<ScaffoldMessengerState> especialidadesMessenger =
+final GlobalKey<ScaffoldMessengerState> ocupacionesMessenger =
     GlobalKey<ScaffoldMessengerState>();
 
-class EspecialidadesPage extends StatefulWidget {
-  const EspecialidadesPage({super.key});
+class OcupacionesPage extends StatefulWidget {
+  const OcupacionesPage({super.key});
 
   @override
-  State<EspecialidadesPage> createState() => _EspecialidadesPageState();
+  State<OcupacionesPage> createState() => _OcupacionesPageState();
 }
 
-class _EspecialidadesPageState extends State<EspecialidadesPage>
-    with FormController {
+class _OcupacionesPageState extends State<OcupacionesPage> with FormController {
   final _theme = ThemeController.instance;
-  late final EspecialidadesService _service;
+  late final OcupacionesService _service;
 
-  List<Especialidad> _especialidades = [];
+  List<Ocupacion> _ocupaciones = [];
   bool _loading = false;
   bool _loadingMore = false;
   int _page = 1;
@@ -43,8 +41,8 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
   @override
   void initState() {
     super.initState();
-    _service = EspecialidadesService(context);
-    _cargarEspecialidades();
+    _service = OcupacionesService(context);
+    _cargarOcupaciones();
     _scrollController.addListener(_handleScroll);
   }
 
@@ -63,18 +61,18 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
     }
     final maxScroll = _scrollController.position.maxScrollExtent;
     final current = _scrollController.position.pixels;
-    if (current >= maxScroll - 200 && _especialidades.length < _total) {
-      _cargarEspecialidades(page: _page + 1, append: true);
+    if (current >= maxScroll - 200 && _ocupaciones.length < _total) {
+      _cargarOcupaciones(page: _page + 1, append: true);
     }
   }
 
-  Future<void> _cargarEspecialidades({int? page, bool append = false}) async {
+  Future<void> _cargarOcupaciones({int? page, bool append = false}) async {
     if (append) {
       setState(() => _loadingMore = true);
     } else {
       setState(() => _loading = true);
     }
-    final result = await _service.obtenerEspecialidades(
+    final result = await _service.obtenerOcupaciones(
       page: page ?? _page,
       limit: _limit,
       filtro: _filtro,
@@ -82,9 +80,9 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
 
     setState(() {
       if (append) {
-        _especialidades = [..._especialidades, ...result.especialidades];
+        _ocupaciones = [..._ocupaciones, ...result.ocupaciones];
       } else {
-        _especialidades = result.especialidades;
+        _ocupaciones = result.ocupaciones;
       }
       _page = page ?? result.page;
       _limit = result.limit;
@@ -99,7 +97,7 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
     if (!mounted) return;
     if (result.status != StatusNetwork.connected) {
       showSnackBar(
-        especialidadesMessenger,
+        ocupacionesMessenger,
         result.message,
         state: StatusSnackBar.error,
         colorText: _theme.white,
@@ -167,7 +165,7 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
       _filtro = controller.text.trim();
       _searchController.text = _filtro;
     });
-    _cargarEspecialidades(page: 1);
+    _cargarOcupaciones(page: 1);
   }
 
   Widget _buildFilterSummary() {
@@ -193,7 +191,7 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
                 _filtro = '';
                 _searchController.clear();
               });
-              _cargarEspecialidades(page: 1);
+              _cargarOcupaciones(page: 1);
             },
             child: const Text('Quitar filtros'),
           ),
@@ -206,45 +204,36 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
     return validateData(context, value, alias, required: true);
   }
 
-  String _normalizarColor(String value) {
-    final trimmed = value.trim();
-    if (trimmed.startsWith('#')) return trimmed;
-    return '#$trimmed';
-  }
-
-  String _colorToHex(Color color) {
-    final rgbHex = (color.toARGB32() & 0x00FFFFFF)
-        .toRadixString(16)
-        .padLeft(6, '0');
-    return '#${rgbHex.toUpperCase()}';
-  }
-
-  Future<void> _abrirFormulario({Especialidad? especialidad}) async {
+  Future<void> _abrirFormulario({Ocupacion? ocupacion}) async {
     final formKey = GlobalKey<FormState>();
     final nombreController = TextEditingController(
-      text: especialidad?.nombre ?? '',
+      text: ocupacion?.nombre ?? '',
     );
     final descripcionController = TextEditingController(
-      text: especialidad?.descripcion ?? '',
+      text: ocupacion?.descripcion ?? '',
     );
-    Color selectedColor = HexColor.fromHex(
-      _normalizarColor(especialidad?.colorHex ?? '#0ea5e9'),
-    );
-    HSVColor hsvColor = HSVColor.fromColor(selectedColor);
-    final baseColors = <String>[
-      '#0ea5e9',
-      '#22c55e',
-      '#f59e0b',
-      '#ef4444',
-      '#8b5cf6',
-      '#1f2937',
+    final gradoController = TextEditingController(text: ocupacion?.grado ?? '');
+
+    const gradosSugeridos = <String>[
+      'Auxiliar de enfermería',
+      'Licenciatura en enfermería',
+      'Técnico en laboratorio clínico',
+      'Tecnólogo en imagenología',
+      'Médico general',
+      'Médico especialista',
+      'Residente de medicina',
+      'Interno de medicina',
+      'Odontología general',
+      'Fisioterapia',
+      'Terapia ocupacional',
+      'Nutrición clínica',
+      'Psicología clínica',
+      'Farmacia hospitalaria',
+      'Bioquímica clínica',
     ];
 
-    String? modalErrorText;
     String? submitErrorText;
     bool submitting = false;
-    int currentStep = 0;
-    const int lastStepIndex = 1;
 
     await showModalBottomSheet<void>(
       context: context,
@@ -257,130 +246,6 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
-            Widget stepContent() {
-              if (currentStep == 0) {
-                return Column(
-                  children: [
-                    CustomTextInput(
-                      title: 'Nombre',
-                      controller: nombreController,
-                      requiredData: true,
-                      validate: _validarRequerido,
-                    ),
-                    const SizedBox(height: 12),
-                    CustomTextInput(
-                      title: 'Descripción',
-                      controller: descripcionController,
-                      lines: 3,
-                    ),
-                  ],
-                );
-              }
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Color de la especialidad',
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: selectedColor,
-                          border: Border.all(
-                            color: _theme.grey.withValues(alpha: .4),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        _colorToHex(selectedColor),
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text('Tono', style: Theme.of(context).textTheme.bodySmall),
-                  Slider(
-                    min: 0,
-                    max: 360,
-                    value: hsvColor.hue,
-                    onChanged: (value) {
-                      setStateDialog(() {
-                        hsvColor = hsvColor.withHue(value);
-                        selectedColor = hsvColor.toColor();
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Colores básicos',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: baseColors.map((colorHex) {
-                      return GestureDetector(
-                        onTap: () {
-                          setStateDialog(() {
-                            selectedColor = HexColor.fromHex(colorHex);
-                            hsvColor = HSVColor.fromColor(selectedColor);
-                          });
-                        },
-                        child: Container(
-                          width: 28,
-                          height: 28,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: HexColor.fromHex(colorHex),
-                            border: Border.all(
-                              color: _theme.grey.withValues(alpha: .4),
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Saturación',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  Slider(
-                    min: 0,
-                    max: 1,
-                    value: hsvColor.saturation,
-                    onChanged: (value) {
-                      setStateDialog(() {
-                        hsvColor = hsvColor.withSaturation(value);
-                        selectedColor = hsvColor.toColor();
-                      });
-                    },
-                  ),
-                  Text('Brillo', style: Theme.of(context).textTheme.bodySmall),
-                  Slider(
-                    min: 0,
-                    max: 1,
-                    value: hsvColor.value,
-                    onChanged: (value) {
-                      setStateDialog(() {
-                        hsvColor = hsvColor.withValue(value);
-                        selectedColor = hsvColor.toColor();
-                      });
-                    },
-                  ),
-                ],
-              );
-            }
-
             return PopScope(
               canPop: !submitting,
               child: Padding(
@@ -398,62 +263,85 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
                       child: AbsorbPointer(
                         absorbing: submitting,
                         child: StepFormDialogLayout(
-                          title: especialidad == null
-                              ? 'Nueva especialidad'
-                              : 'Editar especialidad',
-                          totalSteps: lastStepIndex + 1,
-                          currentStep: currentStep,
-                          stepErrorText: modalErrorText,
+                          title: ocupacion == null
+                              ? 'Nueva ocupación'
+                              : 'Editar ocupación',
+                          totalSteps: 1,
+                          currentStep: 0,
                           submitErrorText: submitErrorText,
                           isSubmitting: submitting,
                           onClose: submitting
                               ? null
                               : () => Navigator.pop(context),
-                          onBack: currentStep > 0
-                              ? () {
-                                  setStateDialog(() {
-                                    currentStep -= 1;
-                                    modalErrorText = null;
-                                    submitErrorText = null;
-                                  });
-                                }
-                              : null,
-                          nextLabel: currentStep == lastStepIndex
-                              ? (especialidad == null ? 'Crear' : 'Guardar')
-                              : 'Siguiente',
-                          stepContent: stepContent(),
+                          nextLabel: ocupacion == null ? 'Crear' : 'Guardar',
+                          stepContent: Column(
+                            children: [
+                              CustomTextInput(
+                                title: 'Nombre',
+                                controller: nombreController,
+                                requiredData: true,
+                                validate: _validarRequerido,
+                              ),
+                              const SizedBox(height: 12),
+                              CustomTextInput(
+                                title: 'Descripción',
+                                controller: descripcionController,
+                                lines: 3,
+                              ),
+                              const SizedBox(height: 12),
+                              CustomTextInput(
+                                title: 'Grado (opcional)',
+                                controller: gradoController,
+                                placeholder: 'Ej: Médico especialista',
+                              ),
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  'Sugeridos',
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: gradosSugeridos
+                                    .map(
+                                      (grado) => ActionChip(
+                                        label: Text(grado),
+                                        onPressed: () {
+                                          setStateDialog(() {
+                                            gradoController.text = grado;
+                                          });
+                                        },
+                                      ),
+                                    )
+                                    .toList(),
+                              ),
+                            ],
+                          ),
                           onNext: () async {
                             final navigator = Navigator.of(context);
-                            if (currentStep < lastStepIndex) {
-                              final isValid = validateForm(formKey);
-                              if (!isValid) return;
-                              setStateDialog(() {
-                                currentStep += 1;
-                                modalErrorText = null;
-                                submitErrorText = null;
-                              });
-                              return;
-                            }
-
                             final isValid = validateForm(formKey);
                             if (!isValid) return;
 
                             final payload = {
                               'nombre': nombreController.text.trim(),
                               'descripcion': descripcionController.text.trim(),
-                              'colorHex': _colorToHex(selectedColor),
+                              if (gradoController.text.trim().isNotEmpty)
+                                'grado': gradoController.text.trim(),
                             };
 
                             setStateDialog(() {
                               submitting = true;
-                              modalErrorText = null;
                               submitErrorText = null;
                             });
 
-                            final response = especialidad == null
-                                ? await _service.crearEspecialidad(payload)
-                                : await _service.actualizarEspecialidad(
-                                    especialidad.id,
+                            final response = ocupacion == null
+                                ? await _service.crearOcupacion(payload)
+                                : await _service.actualizarOcupacion(
+                                    ocupacion.id,
                                     payload,
                                   );
 
@@ -462,12 +350,12 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
                             if (response.status == StatusNetwork.connected) {
                               navigator.pop();
                               showSnackBar(
-                                especialidadesMessenger,
+                                ocupacionesMessenger,
                                 response.message,
                                 state: StatusSnackBar.success,
                                 colorText: _theme.white,
                               );
-                              _cargarEspecialidades();
+                              _cargarOcupaciones();
                               return;
                             }
 
@@ -489,21 +377,26 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
     );
   }
 
-  Future<void> _cambiarEstado(Especialidad especialidad) async {
-    final response = await _service.cambiarEstadoEspecialidad(especialidad.id);
+  String _textoGrado(String? grado) {
+    final value = (grado ?? '').trim();
+    return value.isEmpty ? '-' : value;
+  }
+
+  Future<void> _cambiarEstado(Ocupacion ocupacion) async {
+    final response = await _service.cambiarEstadoOcupacion(ocupacion.id);
 
     if (!mounted) return;
     if (response.status == StatusNetwork.connected) {
       showSnackBar(
-        especialidadesMessenger,
+        ocupacionesMessenger,
         response.message,
         state: StatusSnackBar.success,
         colorText: _theme.white,
       );
-      _cargarEspecialidades();
+      _cargarOcupaciones();
     } else {
       showSnackBar(
-        especialidadesMessenger,
+        ocupacionesMessenger,
         response.message,
         state: StatusSnackBar.error,
         colorText: _theme.white,
@@ -516,14 +409,14 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
     final isCompact = MediaQuery.of(context).size.width < 700;
     final isNarrowHeader = MediaQuery.of(context).size.width < 560;
     return ScaffoldMessenger(
-      key: especialidadesMessenger,
+      key: ocupacionesMessenger,
       child: TemplatePage(
         showEnvironmentBanner: false,
         page: Scaffold(
           backgroundColor: _theme.transparent,
           appBar: TrayModuleHeader(
-            titulo: 'Especialidades',
-            subtitulo: 'Administra las especialidades médicas disponibles.',
+            titulo: 'Ocupaciones',
+            subtitulo: 'Administra las ocupaciones médicas disponibles.',
             isCompact: isNarrowHeader,
             actions: [
               IconButton(
@@ -531,9 +424,7 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
                 icon: Icon(Icons.filter_list, color: _theme.white),
                 style: IconButton.styleFrom(
                   minimumSize: const Size(36, 36),
-                  side: BorderSide(
-                    color: _theme.white.withValues(alpha: 0.35),
-                  ),
+                  side: BorderSide(color: _theme.white.withValues(alpha: 0.35)),
                 ),
               ),
               IconButton(
@@ -541,9 +432,7 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
                 icon: Icon(Icons.add, color: _theme.white),
                 style: IconButton.styleFrom(
                   minimumSize: const Size(36, 36),
-                  side: BorderSide(
-                    color: _theme.white.withValues(alpha: 0.35),
-                  ),
+                  side: BorderSide(color: _theme.white.withValues(alpha: 0.35)),
                 ),
               ),
             ],
@@ -557,47 +446,32 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
                 const SizedBox(height: 12),
                 if (!isCompact)
                   CustomDesktopDataTable(
-                    titulo: 'Gestión de especialidades',
+                    titulo: 'Gestión de ocupaciones',
                     descripcion:
-                        'Consulta, filtra y administra las especialidades médicas.',
+                        'Consulta, filtra y administra las ocupaciones médicas.',
                     acciones: [
                       IconButton(
-                        onPressed: _cargarEspecialidades,
+                        onPressed: _cargarOcupaciones,
                         icon: const Icon(Icons.refresh),
                       ),
                     ],
                     columnas: [
                       CriterioOrdenType(nombre: 'Nombre'),
                       CriterioOrdenType(nombre: 'Descripción'),
-                      CriterioOrdenType(nombre: 'Color'),
+                      CriterioOrdenType(nombre: 'Grado'),
                       CriterioOrdenType(nombre: 'Servicios'),
                       CriterioOrdenType(nombre: 'Estado'),
                       CriterioOrdenType(nombre: 'Acciones'),
                     ],
-                    contenidoTabla: _especialidades
+                    contenidoTabla: _ocupaciones
                         .map(
-                          (especialidad) => [
-                            Text(especialidad.nombre),
-                            Text(especialidad.descripcion ?? '-'),
-                            Row(
-                              children: [
-                                Container(
-                                  width: 16,
-                                  height: 16,
-                                  decoration: BoxDecoration(
-                                    color: HexColor.fromHex(
-                                      especialidad.colorHex,
-                                    ),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(especialidad.colorHex),
-                              ],
-                            ),
-                            Text('${especialidad.estudios.length} asociados'),
+                          (ocupacion) => [
+                            Text(ocupacion.nombre),
+                            Text(ocupacion.descripcion ?? '-'),
+                            Text(_textoGrado(ocupacion.grado)),
+                            Text('${ocupacion.estudios.length} asociados'),
                             TrayStatusBadge(
-                              status: especialidad.estado,
+                              status: ocupacion.estado,
                               activeColor: _theme.success,
                             ),
                             Wrap(
@@ -607,22 +481,20 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
                                   tooltip: 'Editar',
                                   icon: const Icon(Icons.edit_outlined),
                                   onPressed: () =>
-                                      _abrirFormulario(especialidad: especialidad),
+                                      _abrirFormulario(ocupacion: ocupacion),
                                 ),
                                 IconButton(
                                   tooltip:
-                                      especialidad.estado.toUpperCase() ==
-                                              'ACTIVO'
-                                          ? 'Desactivar'
-                                          : 'Activar',
+                                      ocupacion.estado.toUpperCase() == 'ACTIVO'
+                                      ? 'Desactivar'
+                                      : 'Activar',
                                   icon: Icon(
-                                    especialidad.estado.toUpperCase() ==
-                                            'ACTIVO'
+                                    ocupacion.estado.toUpperCase() == 'ACTIVO'
                                         ? Icons.toggle_off
                                         : Icons.toggle_on,
                                     color: _theme.primary,
                                   ),
-                                  onPressed: () => _cambiarEstado(especialidad),
+                                  onPressed: () => _cambiarEstado(ocupacion),
                                 ),
                               ],
                             ),
@@ -634,9 +506,7 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
                   )
                 else ...[
                   const SizedBox(height: 12),
-                  Expanded(
-                    child: _buildCompactList(),
-                  ),
+                  Expanded(child: _buildCompactList()),
                 ],
               ],
             ),
@@ -646,28 +516,27 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
     );
   }
 
-
   Widget _buildPagination() {
-    final inicio = _especialidades.isEmpty ? 0 : ((_page - 1) * _limit) + 1;
-    final fin = (_page - 1) * _limit + _especialidades.length;
+    final inicio = _ocupaciones.isEmpty ? 0 : ((_page - 1) * _limit) + 1;
+    final fin = (_page - 1) * _limit + _ocupaciones.length;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('Mostrando $inicio - $fin de $_total especialidades'),
+          Text('Mostrando $inicio - $fin de $_total ocupaciones'),
           Row(
             children: [
               IconButton(
                 onPressed: _page > 1 && !_loading
-                    ? () => _cargarEspecialidades(page: _page - 1)
+                    ? () => _cargarOcupaciones(page: _page - 1)
                     : null,
                 icon: const Icon(Icons.chevron_left),
               ),
               Text('$_page'),
               IconButton(
                 onPressed: (_page * _limit) < _total && !_loading
-                    ? () => _cargarEspecialidades(page: _page + 1)
+                    ? () => _cargarOcupaciones(page: _page + 1)
                     : null,
                 icon: const Icon(Icons.chevron_right),
               ),
@@ -682,10 +551,10 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
     }
-    if (_especialidades.isEmpty) {
+    if (_ocupaciones.isEmpty) {
       return Center(
         child: Text(
-          'No hay especialidades registradas.',
+          'No hay ocupaciones registradas.',
           style: Theme.of(context).textTheme.bodyMedium,
         ),
       );
@@ -693,14 +562,14 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
 
     return ListView.separated(
       controller: _scrollController,
-      itemCount: _especialidades.length,
+      itemCount: _ocupaciones.length,
       separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
-        final especialidad = _especialidades[index];
+        final ocupacion = _ocupaciones[index];
         return Card(
           child: InkWell(
             borderRadius: BorderRadius.circular(12),
-            onTap: () => _mostrarDetalleEspecialidad(especialidad),
+            onTap: () => _mostrarDetalleOcupacion(ocupacion),
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
@@ -709,64 +578,37 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
                   ListTile(
                     contentPadding: EdgeInsets.zero,
                     dense: true,
-                    leading: Container(
-                      width: 16,
-                      height: 16,
-                      decoration: BoxDecoration(
-                        color: HexColor.fromHex(especialidad.colorHex),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
+                    leading: const Icon(Icons.work_outline, size: 18),
                     title: Text(
-                      especialidad.nombre,
+                      ocupacion.nombre,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
-                    subtitle: Text(
-                      'Servicios: ${especialidad.estudios.length}',
-                    ),
+                    subtitle: Text('Servicios: ${ocupacion.estudios.length}'),
                     trailing: TrayStatusBadge(
-                      status: especialidad.estado,
+                      status: ocupacion.estado,
                       activeColor: _theme.success,
                     ),
                   ),
-                if ((especialidad.descripcion ?? '').isNotEmpty) ...[
-                  Text(
-                    especialidad.descripcion ?? '-',
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-                const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Icon(Icons.palette_outlined, size: 16, color: _theme.primary),
-                    const SizedBox(width: 6),
+                  if ((ocupacion.descripcion ?? '').isNotEmpty) ...[
                     Text(
-                      'Color asignado',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      width: 14,
-                      height: 14,
-                      decoration: BoxDecoration(
-                        color: HexColor.fromHex(especialidad.colorHex),
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(
-                          color: _theme.grey.withValues(alpha: .35),
-                        ),
-                      ),
+                      ocupacion.descripcion ?? '-',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
-                ),
-                const SizedBox(height: 4),
-                if (_loadingMore && index == _especialidades.length - 1) ...[
-                  const SizedBox(height: 12),
-                  const Center(child: CircularProgressIndicator()),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Grado: ${_textoGrado(ocupacion.grado)}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 4),
+                  if (_loadingMore && index == _ocupaciones.length - 1) ...[
+                    const SizedBox(height: 12),
+                    const Center(child: CircularProgressIndicator()),
+                  ],
                 ],
-              ],
               ),
             ),
           ),
@@ -775,7 +617,7 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
     );
   }
 
-  void _mostrarDetalleEspecialidad(Especialidad especialidad) {
+  void _mostrarDetalleOcupacion(Ocupacion ocupacion) {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -797,7 +639,7 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
                   children: [
                     Expanded(
                       child: Text(
-                        'Detalle de especialidad',
+                        'Detalle de ocupacion',
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                     ),
@@ -807,35 +649,21 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
                     ),
                   ],
                 ),
-                Text(especialidad.nombre,
-                    style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  ocupacion.nombre,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 const SizedBox(height: 8),
                 TrayStatusBadge(
-                  status: especialidad.estado,
+                  status: ocupacion.estado,
                   activeColor: _theme.success,
                 ),
                 const SizedBox(height: 8),
-                if ((especialidad.descripcion ?? '').isNotEmpty)
-                  Text(especialidad.descripcion!),
+                if ((ocupacion.descripcion ?? '').isNotEmpty)
+                  Text(ocupacion.descripcion!),
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    const Text('Color asignado:'),
-                    const SizedBox(width: 8),
-                    Container(
-                      width: 16,
-                      height: 16,
-                      decoration: BoxDecoration(
-                        color: HexColor.fromHex(especialidad.colorHex),
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(
-                          color: _theme.grey.withValues(alpha: .35),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                Text('Servicios asociados: ${especialidad.estudios.length}'),
+                Text('Grado: ${_textoGrado(ocupacion.grado)}'),
+                Text('Servicios asociados: ${ocupacion.estudios.length}'),
                 const SizedBox(height: 14),
                 SafeArea(
                   top: false,
@@ -850,7 +678,7 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
                         ),
                         onPressed: () {
                           Navigator.pop(context);
-                          _abrirFormulario(especialidad: especialidad);
+                          _abrirFormulario(ocupacion: ocupacion);
                         },
                         icon: const Icon(Icons.edit_outlined),
                         label: const Text('Editar'),
@@ -858,15 +686,15 @@ class _EspecialidadesPageState extends State<EspecialidadesPage>
                       OutlinedButton.icon(
                         onPressed: () {
                           Navigator.pop(context);
-                          _cambiarEstado(especialidad);
+                          _cambiarEstado(ocupacion);
                         },
                         icon: Icon(
-                          especialidad.estado.toUpperCase() == 'ACTIVO'
+                          ocupacion.estado.toUpperCase() == 'ACTIVO'
                               ? Icons.toggle_off
                               : Icons.toggle_on,
                         ),
                         label: Text(
-                          especialidad.estado.toUpperCase() == 'ACTIVO'
+                          ocupacion.estado.toUpperCase() == 'ACTIVO'
                               ? 'Desactivar'
                               : 'Activar',
                         ),

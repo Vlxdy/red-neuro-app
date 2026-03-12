@@ -3,7 +3,7 @@ import 'package:red_neuro_app/src/config/form_controller.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/extensions/colores_extension.dart';
-import 'package:red_neuro_app/src/models/especialidad.dart';
+import 'package:red_neuro_app/src/models/categoria.dart';
 import 'package:red_neuro_app/src/models/estudio.dart';
 import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
 import 'package:red_neuro_app/src/ui/common/customdatatable/custom_datatable.dart';
@@ -30,10 +30,10 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
   late final EstudiosService _service;
 
   List<Servicio> _servicios = [];
-  List<Especialidad> _especialidadesDisponibles = [];
+  List<Categoria> _ocupacionesDisponibles = [];
   bool _loading = false;
   bool _loadingMore = false;
-  bool _loadingEspecialidades = false;
+  bool _loadingCategorias = false;
   int _page = 1;
   int _limit = 10;
   int _total = 0;
@@ -46,7 +46,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
   void initState() {
     super.initState();
     _service = EstudiosService(context);
-    _cargarEspecialidadesDisponibles();
+    _cargarCategoriasDisponibles();
     _cargarServicios();
     _scrollController.addListener(_handleScroll);
   }
@@ -71,12 +71,12 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
     }
   }
 
-  Future<void> _cargarEspecialidadesDisponibles() async {
-    setState(() => _loadingEspecialidades = true);
-    final especialidades = await _service.obtenerEspecialidades();
+  Future<void> _cargarCategoriasDisponibles() async {
+    setState(() => _loadingCategorias = true);
+    final ocupaciones = await _service.obtenerOcupaciones();
     setState(() {
-      _especialidadesDisponibles = especialidades;
-      _loadingEspecialidades = false;
+      _ocupacionesDisponibles = ocupaciones;
+      _loadingCategorias = false;
     });
   }
 
@@ -249,9 +249,9 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
       text: (servicio?.costo ?? 0).toStringAsFixed(2),
     );
     var tipoSeleccionado = (servicio?.tipo ?? 'ESTUDIO').toUpperCase();
-    final especialidadesSeleccionadas =
-        servicio?.especialidades.map((item) => item.id).toSet() ?? <String>{};
-    const mostrarPasoEspecialidades = true;
+    final ocupacionesSeleccionadas =
+        servicio?.ocupaciones.map((item) => item.id).toSet() ?? <String>{};
+    const mostrarPasoCategorias = true;
     var currentStep = 0;
     String? modalError;
 
@@ -266,7 +266,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             Widget buildStepContent() {
-              if (!mostrarPasoEspecialidades || currentStep == 0) {
+              if (!mostrarPasoCategorias || currentStep == 0) {
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -347,7 +347,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                 );
               }
 
-              if (_loadingEspecialidades) {
+              if (_loadingCategorias) {
                 return const Padding(
                   padding: EdgeInsets.symmetric(vertical: 32),
                   child: Center(child: CircularProgressIndicator()),
@@ -358,38 +358,38 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Especialidades asociadas',
+                    'Categorías asociadas',
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                   const SizedBox(height: 8),
-                  if (_especialidadesDisponibles.isEmpty)
+                  if (_ocupacionesDisponibles.isEmpty)
                     Text(
-                      'No hay especialidades disponibles.',
+                      'No hay categorías disponibles.',
                       style: Theme.of(context).textTheme.bodySmall,
                     )
                   else
                     SizedBox(
                       height: 280,
                       child: ListView.builder(
-                        itemCount: _especialidadesDisponibles.length,
+                        itemCount: _ocupacionesDisponibles.length,
                         itemBuilder: (context, index) {
-                          final especialidad =
-                              _especialidadesDisponibles[index];
+                          final ocupacion =
+                              _ocupacionesDisponibles[index];
                           return CheckboxListTile(
-                            value: especialidadesSeleccionadas.contains(
-                              especialidad.id,
+                            value: ocupacionesSeleccionadas.contains(
+                              ocupacion.id,
                             ),
-                            title: Text(especialidad.nombre),
-                            subtitle: Text(especialidad.descripcion ?? '-'),
+                            title: Text(ocupacion.nombre),
+                            subtitle: Text(ocupacion.descripcion ?? '-'),
                             onChanged: (value) {
                               setDialogState(() {
                                 if (value == true) {
-                                  especialidadesSeleccionadas.add(
-                                    especialidad.id,
+                                  ocupacionesSeleccionadas.add(
+                                    ocupacion.id,
                                   );
                                 } else {
-                                  especialidadesSeleccionadas.remove(
-                                    especialidad.id,
+                                  ocupacionesSeleccionadas.remove(
+                                    ocupacion.id,
                                   );
                                 }
                               });
@@ -402,7 +402,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
               );
             }
 
-            final totalSteps = mostrarPasoEspecialidades ? 2 : 1;
+            final totalSteps = mostrarPasoCategorias ? 2 : 1;
             final isLastStep = currentStep == totalSteps - 1;
 
             return Padding(
@@ -435,7 +435,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                             ? (servicio == null ? 'Crear' : 'Guardar')
                             : 'Siguiente',
                         onNext: () async {
-                          if ((!mostrarPasoEspecialidades ||
+                          if ((!mostrarPasoCategorias ||
                                   currentStep == 0) &&
                               (nombreController.text.trim().isEmpty ||
                                   descripcionController.text.trim().isEmpty)) {
@@ -448,9 +448,9 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                           final valid = validateForm(formKey);
                           if (!valid) return;
                           if (!isLastStep) {
-                            if (_especialidadesDisponibles.isEmpty &&
-                                !_loadingEspecialidades) {
-                              await _cargarEspecialidadesDisponibles();
+                            if (_ocupacionesDisponibles.isEmpty &&
+                                !_loadingCategorias) {
+                              await _cargarCategoriasDisponibles();
                             }
                             setDialogState(() {
                               currentStep += 1;
@@ -481,7 +481,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
       'duracionMinutos': int.parse(duracionController.text.trim()),
       'costo': double.parse(costoController.text.trim().replaceAll(',', '.')),
       'tipo': tipoSeleccionado,
-      'especialidadIds': especialidadesSeleccionadas.toList(),
+      'categoriaIds': ocupacionesSeleccionadas.toList(),
     };
 
     final response = servicio == null
@@ -557,19 +557,19 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
     }
   }
 
-  Widget _buildEspecialidadesCell(Servicio servicio) {
-    if (servicio.especialidades.isEmpty) {
+  Widget _buildCategoriasCell(Servicio servicio) {
+    if (servicio.ocupaciones.isEmpty) {
       return const Text('-');
     }
     return Wrap(
       spacing: 8,
       runSpacing: 8,
-      children: servicio.especialidades
+      children: servicio.ocupaciones
           .map(
-            (especialidad) => Chip(
-              label: Text(especialidad.nombre),
+            (ocupacion) => Chip(
+              label: Text(ocupacion.nombre),
               backgroundColor: HexColor.fromHex(
-                especialidad.colorHex,
+                '#64748b',
               ).withValues(alpha: .15),
             ),
           )
@@ -590,7 +590,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
           appBar: TrayModuleHeader(
             titulo: 'Servicios',
             subtitulo:
-                'Administra servicios (consultas y estudios) y sus especialidades.',
+                'Administra servicios (consultas y estudios) y sus categorías.',
             isCompact: isNarrowHeader,
             actions: [
               IconButton(
@@ -633,7 +633,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                       CriterioOrdenType(nombre: 'Tipo'),
                       CriterioOrdenType(nombre: 'Duración'),
                       CriterioOrdenType(nombre: 'Costo'),
-                      CriterioOrdenType(nombre: 'Especialidades'),
+                      CriterioOrdenType(nombre: 'Categorías'),
                       CriterioOrdenType(nombre: 'Estado'),
                       CriterioOrdenType(nombre: 'Acciones'),
                     ],
@@ -645,7 +645,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                             Text(servicio.tipo.toUpperCase()),
                             Text('${servicio.duracionMinutos} min'),
                             Text('Bs ${servicio.costo.toStringAsFixed(2)}'),
-                            _buildEspecialidadesCell(servicio),
+                            _buildCategoriasCell(servicio),
                             TrayStatusBadge(
                               status: servicio.estado,
                               activeColor: _theme.success,
@@ -795,21 +795,21 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  if (servicio.especialidades.isEmpty)
+                  if (servicio.ocupaciones.isEmpty)
                     Text(
-                      'Sin especialidades asignadas.',
+                      'Sin categorías asignadas.',
                       style: Theme.of(context).textTheme.bodySmall,
                     )
                   else
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: servicio.especialidades
+                      children: servicio.ocupaciones
                           .map(
-                            (especialidad) => Chip(
-                              label: Text(especialidad.nombre),
+                            (ocupacion) => Chip(
+                              label: Text(ocupacion.nombre),
                               backgroundColor: HexColor.fromHex(
-                                especialidad.colorHex,
+                                '#64748b',
                               ).withValues(alpha: .15),
                             ),
                           )
@@ -875,16 +875,16 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                 Text('Duración: ${servicio.duracionMinutos} min'),
                 Text('Costo: Bs ${servicio.costo.toStringAsFixed(2)}'),
                 const SizedBox(height: 8),
-                if (servicio.especialidades.isNotEmpty)
+                if (servicio.ocupaciones.isNotEmpty)
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: servicio.especialidades
+                    children: servicio.ocupaciones
                         .map(
-                          (especialidad) => Chip(
-                            label: Text(especialidad.nombre),
+                          (ocupacion) => Chip(
+                            label: Text(ocupacion.nombre),
                             backgroundColor: HexColor.fromHex(
-                              especialidad.colorHex,
+                              '#64748b',
                             ).withValues(alpha: .15),
                           ),
                         )

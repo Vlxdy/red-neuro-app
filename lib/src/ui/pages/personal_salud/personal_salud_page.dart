@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -10,7 +9,6 @@ import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/constants.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/extensions/colores_extension.dart';
-import 'package:red_neuro_app/src/models/especialidad.dart';
 import 'package:red_neuro_app/src/models/personal_salud.dart';
 import 'package:red_neuro_app/src/models/rol.dart';
 import 'package:red_neuro_app/src/models/user.dart';
@@ -22,7 +20,6 @@ import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/common/form_stepper/step_form_dialog_layout.dart';
 import 'package:red_neuro_app/src/ui/common/components/tray_ui_helpers.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
-import 'package:red_neuro_app/src/ui/common/text_inputs/autocomplete_field.dart';
 import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
 import 'package:red_neuro_app/src/ui/pages/personal_salud/personal_salud_service.dart';
 
@@ -471,7 +468,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
       ),
       builder: (context) {
         String? copiedField;
-        final especialidades = persona.especialidades;
+        final ocupacion = persona.ocupacion?.trim() ?? "";
         final contacto = [
           if ((persona.correoElectronico ?? '').trim().isNotEmpty)
             persona.correoElectronico!.trim(),
@@ -570,14 +567,14 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                       ),
                   ],
                 ),
-                if (especialidades.isNotEmpty) ...[
+                if (ocupacion.isNotEmpty) ...[
                   const SizedBox(height: 14),
                   Text(
-                    'Especialidades',
+                    'Ocupación',
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                   const SizedBox(height: 8),
-                  _buildEspecialidadesCell(persona),
+                  _buildOcupacionesCell(persona),
                 ],
                 if (!esUsuarioActual) ...[
                   const SizedBox(height: 18),
@@ -716,30 +713,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     final bool isEditing = personal != null;
     final int lastStepIndex = isEditing ? 2 : 3;
 
-    final seleccionInicial = personal?.especialidades ?? [];
-    final selectedEspecialidades = seleccionInicial.isNotEmpty
-        ? seleccionInicial
-              .map(
-                (especialidad) => Especialidad(
-                  id: especialidad.id,
-                  nombre: especialidad.nombre,
-                  descripcion: null,
-                  estado: 'ACTIVO',
-                  colorHex: especialidad.colorHex,
-                  estudios: const [],
-                ),
-              )
-              .toList()
-        : <Especialidad>[];
-
-    final List<Especialidad> especialidadesDisponibles = [];
-    bool especialidadesLoading = false;
-    bool especialidadesHasMore = true;
-    int especialidadesPage = 1;
-    String especialidadesFiltro = '';
-    Timer? especialidadesDebounce;
-    bool scrollListenerAttached = false;
-    final ScrollController especialidadesScrollController = ScrollController();
+    final ocupacion = TextEditingController(text: personal?.ocupacion ?? '');
 
     showModalBottomSheet(
       context: context,
@@ -752,58 +726,6 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
-            Future<void> cargarEspecialidades({
-              bool reset = false,
-              bool clearBeforeLoad = true,
-            }) async {
-              if (especialidadesLoading || (!especialidadesHasMore && !reset)) {
-                return;
-              }
-              setStateDialog(() => especialidadesLoading = true);
-              if (reset) {
-                especialidadesPage = 1;
-                especialidadesHasMore = true;
-                if (clearBeforeLoad) {
-                  especialidadesDisponibles.clear();
-                }
-              }
-              final result = await _service.obtenerEspecialidadesPaginadas(
-                page: especialidadesPage,
-                limit: 20,
-                filtro: especialidadesFiltro,
-              );
-              if (!mounted) return;
-              setStateDialog(() {
-                if (reset) {
-                  especialidadesDisponibles
-                    ..clear()
-                    ..addAll(result.items);
-                } else {
-                  especialidadesDisponibles.addAll(result.items);
-                }
-                especialidadesHasMore =
-                    especialidadesDisponibles.length < result.total;
-                especialidadesPage += 1;
-                especialidadesLoading = false;
-              });
-            }
-
-            if (!scrollListenerAttached) {
-              scrollListenerAttached = true;
-              especialidadesScrollController.addListener(() {
-                if (especialidadesScrollController.position.pixels >=
-                        especialidadesScrollController
-                                .position
-                                .maxScrollExtent -
-                            120 &&
-                    !especialidadesLoading &&
-                    especialidadesHasMore) {
-                  cargarEspecialidades();
-                }
-              });
-              cargarEspecialidades(reset: true);
-            }
-
             Widget stepContent() {
               final isWide = MediaQuery.of(context).size.width >= 720;
 
@@ -1066,116 +988,18 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
               }
 
               if (currentStep == 2) {
-                final selectedIds = selectedEspecialidades.map((e) => e.id).toSet();
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Especialidades (opcional)',
+                      'Ocupación (opcional)',
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
                     const SizedBox(height: 12),
-                    FormField<List<Especialidad>>(
-                      initialValue: selectedEspecialidades,
-                      builder: (state) {
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (selectedEspecialidades.isEmpty)
-                              Text(
-                                'Puedes continuar sin especialidades y agregarlas después.',
-                                style: Theme.of(context).textTheme.bodySmall,
-                              )
-                            else
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: selectedEspecialidades.map((item) {
-                                  return Chip(
-                                    label: Text(item.nombre),
-                                    backgroundColor: HexColor.fromHex(
-                                      item.colorHex,
-                                    ).withValues(alpha: .15),
-                                    deleteIcon: const Icon(Icons.close),
-                                    onDeleted: () {
-                                      setStateDialog(() {
-                                        selectedEspecialidades.removeWhere(
-                                          (especialidad) =>
-                                              especialidad.id == item.id,
-                                        );
-                                      });
-                                      state.didChange(selectedEspecialidades);
-                                    },
-                                  );
-                                }).toList(),
-                              ),
-                            const SizedBox(height: 12),
-                            AutocompleteField<Especialidad>(
-                              optionsBuilder: (textEditingValue) {
-                                final query = textEditingValue.text
-                                    .trim()
-                                    .toLowerCase();
-                                if (query.isEmpty &&
-                                    especialidadesDisponibles.isEmpty &&
-                                    !especialidadesLoading) {
-                                  Future.microtask(
-                                    () => cargarEspecialidades(reset: true),
-                                  );
-                                }
-                                if (query.isEmpty) {
-                                  return especialidadesDisponibles;
-                                }
-                                return especialidadesDisponibles.where(
-                                  (option) => option.nombre
-                                      .toLowerCase()
-                                      .contains(query),
-                                );
-                              },
-                              displayStringForOption: (option) => option.nombre,
-                              onSelected: (selection) {
-                                if (selectedIds.contains(selection.id)) {
-                                  return;
-                                }
-                                setStateDialog(() {
-                                  selectedEspecialidades.add(selection);
-                                  especialidadesFiltro = '';
-                                  especialidadesDisponibles.clear();
-                                  especialidadesHasMore = true;
-                                  especialidadesPage = 1;
-                                });
-                                state.didChange(selectedEspecialidades);
-                                FocusScope.of(context).unfocus();
-                                cargarEspecialidades(reset: true);
-                              },
-                              labelText: 'Agregar especialidad (opcional)',
-                              loading: especialidadesLoading,
-                              loadingText: 'Cargando especialidades...',
-                              emptyText: 'No hay especialidades disponibles.',
-                              optionsHeaderText: 'Especialidades',
-                              optionsScrollController:
-                                  especialidadesScrollController,
-                              selectedIconColor: _theme.primary,
-                              isOptionSelected: (option) =>
-                                  selectedIds.contains(option.id),
-                              onChanged: (value) {
-                                especialidadesFiltro = value.trim();
-                                especialidadesDebounce?.cancel();
-                                if (especialidadesFiltro.isEmpty) {
-                                  cargarEspecialidades(
-                                    reset: true,
-                                    clearBeforeLoad: false,
-                                  );
-                                  return;
-                                }
-                                especialidadesDebounce = Timer(
-                                  const Duration(milliseconds: 400),
-                                  () => cargarEspecialidades(reset: true),
-                                );
-                              },
-                            ),
-                          ],
-                        );
-                      },
+                    CustomTextInput(
+                      title: 'Ocupación',
+                      controller: ocupacion,
+                      placeholder: 'Ej: Cardiología',
                     ),
                     const SizedBox(height: 16),
                     SwitchListTile(
@@ -1384,10 +1208,6 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                               if ((generoSeleccionado ?? '').trim().isNotEmpty)
                                 'genero': generoSeleccionado,
                             };
-                            final idsEspecialidades = selectedEspecialidades
-                                .map((especialidad) => especialidad.id)
-                                .toList();
-
                             Map<String, dynamic> body;
                             if (personal == null) {
                               body = {
@@ -1396,16 +1216,16 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                 'contrasena': contrasena.text,
                                 'repetirContrasena': repetirContrasena.text,
                                 'esSupervisor': esSupervisor,
-                                if (idsEspecialidades.isNotEmpty)
-                                  'idEspecialidades': idsEspecialidades,
+                                if (ocupacion.text.trim().isNotEmpty)
+                                  'ocupacion': ocupacion.text.trim(),
                               };
                             } else {
                               body = {
                                 'persona': persona,
                                 'correoElectronico': correo.text.trim(),
                                 'esSupervisor': esSupervisor,
-                                if (idsEspecialidades.isNotEmpty)
-                                  'idEspecialidades': idsEspecialidades,
+                                if (ocupacion.text.trim().isNotEmpty)
+                                  'ocupacion': ocupacion.text.trim(),
                               };
                             }
 
@@ -1435,8 +1255,6 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
         );
       },
     ).whenComplete(() {
-      especialidadesDebounce?.cancel();
-      especialidadesScrollController.dispose();
     });
   }
 
@@ -1567,37 +1385,31 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     );
   }
 
-  Widget _buildEspecialidadesCell(PersonalSalud personal) {
-    if (personal.especialidades.isEmpty) {
-      return const Text('Sin especialidades');
+  Widget _buildOcupacionesCell(PersonalSalud personal) {
+    if ((personal.ocupacion ?? "").trim().isEmpty) {
+      return const Text('Sin ocupación');
     }
     return Wrap(
       spacing: 6,
       runSpacing: 6,
-      children: personal.especialidades
-          .map(
-            (especialidad) => Chip(
-              label: Text(especialidad.nombre),
-              backgroundColor: HexColor.fromHex(
-                especialidad.colorHex,
-              ).withValues(alpha: .15),
-            ),
-          )
-          .toList(),
+      children: [
+        Chip(
+          label: Text(personal.ocupacion!.trim()),
+          backgroundColor: HexColor.fromHex('#64748b').withValues(alpha: .15),
+        ),
+      ],
     );
   }
 
-  Widget _buildEspecialidadesResumen(PersonalSalud personal) {
-    if (personal.especialidades.isEmpty) {
+  Widget _buildOcupacionesResumen(PersonalSalud personal) {
+    if ((personal.ocupacion ?? "").trim().isEmpty) {
       return Text(
-        'Sin especialidades asignadas',
+        'Sin ocupación asignada',
         style: Theme.of(context).textTheme.bodySmall,
       );
     }
 
-    final top = personal.especialidades.take(2).map((e) => e.nombre).toList();
-    final extras = personal.especialidades.length - top.length;
-    final resumen = extras > 0 ? '${top.join(' · ')}  +$extras' : top.join(' · ');
+    final resumen = personal.ocupacion!.trim();
 
     return Container(
       width: double.infinity,
@@ -1653,8 +1465,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                 final persona = _personal[index];
                 final detallePrincipal = [
                   persona.nroDocumento ?? 'Sin documento',
-                  if (persona.especialidades.isNotEmpty)
-                    '${persona.especialidades.length} especialidades',
+                  if ((persona.ocupacion ?? '').trim().isNotEmpty) persona.ocupacion!.trim(),
                 ].join(' · ');
                 return ClipRRect(
                   borderRadius: BorderRadius.circular(18),
@@ -1707,7 +1518,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                   ],
                                 ),
                                 const SizedBox(height: 6),
-                                _buildEspecialidadesResumen(persona),
+                                _buildOcupacionesResumen(persona),
                               ],
                             ),
                           ),
@@ -1742,7 +1553,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
           appBar: TrayModuleHeader(
           titulo: 'Personal de salud',
           subtitulo:
-              'Administra perfiles, especialidades y permisos administrativos.',
+              'Administra perfiles, ocupación y permisos administrativos.',
           isCompact: isNarrowHeader,
           actions: [
             IconButton(
@@ -1792,7 +1603,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                         CriterioOrdenType(nombre: 'Nombre'),
                         CriterioOrdenType(nombre: 'Documento'),
                         CriterioOrdenType(nombre: 'Estado'),
-                        CriterioOrdenType(nombre: 'Especialidades'),
+                        CriterioOrdenType(nombre: 'Ocupación'),
                         CriterioOrdenType(nombre: 'Admin'),
                         CriterioOrdenType(nombre: 'Acciones'),
                       ],
@@ -1822,7 +1633,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              _buildEspecialidadesCell(persona),
+                              _buildOcupacionesCell(persona),
                               persona.esSupervisor
                                   ? Chip(
                                       label: const Text('Admin'),

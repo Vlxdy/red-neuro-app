@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:red_neuro_app/src/config/service_config.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
-import 'package:red_neuro_app/src/models/especialidad.dart';
+import 'package:red_neuro_app/src/models/ocupacion.dart';
 import 'package:red_neuro_app/src/models/estudio.dart';
 import 'package:red_neuro_app/src/models/historial_cita.dart';
 import 'package:red_neuro_app/src/models/lugar.dart';
@@ -327,8 +327,7 @@ class CitasService extends ServiceConfig {
   Future<ResponseApi> crearCita(Map<String, dynamic> body) async {
     return fetch('/citas', type: HttpProtocol.post, body: body);
   }
-
-  Future<CatalogoPageResult<Especialidad>> obtenerEspecialidades({
+  Future<CatalogoPageResult<Ocupacion>> obtenerOcupaciones({
     int page = 1,
     int limit = 10,
     String? filtro,
@@ -339,12 +338,12 @@ class CitasService extends ServiceConfig {
         'limite': '$limit',
         if (filtro != null && filtro.trim().isNotEmpty) 'filtro': filtro.trim(),
       };
-      final response = await fetch('/especialidades', params: params);
+      final response = await fetch('/ocupaciones', params: params);
       if (response.status != StatusNetwork.connected) {
         return CatalogoPageResult.empty(
           response.message.isNotEmpty
               ? response.message
-              : 'No se pudieron cargar las especialidades.',
+              : 'No se pudieron cargar las ocupaciones.',
         );
       }
       final data = response.data;
@@ -357,17 +356,17 @@ class CitasService extends ServiceConfig {
           data['items'] ??
           data['datos'] ??
           [];
-      final especialidades = (filasRaw is List)
+      final ocupaciones = (filasRaw is List)
           ? filasRaw
                 .whereType<Map<String, dynamic>>()
-                .map(Especialidad.fromJson)
+                 .map(Ocupacion.fromJson)
                 .toList()
-          : <Especialidad>[];
+          : <Ocupacion>[];
       final total = totalRaw is int
           ? totalRaw
-          : int.tryParse('$totalRaw') ?? especialidades.length;
+          : int.tryParse('$totalRaw') ?? ocupaciones.length;
       return CatalogoPageResult(
-        items: especialidades,
+        items: ocupaciones,
         total: total,
         page: page,
         limit: limit,
@@ -375,16 +374,15 @@ class CitasService extends ServiceConfig {
         status: response.status,
       );
     } catch (e, stacktrace) {
-      Logger.error('Error al obtener especialidades $e');
+      Logger.error('Error al obtener ocupaciones $e');
       Logger.error('stacktrace $stacktrace');
       return CatalogoPageResult.empty(
-        'No se pudieron cargar las especialidades.',
+        'No se pudieron cargar las ocupaciones.',
       );
     }
   }
-
-  Future<CatalogoPageResult<Servicio>> obtenerServiciosPorEspecialidad({
-    required String especialidadId,
+  Future<CatalogoPageResult<Servicio>> obtenerServiciosPorOcupacion({
+    required String ocupacionId,
     required String tipo,
     int page = 1,
     int limit = 10,
@@ -398,7 +396,7 @@ class CitasService extends ServiceConfig {
         if (filtro != null && filtro.trim().isNotEmpty) 'filtro': filtro.trim(),
       };
       final response = await fetch(
-        '/servicios/especialidades/$especialidadId',
+        '/servicios/ocupaciones/$ocupacionId',
         params: params,
       );
       if (response.status != StatusNetwork.connected) {
@@ -436,21 +434,21 @@ class CitasService extends ServiceConfig {
         status: response.status,
       );
     } catch (e, stacktrace) {
-      Logger.error('Error al obtener servicios por especialidad $e');
+      Logger.error('Error al obtener servicios por ocupación $e');
       Logger.error('stacktrace $stacktrace');
       return CatalogoPageResult.empty('No se pudieron cargar los servicios.');
     }
   }
 
-  @Deprecated('Usar obtenerServiciosPorEspecialidad')
-  Future<CatalogoPageResult<Servicio>> obtenerEstudiosPorEspecialidad({
-    required String especialidadId,
+  @Deprecated('Usar obtenerServiciosPorOcupacion')
+  Future<CatalogoPageResult<Servicio>> obtenerEstudiosPorOcupacion({
+    required String ocupacionId,
     required String tipo,
     int page = 1,
     int limit = 10,
     String? filtro,
-  }) => obtenerServiciosPorEspecialidad(
-        especialidadId: especialidadId,
+  }) => obtenerServiciosPorOcupacion(
+        ocupacionId: ocupacionId,
         tipo: tipo,
         page: page,
         limit: limit,

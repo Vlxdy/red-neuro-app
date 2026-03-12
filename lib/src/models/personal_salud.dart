@@ -1,5 +1,3 @@
-import 'package:red_neuro_app/src/models/estudio.dart';
-
 class PersonalSalud {
   final String id;
   final String estado;
@@ -13,7 +11,7 @@ class PersonalSalud {
   final String? correoElectronico;
   final String? genero;
   final String? urlFoto;
-  final List<EspecialidadResumen> especialidades;
+  final String? ocupacion;
 
   const PersonalSalud({
     required this.id,
@@ -28,7 +26,7 @@ class PersonalSalud {
     required this.correoElectronico,
     required this.genero,
     required this.urlFoto,
-    required this.especialidades,
+    required this.ocupacion,
   });
 
   factory PersonalSalud.fromJson(Map<String, dynamic> json) {
@@ -40,7 +38,20 @@ class PersonalSalud {
       return value.toString();
     }
 
-    final especialidadesRaw = json['especialidades'] ?? [];
+    String? resolveOcupacion() {
+      final ocupacionRaw = json['ocupacion'];
+      if (ocupacionRaw != null && ocupacionRaw.toString().trim().isNotEmpty) {
+        return ocupacionRaw.toString();
+      }
+      final ocupacionesRaw = json['ocupaciones'];
+      if (ocupacionesRaw is List && ocupacionesRaw.isNotEmpty) {
+        final first = ocupacionesRaw.first;
+        if (first is Map<String, dynamic>) {
+          return first['nombre']?.toString();
+        }
+      }
+      return null;
+    }
 
     return PersonalSalud(
       id: (json['id'] ?? '').toString(),
@@ -72,12 +83,7 @@ class PersonalSalud {
       urlFoto: resolveString('urlFoto').trim().isEmpty
           ? null
           : resolveString('urlFoto'),
-      especialidades: especialidadesRaw is List
-          ? especialidadesRaw
-              .whereType<Map<String, dynamic>>()
-              .map(EspecialidadResumen.fromJson)
-              .toList()
-          : const [],
+      ocupacion: resolveOcupacion(),
     );
   }
 

@@ -32,7 +32,7 @@ class CitasAgendaSection extends StatelessWidget {
   final String Function(CitaMedica cita) nombreMedico;
   final String Function(CitaMedica cita) nombrePaciente;
   final IconData Function(CitaMedica cita) iconoTipoCita;
-  final Color Function(CitaMedica cita) colorEspecialidad;
+  final Color Function(CitaMedica cita) colorOcupacion;
   final Color Function(String estado) colorEstado;
   final VoidCallback Function(CitaMedica cita) onTapCita;
   final ValueChanged<int> onTapHora;
@@ -62,7 +62,7 @@ class CitasAgendaSection extends StatelessWidget {
     required this.nombreMedico,
     required this.nombrePaciente,
     required this.iconoTipoCita,
-    required this.colorEspecialidad,
+    required this.colorOcupacion,
     required this.colorEstado,
     required this.onTapCita,
     required this.onTapHora,
@@ -244,7 +244,7 @@ class CitasAgendaSection extends StatelessWidget {
                   nombreMedico: nombreMedico,
                   nombrePaciente: nombrePaciente,
                   iconoTipoCita: iconoTipoCita,
-                  colorEspecialidad: colorEspecialidad,
+                  colorOcupacion: colorOcupacion,
                   colorEstado: colorEstado,
                   onTapCita: onTapCita,
                   onTapHora: onTapHora,
@@ -473,7 +473,7 @@ class _AgendaTimeline extends StatelessWidget {
   final String Function(CitaMedica cita) nombreMedico;
   final String Function(CitaMedica cita) nombrePaciente;
   final IconData Function(CitaMedica cita) iconoTipoCita;
-  final Color Function(CitaMedica cita) colorEspecialidad;
+  final Color Function(CitaMedica cita) colorOcupacion;
   final Color Function(String estado) colorEstado;
   final VoidCallback Function(CitaMedica cita) onTapCita;
   final ValueChanged<int> onTapHora;
@@ -490,7 +490,7 @@ class _AgendaTimeline extends StatelessWidget {
     required this.nombreMedico,
     required this.nombrePaciente,
     required this.iconoTipoCita,
-    required this.colorEspecialidad,
+    required this.colorOcupacion,
     required this.colorEstado,
     required this.onTapCita,
     required this.onTapHora,
@@ -592,7 +592,7 @@ class _AgendaTimeline extends StatelessWidget {
                     nombreMedico: nombreMedico,
                     nombrePaciente: nombrePaciente,
                     iconoTipoCita: iconoTipoCita,
-                    colorEspecialidad: colorEspecialidad,
+                    colorOcupacion: colorOcupacion,
                     colorEstado: colorEstado,
                     onTap: onTapCita(citas[i]),
                   ),
@@ -696,7 +696,7 @@ class _AgendaCitaCard extends StatelessWidget {
   final String Function(CitaMedica cita) nombreMedico;
   final String Function(CitaMedica cita) nombrePaciente;
   final IconData Function(CitaMedica cita) iconoTipoCita;
-  final Color Function(CitaMedica cita) colorEspecialidad;
+  final Color Function(CitaMedica cita) colorOcupacion;
   final Color Function(String estado) colorEstado;
   final VoidCallback onTap;
 
@@ -708,19 +708,19 @@ class _AgendaCitaCard extends StatelessWidget {
     required this.nombreMedico,
     required this.nombrePaciente,
     required this.iconoTipoCita,
-    required this.colorEspecialidad,
+    required this.colorOcupacion,
     required this.colorEstado,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final especialidadColor = colorEspecialidad(cita);
+    final ocupacionColor = colorOcupacion(cita);
     final horario = formatoHorarioCita(cita.fechaInicio, cita.fechaFin);
     final titulo = tituloCita(cita);
     final medico = nombreMedico(cita);
     final paciente = nombrePaciente(cita);
-    final especialidad = (cita.especialidadNombre ?? '').trim();
+    final ocupacion = (cita.ocupacionNombre ?? '').trim();
 
     return InkWell(
       onTap: onTap,
@@ -731,7 +731,7 @@ class _AgendaCitaCard extends StatelessWidget {
           color: theme.bgCard,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: especialidadColor.withValues(alpha: 0.25),
+            color: ocupacionColor.withValues(alpha: 0.25),
             width: 1.2,
           ),
           boxShadow: [
@@ -784,7 +784,7 @@ class _AgendaCitaCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (especialidad.isNotEmpty)
+                if (ocupacion.isNotEmpty)
                   Flexible(
                     child: Align(
                       alignment: Alignment.centerRight,
@@ -794,16 +794,16 @@ class _AgendaCitaCard extends StatelessWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: especialidadColor.withValues(alpha: 0.12),
+                          color: ocupacionColor.withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          especialidad,
+                          ocupacion,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(context).textTheme.labelSmall
                               ?.copyWith(
-                                color: especialidadColor,
+                                color: ocupacionColor,
                                 fontWeight: FontWeight.w600,
                               ),
                         ),
