@@ -233,6 +233,21 @@ class EstudiosService extends ServiceConfig {
     );
   }
 
+  Future<ResponseApi> crearCategoria(Map<String, dynamic> body) async {
+    return fetch('/categorias', type: HttpProtocol.post, body: body);
+  }
+
+  Future<ResponseApi> actualizarCategoria(
+    String id,
+    Map<String, dynamic> body,
+  ) async {
+    return fetch('/categorias/$id', type: HttpProtocol.patch, body: body);
+  }
+
+  Future<ResponseApi> cambiarEstadoCategoria(String id) async {
+    return fetch('/categorias/$id/cambiar-estado', type: HttpProtocol.patch);
+  }
+
   @Deprecated('Usar crearServicio')
   Future<ResponseApi> crearEstudio(Map<String, dynamic> body) =>
       crearServicio(body);

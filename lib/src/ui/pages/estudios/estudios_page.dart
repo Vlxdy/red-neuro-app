@@ -38,9 +38,17 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
   int _limit = 10;
   int _total = 0;
   String _filtro = '';
+  int _tabIndex = 0;
+  List<Categoria> _categorias = [];
+  bool _loadingCategoriasTab = false;
+  bool _loadingMoreCategorias = false;
+  int _categoriasPage = 1;
+  final int _categoriasLimit = 10;
+  int _categoriasTotal = 0;
 
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final ScrollController _categoriasScrollController = ScrollController();
 
   @override
   void initState() {
@@ -48,7 +56,9 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
     _service = EstudiosService(context);
     _cargarCategoriasDisponibles();
     _cargarServicios();
+    _cargarCategoriasTab();
     _scrollController.addListener(_handleScroll);
+    _categoriasScrollController.addListener(_handleCategoriasScroll);
   }
 
   @override
@@ -56,6 +66,9 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
     _searchController.dispose();
     _scrollController
       ..removeListener(_handleScroll)
+      ..dispose();
+    _categoriasScrollController
+      ..removeListener(_handleCategoriasScroll)
       ..dispose();
     super.dispose();
   }
@@ -71,9 +84,24 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
     }
   }
 
+  void _handleCategoriasScroll() {
+    if (!_categoriasScrollController.hasClients ||
+        _loadingCategoriasTab ||
+        _loadingMoreCategorias ||
+        _tabIndex != 1) {
+      return;
+    }
+
+    final maxScroll = _categoriasScrollController.position.maxScrollExtent;
+    final current = _categoriasScrollController.position.pixels;
+    if (current >= maxScroll - 200 && _categorias.length < _categoriasTotal) {
+      _cargarCategoriasTab(page: _categoriasPage + 1, append: true);
+    }
+  }
+
   Future<void> _cargarCategoriasDisponibles() async {
     setState(() => _loadingCategorias = true);
-    final ocupaciones = await _service.obtenerOcupaciones();
+    final ocupaciones = await _service.obtenerCategorias();
     setState(() {
       _ocupacionesDisponibles = ocupaciones;
       _loadingCategorias = false;
@@ -557,6 +585,403 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
     }
   }
 
+
+  Future<void> _refrescarCategoriasTab() async {
+    await _cargarCategoriasTab(page: 1);
+    await _cargarCategoriasDisponibles();
+  }
+
+  Future<void> _cargarCategoriasTab({int? page, bool append = false}) async {
+    if (append) {
+      setState(() => _loadingMoreCategorias = true);
+    } else {
+      setState(() => _loadingCategoriasTab = true);
+    }
+
+    final result = await _service.obtenerCategoriasPaginadas(
+      page: page ?? _categoriasPage,
+      limit: _categoriasLimit,
+    );
+
+    if (!mounted) return;
+    setState(() {
+      if (append) {
+        _categorias = [..._categorias, ...result.items];
+      } else {
+        _categorias = result.items;
+      }
+      _categoriasPage = page ?? result.page;
+      _categoriasTotal = result.total;
+      if (append) {
+        _loadingMoreCategorias = false;
+      } else {
+        _loadingCategoriasTab = false;
+      }
+    });
+
+    if (result.status != StatusNetwork.connected) {
+      showSnackBar(
+        estudiosMessenger,
+        result.message,
+        state: StatusSnackBar.error,
+        colorText: _theme.white,
+      );
+    }
+  }
+
+  Color _colorDesdeHex(String? colorHex) {
+    final raw = (colorHex ?? '').trim();
+    if (raw.isEmpty) {
+      return HexColor.fromHex('#64748b');
+    }
+    try {
+      return HexColor.fromHex(raw);
+    } catch (_) {
+      return HexColor.fromHex('#64748b');
+    }
+  }
+
+  Future<void> _abrirFormularioCategoria({Categoria? categoria}) async {
+    final form = GlobalKey<FormState>();
+    final nombre = TextEditingController(text: categoria?.nombre ?? '');
+    final descripcion = TextEditingController(text: categoria?.descripcion ?? '');
+
+    final colorInicial = _colorDesdeHex(categoria?.colorHex);
+    var hue = HSVColor.fromColor(colorInicial).hue;
+    var sat = HSVColor.fromColor(colorInicial).saturation;
+    var val = HSVColor.fromColor(colorInicial).value;
+    bool submitting = false;
+
+    String colorHexSeleccionado() {
+      final color = HSVColor.fromAHSV(1, hue, sat, val).toColor();
+      final hex = color.value.toRadixString(16).padLeft(8, '0').substring(2);
+      return '#$hex';
+    }
+
+    final result = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setStateDialog) => Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+          child: SafeArea(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Form(
+                  key: form,
+                  child: StepFormDialogLayout(
+                    title: categoria == null ? 'Nueva categoría' : 'Editar categoría',
+                    totalSteps: 1,
+                    currentStep: 0,
+                    isSubmitting: submitting,
+                    onClose: () => Navigator.pop(ctx, false),
+                    nextLabel: categoria == null ? 'Crear' : 'Guardar',
+                    onNext: () async {
+                      if (!form.currentState!.validate()) return;
+                      setStateDialog(() => submitting = true);
+                      final body = {
+                        'nombre': nombre.text.trim(),
+                        if (descripcion.text.trim().isNotEmpty)
+                          'descripcion': descripcion.text.trim(),
+                        'colorHex': colorHexSeleccionado(),
+                      };
+                      final response = categoria == null
+                          ? await _service.crearCategoria(body)
+                          : await _service.actualizarCategoria(categoria.id, body);
+                      if (!mounted) return;
+                      if (response.status == StatusNetwork.connected) {
+                        Navigator.pop(ctx, true);
+                        return;
+                      }
+                      showSnackBar(
+                        estudiosMessenger,
+                        response.message,
+                        state: StatusSnackBar.error,
+                        colorText: _theme.white,
+                      );
+                      setStateDialog(() => submitting = false);
+                    },
+                    stepContent: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CustomTextInput(
+                          title: 'Nombre',
+                          controller: nombre,
+                          requiredData: true,
+                          validate: (v, a) =>
+                              validateData(context, v, a, required: true),
+                        ),
+                        const SizedBox(height: 12),
+                        CustomTextInput(
+                          title: 'Descripción',
+                          controller: descripcion,
+                          lines: 3,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Color de categoría',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          height: 42,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            gradient: const LinearGradient(
+                              colors: [
+                                Color(0xFFFF0000),
+                                Color(0xFFFFFF00),
+                                Color(0xFF00FF00),
+                                Color(0xFF00FFFF),
+                                Color(0xFF0000FF),
+                                Color(0xFFFF00FF),
+                                Color(0xFFFF0000),
+                              ],
+                            ),
+                          ),
+                          child: SliderTheme(
+                            data: SliderTheme.of(context).copyWith(
+                              trackHeight: 0,
+                              thumbColor: Colors.white,
+                            ),
+                            child: Slider(
+                              value: hue,
+                              min: 0,
+                              max: 360,
+                              onChanged: (value) =>
+                                  setStateDialog(() => hue = value),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text('Saturación', style: Theme.of(context).textTheme.bodySmall),
+                        Slider(
+                          value: sat,
+                          min: 0,
+                          max: 1,
+                          onChanged: (value) => setStateDialog(() => sat = value),
+                        ),
+                        Text('Brillo', style: Theme.of(context).textTheme.bodySmall),
+                        Slider(
+                          value: val,
+                          min: 0,
+                          max: 1,
+                          onChanged: (value) => setStateDialog(() => val = value),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 14,
+                              backgroundColor:
+                                  HSVColor.fromAHSV(1, hue, sat, val).toColor(),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              colorHexSeleccionado(),
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    if (result == true) {
+      _cargarCategoriasDisponibles();
+      _cargarCategoriasTab();
+    }
+  }
+
+  Future<void> _cambiarEstadoCategoria(Categoria categoria) async {
+    final activando = categoria.estado.toUpperCase() != 'ACTIVO';
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(activando ? 'Activar categoría' : 'Desactivar categoría'),
+          content: Text(
+            activando
+                ? '¿Deseas activar la categoría "${categoria.nombre}"?'
+                : '¿Deseas desactivar la categoría "${categoria.nombre}"?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(activando ? 'Activar' : 'Desactivar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmar != true) return;
+
+    final response = await _service.cambiarEstadoCategoria(categoria.id);
+    if (!mounted) return;
+    if (response.status == StatusNetwork.connected) {
+      showSnackBar(
+        estudiosMessenger,
+        response.message,
+        state: StatusSnackBar.success,
+        colorText: _theme.white,
+      );
+      _cargarCategoriasDisponibles();
+      _cargarCategoriasTab();
+    } else {
+      showSnackBar(
+        estudiosMessenger,
+        response.message,
+        state: StatusSnackBar.error,
+        colorText: _theme.white,
+      );
+    }
+  }
+
+  Widget _buildServiciosTab(bool isCompact) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildFilterSummary(),
+        const SizedBox(height: 12),
+        if (!isCompact)
+          CustomDesktopDataTable(
+            titulo: 'Gestión de servicios médicos',
+            descripcion: 'Consulta y administra servicios clínicos.',
+            acciones: const [],
+            columnas: [
+              CriterioOrdenType(nombre: 'Nombre'),
+              CriterioOrdenType(nombre: 'Descripción'),
+              CriterioOrdenType(nombre: 'Tipo'),
+              CriterioOrdenType(nombre: 'Duración'),
+              CriterioOrdenType(nombre: 'Costo'),
+              CriterioOrdenType(nombre: 'Categorías'),
+              CriterioOrdenType(nombre: 'Estado'),
+              CriterioOrdenType(nombre: 'Acciones'),
+            ],
+            contenidoTabla: _servicios
+                .map(
+                  (servicio) => [
+                    Text(servicio.nombre),
+                    Text(servicio.descripcion),
+                    Text(servicio.tipo.toUpperCase()),
+                    Text('${servicio.duracionMinutos} min'),
+                    Text('Bs ${servicio.costo.toStringAsFixed(2)}'),
+                    _buildCategoriasCell(servicio),
+                    TrayStatusBadge(
+                      status: servicio.estado,
+                      activeColor: _theme.success,
+                    ),
+                    Wrap(
+                      spacing: 4,
+                      children: [
+                        IconButton(
+                          tooltip: 'Editar',
+                          icon: const Icon(Icons.edit_outlined),
+                          onPressed: () => _abrirFormulario(servicio: servicio),
+                        ),
+                        IconButton(
+                          tooltip: servicio.estado.toUpperCase() == 'ACTIVO' ? 'Desactivar' : 'Activar',
+                          icon: Icon(
+                            servicio.estado.toUpperCase() == 'ACTIVO' ? Icons.toggle_off : Icons.toggle_on,
+                            color: _theme.primary,
+                          ),
+                          onPressed: () => _cambiarEstado(servicio),
+                        ),
+                      ],
+                    ),
+                  ],
+                )
+                .toList(),
+            paginacion: _buildPagination(),
+            cargando: _loading,
+          )
+        else ...[
+          const SizedBox(height: 12),
+          Expanded(child: _buildCompactList()),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildCategoriasTab() {
+    if (_loadingCategoriasTab && _categorias.isEmpty) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_categorias.isEmpty) {
+      return Center(
+        child: Text(
+          'No hay categorías registradas.',
+          style: Theme.of(context).textTheme.bodyMedium,
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+      onRefresh: _refrescarCategoriasTab,
+      child: ListView.separated(
+        controller: _categoriasScrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: _categorias.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 12),
+        itemBuilder: (context, index) {
+          final categoria = _categorias[index];
+          final chipColor = _colorDesdeHex(categoria.colorHex);
+          return Card(
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () => _mostrarDetalleCategoria(categoria),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    ListTile(
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
+                      title: Text(categoria.nombre),
+                      leading: CircleAvatar(
+                        radius: 10,
+                        backgroundColor: chipColor,
+                      ),
+                      trailing: TrayStatusBadge(
+                        status: categoria.estado,
+                        activeColor: _theme.primary,
+                      ),
+                    ),
+                    if (_loadingMoreCategorias && index == _categorias.length - 1)
+                      const Padding(
+                        padding: EdgeInsets.only(top: 8),
+                        child: Center(child: CircularProgressIndicator()),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildCategoriasCell(Servicio servicio) {
     if (servicio.ocupaciones.isEmpty) {
       return const Text('-');
@@ -594,8 +1019,11 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
             isCompact: isNarrowHeader,
             actions: [
               IconButton(
-                onPressed: _abrirFiltros,
-                icon: Icon(Icons.filter_list, color: _theme.white),
+                onPressed: _tabIndex == 0 ? _abrirFiltros : _refrescarCategoriasTab,
+                icon: Icon(
+                  _tabIndex == 0 ? Icons.filter_list : Icons.refresh,
+                  color: _theme.white,
+                ),
                 style: IconButton.styleFrom(
                   minimumSize: const Size(36, 36),
                   side: BorderSide(
@@ -604,7 +1032,9 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                 ),
               ),
               IconButton(
-                onPressed: () => _abrirFormulario(),
+                onPressed: () => _tabIndex == 0
+                    ? _abrirFormulario()
+                    : _abrirFormularioCategoria(),
                 icon: Icon(Icons.add, color: _theme.white),
                 style: IconButton.styleFrom(
                   minimumSize: const Size(36, 36),
@@ -620,72 +1050,40 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildFilterSummary(),
-                const SizedBox(height: 12),
-                if (!isCompact)
-                  CustomDesktopDataTable(
-                    titulo: 'Gestión de servicios médicos',
-                    descripcion: 'Consulta y administra servicios clínicos.',
-                    acciones: const [],
-                    columnas: [
-                      CriterioOrdenType(nombre: 'Nombre'),
-                      CriterioOrdenType(nombre: 'Descripción'),
-                      CriterioOrdenType(nombre: 'Tipo'),
-                      CriterioOrdenType(nombre: 'Duración'),
-                      CriterioOrdenType(nombre: 'Costo'),
-                      CriterioOrdenType(nombre: 'Categorías'),
-                      CriterioOrdenType(nombre: 'Estado'),
-                      CriterioOrdenType(nombre: 'Acciones'),
-                    ],
-                    contenidoTabla: _servicios
-                        .map(
-                          (servicio) => [
-                            Text(servicio.nombre),
-                            Text(servicio.descripcion),
-                            Text(servicio.tipo.toUpperCase()),
-                            Text('${servicio.duracionMinutos} min'),
-                            Text('Bs ${servicio.costo.toStringAsFixed(2)}'),
-                            _buildCategoriasCell(servicio),
-                            TrayStatusBadge(
-                              status: servicio.estado,
-                              activeColor: _theme.success,
-                            ),
-                            Wrap(
-                              spacing: 4,
-                              children: [
-                                IconButton(
-                                  tooltip: 'Editar',
-                                  icon: const Icon(Icons.edit_outlined),
-                                  onPressed: () =>
-                                      _abrirFormulario(servicio: servicio),
-                                ),
-                                IconButton(
-                                  tooltip:
-                                      servicio.estado.toUpperCase() == 'ACTIVO'
-                                      ? 'Desactivar'
-                                      : 'Activar',
-                                  icon: Icon(
-                                    servicio.estado.toUpperCase() == 'ACTIVO'
-                                        ? Icons.toggle_off
-                                        : Icons.toggle_on,
-                                    color: _theme.primary,
-                                  ),
-                                  onPressed: () => _cambiarEstado(servicio),
-                                ),
-                              ],
-                            ),
-                          ],
-                        )
-                        .toList(),
-                    paginacion: _buildPagination(),
-                    cargando: _loading,
-                  )
-                else ...[
-                  const SizedBox(height: 12),
-                  Expanded(
-                    child: _buildCompactList(),
+                SegmentedButton<int>(
+                  style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return _theme.primary;
+                      }
+                      return null;
+                    }),
+                    foregroundColor: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return _theme.white;
+                      }
+                      return null;
+                    }),
                   ),
-                ],
+                  segments: const [
+                    ButtonSegment(value: 0, label: Text('Servicios')),
+                    ButtonSegment(value: 1, label: Text('Categorías')),
+                  ],
+                  selected: {_tabIndex},
+                  onSelectionChanged: (selection) {
+                    final next = selection.first;
+                    setState(() => _tabIndex = next);
+                    if (next == 1) {
+                      _refrescarCategoriasTab();
+                    }
+                  },
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: _tabIndex == 0
+                      ? _buildServiciosTab(isCompact)
+                      : _buildCategoriasTab(),
+                ),
               ],
             ),
           ),
@@ -827,6 +1225,108 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
           );
         },
       ),
+    );
+  }
+
+  void _mostrarDetalleCategoria(Categoria categoria) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        final color = _colorDesdeHex(categoria.colorHex);
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Detalle de categoría',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    CircleAvatar(radius: 10, backgroundColor: color),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        categoria.nombre,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                TrayStatusBadge(
+                  status: categoria.estado,
+                  activeColor: _theme.primary,
+                ),
+                const SizedBox(height: 8),
+                Text('Color: ${categoria.colorHex ?? '#64748b'}'),
+                const SizedBox(height: 8),
+                Text(categoria.descripcion?.trim().isNotEmpty == true
+                    ? categoria.descripcion!
+                    : 'Sin descripción'),
+                const SizedBox(height: 12),
+                SafeArea(
+                  top: false,
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      FilledButton.tonalIcon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: _theme.primary,
+                          foregroundColor: _theme.white,
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _abrirFormularioCategoria(categoria: categoria);
+                        },
+                        icon: const Icon(Icons.edit_outlined),
+                        label: const Text('Editar'),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _cambiarEstadoCategoria(categoria);
+                        },
+                        icon: Icon(
+                          categoria.estado.toUpperCase() == 'ACTIVO'
+                              ? Icons.toggle_off
+                              : Icons.toggle_on,
+                        ),
+                        label: Text(
+                          categoria.estado.toUpperCase() == 'ACTIVO'
+                              ? 'Desactivar'
+                              : 'Activar',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
