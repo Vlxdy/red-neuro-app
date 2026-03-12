@@ -3624,9 +3624,9 @@
         ]
       }
     },
-    "/servicios/especialidades/{id}": {
+    "/servicios/ocupaciones/{id}": {
       "get": {
-        "operationId": "ServicioController_listarPorEspecialidad",
+        "operationId": "ServicioController_listarPorOcupacion",
         "parameters": [
           {
             "name": "id",
@@ -3728,7 +3728,7 @@
             "bearer": []
           }
         ],
-        "summary": "Lista los servicios paginados por especialidad",
+        "summary": "Lista los servicios paginados por ocupación",
         "tags": [
           "Servicios"
         ]
@@ -3932,9 +3932,9 @@
         ]
       }
     },
-    "/especialidades": {
+    "/ocupaciones": {
       "get": {
-        "operationId": "EspecialidadController_listar",
+        "operationId": "OcupacionController_listar",
         "parameters": [
           {
             "name": "limite",
@@ -3995,7 +3995,7 @@
                             "filas": {
                               "type": "array",
                               "items": {
-                                "$ref": "#/components/schemas/EspecialidadResponseDto"
+                                "$ref": "#/components/schemas/OcupacionResponseDto"
                               }
                             }
                           }
@@ -4013,20 +4013,20 @@
             "bearer": []
           }
         ],
-        "summary": "Lista las especialidades médicas configuradas",
+        "summary": "Lista las ocupaciones configuradas",
         "tags": [
-          "Especialidades"
+          "Ocupaciones"
         ]
       },
       "post": {
-        "operationId": "EspecialidadController_crear",
+        "operationId": "OcupacionController_crear",
         "parameters": [],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CrearEspecialidadDto"
+                "$ref": "#/components/schemas/CrearOcupacionDto"
               }
             }
           }
@@ -4044,7 +4044,7 @@
                     {
                       "properties": {
                         "datos": {
-                          "$ref": "#/components/schemas/EspecialidadResponseDto"
+                          "$ref": "#/components/schemas/OcupacionResponseDto"
                         }
                       }
                     }
@@ -4059,15 +4059,15 @@
             "bearer": []
           }
         ],
-        "summary": "Crea una nueva especialidad médica",
+        "summary": "Crea una nueva ocupación",
         "tags": [
-          "Especialidades"
+          "Ocupaciones"
         ]
       }
     },
-    "/especialidades/{id}": {
+    "/ocupaciones/{id}": {
       "get": {
-        "operationId": "EspecialidadController_obtenerPorId",
+        "operationId": "OcupacionController_obtenerPorId",
         "parameters": [
           {
             "name": "id",
@@ -4092,7 +4092,7 @@
                     {
                       "properties": {
                         "datos": {
-                          "$ref": "#/components/schemas/EspecialidadResponseDto"
+                          "$ref": "#/components/schemas/OcupacionResponseDto"
                         }
                       }
                     }
@@ -4107,13 +4107,13 @@
             "bearer": []
           }
         ],
-        "summary": "Obtiene el detalle de una especialidad médica",
+        "summary": "Obtiene el detalle de una ocupación",
         "tags": [
-          "Especialidades"
+          "Ocupaciones"
         ]
       },
       "patch": {
-        "operationId": "EspecialidadController_actualizar",
+        "operationId": "OcupacionController_actualizar",
         "parameters": [
           {
             "name": "id",
@@ -4130,7 +4130,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ActualizarEspecialidadDto"
+                "$ref": "#/components/schemas/ActualizarOcupacionDto"
               }
             }
           }
@@ -4148,7 +4148,7 @@
                     {
                       "properties": {
                         "datos": {
-                          "$ref": "#/components/schemas/EspecialidadResponseDto"
+                          "$ref": "#/components/schemas/OcupacionResponseDto"
                         }
                       }
                     }
@@ -4163,13 +4163,13 @@
             "bearer": []
           }
         ],
-        "summary": "Actualiza la información de una especialidad",
+        "summary": "Actualiza la información de una ocupación",
         "tags": [
-          "Especialidades"
+          "Ocupaciones"
         ]
       },
       "delete": {
-        "operationId": "EspecialidadController_eliminar",
+        "operationId": "OcupacionController_eliminar",
         "parameters": [
           {
             "name": "id",
@@ -4194,7 +4194,7 @@
                     {
                       "properties": {
                         "datos": {
-                          "$ref": "#/components/schemas/EspecialidadResponseDto"
+                          "$ref": "#/components/schemas/OcupacionResponseDto"
                         }
                       }
                     }
@@ -4209,15 +4209,15 @@
             "bearer": []
           }
         ],
-        "summary": "Elimina una especialidad médica",
+        "summary": "Elimina una ocupación",
         "tags": [
-          "Especialidades"
+          "Ocupaciones"
         ]
       }
     },
-    "/especialidades/{id}/cambiar-estado": {
+    "/ocupaciones/{id}/cambiar-estado": {
       "patch": {
-        "operationId": "EspecialidadController_cambiarEstado",
+        "operationId": "OcupacionController_cambiarEstado",
         "parameters": [
           {
             "name": "id",
@@ -4242,7 +4242,7 @@
                     {
                       "properties": {
                         "datos": {
-                          "$ref": "#/components/schemas/EspecialidadResponseDto"
+                          "$ref": "#/components/schemas/OcupacionResponseDto"
                         }
                       }
                     }
@@ -4257,9 +4257,9 @@
             "bearer": []
           }
         ],
-        "summary": "Cambiar estado de la especialidad",
+        "summary": "Cambiar estado de la ocupación",
         "tags": [
-          "Especialidades"
+          "Ocupaciones"
         ]
       }
     },
@@ -6118,40 +6118,34 @@
           "id"
         ]
       },
-      "EspecialidadPersonalDto": {
+      "OcupacionPersonalDto": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Identificador único de la especialidad médica",
+            "description": "Identificador único de la ocupación",
             "example": "12"
           },
           "nombre": {
             "type": "string",
-            "description": "Nombre visible de la especialidad médica",
+            "description": "Nombre visible de la ocupación",
             "example": "Cardiología"
           },
           "descripcion": {
             "type": "string",
-            "description": "Descripción opcional de la especialidad médica",
-            "example": "Especialidad dedicada al diagnóstico de enfermedades cardíacas"
+            "description": "Descripción opcional de la ocupación",
+            "example": "Perfil ocupacional clínico"
           },
           "estado": {
             "type": "string",
             "description": "Estado del registro",
             "example": "ACTIVO"
-          },
-          "colorHex": {
-            "type": "string",
-            "description": "Color principal de la especialidad en formato hexadecimal",
-            "example": "#0ea5e9"
           }
         },
         "required": [
           "id",
           "nombre",
-          "estado",
-          "colorHex"
+          "estado"
         ]
       },
       "PersonalResponseDto": {
@@ -6217,18 +6211,17 @@
             "description": "URL de la fotografía del profesional",
             "example": "/fotos/mariela.jpg"
           },
-          "especialidades": {
-            "description": "Especialidades médicas del profesional",
+          "ocupaciones": {
+            "description": "Ocupaciones del profesional",
             "example": [
               {
                 "id": "1",
-                "nombre": "Pediatría",
-                "colorHex": "#0ea5e9"
+                "nombre": "Pediatría"
               }
             ],
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/EspecialidadPersonalDto"
+              "$ref": "#/components/schemas/OcupacionPersonalDto"
             }
           }
         },
@@ -6295,42 +6288,6 @@
         "required": [
           "id",
           "nombres",
-          "estado"
-        ]
-      },
-      "EspecialidadCitaDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Identificador de la especialidad",
-            "example": "3"
-          },
-          "nombre": {
-            "type": "string",
-            "description": "Nombre de la especialidad",
-            "example": "Radiología"
-          },
-          "descripcion": {
-            "type": "string",
-            "description": "Descripción de la especialidad",
-            "example": "Especialidad dedicada a estudios por imagen"
-          },
-          "colorHex": {
-            "type": "string",
-            "description": "Color principal de la especialidad en formato hexadecimal",
-            "example": "#0ea5e9"
-          },
-          "estado": {
-            "type": "string",
-            "description": "Estado actual de la especialidad",
-            "example": "ACTIVO"
-          }
-        },
-        "required": [
-          "id",
-          "nombre",
-          "colorHex",
           "estado"
         ]
       },
@@ -6520,10 +6477,6 @@
             "type": "string",
             "description": "Id de la institución asociada"
           },
-          "especialidadId": {
-            "type": "string",
-            "description": "Id de la especialidad asociada"
-          },
           "servicioId": {
             "type": "string",
             "description": "Id del servicio asociado"
@@ -6533,9 +6486,6 @@
           },
           "paciente": {
             "$ref": "#/components/schemas/PacienteResponseDto"
-          },
-          "especialidad": {
-            "$ref": "#/components/schemas/EspecialidadCitaDto"
           },
           "servicio": {
             "$ref": "#/components/schemas/ServicioCitaDto"
@@ -6666,11 +6616,6 @@
             "description": "Identificador de la institución asociada",
             "example": "2"
           },
-          "especialidadId": {
-            "type": "string",
-            "description": "Identificador de la especialidad asociada",
-            "example": "12"
-          },
           "servicioId": {
             "type": "string",
             "description": "Identificador del servicio asociado",
@@ -6689,14 +6634,6 @@
             "allOf": [
               {
                 "$ref": "#/components/schemas/PacienteResponseDto"
-              }
-            ]
-          },
-          "especialidad": {
-            "description": "Especialidad asociada a la cita",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/EspecialidadCitaDto"
               }
             ]
           },
@@ -6801,11 +6738,6 @@
             "description": "Identificador de la institución asociada",
             "example": "2"
           },
-          "idEspecialidad": {
-            "type": "string",
-            "description": "Identificador de la especialidad asociada (opcional)",
-            "example": "12"
-          },
           "tipoCita": {
             "type": "string",
             "enum": [
@@ -6871,11 +6803,6 @@
             "type": "string",
             "description": "Identificador de la institución asociada",
             "example": "2"
-          },
-          "idEspecialidad": {
-            "type": "string",
-            "description": "Identificador de la especialidad asociada (opcional)",
-            "example": "12"
           },
           "tipoCita": {
             "type": "string",
@@ -7180,29 +7107,23 @@
           }
         }
       },
-      "EspecialidadResumenDto": {
+      "OcupacionResumenDto": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Identificador único de la especialidad",
+            "description": "Identificador único de la ocupación",
             "example": "12"
           },
           "nombre": {
             "type": "string",
-            "description": "Nombre visible de la especialidad médica",
+            "description": "Nombre visible de la ocupación",
             "example": "Cardiología"
-          },
-          "colorHex": {
-            "type": "string",
-            "description": "Color principal de la especialidad en formato hexadecimal",
-            "example": "#0ea5e9"
           }
         },
         "required": [
           "id",
-          "nombre",
-          "colorHex"
+          "nombre"
         ]
       },
       "ServicioResponseDto": {
@@ -7247,11 +7168,11 @@
             "description": "Costo referencial del servicio",
             "example": 120
           },
-          "especialidades": {
-            "description": "Especialidades asociadas al servicio",
+          "ocupaciones": {
+            "description": "Ocupaciones asociadas al servicio",
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/EspecialidadResumenDto"
+              "$ref": "#/components/schemas/OcupacionResumenDto"
             }
           }
         },
@@ -7263,7 +7184,7 @@
           "estado",
           "tipo",
           "costo",
-          "especialidades"
+          "ocupaciones"
         ]
       },
       "CrearServicioDto": {
@@ -7298,8 +7219,8 @@
             "description": "Costo referencial del servicio",
             "example": 120
           },
-          "especialidadIds": {
-            "description": "Identificadores de especialidades asociadas (opcional)",
+          "ocupacionIds": {
+            "description": "Identificadores de ocupaciones asociadas (opcional)",
             "example": [
               "2",
               "5"
@@ -7350,8 +7271,8 @@
             "description": "Costo referencial del servicio",
             "example": 120
           },
-          "especialidadIds": {
-            "description": "Identificadores de especialidades asociadas (opcional)",
+          "ocupacionIds": {
+            "description": "Identificadores de ocupaciones asociadas (opcional)",
             "example": [
               "2",
               "5"
@@ -7393,36 +7314,36 @@
           "duracionMinutos"
         ]
       },
-      "EspecialidadResponseDto": {
+      "OcupacionResponseDto": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string",
-            "description": "Identificador único de la especialidad",
+            "description": "Identificador único de la ocupación",
             "example": "12"
           },
           "nombre": {
             "type": "string",
-            "description": "Nombre visible de la especialidad médica",
-            "example": "Cardiología"
+            "description": "Nombre visible de la ocupación",
+            "example": "Enfermería"
           },
           "descripcion": {
             "type": "string",
-            "description": "Descripción opcional de la especialidad médica",
-            "example": "Especialidad dedicada al diagnóstico de enfermedades cardíacas"
+            "description": "Descripción opcional de la ocupación",
+            "example": "Perfil orientado al cuidado integral del paciente"
+          },
+          "grado": {
+            "type": "string",
+            "description": "Grado o nivel profesional opcional para diferenciar perfiles de una misma ocupación",
+            "example": "Licenciatura"
           },
           "estado": {
             "type": "string",
-            "description": "Estado actual del registro de especialidad",
+            "description": "Estado actual del registro de ocupación",
             "example": "ACTIVO"
           },
-          "colorHex": {
-            "type": "string",
-            "description": "Color principal de la especialidad en formato hexadecimal",
-            "example": "#0ea5e9"
-          },
           "servicios": {
-            "description": "Servicios asociados a la especialidad",
+            "description": "Servicios asociados a la ocupación",
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ServicioResumenDto"
@@ -7433,55 +7354,53 @@
           "id",
           "nombre",
           "estado",
-          "colorHex",
           "servicios"
         ]
       },
-      "CrearEspecialidadDto": {
+      "CrearOcupacionDto": {
         "type": "object",
         "properties": {
           "nombre": {
             "type": "string",
-            "description": "Nombre visible de la especialidad médica",
-            "example": "Cardiología"
+            "description": "Nombre visible de la ocupación",
+            "example": "Enfermería"
           },
           "descripcion": {
             "type": "string",
-            "description": "Descripción opcional de la especialidad médica",
-            "example": "Especialidad dedicada al diagnóstico de enfermedades cardíacas"
+            "description": "Descripción opcional de la ocupación",
+            "example": "Perfil orientado al cuidado integral del paciente"
           },
-          "colorHex": {
+          "grado": {
             "type": "string",
-            "description": "Color principal de la especialidad en formato hexadecimal",
-            "example": "#0ea5e9"
+            "description": "Grado o nivel profesional opcional para diferenciar perfiles de una misma ocupación",
+            "example": "Licenciatura"
           }
         },
         "required": [
-          "nombre",
-          "colorHex"
+          "nombre"
         ]
       },
-      "ActualizarEspecialidadDto": {
+      "ActualizarOcupacionDto": {
         "type": "object",
         "properties": {
           "nombre": {
             "type": "string",
-            "description": "Nombre visible de la especialidad médica",
-            "example": "Cardiología"
+            "description": "Nombre visible de la ocupación",
+            "example": "Enfermería"
           },
           "descripcion": {
             "type": "string",
-            "description": "Descripción opcional de la especialidad médica",
-            "example": "Especialidad dedicada al diagnóstico de enfermedades cardíacas"
+            "description": "Descripción opcional de la ocupación",
+            "example": "Perfil orientado al cuidado integral del paciente"
           },
-          "colorHex": {
+          "grado": {
             "type": "string",
-            "description": "Color principal de la especialidad en formato hexadecimal",
-            "example": "#0ea5e9"
+            "description": "Grado o nivel profesional opcional para diferenciar perfiles de una misma ocupación",
+            "example": "Licenciatura"
           },
           "estado": {
             "type": "string",
-            "description": "Permite reactivar o desactivar la especialidad",
+            "description": "Permite reactivar o desactivar la ocupación",
             "example": "ACTIVO"
           }
         }
@@ -7514,8 +7433,8 @@
             "example": false,
             "description": "Habilita permisos de supervisión para el rol PERSONAL_SALUD."
           },
-          "idEspecialidades": {
-            "description": "Especialidades asociadas al profesional de salud",
+          "idOcupaciones": {
+            "description": "Ocupaciones asociadas al profesional de salud",
             "example": [
               "1",
               "2"
@@ -7553,8 +7472,8 @@
             "example": false,
             "description": "Habilita permisos de supervisión para el rol PERSONAL_SALUD."
           },
-          "idEspecialidades": {
-            "description": "Especialidades asociadas al profesional de salud",
+          "idOcupaciones": {
+            "description": "Ocupaciones asociadas al profesional de salud",
             "example": [
               "1",
               "2"
