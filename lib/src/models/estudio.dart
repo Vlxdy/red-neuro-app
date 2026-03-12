@@ -1,19 +1,19 @@
-class EspecialidadResumen {
+class OcupacionResumen {
   final String id;
   final String nombre;
-  final String colorHex;
+  final String? grado;
 
-  const EspecialidadResumen({
+  const OcupacionResumen({
     required this.id,
     required this.nombre,
-    required this.colorHex,
+    required this.grado,
   });
 
-  factory EspecialidadResumen.fromJson(Map<String, dynamic> json) {
-    return EspecialidadResumen(
+  factory OcupacionResumen.fromJson(Map<String, dynamic> json) {
+    return OcupacionResumen(
       id: (json['id'] ?? '').toString(),
       nombre: (json['nombre'] ?? '').toString(),
-      colorHex: (json['colorHex'] ?? '#64748b').toString(),
+      grado: json['grado']?.toString(),
     );
   }
 }
@@ -26,7 +26,7 @@ class Servicio {
   final int duracionMinutos;
   final double costo;
   final String estado;
-  final List<EspecialidadResumen> especialidades;
+  final List<OcupacionResumen> ocupaciones;
 
   const Servicio({
     required this.id,
@@ -36,14 +36,14 @@ class Servicio {
     required this.duracionMinutos,
     this.costo = 0,
     required this.estado,
-    required this.especialidades,
+    required this.ocupaciones,
   });
 
   factory Servicio.fromJson(Map<String, dynamic> json) {
     final rawDuracion = json['duracionMinutos'] ?? json['duracion'] ?? 0;
     final rawCosto = json['costo'] ?? 0;
-    final especialidadesRaw =
-        json['especialidades'] ?? json['especialidad'] ?? [];
+    final ocupacionesRaw =
+        json['ocupaciones'] ?? json['ocupacion'] ?? [];
     return Servicio(
       id: (json['id'] ?? '').toString(),
       nombre: (json['nombre'] ?? '').toString(),
@@ -56,10 +56,10 @@ class Servicio {
           ? rawCosto.toDouble()
           : double.tryParse(rawCosto.toString()) ?? 0,
       estado: (json['estado'] ?? '').toString(),
-      especialidades: especialidadesRaw is List
-          ? especialidadesRaw
+      ocupaciones: ocupacionesRaw is List
+          ? ocupacionesRaw
               .whereType<Map<String, dynamic>>()
-              .map(EspecialidadResumen.fromJson)
+              .map(OcupacionResumen.fromJson)
               .toList()
           : [],
     );

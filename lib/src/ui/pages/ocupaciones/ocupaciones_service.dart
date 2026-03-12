@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:red_neuro_app/src/config/service_config.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
-import 'package:red_neuro_app/src/models/especialidad.dart';
+import 'package:red_neuro_app/src/models/ocupacion.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 
-class EspecialidadPageResult {
-  final List<Especialidad> especialidades;
+class OcupacionPageResult {
+  final List<Ocupacion> ocupaciones;
   final int total;
   final int page;
   final int limit;
   final String message;
   final StatusNetwork status;
 
-  const EspecialidadPageResult({
-    required this.especialidades,
+  const OcupacionPageResult({
+    required this.ocupaciones,
     required this.total,
     required this.page,
     required this.limit,
@@ -21,8 +21,8 @@ class EspecialidadPageResult {
     required this.status,
   });
 
-  factory EspecialidadPageResult.empty(String message) => EspecialidadPageResult(
-        especialidades: const [],
+  factory OcupacionPageResult.empty(String message) => OcupacionPageResult(
+        ocupaciones: const [],
         total: 0,
         page: 1,
         limit: 10,
@@ -31,17 +31,17 @@ class EspecialidadPageResult {
       );
 }
 
-class EspecialidadesService extends ServiceConfig {
-  EspecialidadesService(BuildContext context) : super('', context);
+class OcupacionesService extends ServiceConfig {
+  OcupacionesService(BuildContext context) : super('', context);
 
-  Future<EspecialidadPageResult> obtenerEspecialidades({
+  Future<OcupacionPageResult> obtenerOcupaciones({
     int page = 1,
     int limit = 10,
     String? filtro,
   }) async {
     try {
       final response = await fetch(
-        '/especialidades',
+        '/ocupaciones',
         params: {
           'pagina': '$page',
           'limite': '$limit',
@@ -50,7 +50,7 @@ class EspecialidadesService extends ServiceConfig {
       );
 
       if (response.status != StatusNetwork.connected) {
-        return EspecialidadPageResult.empty(response.message);
+        return OcupacionPageResult.empty(response.message);
       }
 
       final data = response.data;
@@ -62,62 +62,46 @@ class EspecialidadesService extends ServiceConfig {
           data['items'] ??
           [];
 
-      final especialidades = (filasRaw is List)
+      final ocupaciones = (filasRaw is List)
           ? filasRaw
               .whereType<Map<String, dynamic>>()
-              .map(Especialidad.fromJson)
+              .map(Ocupacion.fromJson)
               .toList()
-          : <Especialidad>[];
+          : <Ocupacion>[];
 
-      return EspecialidadPageResult(
-        especialidades: especialidades,
+      return OcupacionPageResult(
+        ocupaciones: ocupaciones,
         total: totalRaw is int
             ? totalRaw
-            : int.tryParse('$totalRaw') ?? especialidades.length,
+            : int.tryParse('$totalRaw') ?? ocupaciones.length,
         page: page,
         limit: limit,
         message: response.message,
         status: response.status,
       );
     } catch (e, stacktrace) {
-      Logger.error('Error al listar especialidades $e');
+      Logger.error('Error al listar ocupaciones $e');
       Logger.error('stacktrace $stacktrace');
-      return EspecialidadPageResult.empty(
-        'No se pudieron cargar las especialidades',
-      );
+      return OcupacionPageResult.empty('No se pudieron cargar las ocupaciones');
     }
   }
 
-  Future<ResponseApi> crearEspecialidad(Map<String, dynamic> body) async {
-    return fetch(
-      '/especialidades',
-      type: HttpProtocol.post,
-      body: body,
-    );
+  Future<ResponseApi> crearOcupacion(Map<String, dynamic> body) async {
+    return fetch('/ocupaciones', type: HttpProtocol.post, body: body);
   }
 
-  Future<ResponseApi> actualizarEspecialidad(
+  Future<ResponseApi> actualizarOcupacion(
     String id,
     Map<String, dynamic> body,
   ) async {
-    return fetch(
-      '/especialidades/$id',
-      type: HttpProtocol.patch,
-      body: body,
-    );
+    return fetch('/ocupaciones/$id', type: HttpProtocol.patch, body: body);
   }
 
-  Future<ResponseApi> eliminarEspecialidad(String id) async {
-    return fetch(
-      '/especialidades/$id',
-      type: HttpProtocol.delete,
-    );
+  Future<ResponseApi> eliminarOcupacion(String id) async {
+    return fetch('/ocupaciones/$id', type: HttpProtocol.delete);
   }
 
-  Future<ResponseApi> cambiarEstadoEspecialidad(String id) async {
-    return fetch(
-      '/especialidades/$id/cambiar-estado',
-      type: HttpProtocol.patch,
-    );
+  Future<ResponseApi> cambiarEstadoOcupacion(String id) async {
+    return fetch('/ocupaciones/$id/cambiar-estado', type: HttpProtocol.patch);
   }
 }

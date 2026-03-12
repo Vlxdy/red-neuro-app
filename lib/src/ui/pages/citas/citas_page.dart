@@ -9,7 +9,7 @@ import 'package:red_neuro_app/src/constants/constants.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/extensions/colores_extension.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
-import 'package:red_neuro_app/src/models/especialidad.dart';
+import 'package:red_neuro_app/src/models/ocupacion.dart';
 import 'package:red_neuro_app/src/models/estudio.dart';
 import 'package:red_neuro_app/src/models/historial_cita.dart';
 import 'package:red_neuro_app/src/models/lugar.dart';
@@ -334,7 +334,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     required DateTime fechaInicio,
     int? duracionMinutos,
     String? pacienteNombre,
-    String? especialidadNombre,
+    String? ocupacionNombre,
     String? medicoNombre,
     String? pacienteDocumento,
     String? pacienteTelefono,
@@ -352,7 +352,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
         fechaInicio: fechaInicio,
         duracionMinutos: duracionMinutos,
         pacienteNombre: pacienteNombre,
-        especialidadNombre: especialidadNombre,
+        ocupacionNombre: ocupacionNombre,
         medicoNombre: medicoNombre,
         pacienteDocumento: pacienteDocumento,
         pacienteTelefono: pacienteTelefono,
@@ -1028,7 +1028,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
                             nombrePaciente: _nombrePaciente,
                             nombreMedico: _nombreMedico,
                             iconoTipoCita: _iconoTipoCita,
-                            colorEspecialidad: _colorEspecialidad,
+                            colorOcupacion: _colorOcupacion,
                             onTapCita: (cita) =>
                                 () => _abrirCitaSegunEstado(cita),
                             onTapHora: (hour) {
@@ -1086,8 +1086,8 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     return _timeFormat.format(referencia);
   }
 
-  Color _colorEspecialidad(CitaMedica cita) {
-    return HexColor.fromHex(cita.especialidadColorHex ?? '#64748b');
+  Color _colorOcupacion(CitaMedica cita) {
+    return HexColor.fromHex(cita.ocupacionColorHex ?? '#64748b');
   }
 
   String _nombreMedico(CitaMedica cita) {
@@ -1151,7 +1151,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     if (tipo == 'CONSULTA') return 'Consulta';
     if (tipo == 'ESTUDIO') return 'Servicio';
     if (tipo.isNotEmpty) return cita.tipoCita!.trim();
-    if ((cita.especialidadNombre ?? '').trim().isNotEmpty) return 'Consulta';
+    if ((cita.ocupacionNombre ?? '').trim().isNotEmpty) return 'Consulta';
     return 'Cita médica';
   }
 
@@ -1161,7 +1161,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
       return PhosphorIconsRegular.testTube;
     }
     if (tipo == 'CONSULTA' ||
-        (cita.especialidadNombre ?? '').trim().isNotEmpty) {
+        (cita.ocupacionNombre ?? '').trim().isNotEmpty) {
       return PhosphorIconsRegular.stethoscope;
     }
     return PhosphorIconsRegular.calendarCheck;
