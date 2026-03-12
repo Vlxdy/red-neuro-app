@@ -3,7 +3,7 @@ import 'package:red_neuro_app/src/config/form_controller.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/extensions/colores_extension.dart';
-import 'package:red_neuro_app/src/models/ocupacion.dart';
+import 'package:red_neuro_app/src/models/categoria.dart';
 import 'package:red_neuro_app/src/models/estudio.dart';
 import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
 import 'package:red_neuro_app/src/ui/common/customdatatable/custom_datatable.dart';
@@ -30,10 +30,10 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
   late final EstudiosService _service;
 
   List<Servicio> _servicios = [];
-  List<Ocupacion> _ocupacionesDisponibles = [];
+  List<Categoria> _ocupacionesDisponibles = [];
   bool _loading = false;
   bool _loadingMore = false;
-  bool _loadingOcupaciones = false;
+  bool _loadingCategorias = false;
   int _page = 1;
   int _limit = 10;
   int _total = 0;
@@ -46,7 +46,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
   void initState() {
     super.initState();
     _service = EstudiosService(context);
-    _cargarOcupacionesDisponibles();
+    _cargarCategoriasDisponibles();
     _cargarServicios();
     _scrollController.addListener(_handleScroll);
   }
@@ -71,12 +71,12 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
     }
   }
 
-  Future<void> _cargarOcupacionesDisponibles() async {
-    setState(() => _loadingOcupaciones = true);
+  Future<void> _cargarCategoriasDisponibles() async {
+    setState(() => _loadingCategorias = true);
     final ocupaciones = await _service.obtenerOcupaciones();
     setState(() {
       _ocupacionesDisponibles = ocupaciones;
-      _loadingOcupaciones = false;
+      _loadingCategorias = false;
     });
   }
 
@@ -251,7 +251,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
     var tipoSeleccionado = (servicio?.tipo ?? 'ESTUDIO').toUpperCase();
     final ocupacionesSeleccionadas =
         servicio?.ocupaciones.map((item) => item.id).toSet() ?? <String>{};
-    const mostrarPasoOcupaciones = true;
+    const mostrarPasoCategorias = true;
     var currentStep = 0;
     String? modalError;
 
@@ -266,7 +266,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             Widget buildStepContent() {
-              if (!mostrarPasoOcupaciones || currentStep == 0) {
+              if (!mostrarPasoCategorias || currentStep == 0) {
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -347,7 +347,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                 );
               }
 
-              if (_loadingOcupaciones) {
+              if (_loadingCategorias) {
                 return const Padding(
                   padding: EdgeInsets.symmetric(vertical: 32),
                   child: Center(child: CircularProgressIndicator()),
@@ -358,13 +358,13 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Ocupaciones asociadas',
+                    'Categorías asociadas',
                     style: Theme.of(context).textTheme.titleSmall,
                   ),
                   const SizedBox(height: 8),
                   if (_ocupacionesDisponibles.isEmpty)
                     Text(
-                      'No hay ocupaciones disponibles.',
+                      'No hay categorías disponibles.',
                       style: Theme.of(context).textTheme.bodySmall,
                     )
                   else
@@ -402,7 +402,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
               );
             }
 
-            final totalSteps = mostrarPasoOcupaciones ? 2 : 1;
+            final totalSteps = mostrarPasoCategorias ? 2 : 1;
             final isLastStep = currentStep == totalSteps - 1;
 
             return Padding(
@@ -435,7 +435,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                             ? (servicio == null ? 'Crear' : 'Guardar')
                             : 'Siguiente',
                         onNext: () async {
-                          if ((!mostrarPasoOcupaciones ||
+                          if ((!mostrarPasoCategorias ||
                                   currentStep == 0) &&
                               (nombreController.text.trim().isEmpty ||
                                   descripcionController.text.trim().isEmpty)) {
@@ -449,8 +449,8 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                           if (!valid) return;
                           if (!isLastStep) {
                             if (_ocupacionesDisponibles.isEmpty &&
-                                !_loadingOcupaciones) {
-                              await _cargarOcupacionesDisponibles();
+                                !_loadingCategorias) {
+                              await _cargarCategoriasDisponibles();
                             }
                             setDialogState(() {
                               currentStep += 1;
@@ -481,7 +481,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
       'duracionMinutos': int.parse(duracionController.text.trim()),
       'costo': double.parse(costoController.text.trim().replaceAll(',', '.')),
       'tipo': tipoSeleccionado,
-      'ocupacionIds': ocupacionesSeleccionadas.toList(),
+      'categoriaIds': ocupacionesSeleccionadas.toList(),
     };
 
     final response = servicio == null
@@ -557,7 +557,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
     }
   }
 
-  Widget _buildOcupacionesCell(Servicio servicio) {
+  Widget _buildCategoriasCell(Servicio servicio) {
     if (servicio.ocupaciones.isEmpty) {
       return const Text('-');
     }
@@ -590,7 +590,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
           appBar: TrayModuleHeader(
             titulo: 'Servicios',
             subtitulo:
-                'Administra servicios (consultas y estudios) y sus ocupaciones.',
+                'Administra servicios (consultas y estudios) y sus categorías.',
             isCompact: isNarrowHeader,
             actions: [
               IconButton(
@@ -633,7 +633,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                       CriterioOrdenType(nombre: 'Tipo'),
                       CriterioOrdenType(nombre: 'Duración'),
                       CriterioOrdenType(nombre: 'Costo'),
-                      CriterioOrdenType(nombre: 'Ocupaciones'),
+                      CriterioOrdenType(nombre: 'Categorías'),
                       CriterioOrdenType(nombre: 'Estado'),
                       CriterioOrdenType(nombre: 'Acciones'),
                     ],
@@ -645,7 +645,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                             Text(servicio.tipo.toUpperCase()),
                             Text('${servicio.duracionMinutos} min'),
                             Text('Bs ${servicio.costo.toStringAsFixed(2)}'),
-                            _buildOcupacionesCell(servicio),
+                            _buildCategoriasCell(servicio),
                             TrayStatusBadge(
                               status: servicio.estado,
                               activeColor: _theme.success,
@@ -797,7 +797,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
                   const SizedBox(height: 8),
                   if (servicio.ocupaciones.isEmpty)
                     Text(
-                      'Sin ocupaciones asignadas.',
+                      'Sin categorías asignadas.',
                       style: Theme.of(context).textTheme.bodySmall,
                     )
                   else
