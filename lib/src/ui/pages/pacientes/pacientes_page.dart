@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -979,6 +981,74 @@ class _PacientesPageState extends State<PacientesPage> with FormController {
     );
   }
 
+  List<MapEntry<String, String>> _datosPrioritariosPaciente(Paciente paciente) {
+    final candidatos = <MapEntry<String, String>>[
+      MapEntry('Celular', (paciente.telefono ?? '').trim()),
+      MapEntry('Género', _formatearGenero(paciente.genero).trim()),
+      MapEntry('Edad', _edadPaciente(paciente.fechaNacimiento).trim()),
+      MapEntry('Documento', (paciente.nroDocumento ?? '').trim()),
+    ];
+
+    final disponibles = candidatos.where((dato) {
+      final valor = dato.value.trim();
+      return valor.isNotEmpty &&
+          valor.toLowerCase() != 'sin género' &&
+          valor.toLowerCase() != 'sin edad';
+    }).toList();
+
+    final seleccionados = <MapEntry<String, String>>[];
+    seleccionados.addAll(disponibles.take(2));
+
+    if (seleccionados.length < 2) {
+      for (final candidato in candidatos) {
+        if (seleccionados.any((dato) => dato.key == candidato.key)) {
+          continue;
+        }
+        final valor = candidato.value.trim();
+        final fallback = valor.isEmpty ? 'Sin ${candidato.key.toLowerCase()}' : valor;
+        seleccionados.add(MapEntry(candidato.key, fallback));
+        if (seleccionados.length == 2) break;
+      }
+    }
+
+    return seleccionados;
+  }
+
+  IconData _iconoDatoPaciente(String label) {
+    switch (label) {
+      case 'Celular':
+        return Icons.phone_outlined;
+      case 'Género':
+        return Icons.wc_outlined;
+      case 'Edad':
+        return Icons.cake_outlined;
+      case 'Documento':
+        return Icons.badge_outlined;
+      default:
+        return Icons.info_outline;
+    }
+  }
+
+  Widget _estadoPacienteIcono(String estado) {
+    final activo = estado.trim().toUpperCase() == 'ACTIVO';
+    final color = activo ? _theme.success : Colors.grey;
+
+    return Container(
+      width: 24,
+      height: 24,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .14),
+        shape: BoxShape.circle,
+        border: Border.all(color: color.withValues(alpha: .35)),
+      ),
+      child: Icon(
+        activo ? Icons.check : Icons.pause,
+        size: 14,
+        color: color,
+      ),
+    );
+  }
+
   Widget _buildCompactList() {
     if (_loading) {
       return const Center(child: CircularProgressIndicator());
@@ -1012,68 +1082,129 @@ class _PacientesPageState extends State<PacientesPage> with FormController {
         separatorBuilder: (_, _) => const SizedBox(height: 12),
         itemBuilder: (context, index) {
           final paciente = _pacientes[index];
-          return Card(
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: () => _verDetalle(paciente),
-              child: Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    dense: true,
-                    leading: Icon(
-                      PhosphorIconsRegular.userCircle,
-                      color: _theme.primary,
-                    ),
-                    title: Text(
-                      paciente.nombreCompleto,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                    subtitle: Text(
-                      [
-                        if ((paciente.nroDocumento ?? '').trim().isNotEmpty)
-                          paciente.nroDocumento!.trim(),
-                        if ((paciente.telefono ?? '').trim().isNotEmpty)
-                          paciente.telefono!.trim(),
-                      ].join(' · '),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    trailing: TrayStatusBadge(
-                      status: paciente.estado,
-                      activeColor: _theme.success,
+          final datos = _datosPrioritariosPaciente(paciente);
+
+          return Column(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(18),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(18),
+                    onTap: () => _verDetalle(paciente),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: _theme.white.withValues(alpha: 0.72),
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: _theme.white.withValues(alpha: 0.55),
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(
+                                    PhosphorIconsRegular.userCircle,
+                                    color: _theme.primary,
+                                    size: 34,
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Expanded(
+                                    child: Text(
+                                      paciente.nombreCompleto,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(context).textTheme.titleMedium,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _estadoPacienteIcono(paciente.estado),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final usarDosColumnas = constraints.maxWidth >= 300;
+                                  if (usarDosColumnas) {
+                                    return Row(
+                                      children: [
+                                        for (var i = 0; i < datos.length; i++) ...[
+                                          Expanded(
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  _iconoDatoPaciente(datos[i].key),
+                                                  size: 14,
+                                                  color: _theme.primary,
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Expanded(
+                                                  child: Text(
+                                                    datos[i].value,
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: Theme.of(context).textTheme.bodySmall,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          if (i == 0) const SizedBox(width: 10),
+                                        ],
+                                      ],
+                                    );
+                                  }
+
+                                  return Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: datos
+                                        .map(
+                                          (dato) => Padding(
+                                            padding: const EdgeInsets.only(bottom: 4),
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  _iconoDatoPaciente(dato.key),
+                                                  size: 14,
+                                                  color: _theme.primary,
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Expanded(
+                                                  child: Text(
+                                                    dato.value,
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                    style: Theme.of(context).textTheme.bodySmall,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        )
+                                        .toList(),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      CopyableInfoPill(
-                        icon: Icons.wc_outlined,
-                        label: 'Género',
-                        value: _formatearGenero(paciente.genero),
-                      ),
-                      CopyableInfoPill(
-                        icon: Icons.cake_outlined,
-                        label: 'Edad',
-                        value: _edadPaciente(paciente.fechaNacimiento),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  if (_loadingMore && index == _pacientes.length - 1) ...[
-                    const SizedBox(height: 12),
-                    const Center(child: CircularProgressIndicator()),
-                  ],
-                ],
+                ),
               ),
-              ),
-            ),
+              if (_loadingMore && index == _pacientes.length - 1) ...[
+                const SizedBox(height: 12),
+                const Center(child: CircularProgressIndicator()),
+              ],
+            ],
           );
         },
       ),
