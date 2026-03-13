@@ -1385,6 +1385,84 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     );
   }
 
+  String _edadPersonal(String? fechaNacimiento) {
+    final value = _formatearFechaInicial(fechaNacimiento).trim();
+    if (value.isEmpty) return 'Sin edad';
+
+    DateTime? fecha;
+    if (value.contains('/')) {
+      fecha = _parseFechaNacimiento(value);
+    } else {
+      fecha = DateTime.tryParse(value);
+    }
+    if (fecha == null) return 'Sin edad';
+
+    final hoy = DateTime.now();
+    var edad = hoy.year - fecha.year;
+    final yaCumplio =
+        hoy.month > fecha.month ||
+        (hoy.month == fecha.month && hoy.day >= fecha.day);
+    if (!yaCumplio) edad--;
+    if (edad < 0) return 'Sin edad';
+    return '$edad años';
+  }
+
+  MapEntry<String, String> _datoPrincipalPersonal(PersonalSalud persona) {
+    final opciones = <MapEntry<String, String>>[
+      MapEntry('Celular', (persona.telefono ?? '').trim()),
+      MapEntry('Documento', (persona.nroDocumento ?? '').trim()),
+      MapEntry('Correo', (persona.correoElectronico ?? '').trim()),
+      MapEntry('Edad', _edadPersonal(persona.fechaNacimiento).trim()),
+      MapEntry('Género', _textoGenero((persona.genero ?? '').trim()).trim()),
+    ];
+
+    for (final dato in opciones) {
+      final valor = dato.value.trim();
+      if (valor.isNotEmpty &&
+          valor.toLowerCase() != 'sin edad' &&
+          valor.toLowerCase() != 'sin género') {
+        return dato;
+      }
+    }
+
+    return const MapEntry('Dato', 'Sin información');
+  }
+
+  IconData _iconoDatoPersonal(String label) {
+    switch (label) {
+      case 'Celular':
+        return Icons.phone_outlined;
+      case 'Documento':
+        return Icons.badge_outlined;
+      case 'Correo':
+        return Icons.mail_outline;
+      case 'Edad':
+        return Icons.cake_outlined;
+      case 'Género':
+        return Icons.wc_outlined;
+      default:
+        return Icons.info_outline;
+    }
+  }
+
+  Widget _buildEstadoIcono(bool estaActivo) {
+    final color = estaActivo ? Colors.green : Colors.grey;
+    return Container(
+      width: 24,
+      height: 24,
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: .14),
+        shape: BoxShape.circle,
+        border: Border.all(color: color.withValues(alpha: .35)),
+      ),
+      child: Icon(
+        estaActivo ? Icons.check : Icons.pause,
+        size: 14,
+        color: color.shade700,
+      ),
+    );
+  }
+
   Widget _buildOcupacionesCell(PersonalSalud personal) {
     if ((personal.ocupacion ?? "").trim().isEmpty) {
       return const Text('Sin ocupación');
@@ -1402,21 +1480,16 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
   }
 
   Widget _buildOcupacionesResumen(PersonalSalud personal) {
-    if ((personal.ocupacion ?? "").trim().isEmpty) {
-      return Text(
-        'Sin ocupación asignada',
-        style: Theme.of(context).textTheme.bodySmall,
-      );
-    }
-
-    final resumen = personal.ocupacion!.trim();
+    final resumen = (personal.ocupacion ?? '').trim();
+    final texto = resumen.isEmpty ? 'Sin ocupación asignada' : resumen;
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: _theme.primary.withValues(alpha: .08),
-        borderRadius: BorderRadius.circular(10),
+        color: _theme.primary.withValues(alpha: .07),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _theme.primary.withValues(alpha: .15)),
       ),
       child: Row(
         children: [
@@ -1424,7 +1497,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
           const SizedBox(width: 6),
           Expanded(
             child: Text(
-              resumen,
+              texto,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -1463,10 +1536,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
               separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final persona = _personal[index];
-                final detallePrincipal = [
-                  persona.nroDocumento ?? 'Sin documento',
-                  if ((persona.ocupacion ?? '').trim().isNotEmpty) persona.ocupacion!.trim(),
-                ].join(' · ');
+                final datoPrincipal = _datoPrincipalPersonal(persona);
+
                 return ClipRRect(
                   borderRadius: BorderRadius.circular(18),
                   child: Material(
@@ -1489,35 +1560,46 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                ListTile(
-                                  contentPadding: EdgeInsets.zero,
-                                  dense: true,
-                                  horizontalTitleGap: 10,
-                                  leading: _buildAvatar(persona, radius: 18),
-                                  title: Text(
-                                    persona.nombreCompleto,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(context).textTheme.titleMedium,
-                                  ),
-                                  subtitle: Text(
-                                    detallePrincipal,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  trailing: _buildEstadoChip(persona.estaActivo),
-                                ),
-                                Wrap(
-                                  spacing: 8,
-                                  runSpacing: 8,
+                                Row(
                                   children: [
-                                    if (persona.esSupervisor)
-                                      _buildTipoPersonalChip(
-                                        persona.esSupervisor,
+                                    _buildAvatar(persona, radius: 18),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Text(
+                                        persona.nombreCompleto,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: Theme.of(context).textTheme.titleMedium,
                                       ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    _buildEstadoIcono(persona.estaActivo),
                                   ],
                                 ),
-                                const SizedBox(height: 6),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      _iconoDatoPersonal(datoPrincipal.key),
+                                      size: 14,
+                                      color: _theme.primary,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        datoPrincipal.value,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: Theme.of(context).textTheme.bodySmall,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                if (persona.esSupervisor) ...[
+                                  _buildTipoPersonalChip(persona.esSupervisor),
+                                  const SizedBox(height: 8),
+                                ],
                                 _buildOcupacionesResumen(persona),
                               ],
                             ),
@@ -1529,7 +1611,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                 );
               },
             ),
-      );
+    );
   }
 
   Widget _buildLoadingMoreIndicator() {
