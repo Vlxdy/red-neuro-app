@@ -716,6 +716,7 @@ class _AgendaCitaCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ocupacionColor = colorOcupacion(cita);
+    final estadoColor = colorEstado(cita.estado);
     final horario = formatoHorarioCita(cita.fechaInicio, cita.fechaFin);
     final titulo = tituloCita(cita);
     final medico = nombreMedico(cita);
@@ -731,14 +732,14 @@ class _AgendaCitaCard extends StatelessWidget {
           color: theme.bgCard,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: ocupacionColor.withValues(alpha: 0.25),
+            color: estadoColor.withValues(alpha: 0.22),
             width: 1.2,
           ),
           boxShadow: [
             BoxShadow(
-              color: theme.black.withValues(alpha: theme.isLight ? 0.04 : 0.2),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
+              color: estadoColor.withValues(alpha: theme.isLight ? 0.12 : 0.2),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
@@ -759,7 +760,7 @@ class _AgendaCitaCard extends StatelessWidget {
                 ),
                 CitasEstadoBadge(
                   estado: cita.estado,
-                  color: colorEstado(cita.estado),
+                  color: estadoColor,
                 ),
               ],
             ),

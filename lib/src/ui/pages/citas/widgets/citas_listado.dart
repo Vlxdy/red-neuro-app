@@ -187,15 +187,15 @@ class CitasListado extends StatelessWidget {
             color: theme.bgCard,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: ocupacionColor.withValues(alpha: 0.25),
+              color: estadoColor.withValues(alpha: 0.22),
               width: 1.2,
             ),
             boxShadow: [
               BoxShadow(
-                color: theme.black.withValues(
-                  alpha: theme.isLight ? 0.04 : 0.2,
+                color: estadoColor.withValues(
+                  alpha: theme.isLight ? 0.12 : 0.2,
                 ),
-                blurRadius: 6,
+                blurRadius: 8,
                 offset: const Offset(0, 3),
               ),
             ],
