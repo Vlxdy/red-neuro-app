@@ -1627,6 +1627,359 @@
         ]
       }
     },
+    "/citas/mis-resumen": {
+      "get": {
+        "operationId": "CitasController_misResumen",
+        "parameters": [
+          {
+            "name": "desde",
+            "required": false,
+            "in": "query",
+            "description": "Fecha inicial desde donde consultar (ISO)",
+            "schema": {
+              "example": "2026-03-13T00:00:00Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "hasta",
+            "required": false,
+            "in": "query",
+            "description": "Fecha final del rango (ISO)",
+            "schema": {
+              "example": "2026-03-31T23:59:59Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "idLugar",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por lugar/institución",
+            "schema": {
+              "example": "2",
+              "type": "string"
+            }
+          },
+          {
+            "name": "scope",
+            "required": false,
+            "in": "query",
+            "description": "Alcance de consulta (admin puede usar all)",
+            "schema": {
+              "example": "mine",
+              "type": "string",
+              "enum": [
+                "mine",
+                "all"
+              ]
+            }
+          },
+          {
+            "name": "idPersonal",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por personal cuando scope=all",
+            "schema": {
+              "example": "42",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/MisResumenResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Obtiene el resumen operativo de citas desde hoy",
+        "tags": [
+          "Gestión de Citas"
+        ]
+      }
+    },
+    "/citas/mis-solicitadas": {
+      "get": {
+        "operationId": "CitasController_misSolicitadas",
+        "parameters": [
+          {
+            "name": "desde",
+            "required": false,
+            "in": "query",
+            "description": "Fecha inicial desde donde consultar (ISO)",
+            "schema": {
+              "example": "2026-03-13T00:00:00Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "hasta",
+            "required": false,
+            "in": "query",
+            "description": "Fecha final del rango (ISO)",
+            "schema": {
+              "example": "2026-03-31T23:59:59Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "idLugar",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por lugar/institución",
+            "schema": {
+              "example": "2",
+              "type": "string"
+            }
+          },
+          {
+            "name": "scope",
+            "required": false,
+            "in": "query",
+            "description": "Alcance de consulta (admin puede usar all)",
+            "schema": {
+              "example": "mine",
+              "type": "string",
+              "enum": [
+                "mine",
+                "all"
+              ]
+            }
+          },
+          {
+            "name": "idPersonal",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por personal cuando scope=all",
+            "schema": {
+              "example": "42",
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "Cursor en formato ISO|id",
+            "schema": {
+              "example": "2026-03-18T10:30:00Z|12345",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limite",
+            "required": false,
+            "in": "query",
+            "description": "Cantidad de resultados por página",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "ocultas",
+            "required": false,
+            "in": "query",
+            "description": "Si true, devuelve también citas ocultas por preferencia local",
+            "schema": {
+              "default": false,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/MisSolicitadasResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lista citas solicitadas con paginación por cursor",
+        "tags": [
+          "Gestión de Citas"
+        ]
+      }
+    },
+    "/citas/mis-timeline": {
+      "get": {
+        "operationId": "CitasController_misTimeline",
+        "parameters": [
+          {
+            "name": "desde",
+            "required": false,
+            "in": "query",
+            "description": "Fecha inicial desde donde consultar (ISO)",
+            "schema": {
+              "example": "2026-03-13T00:00:00Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "hasta",
+            "required": false,
+            "in": "query",
+            "description": "Fecha final del rango (ISO)",
+            "schema": {
+              "example": "2026-03-31T23:59:59Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "idLugar",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por lugar/institución",
+            "schema": {
+              "example": "2",
+              "type": "string"
+            }
+          },
+          {
+            "name": "scope",
+            "required": false,
+            "in": "query",
+            "description": "Alcance de consulta (admin puede usar all)",
+            "schema": {
+              "example": "mine",
+              "type": "string",
+              "enum": [
+                "mine",
+                "all"
+              ]
+            }
+          },
+          {
+            "name": "idPersonal",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por personal cuando scope=all",
+            "schema": {
+              "example": "42",
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursorFechaHora",
+            "required": false,
+            "in": "query",
+            "description": "Cursor temporal ISO para continuar el timeline",
+            "schema": {
+              "example": "2026-03-14T16:00:00Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursorId",
+            "required": false,
+            "in": "query",
+            "description": "Cursor de desempate por id",
+            "schema": {
+              "example": "98765",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limite",
+            "required": false,
+            "in": "query",
+            "description": "Cantidad de resultados por página",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 30,
+              "type": "number"
+            }
+          },
+          {
+            "name": "incluirSolicitadas",
+            "required": false,
+            "in": "query",
+            "description": "Incluye citas solicitadas en el timeline",
+            "schema": {
+              "default": false,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/MisTimelineResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lista timeline de citas agrupado por fecha y con cursor",
+        "tags": [
+          "Gestión de Citas"
+        ]
+      }
+    },
     "/citas": {
       "get": {
         "operationId": "CitasController_listar",
@@ -6072,6 +6425,32 @@
           "id"
         ]
       },
+      "MisResumenResponseDto": {
+        "type": "object",
+        "properties": {
+          "solicitadasPendientesConfirmacion": {
+            "type": "number",
+            "example": 12
+          },
+          "proximasConfirmadas": {
+            "type": "number",
+            "example": 7
+          },
+          "totalDesdeHoy": {
+            "type": "number",
+            "example": 19
+          },
+          "primeraFechaConCitas": {
+            "type": "object",
+            "example": "2026-03-13"
+          }
+        },
+        "required": [
+          "solicitadasPendientesConfirmacion",
+          "proximasConfirmadas",
+          "totalDesdeHoy"
+        ]
+      },
       "PersonalResponseDto": {
         "type": "object",
         "properties": {
@@ -6587,6 +6966,89 @@
           "estado",
           "idPersonal",
           "personal"
+        ]
+      },
+      "MisSolicitadasResponseDto": {
+        "type": "object",
+        "properties": {
+          "nextCursor": {
+            "type": "string",
+            "example": "2026-03-18T10:30:00Z|12345"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "example": true
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CitaResponseDto"
+            }
+          },
+          "totalAprox": {
+            "type": "number",
+            "example": 120
+          }
+        },
+        "required": [
+          "hasMore",
+          "items",
+          "totalAprox"
+        ]
+      },
+      "GrupoCitasPorFechaDto": {
+        "type": "object",
+        "properties": {
+          "fecha": {
+            "type": "string",
+            "example": "2026-03-13"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CitaResponseDto"
+            }
+          }
+        },
+        "required": [
+          "fecha",
+          "items"
+        ]
+      },
+      "TimelineCursorDto": {
+        "type": "object",
+        "properties": {
+          "cursorFechaHora": {
+            "type": "string",
+            "example": "2026-03-14T16:00:00Z"
+          },
+          "cursorId": {
+            "type": "string",
+            "example": "98765"
+          }
+        }
+      },
+      "MisTimelineResponseDto": {
+        "type": "object",
+        "properties": {
+          "grupos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GrupoCitasPorFechaDto"
+            }
+          },
+          "nextCursor": {
+            "$ref": "#/components/schemas/TimelineCursorDto"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "grupos",
+          "nextCursor",
+          "hasMore"
         ]
       },
       "CantidadCitasPorDiaResponseDto": {
