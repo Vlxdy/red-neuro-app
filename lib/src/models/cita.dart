@@ -6,10 +6,18 @@ class CitaMedica {
   final String estado;
   final String idPersonal;
   final String? personalNombre;
+  final String? personalNroDocumento;
+  final String? personalTelefono;
+  final String? personalCorreoElectronico;
+  final String? personalGenero;
+  final String? personalFechaNacimiento;
+  final String? personalUrlFoto;
+  final String? personalOcupacion;
   final String? pacienteId;
   final String? pacienteNombre;
   final String? pacienteNroDocumento;
   final String? pacienteTelefono;
+  final String? pacienteCorreoElectronico;
   final String? pacienteGenero;
   final String? pacienteFechaNacimiento;
   final String? lugarId;
@@ -48,10 +56,18 @@ class CitaMedica {
     required this.estado,
     required this.idPersonal,
     required this.personalNombre,
+    required this.personalNroDocumento,
+    required this.personalTelefono,
+    required this.personalCorreoElectronico,
+    required this.personalGenero,
+    required this.personalFechaNacimiento,
+    required this.personalUrlFoto,
+    required this.personalOcupacion,
     required this.pacienteId,
     required this.pacienteNombre,
     required this.pacienteNroDocumento,
     required this.pacienteTelefono,
+    required this.pacienteCorreoElectronico,
     required this.pacienteGenero,
     required this.pacienteFechaNacimiento,
     required this.lugarId,
@@ -75,6 +91,9 @@ class CitaMedica {
     final lugarRaw = json['lugar'];
     final servicioRaw = json['servicio'] ?? json['estudio'];
     final personalRaw = json['personal'] ?? json['medico'];
+    final personalPersonaRaw = personalRaw is Map<String, dynamic>
+        ? personalRaw['persona']
+        : null;
     final pacienteRaw = json['paciente'];
     final personalNombre = personalRaw is Map<String, dynamic>
         ? [
@@ -96,6 +115,19 @@ class CitaMedica {
             )
         : null;
 
+    String? _personalField(String key) {
+      if (personalRaw is Map<String, dynamic>) {
+        final value = personalRaw[key] ??
+            (personalPersonaRaw is Map<String, dynamic>
+                ? personalPersonaRaw[key]
+                : null);
+        if (value == null) return null;
+        final text = value.toString().trim();
+        return text.isEmpty ? null : text;
+      }
+      return null;
+    }
+
     return CitaMedica(
       id: (json['id'] ?? json['citaId'] ?? '').toString(),
       detalle: (json['detalle'] ?? '').toString(),
@@ -105,6 +137,26 @@ class CitaMedica {
       idPersonal: (json['idPersonal'] ?? json['medicoId'] ?? json['idMedico'] ?? '').toString(),
       personalNombre:
           (json['personalNombre'] ?? json['medicoNombre'] ?? json['nombreMedico'] ?? personalNombre)
+              ?.toString(),
+      personalNroDocumento:
+          (json['personalNroDocumento'] ?? _personalField('nroDocumento'))
+              ?.toString(),
+      personalTelefono:
+          (json['personalTelefono'] ?? _personalField('telefono'))?.toString(),
+      personalCorreoElectronico:
+          (json['personalCorreoElectronico'] ??
+                  json['personalCorreo'] ??
+                  _personalField('correoElectronico'))
+              ?.toString(),
+      personalGenero:
+          (json['personalGenero'] ?? _personalField('genero'))?.toString(),
+      personalFechaNacimiento:
+          (json['personalFechaNacimiento'] ?? _personalField('fechaNacimiento'))
+              ?.toString(),
+      personalUrlFoto:
+          (json['personalUrlFoto'] ?? _personalField('urlFoto'))?.toString(),
+      personalOcupacion:
+          (json['personalOcupacion'] ?? _personalField('ocupacion'))
               ?.toString(),
       pacienteId: (pacienteId?.isNotEmpty ?? false)
           ? pacienteId
@@ -120,6 +172,9 @@ class CitaMedica {
       pacienteTelefono: pacienteRaw is Map<String, dynamic>
           ? pacienteRaw['telefono']?.toString()
           : json['pacienteTelefono']?.toString(),
+      pacienteCorreoElectronico: pacienteRaw is Map<String, dynamic>
+          ? (pacienteRaw['correoElectronico'] ?? pacienteRaw['correo'])?.toString()
+          : (json['pacienteCorreoElectronico'] ?? json['pacienteCorreo'])?.toString(),
       pacienteGenero: pacienteRaw is Map<String, dynamic>
           ? pacienteRaw['genero']?.toString()
           : json['pacienteGenero']?.toString(),
@@ -175,10 +230,18 @@ class CitaMedica {
     String? estado,
     String? idPersonal,
     String? personalNombre,
+    String? personalNroDocumento,
+    String? personalTelefono,
+    String? personalCorreoElectronico,
+    String? personalGenero,
+    String? personalFechaNacimiento,
+    String? personalUrlFoto,
+    String? personalOcupacion,
     String? pacienteId,
     String? pacienteNombre,
     String? pacienteNroDocumento,
     String? pacienteTelefono,
+    String? pacienteCorreoElectronico,
     String? pacienteGenero,
     String? pacienteFechaNacimiento,
     String? lugarId,
@@ -202,10 +265,21 @@ class CitaMedica {
       estado: estado ?? this.estado,
       idPersonal: idPersonal ?? this.idPersonal,
       personalNombre: personalNombre ?? this.personalNombre,
+      personalNroDocumento: personalNroDocumento ?? this.personalNroDocumento,
+      personalTelefono: personalTelefono ?? this.personalTelefono,
+      personalCorreoElectronico:
+          personalCorreoElectronico ?? this.personalCorreoElectronico,
+      personalGenero: personalGenero ?? this.personalGenero,
+      personalFechaNacimiento:
+          personalFechaNacimiento ?? this.personalFechaNacimiento,
+      personalUrlFoto: personalUrlFoto ?? this.personalUrlFoto,
+      personalOcupacion: personalOcupacion ?? this.personalOcupacion,
       pacienteId: pacienteId ?? this.pacienteId,
       pacienteNombre: pacienteNombre ?? this.pacienteNombre,
       pacienteNroDocumento: pacienteNroDocumento ?? this.pacienteNroDocumento,
       pacienteTelefono: pacienteTelefono ?? this.pacienteTelefono,
+      pacienteCorreoElectronico:
+          pacienteCorreoElectronico ?? this.pacienteCorreoElectronico,
       pacienteGenero: pacienteGenero ?? this.pacienteGenero,
       pacienteFechaNacimiento:
           pacienteFechaNacimiento ?? this.pacienteFechaNacimiento,

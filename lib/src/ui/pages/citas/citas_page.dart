@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:red_neuro_app/src/config/service_config.dart';
@@ -1096,6 +1097,27 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
 
   String _nombrePaciente(CitaMedica cita) {
     return (cita.pacienteNombre ?? '').trim();
+  }
+
+
+  String _resolveAvatarUrl(String? urlFoto) {
+    final trimmed = (urlFoto ?? '').trim();
+    if (trimmed.isEmpty) return '';
+    if (trimmed.startsWith('http')) return trimmed;
+    return '${Constantes.apiUrl}$trimmed';
+  }
+
+  String _inicialesPersonal(CitaMedica cita) {
+    final partes = [
+      cita.personalNombre ?? '',
+    ].join(' ').trim().split(RegExp(r'\s+')).where((p) => p.trim().isNotEmpty).toList();
+    if (partes.isEmpty) return 'PS';
+    return partes.take(2).map((p) => p[0]).join().toUpperCase();
+  }
+
+
+  Future<void> _copiarDato(String valor) async {
+    await Clipboard.setData(ClipboardData(text: valor));
   }
 
   String _formatearGenero(String? genero) {

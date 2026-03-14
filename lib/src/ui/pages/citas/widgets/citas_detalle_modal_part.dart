@@ -5,6 +5,7 @@ extension _CitasPageDetalleModalPart on _CitasPageState {
     final pacienteNombre = _nombrePaciente(cita);
     final pacienteDocumento = _valorDetalle(cita.pacienteNroDocumento);
     final pacienteTelefono = _valorDetalle(cita.pacienteTelefono);
+    final pacienteCorreo = _valorDetalle(cita.pacienteCorreoElectronico);
     final pacienteGenero = _valorDetalle(_formatearGenero(cita.pacienteGenero));
     final pacienteFechaNacimiento = _valorDetalle(
       _formatearFechaPaciente(cita.pacienteFechaNacimiento),
@@ -31,6 +32,11 @@ extension _CitasPageDetalleModalPart on _CitasPageState {
         : lugarNombre;
     final ocupacionColor = _colorOcupacion(cita);
     final personalAsignado = _nombreMedico(cita);
+    final personalDocumento = _valorDetalle(cita.personalNroDocumento);
+    final personalTelefono = _valorDetalle(cita.personalTelefono);
+    final personalCorreo = _valorDetalle(cita.personalCorreoElectronico);
+    final personalOcupacion = _valorDetalle(cita.personalOcupacion);
+    final personalAvatarUrl = _resolveAvatarUrl(cita.personalUrlFoto);
 
     final tieneDatosServicio =
         servicioNombre != null ||
@@ -45,19 +51,31 @@ extension _CitasPageDetalleModalPart on _CitasPageState {
         pacienteNombre.isNotEmpty ||
         pacienteDocumento != null ||
         pacienteTelefono != null ||
+        pacienteCorreo != null ||
         pacienteGenero != null ||
         pacienteFechaNacimiento != null ||
         pacienteEdad != null;
-    final tienePersonalAsignado = personalAsignado.isNotEmpty;
+    final detallesPersonalDisponibles =
+        <({IconData icon, String label, String value})>[
+          if (personalDocumento != null)
+            (
+              icon: PhosphorIconsRegular.identificationCard,
+              label: 'Documento',
+              value: personalDocumento,
+            ),
+          if (personalOcupacion != null)
+            (
+              icon: PhosphorIconsRegular.briefcase,
+              label: 'Ocupación',
+              value: personalOcupacion,
+            ),
+        ];
+
+    final tienePersonalAsignado =
+        personalAsignado.isNotEmpty || detallesPersonalDisponibles.isNotEmpty;
 
     final detallesPacienteDisponibles =
         <({IconData icon, String label, String value})>[
-          if (pacienteTelefono != null)
-            (
-              icon: PhosphorIconsRegular.phone,
-              label: 'Teléfono',
-              value: pacienteTelefono,
-            ),
           if (pacienteDocumento != null)
             (
               icon: PhosphorIconsRegular.identificationCard,
@@ -89,6 +107,10 @@ extension _CitasPageDetalleModalPart on _CitasPageState {
     final detallesPacienteExtra = detallesPacienteDisponibles.length > 1
         ? detallesPacienteDisponibles.sublist(1)
         : const <({IconData icon, String label, String value})>[];
+    final tieneExtrasPaciente =
+        detallesPacienteExtra.isNotEmpty ||
+        pacienteTelefono != null ||
+        pacienteCorreo != null;
     var mostrarMasPaciente = false;
     final detallesServicioExtra =
         <({IconData icon, String label, String value})>[
@@ -111,7 +133,13 @@ extension _CitasPageDetalleModalPart on _CitasPageState {
               value: cita.servicioDescripcion!.trim(),
             ),
         ];
+    final tieneExtrasPersonal =
+        detallesPersonalDisponibles.isNotEmpty ||
+        personalTelefono != null ||
+        personalCorreo != null;
     var mostrarMasServicio = false;
+    var mostrarDetallesPersonal = false;
+    String? copiedField;
 
     final acciones = <_CitaDetalleAccion>[
       if (cita.estado == 'SOLICITADA' && _puedeGestionarSolicitada(cita))
@@ -421,9 +449,7 @@ extension _CitasPageDetalleModalPart on _CitasPageState {
                                   children: [
                                     Padding(
                                       padding: EdgeInsets.only(
-                                        right: detallesPacienteExtra.isNotEmpty
-                                            ? 40
-                                            : 0,
+                                        right: tieneExtrasPaciente ? 40 : 0,
                                       ),
                                       child: Column(
                                         crossAxisAlignment:
@@ -462,10 +488,46 @@ extension _CitasPageDetalleModalPart on _CitasPageState {
                                                   )
                                                   .toList(),
                                             ),
+                                          if (mostrarMasPaciente &&
+                                              pacienteTelefono != null)
+                                            _buildCopyableDetalleRow(
+                                              icon: PhosphorIconsRegular.phone,
+                                              label: 'Teléfono',
+                                              value: pacienteTelefono,
+                                              copied: copiedField ==
+                                                  'pacienteTelefono',
+                                              onTap: () async {
+                                                await _copiarDato(
+                                                  pacienteTelefono,
+                                                );
+                                                if (!mounted) return;
+                                                setStateSheet(
+                                                  () => copiedField =
+                                                      'pacienteTelefono',
+                                                );
+                                              },
+                                            ),
+                                          if (mostrarMasPaciente &&
+                                              pacienteCorreo != null)
+                                            _buildCopyableDetalleRow(
+                                              icon: PhosphorIconsRegular.envelope,
+                                              label: 'Correo',
+                                              value: pacienteCorreo,
+                                              copied:
+                                                  copiedField == 'pacienteCorreo',
+                                              onTap: () async {
+                                                await _copiarDato(pacienteCorreo);
+                                                if (!mounted) return;
+                                                setStateSheet(
+                                                  () => copiedField =
+                                                      'pacienteCorreo',
+                                                );
+                                              },
+                                            ),
                                         ],
                                       ),
                                     ),
-                                    if (detallesPacienteExtra.isNotEmpty)
+                                    if (tieneExtrasPaciente)
                                       Positioned(
                                         top: 0,
                                         right: 0,
@@ -502,12 +564,138 @@ extension _CitasPageDetalleModalPart on _CitasPageState {
                               title: '',
                               theme: _theme,
                               children: [
-                                CitasDetalleRow(
-                                  icon: PhosphorIconsRegular.stethoscope,
-                                  label: 'Personal asignado',
-                                  value: personalAsignado,
-                                  theme: _theme,
+                                Stack(
+                                  children: [
+                                    Padding(
+                                      padding: EdgeInsets.only(
+                                        right: tieneExtrasPersonal ? 40 : 0,
+                                      ),
+                                      child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          CircleAvatar(
+                                            radius: 20,
+                                            backgroundColor: _theme.primary20,
+                                            child: personalAvatarUrl.isEmpty
+                                                ? Text(
+                                                    _inicialesPersonal(cita),
+                                                    style: TextStyle(
+                                                      color: _theme.primary,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                  )
+                                                : ClipOval(
+                                                    child: Image.network(
+                                                      personalAvatarUrl,
+                                                      width: 40,
+                                                      height: 40,
+                                                      fit: BoxFit.cover,
+                                                      errorBuilder: (_, _, _) =>
+                                                          Text(
+                                                            _inicialesPersonal(
+                                                              cita,
+                                                            ),
+                                                            style: TextStyle(
+                                                              color:
+                                                                  _theme.primary,
+                                                              fontWeight:
+                                                                  FontWeight.w600,
+                                                            ),
+                                                          ),
+                                                    ),
+                                                  ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Expanded(
+                                            child: CitasDetalleRow(
+                                              icon: PhosphorIconsRegular
+                                                  .stethoscope,
+                                              label: 'Personal asignado',
+                                              value: personalAsignado,
+                                              theme: _theme,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    if (tieneExtrasPersonal)
+                                      Positioned(
+                                        top: 0,
+                                        right: 0,
+                                        child: IconButton(
+                                          tooltip: mostrarDetallesPersonal
+                                              ? 'Ver menos personal'
+                                              : 'Ver más personal',
+                                          visualDensity: VisualDensity.compact,
+                                          constraints: const BoxConstraints(
+                                            minWidth: 32,
+                                            minHeight: 32,
+                                          ),
+                                          padding: EdgeInsets.zero,
+                                          icon: Icon(
+                                            mostrarDetallesPersonal
+                                                ? Icons.expand_less_rounded
+                                                : Icons.expand_more_rounded,
+                                            size: 20,
+                                          ),
+                                          onPressed: () {
+                                            setStateSheet(
+                                              () => mostrarDetallesPersonal =
+                                                  !mostrarDetallesPersonal,
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                  ],
                                 ),
+                                if (mostrarDetallesPersonal &&
+                                    detallesPersonalDisponibles.isNotEmpty)
+                                  CitasDetalleGrid(
+                                    minItemWidth: 170,
+                                    columns: 2,
+                                    children: detallesPersonalDisponibles
+                                        .map(
+                                          (item) => CitasDetalleRow(
+                                            icon: item.icon,
+                                            label: item.label,
+                                            value: item.value,
+                                            theme: _theme,
+                                          ),
+                                        )
+                                        .toList(),
+                                  ),
+                                if (mostrarDetallesPersonal &&
+                                    personalTelefono != null)
+                                  _buildCopyableDetalleRow(
+                                    icon: PhosphorIconsRegular.phone,
+                                    label: 'Teléfono',
+                                    value: personalTelefono,
+                                    copied: copiedField == 'personalTelefono',
+                                    onTap: () async {
+                                      await _copiarDato(personalTelefono);
+                                      if (!mounted) return;
+                                      setStateSheet(
+                                        () => copiedField = 'personalTelefono',
+                                      );
+                                    },
+                                  ),
+                                if (mostrarDetallesPersonal &&
+                                    personalCorreo != null)
+                                  _buildCopyableDetalleRow(
+                                    icon: PhosphorIconsRegular.envelope,
+                                    label: 'Correo',
+                                    value: personalCorreo,
+                                    copied: copiedField == 'personalCorreo',
+                                    onTap: () async {
+                                      await _copiarDato(personalCorreo);
+                                      if (!mounted) return;
+                                      setStateSheet(
+                                        () => copiedField = 'personalCorreo',
+                                      );
+                                    },
+                                  ),
                               ],
                             ),
                           if (acciones.isNotEmpty) ...[
@@ -575,5 +763,52 @@ extension _CitasPageDetalleModalPart on _CitasPageState {
     );
   }
 
+  Widget _buildCopyableDetalleRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    required bool copied,
+    required Future<void> Function() onTap,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(icon, size: 18, color: _theme.grey),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            color: _theme.grey,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(value, style: Theme.of(context).textTheme.bodyMedium),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                copied ? Icons.check_rounded : Icons.copy_rounded,
+                size: 16,
+                color: _theme.primary,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
 }
