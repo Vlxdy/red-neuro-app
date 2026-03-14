@@ -97,6 +97,14 @@ class Usuario extends Persona {
           .toList();
     }
 
+    // Fallback: si no vino el rol activo plano, tomar el primero de la lista.
+    if (usuario.roles.isNotEmpty) {
+      final Rol primaryRole = usuario.roles.first;
+      usuario.idUsuarioRol ??= primaryRole.idUsuarioRol;
+      usuario.idRol ??= primaryRole.idRol;
+      usuario.rol ??= primaryRole.rol;
+    }
+
     final rawRol = json['rol']?.toString().toUpperCase();
     final esSupervisorValue = json['esSupervisor'] ?? json['es_supervisor'];
     final rolEsSupervisor =

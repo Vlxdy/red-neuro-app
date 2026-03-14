@@ -20,11 +20,11 @@ class Rol {
   });
 
   factory Rol.fromJson(Map<String, dynamic> json) => Rol(
-    idRol: json['idRol'] ?? '',
-    idUsuarioRol: json['idUsuarioRol'] ?? '',
-    rol: json['rol'] ?? '',
-    nombre: json['nombre'] ?? '',
-    descripcion: json['descripcion'] ?? '',
+    idRol: json['idRol']?.toString() ?? '',
+    idUsuarioRol: json['idUsuarioRol']?.toString() ?? '',
+    rol: json['rol']?.toString() ?? '',
+    nombre: json['nombre']?.toString() ?? '',
+    descripcion: json['descripcion']?.toString() ?? '',
     esSupervisor: json['esSupervisor'] == true || json['es_supervisor'] == true,
     modulos:
         (json['modulos'] as List<dynamic>?)
