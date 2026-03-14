@@ -62,18 +62,24 @@ class Auth {
   bool _fcmInitialized = false;
 
   Future<void> login(Map<String, dynamic> json) async {
-    final user = Usuario.fromJson(json);
+    final payload = _resolveLoginPayload(json);
+    final user = Usuario.fromJson(payload);
     final String token =
-        json[Keys.accessToken] ?? json['accessToken'] ?? json['token'] ?? '';
+        (payload[Keys.accessToken] ??
+                payload['accessToken'] ??
+                payload['token'] ??
+                '')
+            .toString();
     final String refreshToken =
-        json[Keys.refreshToken] ?? json['refreshToken'] ?? '';
+        (payload[Keys.refreshToken] ?? payload['refreshToken'] ?? '').toString();
 
     if (token.isNotEmpty) {
+      final normalizedToken = token.replaceAll('"', '');
       await _preferencesService.setStringSecure(
         Keys.accessToken,
-        jsonEncode(token.replaceAll('"', '')),
+        jsonEncode(normalizedToken),
       );
-      _token = token;
+      _token = normalizedToken;
     }
 
     await _preferencesService.setString(
@@ -86,17 +92,24 @@ class Auth {
     Logger.sesion(_user.toJson().toString());
 
     if (refreshToken.isNotEmpty) {
+      final normalizedRefreshToken = refreshToken.replaceAll('"', '');
       await _preferencesService.setStringSecure(
         Keys.refreshToken,
-        jsonEncode(refreshToken.replaceAll('"', '')),
+        jsonEncode(normalizedRefreshToken),
       );
-      _refreshToken = refreshToken;
+      _refreshToken = normalizedRefreshToken;
     }
 
     _store.isLogged = true;
 
     // 🔹 Registra el token FCM una vez autenticado
     // await _registrarTokenFCM();
+  }
+
+  Map<String, dynamic> _resolveLoginPayload(Map<String, dynamic> rawJson) {
+    final nestedDatos = rawJson['datos'];
+    if (nestedDatos is Map<String, dynamic>) return nestedDatos;
+    return rawJson;
   }
 
   Future<void> updateUser(Usuario user) async {
