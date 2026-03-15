@@ -10,8 +10,6 @@ import 'package:red_neuro_app/src/constants/constants.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/extensions/colores_extension.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
-import 'package:red_neuro_app/src/models/estudio.dart';
-import 'package:red_neuro_app/src/models/historial_cita.dart';
 import 'package:red_neuro_app/src/models/lugar.dart';
 import 'package:red_neuro_app/src/models/paciente.dart';
 import 'package:red_neuro_app/src/models/personal_medico.dart';
@@ -22,6 +20,7 @@ import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_service.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/citas_utils.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_active_filters.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_agenda.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_badges.dart';
@@ -32,13 +31,13 @@ import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_autocomplete_selector_field.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/fecha_selector.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_confirmacion_dialog.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_formulario_modal_widget.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_historial_modal_widget.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_modo_mis_citas_banner.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
 part 'widgets/citas_filtros_modal_part.dart';
 part 'widgets/citas_medico_selector_modal_part.dart';
-part 'widgets/citas_formulario_modal_part.dart';
-part 'widgets/citas_historial_modal_part.dart';
 part 'widgets/citas_detalle_modal_part.dart';
 
 final GlobalKey<ScaffoldMessengerState> citasMessenger =
@@ -1018,7 +1017,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
                             isLoading: _agendaLoading,
                             isCalendarLoading: _agendaCalendarLoading,
                             scrollController: _agendaScrollController,
-                            colorEstado: _colorEstado,
+                            colorEstado: (estado) => CitasUtils.colorEstado(estado, _theme),
                             formatoHoraAgenda: _formatoHoraAgenda,
                             formatoHorarioCita: _formatoHorarioCita,
                             tituloCita: _tituloCita,
@@ -1026,7 +1025,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
                             nombreMedico: _nombreMedico,
                             iconoTipoCita: _iconoTipoCita,
                             onTapCita: (cita) =>
-                                () => _abrirCitaSegunEstado(cita),
+                                _abrirCitaSegunEstado(cita),
                             onTapHora: (hour) {
                               final fechaBase = DateTime(
                                 _agendaDay.year,
@@ -1179,10 +1178,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     return PhosphorIconsRegular.calendarCheck;
   }
 
-  bool _puedeEditarCita(CitaMedica cita) {
-    final estado = cita.estado;
-    return estado == 'BORRADOR' || estado == 'RECHAZADA';
-  }
+  bool _puedeEditarCita(CitaMedica cita) => CitasUtils.puedeEditarCita(cita);
 
   Future<bool> _confirmarAccionSimple({
     required String titulo,
@@ -1459,7 +1455,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   }
 
   Future<bool> _rechazarCitaSolicitadaConConfirmacion(CitaMedica cita) async {
-    if (!_puedeGestionarSolicitada(cita)) return false;
+    if (!CitasUtils.puedeGestionarSolicitada(cita, Auth.instance.profile)) return false;
     final resultado = await _solicitarMotivoRechazoYEnviar(cita);
     if (resultado != true) {
       if (resultado == false && mounted) {
@@ -1476,7 +1472,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   }
 
   Future<bool> _confirmarCitaSolicitadaConOpciones(CitaMedica cita) async {
-    if (!_puedeGestionarSolicitada(cita)) return false;
+    if (!CitasUtils.puedeGestionarSolicitada(cita, Auth.instance.profile)) return false;
 
     final detalleController = TextEditingController(text: cita.detalle);
     DateTime? fechaSeleccionada = cita.fechaInicio;
@@ -1556,11 +1552,19 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   }
 
   Future<void> _abrirCitaSegunEstado(CitaMedica cita) async {
-    if (cita.estado == 'BORRADOR' || cita.estado == 'RECHAZADA') {
-      _abrirFormulario(cita: cita);
-      return;
+    final destino = CitasUtils.resolverDestinoModalCita(
+      cita: cita,
+      perfil: Auth.instance.profile,
+    );
+
+    switch (destino) {
+      case CitasModalDestino.formulario:
+        await _abrirFormulario(cita: cita);
+        return;
+      case CitasModalDestino.detalle:
+        await _mostrarDetalleCita(cita);
+        return;
     }
-    await _mostrarDetalleCita(cita);
   }
 
   String? _valorDetalle(String? value) {
@@ -1569,6 +1573,68 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     return normalized;
   }
 }
+
+
+extension _CitasPageFormularioModalPart on _CitasPageState {
+  Future<void> _abrirFormulario({CitaMedica? cita, DateTime? fechaBase}) async {
+    await abrirCitasFormularioModal(
+      context: context,
+      theme: _theme,
+      service: _service,
+      dateFormat: _dateFormat,
+      timeFormat: _timeFormat,
+      messengerKey: citasMessenger,
+      selectedDay: _selectedDay,
+      currentTabIndex: _currentTabIndex,
+      resolveDefaultStartTime: _resolveDefaultStartTime,
+      validarRequerido: _validarRequerido,
+      calcularEdadPaciente: _calcularEdadPaciente,
+      formatearFechaPaciente: _formatearFechaPaciente,
+      formatearGenero: _formatearGenero,
+      puedeGestionarSolicitada: (citaItem) =>
+          CitasUtils.puedeGestionarSolicitada(citaItem, Auth.instance.profile),
+      colorEstado: (estado) => CitasUtils.colorEstado(estado, _theme),
+      formatearTipoCita: CitasUtils.formatearTipoCita,
+      confirmarAccionCita: _confirmarAccionCita,
+      confirmarAccionSimple: _confirmarAccionSimple,
+      solicitarMotivoRechazo: _solicitarMotivoRechazo,
+      handleResponseError: (response, fallback) =>
+          _handleResponseError(response, fallback),
+      cargarCitasCalendario: _cargarCitasCalendario,
+      cargarCitasListado: _cargarCitasListado,
+      mostrarHistorialCita: _mostrarHistorialCita,
+      cita: cita,
+      fechaBase: fechaBase,
+    );
+  }
+
+
+
+}
+
+extension _CitasPageHistorialModalPart on _CitasPageState {
+  Future<void> _mostrarHistorialCita(CitaMedica cita) async {
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return CitasHistorialModalDialog(
+          cita: cita,
+          service: _service,
+          theme: _theme,
+          dateFormat: _dateFormat,
+          inicioDia: CitasUtils.inicioDia,
+          finDia: CitasUtils.finDia,
+          formatoFechaHoraHistorial: (fecha) =>
+              CitasUtils.formatoFechaHoraHistorial(fecha, _dateTimeFormat),
+          tituloHistorial: CitasUtils.tituloHistorial,
+          formatearDetalleCambio: (cambio) =>
+              CitasUtils.formatearDetalleCambio(cambio, _dateTimeFormat),
+        );
+      },
+    );
+  }
+}
+
 
 class _CitasSocketClient {
   io.Socket? _socket;
