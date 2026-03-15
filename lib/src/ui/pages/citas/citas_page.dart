@@ -26,6 +26,7 @@ import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_active_filters.da
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_agenda.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_badges.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_detalle_widgets.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_detalle_modal.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_filters_fields.dart';
 import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_autocomplete_selector_field.dart';
@@ -1567,24 +1568,6 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     if (normalized == null || normalized.isEmpty) return null;
     return normalized;
   }
-}
-
-class _CitaDetalleAccion {
-  final String label;
-  final IconData icon;
-  final bool isPrimary;
-  final bool isDestructive;
-  final bool cierraModal;
-  final Future<bool> Function() onTap;
-
-  const _CitaDetalleAccion({
-    required this.label,
-    required this.icon,
-    required this.onTap,
-    this.isPrimary = false,
-    this.isDestructive = false,
-    this.cierraModal = true,
-  });
 }
 
 class _CitasSocketClient {
