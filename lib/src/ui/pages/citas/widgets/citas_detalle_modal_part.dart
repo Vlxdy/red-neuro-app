@@ -13,9 +13,6 @@ extension _CitasPageDetalleModalPart on _CitasPageState {
     final pacienteEdad = _valorDetalle(
       _calcularEdadPaciente(cita.pacienteFechaNacimiento),
     );
-    final ocupacionNombre = _valorDetalle(
-      cita.ocupacionNombre ?? cita.ocupacionId,
-    );
     final etiquetaPrestacion = _etiquetaPrestacion(
       cita.servicioTipo ?? cita.tipoCita,
     );
@@ -30,7 +27,6 @@ extension _CitasPageDetalleModalPart on _CitasPageState {
     final lugarDisplay = (lugarSigla != null && lugarNombre != null)
         ? '${lugarSigla.toUpperCase()} • $lugarNombre'
         : lugarNombre;
-    final ocupacionColor = _colorOcupacion(cita);
     final personalAsignado = _nombreMedico(cita);
     final personalDocumento = _valorDetalle(cita.personalNroDocumento);
     final personalTelefono = _valorDetalle(cita.personalTelefono);
@@ -39,9 +35,7 @@ extension _CitasPageDetalleModalPart on _CitasPageState {
     final personalAvatarUrl = _resolveAvatarUrl(cita.personalUrlFoto);
 
     final tieneDatosServicio =
-        servicioNombre != null ||
-        ocupacionNombre != null ||
-        (servicioDuracion ?? 0) > 0;
+        servicioNombre != null || (servicioDuracion ?? 0) > 0;
     final tieneDatosLugar =
         lugarNombre != null ||
         lugarSigla != null ||
@@ -114,12 +108,6 @@ extension _CitasPageDetalleModalPart on _CitasPageState {
     var mostrarMasPaciente = false;
     final detallesServicioExtra =
         <({IconData icon, String label, String value})>[
-          if (ocupacionNombre != null)
-            (
-              icon: PhosphorIconsRegular.stethoscope,
-              label: 'Ocupacion',
-              value: ocupacionNombre,
-            ),
           if ((servicioDuracion ?? 0) > 0)
             (
               icon: PhosphorIconsRegular.clock,
@@ -281,11 +269,6 @@ extension _CitasPageDetalleModalPart on _CitasPageState {
                             estado: cita.estado,
                             color: _colorEstado(cita.estado),
                           ),
-                          if (ocupacionNombre?.isNotEmpty ?? false)
-                            CitasOcupacionTag(
-                              label: ocupacionNombre!,
-                              color: ocupacionColor,
-                            ),
                         ],
                       ),
                     ),
@@ -494,7 +477,8 @@ extension _CitasPageDetalleModalPart on _CitasPageState {
                                               icon: PhosphorIconsRegular.phone,
                                               label: 'Teléfono',
                                               value: pacienteTelefono,
-                                              copied: copiedField ==
+                                              copied:
+                                                  copiedField ==
                                                   'pacienteTelefono',
                                               onTap: () async {
                                                 await _copiarDato(
@@ -510,13 +494,17 @@ extension _CitasPageDetalleModalPart on _CitasPageState {
                                           if (mostrarMasPaciente &&
                                               pacienteCorreo != null)
                                             _buildCopyableDetalleRow(
-                                              icon: PhosphorIconsRegular.envelope,
+                                              icon:
+                                                  PhosphorIconsRegular.envelope,
                                               label: 'Correo',
                                               value: pacienteCorreo,
                                               copied:
-                                                  copiedField == 'pacienteCorreo',
+                                                  copiedField ==
+                                                  'pacienteCorreo',
                                               onTap: () async {
-                                                await _copiarDato(pacienteCorreo);
+                                                await _copiarDato(
+                                                  pacienteCorreo,
+                                                );
                                                 if (!mounted) return;
                                                 setStateSheet(
                                                   () => copiedField =
@@ -598,10 +586,11 @@ extension _CitasPageDetalleModalPart on _CitasPageState {
                                                               cita,
                                                             ),
                                                             style: TextStyle(
-                                                              color:
-                                                                  _theme.primary,
+                                                              color: _theme
+                                                                  .primary,
                                                               fontWeight:
-                                                                  FontWeight.w600,
+                                                                  FontWeight
+                                                                      .w600,
                                                             ),
                                                           ),
                                                     ),
@@ -789,9 +778,9 @@ extension _CitasPageDetalleModalPart on _CitasPageState {
                     Text(
                       label,
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            color: _theme.grey,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        color: _theme.grey,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(value, style: Theme.of(context).textTheme.bodyMedium),
@@ -810,5 +799,4 @@ extension _CitasPageDetalleModalPart on _CitasPageState {
       ),
     );
   }
-
 }

@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
-import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_badges.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_agenda_card.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/info_pill.dart';
 import 'package:table_calendar/table_calendar.dart';
 
@@ -32,7 +32,6 @@ class CitasAgendaSection extends StatelessWidget {
   final String Function(CitaMedica cita) nombreMedico;
   final String Function(CitaMedica cita) nombrePaciente;
   final IconData Function(CitaMedica cita) iconoTipoCita;
-  final Color Function(CitaMedica cita) colorOcupacion;
   final Color Function(String estado) colorEstado;
   final VoidCallback Function(CitaMedica cita) onTapCita;
   final ValueChanged<int> onTapHora;
@@ -62,7 +61,6 @@ class CitasAgendaSection extends StatelessWidget {
     required this.nombreMedico,
     required this.nombrePaciente,
     required this.iconoTipoCita,
-    required this.colorOcupacion,
     required this.colorEstado,
     required this.onTapCita,
     required this.onTapHora,
@@ -178,7 +176,9 @@ class CitasAgendaSection extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
               decoration: BoxDecoration(
-                color: theme.primary.withValues(alpha: theme.isLight ? 0.1 : 0.16),
+                color: theme.primary.withValues(
+                  alpha: theme.isLight ? 0.1 : 0.16,
+                ),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: theme.primary.withValues(alpha: 0.24),
@@ -244,7 +244,6 @@ class CitasAgendaSection extends StatelessWidget {
                   nombreMedico: nombreMedico,
                   nombrePaciente: nombrePaciente,
                   iconoTipoCita: iconoTipoCita,
-                  colorOcupacion: colorOcupacion,
                   colorEstado: colorEstado,
                   onTapCita: onTapCita,
                   onTapHora: onTapHora,
@@ -473,7 +472,6 @@ class _AgendaTimeline extends StatelessWidget {
   final String Function(CitaMedica cita) nombreMedico;
   final String Function(CitaMedica cita) nombrePaciente;
   final IconData Function(CitaMedica cita) iconoTipoCita;
-  final Color Function(CitaMedica cita) colorOcupacion;
   final Color Function(String estado) colorEstado;
   final VoidCallback Function(CitaMedica cita) onTapCita;
   final ValueChanged<int> onTapHora;
@@ -490,7 +488,6 @@ class _AgendaTimeline extends StatelessWidget {
     required this.nombreMedico,
     required this.nombrePaciente,
     required this.iconoTipoCita,
-    required this.colorOcupacion,
     required this.colorEstado,
     required this.onTapCita,
     required this.onTapHora,
@@ -502,11 +499,7 @@ class _AgendaTimeline extends StatelessWidget {
     final filas = <({String label, List<CitaMedica> citas, int? hour})>[];
 
     if (citasAntesDeLasOcho.isNotEmpty) {
-      filas.add((
-        label: '< 08:00',
-        citas: citasAntesDeLasOcho,
-        hour: null,
-      ));
+      filas.add((label: '< 08:00', citas: citasAntesDeLasOcho, hour: null));
     }
 
     for (final hour in horas) {
@@ -518,11 +511,7 @@ class _AgendaTimeline extends StatelessWidget {
     }
 
     if (citasDespuesDeLasVeinte.isNotEmpty) {
-      filas.add((
-        label: '> 20:00',
-        citas: citasDespuesDeLasVeinte,
-        hour: null,
-      ));
+      filas.add((label: '> 20:00', citas: citasDespuesDeLasVeinte, hour: null));
     }
 
     if (filas.isEmpty) {
@@ -574,8 +563,14 @@ class _AgendaTimeline extends StatelessWidget {
                 label: i == 0
                     ? fila.label
                     : (fila.hour == null
-                          ? formatoHorarioCita(citas[i].fechaInicio, citas[i].fechaFin)
-                          : formatoHoraAgenda(citas[i].fechaInicio, fila.hour!)),
+                          ? formatoHorarioCita(
+                              citas[i].fechaInicio,
+                              citas[i].fechaFin,
+                            )
+                          : formatoHoraAgenda(
+                              citas[i].fechaInicio,
+                              fila.hour!,
+                            )),
                 theme: theme,
                 onTapLabel: (i == 0 && fila.hour != null)
                     ? () => onTapHora(fila.hour!)
@@ -584,7 +579,7 @@ class _AgendaTimeline extends StatelessWidget {
                   padding: EdgeInsets.only(
                     bottom: i == citas.length - 1 ? 0 : 2,
                   ),
-                  child: _AgendaCitaCard(
+                  child: AgendaCitaCard(
                     cita: citas[i],
                     theme: theme,
                     formatoHorarioCita: formatoHorarioCita,
@@ -592,7 +587,6 @@ class _AgendaTimeline extends StatelessWidget {
                     nombreMedico: nombreMedico,
                     nombrePaciente: nombrePaciente,
                     iconoTipoCita: iconoTipoCita,
-                    colorOcupacion: colorOcupacion,
                     colorEstado: colorEstado,
                     onTap: onTapCita(citas[i]),
                   ),
@@ -675,166 +669,11 @@ class _DashedSeparator extends StatelessWidget {
             dashCount,
             (_) => SizedBox(
               width: dashWidth,
-              child: Divider(
-                color: color,
-                height: 10,
-                thickness: 1,
-              ),
+              child: Divider(color: color, height: 10, thickness: 1),
             ),
           ),
         );
       },
-    );
-  }
-}
-
-class _AgendaCitaCard extends StatelessWidget {
-  final CitaMedica cita;
-  final ThemeController theme;
-  final String Function(DateTime? inicio, DateTime? fin) formatoHorarioCita;
-  final String Function(CitaMedica cita) tituloCita;
-  final String Function(CitaMedica cita) nombreMedico;
-  final String Function(CitaMedica cita) nombrePaciente;
-  final IconData Function(CitaMedica cita) iconoTipoCita;
-  final Color Function(CitaMedica cita) colorOcupacion;
-  final Color Function(String estado) colorEstado;
-  final VoidCallback onTap;
-
-  const _AgendaCitaCard({
-    required this.cita,
-    required this.theme,
-    required this.formatoHorarioCita,
-    required this.tituloCita,
-    required this.nombreMedico,
-    required this.nombrePaciente,
-    required this.iconoTipoCita,
-    required this.colorOcupacion,
-    required this.colorEstado,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final ocupacionColor = colorOcupacion(cita);
-    final estadoColor = colorEstado(cita.estado);
-    final horario = formatoHorarioCita(cita.fechaInicio, cita.fechaFin);
-    final titulo = tituloCita(cita);
-    final medico = nombreMedico(cita);
-    final paciente = nombrePaciente(cita);
-    final ocupacion = (cita.ocupacionNombre ?? '').trim();
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      child: Container(
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          color: theme.bgCard,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: estadoColor.withValues(alpha: 0.22),
-            width: 1.2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: estadoColor.withValues(alpha: theme.isLight ? 0.12 : 0.2),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(iconoTipoCita(cita), size: 18, color: theme.primary),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    titulo,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                CitasEstadoBadge(
-                  estado: cita.estado,
-                  color: estadoColor,
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Expanded(
-                  child: Row(
-                    children: [
-                      Icon(
-                        PhosphorIconsRegular.clock,
-                        size: 16,
-                        color: theme.grey,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        horario,
-                        style: Theme.of(
-                          context,
-                        ).textTheme.bodySmall?.copyWith(color: theme.grey),
-                      ),
-                    ],
-                  ),
-                ),
-                if (ocupacion.isNotEmpty)
-                  Flexible(
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: ocupacionColor.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          ocupacion,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(
-                                color: ocupacionColor,
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Wrap(
-              spacing: 12,
-              runSpacing: 6,
-              children: [
-                if (paciente.isNotEmpty)
-                  InfoPill(
-                    icon: PhosphorIconsRegular.userCircle,
-                    label: paciente,
-                    color: theme.grey,
-                  ),
-                if (medico.isNotEmpty)
-                  InfoPill(
-                    icon: PhosphorIconsRegular.stethoscope,
-                    label: medico,
-                    color: theme.grey,
-                  ),
-              ],
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

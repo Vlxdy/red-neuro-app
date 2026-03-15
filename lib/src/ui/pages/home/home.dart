@@ -10,7 +10,7 @@ import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/pages/perfil/perfil.dart';
 import 'package:red_neuro_app/src/ui/pages/usuarios/usuarios_page.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_page.dart';
-import 'package:red_neuro_app/src/ui/pages/citas/mis_citas_home_page.dart';
+import 'package:red_neuro_app/src/ui/pages/inicio/inicio_page.dart';
 import 'package:red_neuro_app/src/ui/pages/categorias/categorias_page.dart';
 import 'package:red_neuro_app/src/ui/pages/estudios/estudios_page.dart';
 import 'package:red_neuro_app/src/ui/pages/lugares/lugares_page.dart';
@@ -348,7 +348,8 @@ class _HomePageState extends State<HomePage> {
                               ? SolarIconsBold.roundDoubleAltArrowLeft
                               : SolarIconsOutline.menuDots,
                           size: 15,
-                          color: navColor ?? (isSelected ? theme.primary : null),
+                          color:
+                              navColor ?? (isSelected ? theme.primary : null),
                         ),
                       )
                     : const SizedBox(),
@@ -470,7 +471,9 @@ class _HomePageState extends State<HomePage> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: theme.black.withValues(alpha: theme.isDark ? 0.26 : 0.08),
+                  color: theme.black.withValues(
+                    alpha: theme.isDark ? 0.26 : 0.08,
+                  ),
                   blurRadius: 16,
                   offset: const Offset(0, -4),
                 ),
@@ -516,8 +519,7 @@ List<ChildrenItem> _itemsByRole({
   required double screenWidth,
 }) {
   final theme = ThemeController.instance;
-  final resolvedRole =
-      _normalizarRol(selectedRole?.rol ?? user.rol ?? '');
+  final resolvedRole = _normalizarRol(selectedRole?.rol ?? user.rol ?? '');
 
   final perfilNav = ChildrenItem(
     iconoImagen: SolarIconsOutline.user,
@@ -580,7 +582,6 @@ List<ChildrenItem> _itemsByRole({
   return navigation;
 }
 
-
 String _normalizeRoute(String? value) {
   final normalized = (value ?? '').trim().toLowerCase();
   if (normalized.isEmpty) return normalized;
@@ -605,9 +606,7 @@ ChildrenItem _homeMenuItem(ThemeController theme) => ChildrenItem(
   iconoImagenSeleccionada: PhosphorIconsFill.house,
   titulo: 'Inicio',
   color: theme.primary,
-  children: const KeepAlivePage(
-    child: MisCitasHomePage(),
-  ),
+  children: const KeepAlivePage(child: MisCitasHomePage()),
 );
 
 List<ChildrenItem> _ensureHomeFirst(
@@ -701,7 +700,9 @@ List<ChildrenItem> _submodulesFromRole({
         );
 
       for (final subModule in orderedSubmodules) {
-        if (!supportedRoutesOrder.contains(_canonicalSupportedRoute(subModule.url))) {
+        if (!supportedRoutesOrder.contains(
+          _canonicalSupportedRoute(subModule.url),
+        )) {
           continue;
         }
         submodules.add(_submoduleToItem(subModule, theme: theme));
@@ -774,7 +775,8 @@ ChildrenItem _submoduleToItem(
       normalizedName == 'notificaciones';
   final isPacientesModule =
       normalizedUrl.contains('pacientes') || normalizedName == 'pacientes';
-  final isPersonalMedicoModule = normalizedUrl.contains('personal_medico') ||
+  final isPersonalMedicoModule =
+      normalizedUrl.contains('personal_medico') ||
       normalizedName.contains('personal');
 
   final resolvedIconName = isNotificacionesModule
@@ -797,10 +799,7 @@ ChildrenItem _submoduleToItem(
 
   return ChildrenItem(
     iconoImagen: _moduleIconData(resolvedIconName),
-    iconoImagenSeleccionada: _moduleIconData(
-      resolvedIconName,
-      filled: true,
-    ),
+    iconoImagenSeleccionada: _moduleIconData(resolvedIconName, filled: true),
     titulo: isHomeModule
         ? (subModule.label.isNotEmpty ? subModule.label : 'Inicio')
         : isCategoriasModule
@@ -914,17 +913,13 @@ List<ChildrenItem> _adminMenu(ThemeController theme) => [
     iconoImagen: PhosphorIconsRegular.userCircle,
     iconoImagenSeleccionada: PhosphorIconsFill.userCircle,
     titulo: 'Pacientes',
-    children: const KeepAlivePage(
-      child: PacientesPage(),
-    ),
+    children: const KeepAlivePage(child: PacientesPage()),
   ),
   ChildrenItem(
     iconoImagen: PhosphorIconsRegular.stethoscope,
     iconoImagenSeleccionada: PhosphorIconsFill.stethoscope,
     titulo: 'Personal médico',
-    children: const KeepAlivePage(
-      child: PersonalSaludPage(),
-    ),
+    children: const KeepAlivePage(child: PersonalSaludPage()),
   ),
   ChildrenItem(
     iconoImagen: Icons.science_outlined,
@@ -957,17 +952,13 @@ List<ChildrenItem> _personalSaludAdminMenu(ThemeController theme) => [
     iconoImagen: PhosphorIconsRegular.userCircle,
     iconoImagenSeleccionada: PhosphorIconsFill.userCircle,
     titulo: 'Pacientes',
-    children: const KeepAlivePage(
-      child: PacientesPage(),
-    ),
+    children: const KeepAlivePage(child: PacientesPage()),
   ),
   ChildrenItem(
     iconoImagen: PhosphorIconsRegular.stethoscope,
     iconoImagenSeleccionada: PhosphorIconsFill.stethoscope,
     titulo: 'Personal médico',
-    children: const KeepAlivePage(
-      child: PersonalSaludPage(),
-    ),
+    children: const KeepAlivePage(child: PersonalSaludPage()),
   ),
   ChildrenItem(
     iconoImagen: Icons.science_outlined,
@@ -996,17 +987,13 @@ List<ChildrenItem> _personalSaludMenu(ThemeController theme) => [
     iconoImagen: PhosphorIconsRegular.userCircle,
     iconoImagenSeleccionada: PhosphorIconsFill.userCircle,
     titulo: 'Pacientes',
-    children: const KeepAlivePage(
-      child: PacientesPage(),
-    ),
+    children: const KeepAlivePage(child: PacientesPage()),
   ),
   ChildrenItem(
     iconoImagen: PhosphorIconsRegular.stethoscope,
     iconoImagenSeleccionada: PhosphorIconsFill.stethoscope,
     titulo: 'Personal médico',
-    children: const KeepAlivePage(
-      child: PersonalSaludPage(),
-    ),
+    children: const KeepAlivePage(child: PersonalSaludPage()),
   ),
   ChildrenItem(
     iconoImagen: Icons.science_outlined,

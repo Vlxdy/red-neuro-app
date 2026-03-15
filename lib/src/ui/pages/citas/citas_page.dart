@@ -10,7 +10,6 @@ import 'package:red_neuro_app/src/constants/constants.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/extensions/colores_extension.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
-import 'package:red_neuro_app/src/models/ocupacion.dart';
 import 'package:red_neuro_app/src/models/estudio.dart';
 import 'package:red_neuro_app/src/models/historial_cita.dart';
 import 'package:red_neuro_app/src/models/lugar.dart';
@@ -134,7 +133,9 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     _agendaFocusedDay = _agendaDay;
     _buscarController = TextEditingController();
     _medicoFiltroController = TextEditingController();
-    _estadoFiltroController = TextEditingController(text: _estadoLabelNatural(null));
+    _estadoFiltroController = TextEditingController(
+      text: _estadoLabelNatural(null),
+    );
     _lugarFiltroController = TextEditingController();
     _service = CitasService(context);
     _socketClient = _CitasSocketClient(
@@ -447,9 +448,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
 
   Map<String, dynamic>? _normalizeSocketMap(dynamic data) {
     if (data is! Map) return null;
-    return data.map(
-      (key, value) => MapEntry(key.toString(), value),
-    );
+    return data.map((key, value) => MapEntry(key.toString(), value));
   }
 
   void _syncSocketCita(CitaMedica cita) {
@@ -491,7 +490,9 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
 
   bool _matchesBaseSocketFilters(CitaMedica cita) {
     final estado = cita.estado.trim();
-    if (_estadoFiltro != null && _estadoFiltro!.isNotEmpty && estado != _estadoFiltro) {
+    if (_estadoFiltro != null &&
+        _estadoFiltro!.isNotEmpty &&
+        estado != _estadoFiltro) {
       return false;
     }
 
@@ -509,7 +510,8 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
       return false;
     }
 
-    if ((estado == 'BORRADOR' || estado == 'RECHAZADA') && !_canViewRestrictedDraftStatus(cita)) {
+    if ((estado == 'BORRADOR' || estado == 'RECHAZADA') &&
+        !_canViewRestrictedDraftStatus(cita)) {
       return false;
     }
 
@@ -572,7 +574,10 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     return [cita, ...lista];
   }
 
-  List<CitaMedica> _upsertOrRemoveCitaEnAgenda(List<CitaMedica> lista, CitaMedica cita) {
+  List<CitaMedica> _upsertOrRemoveCitaEnAgenda(
+    List<CitaMedica> lista,
+    CitaMedica cita,
+  ) {
     final index = lista.indexWhere((item) => item.id == cita.id);
     final include = _shouldIncludeInAgenda(cita);
 
@@ -702,20 +707,12 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   _DateRange _resolveCalendarRange() {
     final focusedDay = _agendaFocusedDay;
     if (_agendaCalendarFormat == CalendarFormat.week) {
-      final start = focusedDay.subtract(
-        Duration(days: focusedDay.weekday - 1),
-      );
+      final start = focusedDay.subtract(Duration(days: focusedDay.weekday - 1));
       final end = start.add(const Duration(days: 6, hours: 23, minutes: 59));
       return _DateRange(start: start, end: end);
     }
     final firstDay = DateTime(focusedDay.year, focusedDay.month, 1);
-    final lastDay = DateTime(
-      focusedDay.year,
-      focusedDay.month + 1,
-      0,
-      23,
-      59,
-    );
+    final lastDay = DateTime(focusedDay.year, focusedDay.month + 1, 0, 23, 59);
     return _DateRange(start: firstDay, end: lastDay);
   }
 
@@ -729,8 +726,6 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
       _cargarCitasAgendaDay(day: _agendaDay),
     ]);
   }
-
-
 
   String _estadoLabelNatural(String? estado) {
     if (estado == null || estado.trim().isEmpty) return 'Todos';
@@ -830,8 +825,6 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     });
     _aplicarFiltrosTrasCambiosRapidos();
   }
-
-
 
   void _limpiarFiltros() {
     setState(() {
@@ -980,7 +973,9 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
                         CitasActiveFiltersRibbon(
                           theme: _theme,
                           buscarTexto: _buscarTexto,
-                          estadoFiltro: _estadoFiltro == null ? null : _estadoLabelNatural(_estadoFiltro),
+                          estadoFiltro: _estadoFiltro == null
+                              ? null
+                              : _estadoLabelNatural(_estadoFiltro),
                           medicoFiltroNombre: _medicoFiltroNombre,
                           lugarFiltroNombre: _lugarFiltroNombre,
                           onClearBuscar: _limpiarFiltroBuscar,
@@ -1029,7 +1024,6 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
                             nombrePaciente: _nombrePaciente,
                             nombreMedico: _nombreMedico,
                             iconoTipoCita: _iconoTipoCita,
-                            colorOcupacion: _colorOcupacion,
                             onTapCita: (cita) =>
                                 () => _abrirCitaSegunEstado(cita),
                             onTapHora: (hour) {
@@ -1087,10 +1081,6 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     return _timeFormat.format(referencia);
   }
 
-  Color _colorOcupacion(CitaMedica cita) {
-    return HexColor.fromHex(cita.ocupacionColorHex ?? '#64748b');
-  }
-
   String _nombreMedico(CitaMedica cita) {
     return (cita.medicoNombre ?? '').trim();
   }
@@ -1098,7 +1088,6 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   String _nombrePaciente(CitaMedica cita) {
     return (cita.pacienteNombre ?? '').trim();
   }
-
 
   String _resolveAvatarUrl(String? urlFoto) {
     final trimmed = (urlFoto ?? '').trim();
@@ -1108,13 +1097,15 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   }
 
   String _inicialesPersonal(CitaMedica cita) {
-    final partes = [
-      cita.personalNombre ?? '',
-    ].join(' ').trim().split(RegExp(r'\s+')).where((p) => p.trim().isNotEmpty).toList();
+    final partes = [cita.personalNombre ?? '']
+        .join(' ')
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((p) => p.trim().isNotEmpty)
+        .toList();
     if (partes.isEmpty) return 'PS';
     return partes.take(2).map((p) => p[0]).join().toUpperCase();
   }
-
 
   Future<void> _copiarDato(String valor) async {
     await Clipboard.setData(ClipboardData(text: valor));
@@ -1173,7 +1164,6 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     if (tipo == 'CONSULTA') return 'Consulta';
     if (tipo == 'ESTUDIO') return 'Servicio';
     if (tipo.isNotEmpty) return cita.tipoCita!.trim();
-    if ((cita.ocupacionNombre ?? '').trim().isNotEmpty) return 'Consulta';
     return 'Cita médica';
   }
 
@@ -1182,8 +1172,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     if (tipo == 'ESTUDIO' || (cita.servicioNombre ?? '').trim().isNotEmpty) {
       return PhosphorIconsRegular.testTube;
     }
-    if (tipo == 'CONSULTA' ||
-        (cita.ocupacionNombre ?? '').trim().isNotEmpty) {
+    if (tipo == 'CONSULTA') {
       return PhosphorIconsRegular.stethoscope;
     }
     return PhosphorIconsRegular.calendarCheck;
@@ -1367,7 +1356,8 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(dialogContext, rootNavigator: true).pop(),
+            onPressed: () =>
+                Navigator.of(dialogContext, rootNavigator: true).pop(),
             child: const Text('Cancelar'),
           ),
           FilledButton(
@@ -1421,7 +1411,10 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
             TextButton(
               onPressed: enviando
                   ? null
-                  : () => Navigator.of(dialogContext, rootNavigator: true).pop(false),
+                  : () => Navigator.of(
+                      dialogContext,
+                      rootNavigator: true,
+                    ).pop(false),
               child: const Text('Cancelar'),
             ),
             FilledButton(
@@ -1451,7 +1444,10 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
                         setStateDialog(() => enviando = false);
                         return;
                       }
-                      Navigator.of(dialogContext, rootNavigator: true).pop(true);
+                      Navigator.of(
+                        dialogContext,
+                        rootNavigator: true,
+                      ).pop(true);
                     },
               child: const Text('Rechazar'),
             ),
@@ -1477,7 +1473,6 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     }
     return true;
   }
-
 
   Future<bool> _confirmarCitaSolicitadaConOpciones(CitaMedica cita) async {
     if (!_puedeGestionarSolicitada(cita)) return false;

@@ -36,18 +36,6 @@ class CitaMedica {
   String get medicoId => idPersonal;
   String? get medicoNombre => personalNombre;
 
-  @Deprecated('Las citas ya no están vinculadas a ocupación/ocupacion')
-  String? get ocupacionId => null;
-
-  @Deprecated('Las citas ya no están vinculadas a ocupación/ocupacion')
-  String? get ocupacionNombre => null;
-
-  @Deprecated('Las citas ya no están vinculadas a ocupación/ocupacion')
-  String? get ocupacionColorHex => null;
-
-  @Deprecated('Las citas ya no están vinculadas a ocupación/ocupacion')
-  String? get ocupacionDescripcion => null;
-
   const CitaMedica({
     required this.id,
     required this.detalle,

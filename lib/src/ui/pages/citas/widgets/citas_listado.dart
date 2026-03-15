@@ -275,15 +275,6 @@ class CitasListado extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          if ((cita.ocupacionNombre ?? cita.ocupacionId)
-                                  ?.isNotEmpty ??
-                              false)
-                            CitasOcupacionTag(
-                              label:
-                                  cita.ocupacionNombre ??
-                                  cita.ocupacionId!,
-                              color: ocupacionColor,
-                            ),
                           const Spacer(),
                           IconButton(
                             onPressed: onVerDetalle(cita),
