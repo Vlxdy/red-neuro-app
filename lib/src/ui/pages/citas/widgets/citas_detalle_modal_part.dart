@@ -33,7 +33,7 @@ extension _CitasPageDetalleModalPart on _CitasPageState {
     final personalAvatarUrl = _resolveAvatarUrl(cita.personalUrlFoto);
 
     final acciones = <CitaDetalleAccion>[
-      if (cita.estado == 'SOLICITADA' && _puedeGestionarSolicitada(cita))
+      if (cita.estado == 'SOLICITADA' && CitasUtils.puedeGestionarSolicitada(cita, Auth.instance.profile))
         CitaDetalleAccion(
           label: 'Confirmar',
           icon: Icons.check_circle_outline,
@@ -52,7 +52,7 @@ extension _CitasPageDetalleModalPart on _CitasPageState {
             return true;
           },
         ),
-      if (cita.estado == 'SOLICITADA' && _puedeGestionarSolicitada(cita))
+      if (cita.estado == 'SOLICITADA' && CitasUtils.puedeGestionarSolicitada(cita, Auth.instance.profile))
         CitaDetalleAccion(
           label: 'Rechazar',
           icon: Icons.block_outlined,
@@ -145,7 +145,7 @@ extension _CitasPageDetalleModalPart on _CitasPageState {
           fechaCita: _formatoFechaCita(cita.fechaInicio),
           horaCita: _formatoHorarioCita(cita.fechaInicio, cita.fechaFin),
           detalleCita: cita.detalle,
-          estadoColor: _colorEstado(cita.estado),
+          estadoColor: CitasUtils.colorEstado(cita.estado, _theme),
           acciones: acciones,
           onClose: () => Navigator.of(context).pop(),
           onVerHistorial: () => _mostrarHistorialCita(cita),

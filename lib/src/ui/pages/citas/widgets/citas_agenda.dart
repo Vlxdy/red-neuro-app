@@ -33,7 +33,7 @@ class CitasAgendaSection extends StatelessWidget {
   final String Function(CitaMedica cita) nombrePaciente;
   final IconData Function(CitaMedica cita) iconoTipoCita;
   final Color Function(String estado) colorEstado;
-  final VoidCallback Function(CitaMedica cita) onTapCita;
+  final ValueChanged<CitaMedica> onTapCita;
   final ValueChanged<int> onTapHora;
 
   const CitasAgendaSection({
@@ -473,7 +473,7 @@ class _AgendaTimeline extends StatelessWidget {
   final String Function(CitaMedica cita) nombrePaciente;
   final IconData Function(CitaMedica cita) iconoTipoCita;
   final Color Function(String estado) colorEstado;
-  final VoidCallback Function(CitaMedica cita) onTapCita;
+  final ValueChanged<CitaMedica> onTapCita;
   final ValueChanged<int> onTapHora;
 
   const _AgendaTimeline({
@@ -588,7 +588,7 @@ class _AgendaTimeline extends StatelessWidget {
                     nombrePaciente: nombrePaciente,
                     iconoTipoCita: iconoTipoCita,
                     colorEstado: colorEstado,
-                    onTap: onTapCita(citas[i]),
+                    onTap: () => onTapCita(citas[i]),
                   ),
                 ),
               ),
