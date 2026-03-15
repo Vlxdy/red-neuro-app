@@ -30,7 +30,7 @@ class Modulo {
         ? PropiedadesModulo.fromJson(json['propiedades'])
         : null,
     subModulos:
-        (json['subModulo'] as List<dynamic>?)
+        ((json['subModulo'] ?? json['subModulos']) as List<dynamic>?)
             ?.map((s) => SubModulo.fromJson(s))
             .toList() ??
         [],
