@@ -143,6 +143,63 @@ class CitasUtils {
     return normalized;
   }
 
+
+  static CitasDetalleModalPayload construirDetalleModalPayload({
+    required CitaMedica cita,
+    required ThemeController theme,
+    required String titulo,
+    required String Function(CitaMedica cita) nombrePaciente,
+    required String Function(String? genero) formatearGenero,
+    required String Function(String? fechaRaw) formatearFechaPaciente,
+    required String Function(String? fechaRaw) calcularEdadPaciente,
+    required String Function(String? tipo) etiquetaPrestacion,
+    required String Function(CitaMedica cita) nombreMedico,
+    required String Function(String? urlFoto) resolveAvatarUrl,
+    required String Function(CitaMedica cita) inicialesPersonal,
+    required String Function(DateTime? fecha) formatoFechaCita,
+    required String Function(DateTime? inicio, DateTime? fin) formatoHorarioCita,
+  }) {
+    final detalleData = construirDetalleModalData(
+      cita: cita,
+      nombrePaciente: nombrePaciente,
+      formatearGenero: formatearGenero,
+      formatearFechaPaciente: formatearFechaPaciente,
+      calcularEdadPaciente: calcularEdadPaciente,
+      etiquetaPrestacion: etiquetaPrestacion,
+      nombreMedico: nombreMedico,
+      resolveAvatarUrl: resolveAvatarUrl,
+    );
+
+    return CitasDetalleModalPayload(
+      titulo: titulo,
+      pacienteNombre: detalleData.pacienteNombre,
+      pacienteDocumento: detalleData.pacienteDocumento,
+      pacienteTelefono: detalleData.pacienteTelefono,
+      pacienteCorreo: detalleData.pacienteCorreo,
+      pacienteGenero: detalleData.pacienteGenero,
+      pacienteFechaNacimiento: detalleData.pacienteFechaNacimiento,
+      pacienteEdad: detalleData.pacienteEdad,
+      etiquetaPrestacion: detalleData.etiquetaPrestacion,
+      servicioNombre: detalleData.servicioNombre,
+      servicioDuracion: detalleData.servicioDuracion,
+      servicioDescripcion: cita.servicioDescripcion,
+      lugarDisplay: detalleData.lugarDisplay,
+      lugarTipo: detalleData.lugarTipo,
+      lugarDireccion: detalleData.lugarDireccion,
+      personalAsignado: detalleData.personalAsignado,
+      personalDocumento: detalleData.personalDocumento,
+      personalTelefono: detalleData.personalTelefono,
+      personalCorreo: detalleData.personalCorreo,
+      personalOcupacion: detalleData.personalOcupacion,
+      personalAvatarUrl: detalleData.personalAvatarUrl,
+      inicialesPersonal: inicialesPersonal(cita),
+      fechaCita: formatoFechaCita(cita.fechaInicio),
+      horaCita: formatoHorarioCita(cita.fechaInicio, cita.fechaFin),
+      detalleCita: cita.detalle,
+      estadoColor: colorEstado(cita.estado, theme),
+    );
+  }
+
   static CitasDetalleModalData construirDetalleModalData({
     required CitaMedica cita,
     required String Function(CitaMedica cita) nombrePaciente,

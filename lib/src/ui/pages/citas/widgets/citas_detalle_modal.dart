@@ -23,6 +23,65 @@ class CitaDetalleAccion {
   });
 }
 
+
+class CitasDetalleModalPayload {
+  final String titulo;
+  final String pacienteNombre;
+  final String? pacienteDocumento;
+  final String? pacienteTelefono;
+  final String? pacienteCorreo;
+  final String? pacienteGenero;
+  final String? pacienteFechaNacimiento;
+  final String? pacienteEdad;
+  final String etiquetaPrestacion;
+  final String? servicioNombre;
+  final int? servicioDuracion;
+  final String? servicioDescripcion;
+  final String? lugarDisplay;
+  final String? lugarTipo;
+  final String? lugarDireccion;
+  final String personalAsignado;
+  final String? personalDocumento;
+  final String? personalTelefono;
+  final String? personalCorreo;
+  final String? personalOcupacion;
+  final String personalAvatarUrl;
+  final String inicialesPersonal;
+  final String fechaCita;
+  final String horaCita;
+  final String detalleCita;
+  final Color estadoColor;
+
+  const CitasDetalleModalPayload({
+    required this.titulo,
+    required this.pacienteNombre,
+    required this.pacienteDocumento,
+    required this.pacienteTelefono,
+    required this.pacienteCorreo,
+    required this.pacienteGenero,
+    required this.pacienteFechaNacimiento,
+    required this.pacienteEdad,
+    required this.etiquetaPrestacion,
+    required this.servicioNombre,
+    required this.servicioDuracion,
+    required this.servicioDescripcion,
+    required this.lugarDisplay,
+    required this.lugarTipo,
+    required this.lugarDireccion,
+    required this.personalAsignado,
+    required this.personalDocumento,
+    required this.personalTelefono,
+    required this.personalCorreo,
+    required this.personalOcupacion,
+    required this.personalAvatarUrl,
+    required this.inicialesPersonal,
+    required this.fechaCita,
+    required this.horaCita,
+    required this.detalleCita,
+    required this.estadoColor,
+  });
+}
+
 class CitasDetalleModal extends StatefulWidget {
   final CitaMedica cita;
   final ThemeController theme;
@@ -92,6 +151,43 @@ class CitasDetalleModal extends StatefulWidget {
     required this.onVerHistorial,
     required this.onCopiarDato,
   });
+
+
+  CitasDetalleModal.fromPayload({
+    super.key,
+    required this.cita,
+    required this.theme,
+    required CitasDetalleModalPayload payload,
+    required this.acciones,
+    required this.onClose,
+    required this.onVerHistorial,
+    required this.onCopiarDato,
+  }) : titulo = payload.titulo,
+       pacienteNombre = payload.pacienteNombre,
+       pacienteDocumento = payload.pacienteDocumento,
+       pacienteTelefono = payload.pacienteTelefono,
+       pacienteCorreo = payload.pacienteCorreo,
+       pacienteGenero = payload.pacienteGenero,
+       pacienteFechaNacimiento = payload.pacienteFechaNacimiento,
+       pacienteEdad = payload.pacienteEdad,
+       etiquetaPrestacion = payload.etiquetaPrestacion,
+       servicioNombre = payload.servicioNombre,
+       servicioDuracion = payload.servicioDuracion,
+       servicioDescripcion = payload.servicioDescripcion,
+       lugarDisplay = payload.lugarDisplay,
+       lugarTipo = payload.lugarTipo,
+       lugarDireccion = payload.lugarDireccion,
+       personalAsignado = payload.personalAsignado,
+       personalDocumento = payload.personalDocumento,
+       personalTelefono = payload.personalTelefono,
+       personalCorreo = payload.personalCorreo,
+       personalOcupacion = payload.personalOcupacion,
+       personalAvatarUrl = payload.personalAvatarUrl,
+       inicialesPersonal = payload.inicialesPersonal,
+       fechaCita = payload.fechaCita,
+       horaCita = payload.horaCita,
+       detalleCita = payload.detalleCita,
+       estadoColor = payload.estadoColor;
 
   @override
   State<CitasDetalleModal> createState() => _CitasDetalleModalState();

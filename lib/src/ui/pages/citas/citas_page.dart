@@ -1642,8 +1642,10 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   }
 
   Future<void> _mostrarDetalleCita(CitaMedica cita) async {
-    final detalleData = CitasUtils.construirDetalleModalData(
+    final detallePayload = CitasUtils.construirDetalleModalPayload(
       cita: cita,
+      theme: _theme,
+      titulo: _tituloCita(cita),
       nombrePaciente: _nombrePaciente,
       formatearGenero: _formatearGenero,
       formatearFechaPaciente: _formatearFechaPaciente,
@@ -1651,6 +1653,9 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
       etiquetaPrestacion: _etiquetaPrestacion,
       nombreMedico: _nombreMedico,
       resolveAvatarUrl: _resolveAvatarUrl,
+      inicialesPersonal: _inicialesPersonal,
+      formatoFechaCita: _formatoFechaCita,
+      formatoHorarioCita: _formatoHorarioCita,
     );
 
     final accionesDetalleModal = CitasUtils.construirAccionesDetalleCita(
@@ -1674,35 +1679,10 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
       useSafeArea: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return CitasDetalleModal(
+        return CitasDetalleModal.fromPayload(
           cita: cita,
           theme: _theme,
-          titulo: _tituloCita(cita),
-          pacienteNombre: detalleData.pacienteNombre,
-          pacienteDocumento: detalleData.pacienteDocumento,
-          pacienteTelefono: detalleData.pacienteTelefono,
-          pacienteCorreo: detalleData.pacienteCorreo,
-          pacienteGenero: detalleData.pacienteGenero,
-          pacienteFechaNacimiento: detalleData.pacienteFechaNacimiento,
-          pacienteEdad: detalleData.pacienteEdad,
-          etiquetaPrestacion: detalleData.etiquetaPrestacion,
-          servicioNombre: detalleData.servicioNombre,
-          servicioDuracion: detalleData.servicioDuracion,
-          servicioDescripcion: cita.servicioDescripcion,
-          lugarDisplay: detalleData.lugarDisplay,
-          lugarTipo: detalleData.lugarTipo,
-          lugarDireccion: detalleData.lugarDireccion,
-          personalAsignado: detalleData.personalAsignado,
-          personalDocumento: detalleData.personalDocumento,
-          personalTelefono: detalleData.personalTelefono,
-          personalCorreo: detalleData.personalCorreo,
-          personalOcupacion: detalleData.personalOcupacion,
-          personalAvatarUrl: detalleData.personalAvatarUrl,
-          inicialesPersonal: _inicialesPersonal(cita),
-          fechaCita: _formatoFechaCita(cita.fechaInicio),
-          horaCita: _formatoHorarioCita(cita.fechaInicio, cita.fechaFin),
-          detalleCita: cita.detalle,
-          estadoColor: CitasUtils.colorEstado(cita.estado, _theme),
+          payload: detallePayload,
           acciones: accionesDetalleModal,
           onClose: () => Navigator.of(context).pop(),
           onVerHistorial: () => _mostrarHistorialCita(cita),
