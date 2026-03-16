@@ -6,7 +6,6 @@ extension _CitasPageMedicoSelectorModalPart on _CitasPageState {
     bool medicosLoading = false;
     bool medicosHasMore = true;
     int medicosPage = 1;
-    int total = 0;
     String medicosFiltro = '';
     Timer? medicosDebounce;
 
@@ -20,7 +19,6 @@ extension _CitasPageMedicoSelectorModalPart on _CitasPageState {
       if (reset) {
         medicosPage = 1;
         medicosHasMore = true;
-        total = 0;
         medicosDisponibles.clear();
       }
       final result = await _service.obtenerPersonalMedico(
@@ -32,7 +30,6 @@ extension _CitasPageMedicoSelectorModalPart on _CitasPageState {
       if (result.items.isNotEmpty) {
         medicosDisponibles.addAll(result.items);
       }
-      total = result.total;
       medicosHasMore = medicosDisponibles.length < result.total;
       medicosPage += 1;
       medicosLoading = false;
@@ -157,7 +154,6 @@ extension _CitasPageMedicoSelectorModalPart on _CitasPageState {
       _medicoFiltroController.text = seleccionado.nombreCompleto;
     });
   }
-
 
   Future<void> _abrirSelectorLugarFiltro() async {
     final List<Lugar> lugaresDisponibles = [];
@@ -311,6 +307,4 @@ extension _CitasPageMedicoSelectorModalPart on _CitasPageState {
       _lugarFiltroController.text = seleccionado.nombre;
     });
   }
-
-
 }

@@ -12,7 +12,7 @@ import 'package:red_neuro_app/src/ui/pages/usuarios/usuarios_page.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_page.dart';
 import 'package:red_neuro_app/src/ui/pages/inicio/inicio_page.dart';
 import 'package:red_neuro_app/src/ui/pages/categorias/categorias_page.dart';
-import 'package:red_neuro_app/src/ui/pages/estudios/estudios_page.dart';
+import 'package:red_neuro_app/src/ui/pages/servicios/servicios_page.dart';
 import 'package:red_neuro_app/src/ui/pages/lugares/lugares_page.dart';
 import 'package:red_neuro_app/src/ui/pages/pacientes/pacientes_page.dart';
 import 'package:red_neuro_app/src/ui/pages/personal_salud/personal_salud_page.dart';
@@ -761,7 +761,7 @@ ChildrenItem _submoduleToItem(
       normalizedName == 'inicio';
   final isCategoriasModule =
       normalizedUrl.contains('categorias') || normalizedName == 'categorias';
-  final isEstudiosModule =
+  final isServiciosModule =
       normalizedUrl.contains('estudios') ||
       normalizedUrl.contains('servicios') ||
       normalizedName == 'estudios' ||
@@ -793,7 +793,7 @@ ChildrenItem _submoduleToItem(
       ? 'personal_medico'
       : isLugaresModule
       ? 'lugares'
-      : isEstudiosModule
+      : isServiciosModule
       ? 'servicios'
       : subModule.propiedades?.icono;
 
@@ -804,7 +804,7 @@ ChildrenItem _submoduleToItem(
         ? (subModule.label.isNotEmpty ? subModule.label : 'Inicio')
         : isCategoriasModule
         ? 'Categorías'
-        : isEstudiosModule
+        : isServiciosModule
         ? 'Servicios'
         : (subModule.label.isNotEmpty ? subModule.label : subModule.nombre),
     color: theme.primary,
@@ -819,8 +819,8 @@ ChildrenItem _submoduleToItem(
           ? const CategoriasPage()
           : isLugaresModule
           ? const LugaresPage()
-          : isEstudiosModule
-          ? const EstudiosPage()
+          : isServiciosModule
+          ? const ServiciosPage()
           : isCitasModule
           ? const CitasPage(
               soloMisCitas: false,
@@ -925,7 +925,7 @@ List<ChildrenItem> _adminMenu(ThemeController theme) => [
     iconoImagen: Icons.science_outlined,
     iconoImagenSeleccionada: Icons.science,
     titulo: 'Servicios',
-    children: const KeepAlivePage(child: EstudiosPage()),
+    children: const KeepAlivePage(child: ServiciosPage()),
   ),
   ChildrenItem(
     iconoImagen: Icons.location_city_outlined,
@@ -964,7 +964,7 @@ List<ChildrenItem> _personalSaludAdminMenu(ThemeController theme) => [
     iconoImagen: Icons.science_outlined,
     iconoImagenSeleccionada: Icons.science,
     titulo: 'Servicios',
-    children: const KeepAlivePage(child: EstudiosPage()),
+    children: const KeepAlivePage(child: ServiciosPage()),
   ),
   ChildrenItem(
     iconoImagen: Icons.location_city_outlined,
@@ -999,7 +999,7 @@ List<ChildrenItem> _personalSaludMenu(ThemeController theme) => [
     iconoImagen: Icons.science_outlined,
     iconoImagenSeleccionada: Icons.science,
     titulo: 'Servicios',
-    children: const KeepAlivePage(child: EstudiosPage()),
+    children: const KeepAlivePage(child: ServiciosPage()),
   ),
   ChildrenItem(
     iconoImagen: Icons.location_city_outlined,

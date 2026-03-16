@@ -4,7 +4,7 @@ import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/extensions/colores_extension.dart';
 import 'package:red_neuro_app/src/models/categoria.dart';
-import 'package:red_neuro_app/src/models/estudio.dart';
+import 'package:red_neuro_app/src/models/servicio.dart';
 import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
 import 'package:red_neuro_app/src/ui/common/customdatatable/custom_datatable.dart';
 import 'package:red_neuro_app/src/ui/common/components/tray_ui_helpers.dart';
@@ -13,21 +13,21 @@ import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
 import 'package:red_neuro_app/src/ui/common/form_stepper/step_form_dialog_layout.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
-import 'package:red_neuro_app/src/ui/pages/estudios/estudios_service.dart';
+import 'package:red_neuro_app/src/ui/pages/servicios/servicios_service.dart';
 
 final GlobalKey<ScaffoldMessengerState> estudiosMessenger =
     GlobalKey<ScaffoldMessengerState>();
 
-class EstudiosPage extends StatefulWidget {
-  const EstudiosPage({super.key});
+class ServiciosPage extends StatefulWidget {
+  const ServiciosPage({super.key});
 
   @override
-  State<EstudiosPage> createState() => _EstudiosPageState();
+  State<ServiciosPage> createState() => _ServiciosPageState();
 }
 
-class _EstudiosPageState extends State<EstudiosPage> with FormController {
+class _ServiciosPageState extends State<ServiciosPage> with FormController {
   final _theme = ThemeController.instance;
-  late final EstudiosService _service;
+  late final ServiciosService _service;
 
   List<Servicio> _servicios = [];
   List<Categoria> _ocupacionesDisponibles = [];
@@ -53,7 +53,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
   @override
   void initState() {
     super.initState();
-    _service = EstudiosService(context);
+    _service = ServiciosService(context);
     _cargarCategoriasDisponibles();
     _cargarServicios();
     _cargarCategoriasTab();
@@ -430,7 +430,7 @@ class _EstudiosPageState extends State<EstudiosPage> with FormController {
               );
             }
 
-            final totalSteps = mostrarPasoCategorias ? 2 : 1;
+            final totalSteps = 2;
             final isLastStep = currentStep == totalSteps - 1;
 
             return Padding(

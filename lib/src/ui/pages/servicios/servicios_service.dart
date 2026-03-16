@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:red_neuro_app/src/config/service_config.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/models/categoria.dart';
-import 'package:red_neuro_app/src/models/estudio.dart';
+import 'package:red_neuro_app/src/models/servicio.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 
 class ServicioPageResult {
@@ -23,13 +23,13 @@ class ServicioPageResult {
   });
 
   factory ServicioPageResult.empty(String message) => ServicioPageResult(
-        servicios: const [],
-        total: 0,
-        page: 1,
-        limit: 10,
-        message: message,
-        status: StatusNetwork.noContent,
-      );
+    servicios: const [],
+    total: 0,
+    page: 1,
+    limit: 10,
+    message: message,
+    status: StatusNetwork.noContent,
+  );
 }
 
 class CategoriaPageResult {
@@ -50,19 +50,19 @@ class CategoriaPageResult {
   });
 
   factory CategoriaPageResult.empty(String message) => CategoriaPageResult(
-        items: const [],
-        total: 0,
-        page: 1,
-        limit: 20,
-        message: message,
-        status: StatusNetwork.noContent,
-      );
+    items: const [],
+    total: 0,
+    page: 1,
+    limit: 20,
+    message: message,
+    status: StatusNetwork.noContent,
+  );
 }
 
 typedef OcupacionPageResult = CategoriaPageResult;
 
-class EstudiosService extends ServiceConfig {
-  EstudiosService(BuildContext context) : super('', context);
+class ServiciosService extends ServiceConfig {
+  ServiciosService(BuildContext context) : super('', context);
 
   Future<ServicioPageResult> obtenerServicios({
     int page = 1,
@@ -88,7 +88,8 @@ class EstudiosService extends ServiceConfig {
       final data = response.data;
       final datos = data['datos'] ?? data['data'] ?? data;
       final totalRaw = (datos is Map ? datos['total'] : null) ?? data['total'];
-      final filasRaw = (datos is Map ? datos['filas'] : null) ??
+      final filasRaw =
+          (datos is Map ? datos['filas'] : null) ??
           data['list'] ??
           data['data'] ??
           data['items'] ??
@@ -96,9 +97,9 @@ class EstudiosService extends ServiceConfig {
 
       final servicios = (filasRaw is List)
           ? filasRaw
-              .whereType<Map<String, dynamic>>()
-              .map(Servicio.fromJson)
-              .toList()
+                .whereType<Map<String, dynamic>>()
+                .map(Servicio.fromJson)
+                .toList()
           : <Servicio>[];
 
       return ServicioPageResult(
@@ -118,19 +119,6 @@ class EstudiosService extends ServiceConfig {
     }
   }
 
-  @Deprecated('Usar obtenerServicios')
-  Future<ServicioPageResult> obtenerEstudios({
-    int page = 1,
-    int limit = 10,
-    String? filtro,
-    String? tipo,
-  }) => obtenerServicios(
-        page: page,
-        limit: limit,
-        filtro: filtro,
-        tipo: tipo,
-      );
-
   Future<CategoriaPageResult> obtenerCategoriasPaginadas({
     int page = 1,
     int limit = 20,
@@ -142,7 +130,8 @@ class EstudiosService extends ServiceConfig {
         params: {
           'pagina': '$page',
           'limite': '$limit',
-          if (filtro != null && filtro.trim().isNotEmpty) 'filtro': filtro.trim(),
+          if (filtro != null && filtro.trim().isNotEmpty)
+            'filtro': filtro.trim(),
         },
       );
 
@@ -153,7 +142,8 @@ class EstudiosService extends ServiceConfig {
       final data = response.data;
       final datos = data['datos'] ?? data['data'] ?? data;
       final totalRaw = (datos is Map ? datos['total'] : null) ?? data['total'];
-      final filasRaw = (datos is Map ? datos['filas'] : null) ??
+      final filasRaw =
+          (datos is Map ? datos['filas'] : null) ??
           data['list'] ??
           data['data'] ??
           data['items'] ??
@@ -161,9 +151,9 @@ class EstudiosService extends ServiceConfig {
 
       final categorias = (filasRaw is List)
           ? filasRaw
-              .whereType<Map<String, dynamic>>()
-              .map(Categoria.fromJson)
-              .toList()
+                .whereType<Map<String, dynamic>>()
+                .map(Categoria.fromJson)
+                .toList()
           : <Categoria>[];
 
       return CategoriaPageResult(
@@ -179,9 +169,7 @@ class EstudiosService extends ServiceConfig {
     } catch (e, stacktrace) {
       Logger.error('Error al obtener categorías $e');
       Logger.error('stacktrace $stacktrace');
-      return CategoriaPageResult.empty(
-        'No se pudieron cargar las categorías',
-      );
+      return CategoriaPageResult.empty('No se pudieron cargar las categorías');
     }
   }
 
@@ -201,36 +189,22 @@ class EstudiosService extends ServiceConfig {
   }
 
   Future<ResponseApi> crearServicio(Map<String, dynamic> body) async {
-    return fetch(
-      '/servicios',
-      type: HttpProtocol.post,
-      body: body,
-    );
+    return fetch('/servicios', type: HttpProtocol.post, body: body);
   }
 
   Future<ResponseApi> actualizarServicio(
     String id,
     Map<String, dynamic> body,
   ) async {
-    return fetch(
-      '/servicios/$id',
-      type: HttpProtocol.patch,
-      body: body,
-    );
+    return fetch('/servicios/$id', type: HttpProtocol.patch, body: body);
   }
 
   Future<ResponseApi> eliminarServicio(String id) async {
-    return fetch(
-      '/servicios/$id',
-      type: HttpProtocol.delete,
-    );
+    return fetch('/servicios/$id', type: HttpProtocol.delete);
   }
 
   Future<ResponseApi> cambiarEstadoServicio(String id) async {
-    return fetch(
-      '/servicios/$id/cambiar-estado',
-      type: HttpProtocol.patch,
-    );
+    return fetch('/servicios/$id/cambiar-estado', type: HttpProtocol.patch);
   }
 
   Future<ResponseApi> crearCategoria(Map<String, dynamic> body) async {

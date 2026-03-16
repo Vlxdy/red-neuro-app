@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
-import 'package:red_neuro_app/src/constants/constants.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/models/historial_cita.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_service.dart';
@@ -26,24 +25,25 @@ class CitasHistorialModalWidget extends StatelessWidget {
     final Size screenSize = MediaQuery.sizeOf(context);
     final double dialogWidth = (screenSize.width - 32).clamp(300.0, 520.0);
     final double dialogHeight = (screenSize.height * 0.72).clamp(360.0, 560.0);
-    final double responsiveTextScale = (screenSize.width / 390).clamp(0.90, 1.08);
+    final double responsiveTextScale = (screenSize.width / 390).clamp(
+      0.90,
+      1.08,
+    );
 
     return AlertDialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 20),
       title: Text(title),
       content: MediaQuery(
-        data: MediaQuery.of(context).copyWith(
-          textScaler: TextScaler.linear(responsiveTextScale),
-        ),
+        data: MediaQuery.of(
+          context,
+        ).copyWith(textScaler: TextScaler.linear(responsiveTextScale)),
         child: SizedBox(
           width: dialogWidth,
           height: dialogHeight,
           child: content,
         ),
       ),
-      actions: [
-        TextButton(onPressed: onClose, child: const Text('Cerrar')),
-      ],
+      actions: [TextButton(onPressed: onClose, child: const Text('Cerrar'))],
     );
   }
 }
@@ -128,7 +128,10 @@ class _CitasHistorialModalDialogState extends State<CitasHistorialModalDialog> {
       if (_rolController.text.trim().isNotEmpty)
         'rolEjecutor': _rolController.text.trim(),
       if (_fechaInicio != null)
-        'fechaInicio': widget.inicioDia(_fechaInicio!).toUtc().toIso8601String(),
+        'fechaInicio': widget
+            .inicioDia(_fechaInicio!)
+            .toUtc()
+            .toIso8601String(),
       if (_fechaFin != null)
         'fechaFin': widget.finDia(_fechaFin!).toUtc().toIso8601String(),
     };
@@ -166,9 +169,15 @@ class _CitasHistorialModalDialogState extends State<CitasHistorialModalDialog> {
         children: [
           ExpansionTile(
             tilePadding: EdgeInsets.zero,
-            title: Text('Filtros', style: Theme.of(context).textTheme.titleSmall),
+            title: Text(
+              'Filtros',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
             children: [
-              if (isNarrow) ..._buildDatePickersColumn(context) else ..._buildDatePickersRow(context),
+              if (isNarrow)
+                ..._buildDatePickersColumn(context)
+              else
+                ..._buildDatePickersRow(context),
               const SizedBox(height: 12),
               DropdownButtonFormField<String?>(
                 initialValue: _estadoAnterior,
@@ -177,7 +186,10 @@ class _CitasHistorialModalDialogState extends State<CitasHistorialModalDialog> {
                   border: OutlineInputBorder(),
                 ),
                 items: CitaEstado.values
-                    .map((estado) => DropdownMenuItem(value: estado, child: Text(estado)))
+                    .map(
+                      (estado) =>
+                          DropdownMenuItem(value: estado, child: Text(estado)),
+                    )
                     .toList(),
                 onChanged: (value) => setState(() => _estadoAnterior = value),
               ),
@@ -221,7 +233,9 @@ class _CitasHistorialModalDialogState extends State<CitasHistorialModalDialog> {
           if (_loading)
             const Expanded(child: Center(child: CircularProgressIndicator()))
           else if (_historial.isEmpty)
-            const Expanded(child: Center(child: Text('No hay historial disponible.')))
+            const Expanded(
+              child: Center(child: Text('No hay historial disponible.')),
+            )
           else
             Expanded(
               child: ListView.builder(
@@ -260,8 +274,9 @@ class _CitasHistorialModalDialogState extends State<CitasHistorialModalDialog> {
                   return CitasHistorialTimelineItem(
                     fecha: widget.formatoFechaHoraHistorial(item.fechaCreacion),
                     titulo: widget.tituloHistorial(item),
-                    subtitulo:
-                        item.ejecutorNombre.trim().isNotEmpty ? item.ejecutorNombre : 'Sistema',
+                    subtitulo: item.ejecutorNombre.trim().isNotEmpty
+                        ? item.ejecutorNombre
+                        : 'Sistema',
                     detalles: detalles,
                     theme: widget.theme,
                     isLast: index == _historial.length - 1,

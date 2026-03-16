@@ -8,28 +8,21 @@ import 'package:red_neuro_app/src/config/service_config.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/constants.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
-import 'package:red_neuro_app/src/extensions/colores_extension.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/models/lugar.dart';
-import 'package:red_neuro_app/src/models/paciente.dart';
 import 'package:red_neuro_app/src/models/personal_medico.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:red_neuro_app/src/plugins/utils/preferences.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
-import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_service.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_utils.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_active_filters.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_agenda.dart';
-import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_badges.dart';
-import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_detalle_widgets.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_detalle_modal.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_filters_fields.dart';
 import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
-import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_autocomplete_selector_field.dart';
-import 'package:red_neuro_app/src/ui/pages/citas/widgets/fecha_selector.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_confirmacion_dialog.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_formulario_modal_widget.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_historial_modal_widget.dart';
@@ -101,11 +94,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   String? _lugarFiltroNombre;
   int _listPage = 1;
   int _listLimit = 10;
-  int _listTotal = 0;
 
-  bool get _listHasNext => _listTotal > 0
-      ? (_listPage * _listLimit) < _listTotal
-      : _citasListado.length == _listLimit;
   late final _CitasSocketClient _socketClient;
   bool get _usarSoloMisCitas => widget.soloMisCitas || _soloCitasAsignadas;
   bool get _bloquearFiltroMedicoPorSoloMisCitas =>
@@ -245,7 +234,6 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
           : result.citas;
       _listPage = result.page;
       _listLimit = result.limit;
-      _listTotal = result.total;
       _loading = false;
     });
   }
@@ -1016,15 +1004,15 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
                             isLoading: _agendaLoading,
                             isCalendarLoading: _agendaCalendarLoading,
                             scrollController: _agendaScrollController,
-                            colorEstado: (estado) => CitasUtils.colorEstado(estado, _theme),
+                            colorEstado: (estado) =>
+                                CitasUtils.colorEstado(estado, _theme),
                             formatoHoraAgenda: _formatoHoraAgenda,
                             formatoHorarioCita: _formatoHorarioCita,
                             tituloCita: _tituloCita,
                             nombrePaciente: _nombrePaciente,
                             nombreMedico: _nombreMedico,
                             iconoTipoCita: _iconoTipoCita,
-                            onTapCita: (cita) =>
-                                _abrirCitaSegunEstado(cita),
+                            onTapCita: (cita) => _abrirCitaSegunEstado(cita),
                             onTapHora: (hour) {
                               final fechaBase = DateTime(
                                 _agendaDay.year,
@@ -1454,7 +1442,8 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   }
 
   Future<bool> _rechazarCitaSolicitadaConConfirmacion(CitaMedica cita) async {
-    if (!CitasUtils.puedeGestionarSolicitada(cita, Auth.instance.profile)) return false;
+    if (!CitasUtils.puedeGestionarSolicitada(cita, Auth.instance.profile))
+      return false;
     final resultado = await _solicitarMotivoRechazoYEnviar(cita);
     if (resultado != true) {
       if (resultado == false && mounted) {
@@ -1471,7 +1460,8 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   }
 
   Future<bool> _confirmarCitaSolicitadaConOpciones(CitaMedica cita) async {
-    if (!CitasUtils.puedeGestionarSolicitada(cita, Auth.instance.profile)) return false;
+    if (!CitasUtils.puedeGestionarSolicitada(cita, Auth.instance.profile))
+      return false;
 
     final detalleController = TextEditingController(text: cita.detalle);
     DateTime? fechaSeleccionada = cita.fechaInicio;
@@ -1566,7 +1556,6 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     }
   }
 
-
   Future<void> _mostrarDetalleCita(CitaMedica cita) async {
     final detalleData = CitasUtils.construirDetalleModalData(
       cita: cita,
@@ -1639,7 +1628,6 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   }
 }
 
-
 extension _CitasPageFormularioModalPart on _CitasPageState {
   Future<void> _abrirFormulario({CitaMedica? cita, DateTime? fechaBase}) async {
     await abrirCitasFormularioModal(
@@ -1672,9 +1660,6 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
       fechaBase: fechaBase,
     );
   }
-
-
-
 }
 
 extension _CitasPageHistorialModalPart on _CitasPageState {
@@ -1699,7 +1684,6 @@ extension _CitasPageHistorialModalPart on _CitasPageState {
     );
   }
 }
-
 
 class _CitasSocketClient {
   io.Socket? _socket;
