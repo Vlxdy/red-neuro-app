@@ -310,7 +310,7 @@ class CitaEstado {
   static const List<String> values = [
     'BORRADOR',
     'SOLICITADA',
-    'CONFIRMADA',
+    'PROGRAMADA',
     'COMPLETADA',
     'NO_ASISTIO',
     'CANCELADA',

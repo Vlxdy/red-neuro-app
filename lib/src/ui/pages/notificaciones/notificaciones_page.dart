@@ -444,7 +444,7 @@ class _ResumenCard extends StatelessWidget {
                 Text('• Citas sin personal: ${resumen!.citasSinPersonal}'),
               ] else
                 Text(
-                  '• Citas confirmadas asignadas: ${resumen!.citasConfirmadasAsignadas}',
+                  '• Citas programadas asignadas: ${resumen!.citasProgramadasAsignadas}',
                 ),
               const SizedBox(height: 6),
               Text('Fecha: ${resumen!.fecha}'),

@@ -73,7 +73,7 @@ class CitasUtils {
         return theme.grey.withValues(alpha: 0.75);
       case 'SOLICITADA':
         return theme.accent500;
-      case 'CONFIRMADA':
+      case 'PROGRAMADA':
         return theme.primary;
       case 'COMPLETADA':
         return theme.success;
@@ -287,7 +287,7 @@ class CitasUtils {
           isDestructive: true,
           onTap: () => rechazarCitaSolicitada(cita),
         ),
-      if (cita.estado == 'CONFIRMADA' && citaYaIniciada(cita))
+      if (cita.estado == 'PROGRAMADA' && citaYaIniciada(cita))
         CitaDetalleAccion(
           label: 'Completar',
           icon: Icons.task_alt_outlined,
@@ -297,7 +297,7 @@ class CitasUtils {
             return true;
           },
         ),
-      if (cita.estado == 'CONFIRMADA' && citaYaIniciada(cita))
+      if (cita.estado == 'PROGRAMADA' && citaYaIniciada(cita))
         CitaDetalleAccion(
           label: 'No asistió',
           icon: Icons.person_off_outlined,
@@ -306,7 +306,7 @@ class CitasUtils {
             return true;
           },
         ),
-      if (cita.estado == 'CONFIRMADA' ||
+      if (cita.estado == 'PROGRAMADA' ||
           cita.estado == 'CANCELADA' ||
           cita.estado == 'NO_ASISTIO')
         CitaDetalleAccion(
@@ -317,7 +317,7 @@ class CitasUtils {
             return true;
           },
         ),
-      if (cita.estado == 'CONFIRMADA')
+      if (cita.estado == 'PROGRAMADA')
         CitaDetalleAccion(
           label: 'Cancelar',
           icon: Icons.cancel_outlined,

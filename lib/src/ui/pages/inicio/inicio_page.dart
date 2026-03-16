@@ -28,7 +28,7 @@ import 'package:socket_io_client/socket_io_client.dart' as io;
 final GlobalKey<ScaffoldMessengerState> misCitasHomeMessenger =
     GlobalKey<ScaffoldMessengerState>();
 
-enum _BandejaTipo { pendientes, rechazadas, borradores, confirmadas }
+enum _BandejaTipo { pendientes, rechazadas, borradores, programadas }
 
 class MisCitasHomePage extends StatefulWidget {
   const MisCitasHomePage({super.key});
@@ -55,12 +55,12 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
   static const _collapsePendientesKey = 'inicio_bandeja_pendientes_collapsed';
   static const _collapseRechazadasKey = 'inicio_bandeja_rechazadas_collapsed';
   static const _collapseBorradoresKey = 'inicio_bandeja_borradores_collapsed';
-  static const _collapseConfirmadasKey = 'inicio_bandeja_confirmadas_collapsed';
+  static const _collapseProgramadasKey = 'inicio_bandeja_programadas_collapsed';
 
   bool _pendientesCollapsed = false;
   bool _rechazadasCollapsed = false;
   bool _borradoresCollapsed = false;
-  bool _confirmadasCollapsed = false;
+  bool _programadasCollapsed = false;
 
   late final _InicioCitasSocketClient _socketClient;
   Timer? _socketReloadDebouncer;
@@ -96,13 +96,13 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
     final pendientes = await PreferencesService.instance.getString(_collapsePendientesKey);
     final rechazadas = await PreferencesService.instance.getString(_collapseRechazadasKey);
     final borradores = await PreferencesService.instance.getString(_collapseBorradoresKey);
-    final confirmadas = await PreferencesService.instance.getString(_collapseConfirmadasKey);
+    final programadas = await PreferencesService.instance.getString(_collapseProgramadasKey);
     if (!mounted) return;
     setState(() {
       _pendientesCollapsed = pendientes == '1';
       _rechazadasCollapsed = rechazadas == '1';
       _borradoresCollapsed = borradores == '1';
-      _confirmadasCollapsed = confirmadas == '1';
+      _programadasCollapsed = programadas == '1';
     });
   }
 
@@ -124,9 +124,9 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
         setState(() => _borradoresCollapsed = !_borradoresCollapsed);
         await _persistCollapsed(_collapseBorradoresKey, _borradoresCollapsed);
         break;
-      case _BandejaTipo.confirmadas:
-        setState(() => _confirmadasCollapsed = !_confirmadasCollapsed);
-        await _persistCollapsed(_collapseConfirmadasKey, _confirmadasCollapsed);
+      case _BandejaTipo.programadas:
+        setState(() => _programadasCollapsed = !_programadasCollapsed);
+        await _persistCollapsed(_collapseProgramadasKey, _programadasCollapsed);
         break;
     }
   }
@@ -155,8 +155,8 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
         return _rechazadasCollapsed;
       case _BandejaTipo.borradores:
         return _borradoresCollapsed;
-      case _BandejaTipo.confirmadas:
-        return _confirmadasCollapsed;
+      case _BandejaTipo.programadas:
+        return _programadasCollapsed;
     }
   }
 
@@ -403,7 +403,7 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
           backgroundColor: _theme.background,
           appBar: TrayModuleHeader(
             titulo: 'Inicio de citas',
-            subtitulo: 'Alertas, borradores y confirmadas asignadas',
+            subtitulo: 'Alertas, borradores y programadas asignadas',
             actions: _esPersonalAdministrador
                 ? [
                     PopupMenuButton<String>(
@@ -463,10 +463,10 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
                           isCollapsed: _isCollapsed(_BandejaTipo.borradores),
                         ),
                       _buildSeccionWidget(
-                        titulo: 'Confirmadas asignadas',
-                        bloque: datos.confirmadasAsignadas,
-                        tipo: _BandejaTipo.confirmadas,
-                        isCollapsed: _isCollapsed(_BandejaTipo.confirmadas),
+                        titulo: 'Programadas asignadas',
+                        bloque: datos.programadasAsignadas,
+                        tipo: _BandejaTipo.programadas,
+                        isCollapsed: _isCollapsed(_BandejaTipo.programadas),
                       ),
                     ],
                   ),
@@ -546,11 +546,11 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
           accentColor: CitasEstado.borrador.color(_theme),
         ),
       InicioBandejaCounterCard(
-        titulo: 'Confirmadas',
-        valor: contadores.confirmadasAsignadas,
+        titulo: 'Programadas',
+        valor: contadores.programadasAsignadas,
         icon: Icons.event_available,
-        onTap: () => _abrirDetalle(_BandejaTipo.confirmadas),
-        accentColor: CitasEstado.confirmada.color(_theme),
+        onTap: () => _abrirDetalle(_BandejaTipo.programadas),
+        accentColor: CitasEstado.programada.color(_theme),
       ),
     ];
 
@@ -701,9 +701,9 @@ class _BandejaDetallePageState extends State<_BandejaDetallePage> {
   List<CitaMedica> _items = [];
   List<HomeGrupoDia> _grupos = [];
 
-  bool get _isConfirmadas => widget.tipo == _BandejaTipo.confirmadas;
+  bool get _isProgramadas => widget.tipo == _BandejaTipo.programadas;
   bool get _hasMore {
-    final loaded = _isConfirmadas
+    final loaded = _isProgramadas
         ? _grupos.fold<int>(0, (acc, g) => acc + g.items.length)
         : _items.length;
     return loaded < _total;
@@ -728,8 +728,8 @@ class _BandejaDetallePageState extends State<_BandejaDetallePage> {
       }
     });
 
-    if (_isConfirmadas) {
-      final res = await widget.service.obtenerConfirmadasAsignadas(
+    if (_isProgramadas) {
+      final res = await widget.service.obtenerProgramadasAsignadas(
         pagina: _pagina,
         scope: widget.scope,
         idPersonal: widget.idPersonal,
@@ -782,7 +782,7 @@ class _BandejaDetallePageState extends State<_BandejaDetallePage> {
       _BandejaTipo.pendientes => 'Pendientes de aprobación',
       _BandejaTipo.rechazadas => 'Rechazadas solicitadas',
       _BandejaTipo.borradores => 'Borradores',
-      _BandejaTipo.confirmadas => 'Confirmadas asignadas',
+      _BandejaTipo.programadas => 'Programadas asignadas',
     };
 
     return Scaffold(
@@ -794,8 +794,8 @@ class _BandejaDetallePageState extends State<_BandejaDetallePage> {
               children: [
                 Text('Total: $_total', style: const TextStyle(fontWeight: FontWeight.w600)),
                 const SizedBox(height: 12),
-                if (_isConfirmadas)
-                  ..._buildConfirmadas()
+                if (_isProgramadas)
+                  ..._buildProgramadas()
                 else
                   ..._items.map((cita) => InicioCitaCompactTile(cita: cita, onTap: () => widget.onTapCita(cita))),
                 if (_hasMore)
@@ -808,7 +808,7 @@ class _BandejaDetallePageState extends State<_BandejaDetallePage> {
     );
   }
 
-  List<Widget> _buildConfirmadas() {
+  List<Widget> _buildProgramadas() {
     final widgets = <Widget>[];
     for (final group in _grupos) {
       widgets.add(Padding(

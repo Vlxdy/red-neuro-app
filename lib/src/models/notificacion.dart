@@ -50,13 +50,13 @@ class NotificacionItem {
 }
 
 class ResumenDiario {
-  final int citasConfirmadasAsignadas;
+  final int citasProgramadasAsignadas;
   final int citasConPersonal;
   final int citasSinPersonal;
   final String fecha;
 
   const ResumenDiario({
-    required this.citasConfirmadasAsignadas,
+    required this.citasProgramadasAsignadas,
     required this.citasConPersonal,
     required this.citasSinPersonal,
     required this.fecha,
@@ -67,7 +67,7 @@ class ResumenDiario {
         value is int ? value : int.tryParse('$value') ?? 0;
 
     return ResumenDiario(
-      citasConfirmadasAsignadas: parseNum(json['citasConfirmadasAsignadas']),
+      citasProgramadasAsignadas: parseNum(json['citasProgramadasAsignadas']),
       citasConPersonal: parseNum(json['citasConPersonal']),
       citasSinPersonal: parseNum(json['citasSinPersonal']),
       fecha: '${json['fecha'] ?? ''}',

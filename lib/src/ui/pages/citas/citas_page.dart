@@ -804,7 +804,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     const etiquetas = {
       'BORRADOR': 'Borrador',
       'SOLICITADA': 'Solicitada',
-      'CONFIRMADA': 'Confirmada',
+      'PROGRAMADA': 'Programada',
       'COMPLETADA': 'Completada',
       'NO_ASISTIO': 'No asistió',
       'CANCELADA': 'Cancelada',

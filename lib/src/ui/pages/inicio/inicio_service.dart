@@ -94,7 +94,7 @@ class MisCitasHomeService extends ServiceConfig {
     );
   }
 
-  Future<HomeConfirmadasResult> obtenerConfirmadasAsignadas({
+  Future<HomeProgramadasResult> obtenerProgramadasAsignadas({
     int pagina = 1,
     int limite = 10,
     String scope = 'mine',
@@ -103,7 +103,7 @@ class MisCitasHomeService extends ServiceConfig {
     DateTime? fechaBase,
   }) async {
     final response = await _fetchWithRetry(
-      '/citas/home/confirmadas-asignadas',
+      '/citas/home/programadas-asignadas',
       params: {
         'pagina': '$pagina',
         'limite': '$limite',
@@ -115,7 +115,7 @@ class MisCitasHomeService extends ServiceConfig {
     );
 
     if (response.status != StatusNetwork.connected) {
-      return HomeConfirmadasResult.empty(response.message, response.status);
+      return HomeProgramadasResult.empty(response.message, response.status);
     }
 
     final filasRaw = response.data['filas'];
@@ -123,7 +123,7 @@ class MisCitasHomeService extends ServiceConfig {
         ? filasRaw.whereType<Map<String, dynamic>>().map(HomeGrupoDia.fromJson).toList()
         : <HomeGrupoDia>[];
 
-    return HomeConfirmadasResult(
+    return HomeProgramadasResult(
       filas: filas,
       total: _parseInt(response.data['total']),
       status: response.status,
@@ -224,14 +224,14 @@ class HomeBandejaData {
   final HomePreviewBloque pendientesAprobacionAsignadas;
   final HomePreviewBloque rechazadasSolicitadasPorMi;
   final HomePreviewBloque borradores;
-  final HomePreviewBloque confirmadasAsignadas;
+  final HomePreviewBloque programadasAsignadas;
 
   const HomeBandejaData({
     required this.contadores,
     required this.pendientesAprobacionAsignadas,
     required this.rechazadasSolicitadasPorMi,
     required this.borradores,
-    required this.confirmadasAsignadas,
+    required this.programadasAsignadas,
   });
 
   factory HomeBandejaData.fromJson(Map<String, dynamic> json) {
@@ -250,8 +250,8 @@ class HomeBandejaData {
       borradores: HomePreviewBloque.fromJson(
         preview['borradores'] as Map<String, dynamic>? ?? {},
       ),
-      confirmadasAsignadas: HomePreviewBloque.fromJson(
-        preview['confirmadasAsignadas'] as Map<String, dynamic>? ?? {},
+      programadasAsignadas: HomePreviewBloque.fromJson(
+        preview['programadasAsignadas'] as Map<String, dynamic>? ?? {},
       ),
     );
   }
@@ -262,7 +262,7 @@ class HomeBandejaData {
       pendientesAprobacionAsignadas: HomePreviewBloque.empty(),
       rechazadasSolicitadasPorMi: HomePreviewBloque.empty(),
       borradores: HomePreviewBloque.empty(),
-      confirmadasAsignadas: HomePreviewBloque.empty(),
+      programadasAsignadas: HomePreviewBloque.empty(),
     );
   }
 }
@@ -271,13 +271,13 @@ class HomeContadores {
   final int pendientesAprobacionAsignadas;
   final int rechazadasSolicitadasPorMi;
   final int borradores;
-  final int confirmadasAsignadas;
+  final int programadasAsignadas;
 
   const HomeContadores({
     required this.pendientesAprobacionAsignadas,
     required this.rechazadasSolicitadasPorMi,
     required this.borradores,
-    required this.confirmadasAsignadas,
+    required this.programadasAsignadas,
   });
 
   factory HomeContadores.fromJson(Map<String, dynamic> json) {
@@ -286,7 +286,7 @@ class HomeContadores {
       pendientesAprobacionAsignadas: parse(json['pendientesAprobacionAsignadas']),
       rechazadasSolicitadasPorMi: parse(json['rechazadasSolicitadasPorMi']),
       borradores: parse(json['borradores']),
-      confirmadasAsignadas: parse(json['confirmadasAsignadas']),
+      programadasAsignadas: parse(json['programadasAsignadas']),
     );
   }
 
@@ -295,7 +295,7 @@ class HomeContadores {
       pendientesAprobacionAsignadas: 0,
       rechazadasSolicitadasPorMi: 0,
       borradores: 0,
-      confirmadasAsignadas: 0,
+      programadasAsignadas: 0,
     );
   }
 }
@@ -353,21 +353,21 @@ class HomeBandejaListadoResult {
   }
 }
 
-class HomeConfirmadasResult {
+class HomeProgramadasResult {
   final List<HomeGrupoDia> filas;
   final int total;
   final StatusNetwork status;
   final String message;
 
-  const HomeConfirmadasResult({
+  const HomeProgramadasResult({
     required this.filas,
     required this.total,
     required this.status,
     required this.message,
   });
 
-  factory HomeConfirmadasResult.empty(String message, StatusNetwork status) {
-    return HomeConfirmadasResult(
+  factory HomeProgramadasResult.empty(String message, StatusNetwork status) {
+    return HomeProgramadasResult(
       filas: const [],
       total: 0,
       status: status,

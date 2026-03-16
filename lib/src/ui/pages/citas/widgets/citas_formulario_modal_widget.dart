@@ -1481,11 +1481,11 @@ Future<void> abrirCitasFormularioModal({
                   ),
                 if (cita != null &&
                     (cita.estado == 'SOLICITADA' ||
-                        cita.estado == 'CONFIRMADA'))
+                        cita.estado == 'PROGRAMADA'))
                   const SizedBox(height: 12),
                 if (cita != null &&
                     (cita.estado == 'SOLICITADA' ||
-                        cita.estado == 'CONFIRMADA'))
+                        cita.estado == 'PROGRAMADA'))
                   DropdownButtonFormField<String?>(
                     initialValue: estado,
                     decoration: CustomTextInputStyles.decoration(
@@ -1495,13 +1495,13 @@ Future<void> abrirCitasFormularioModal({
                         {
                           cita.estado,
                           if (cita.estado == 'SOLICITADA') ...[
-                            'CONFIRMADA',
+                            'PROGRAMADA',
                             'RECHAZADA',
                           ],
-                          if (cita.estado == 'CONFIRMADA') 'CANCELADA',
+                          if (cita.estado == 'PROGRAMADA') 'CANCELADA',
                         }.map((estadoItem) {
                           final requierePermiso =
-                              estadoItem == 'CONFIRMADA' ||
+                              estadoItem == 'PROGRAMADA' ||
                               estadoItem == 'RECHAZADA';
                           final habilitado =
                               !requierePermiso ||
@@ -1748,7 +1748,7 @@ Future<void> abrirCitasFormularioModal({
       return;
     }
 
-    if (estadoSeleccionado == 'CONFIRMADA') {
+    if (estadoSeleccionado == 'PROGRAMADA') {
       final ok = await handleResponseError(
         await service.confirmarCita(cita.id, body: ajuste),
         'No se pudo confirmar la cita.',
@@ -1771,7 +1771,7 @@ Future<void> abrirCitasFormularioModal({
       );
       return;
     }
-  } else if (estadoActual == 'CONFIRMADA') {
+  } else if (estadoActual == 'PROGRAMADA') {
     if (cambioDetalle ||
         cambioMedico ||
         cambioPaciente ||
@@ -1780,7 +1780,7 @@ Future<void> abrirCitasFormularioModal({
         cambioLugar) {
       showSnackBar(
         messengerKey,
-        'La cita confirmada no es editable.',
+        'La cita programada no es editable.',
         state: StatusSnackBar.error,
         colorText: theme.white,
       );
@@ -1807,7 +1807,7 @@ Future<void> abrirCitasFormularioModal({
         estadoSeleccionado != estadoActual) {
       showSnackBar(
         messengerKey,
-        'En CONFIRMADA solo puedes cancelar o reprogramar.',
+        'En PROGRAMADA solo puedes cancelar o reprogramar.',
         state: StatusSnackBar.error,
         colorText: theme.white,
       );

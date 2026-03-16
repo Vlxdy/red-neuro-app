@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 enum CitasEstado {
   borrador('BORRADOR'),
   solicitada('SOLICITADA'),
-  confirmada('CONFIRMADA'),
+  programada('PROGRAMADA'),
   completada('COMPLETADA'),
   noAsistio('NO_ASISTIO'),
   cancelada('CANCELADA'),
@@ -27,8 +27,8 @@ enum CitasEstado {
         return 'Borrador';
       case CitasEstado.solicitada:
         return 'Solicitada';
-      case CitasEstado.confirmada:
-        return 'Confirmada';
+      case CitasEstado.programada:
+        return 'Programada';
       case CitasEstado.completada:
         return 'Completada';
       case CitasEstado.noAsistio:
@@ -48,7 +48,7 @@ enum CitasEstado {
         return theme.grey.withValues(alpha: 0.75);
       case CitasEstado.solicitada:
         return theme.warning;
-      case CitasEstado.confirmada:
+      case CitasEstado.programada:
         return theme.primary;
       case CitasEstado.completada:
         return theme.success;
@@ -67,7 +67,7 @@ enum CitasEstado {
     switch (this) {
       case CitasEstado.borrador:
       case CitasEstado.solicitada:
-      case CitasEstado.confirmada:
+      case CitasEstado.programada:
       case CitasEstado.completada:
         return theme.black;
       case CitasEstado.noAsistio:
