@@ -40,33 +40,77 @@ class MisCitasHomeService extends ServiceConfig {
   Future<HomeBandejaListadoResult> obtenerPendientesAprobacion({
     int pagina = 1,
     int limite = 10,
+    String scope = 'mine',
+    String? idPersonal,
+    String? idLugar,
+    DateTime? fechaBase,
   }) {
-    return _obtenerListado(path: '/citas/home/pendientes-aprobacion', pagina: pagina, limite: limite);
+    return _obtenerListado(
+      path: '/citas/home/pendientes-aprobacion',
+      pagina: pagina,
+      limite: limite,
+      scope: scope,
+      idPersonal: idPersonal,
+      idLugar: idLugar,
+      fechaBase: fechaBase,
+    );
   }
 
   Future<HomeBandejaListadoResult> obtenerRechazadasSolicitadas({
     int pagina = 1,
     int limite = 10,
+    String scope = 'mine',
+    String? idPersonal,
+    String? idLugar,
+    DateTime? fechaBase,
   }) {
-    return _obtenerListado(path: '/citas/home/rechazadas-solicitadas', pagina: pagina, limite: limite);
+    return _obtenerListado(
+      path: '/citas/home/rechazadas-solicitadas',
+      pagina: pagina,
+      limite: limite,
+      scope: scope,
+      idPersonal: idPersonal,
+      idLugar: idLugar,
+      fechaBase: fechaBase,
+    );
   }
 
   Future<HomeBandejaListadoResult> obtenerBorradores({
     int pagina = 1,
     int limite = 10,
+    String scope = 'mine',
+    String? idPersonal,
+    String? idLugar,
+    DateTime? fechaBase,
   }) {
-    return _obtenerListado(path: '/citas/home/borradores', pagina: pagina, limite: limite);
+    return _obtenerListado(
+      path: '/citas/home/borradores',
+      pagina: pagina,
+      limite: limite,
+      scope: scope,
+      idPersonal: idPersonal,
+      idLugar: idLugar,
+      fechaBase: fechaBase,
+    );
   }
 
   Future<HomeConfirmadasResult> obtenerConfirmadasAsignadas({
     int pagina = 1,
     int limite = 10,
+    String scope = 'mine',
+    String? idPersonal,
+    String? idLugar,
+    DateTime? fechaBase,
   }) async {
     final response = await _fetchWithRetry(
       '/citas/home/confirmadas-asignadas',
       params: {
         'pagina': '$pagina',
         'limite': '$limite',
+        'scope': scope,
+        if (idPersonal != null && idPersonal.isNotEmpty) 'idPersonal': idPersonal,
+        if (idLugar != null && idLugar.isNotEmpty) 'idLugar': idLugar,
+        if (fechaBase != null) 'fechaBase': _formatDate(fechaBase),
       },
     );
 
@@ -91,12 +135,20 @@ class MisCitasHomeService extends ServiceConfig {
     required String path,
     required int pagina,
     required int limite,
+    required String scope,
+    String? idPersonal,
+    String? idLugar,
+    DateTime? fechaBase,
   }) async {
     final response = await _fetchWithRetry(
       path,
       params: {
         'pagina': '$pagina',
         'limite': '$limite',
+        'scope': scope,
+        if (idPersonal != null && idPersonal.isNotEmpty) 'idPersonal': idPersonal,
+        if (idLugar != null && idLugar.isNotEmpty) 'idLugar': idLugar,
+        if (fechaBase != null) 'fechaBase': _formatDate(fechaBase),
       },
     );
 
