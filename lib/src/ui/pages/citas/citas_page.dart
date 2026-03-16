@@ -21,7 +21,6 @@ import 'package:red_neuro_app/src/ui/pages/citas/citas_utils.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_active_filters.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_agenda.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_detalle_modal.dart';
-import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_filters_fields.dart';
 import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_confirmacion_dialog.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_formulario_modal_widget.dart';
