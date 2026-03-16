@@ -25,12 +25,12 @@ import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_filters_fields.da
 import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_confirmacion_dialog.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_formulario_modal_widget.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_filtros_modal_widget.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_catalogo_selector_modal_widget.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_historial_modal_widget.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_modo_mis_citas_banner.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
-part 'widgets/citas_filtros_modal_part.dart';
-part 'widgets/citas_medico_selector_modal_part.dart';
 
 final GlobalKey<ScaffoldMessengerState> citasMessenger =
     GlobalKey<ScaffoldMessengerState>();
@@ -712,6 +712,92 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
       _cargarCitasAgendaSemana(),
       _cargarCitasAgendaDay(day: _agendaDay),
     ]);
+  }
+
+
+  Future<void> _abrirFiltrosModal() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return CitasFiltrosModalWidget(
+          filtersScrollController: _filtersScrollController,
+          buscarController: _buscarController,
+          onBuscarChanged: (value) => setState(() => _buscarTexto = value),
+          estadoController: _estadoFiltroController,
+          onTapEstado: _abrirSelectorEstadoFiltro,
+          mostrarFiltroMedico: widget.mostrarFiltroMedico,
+          personalAsignadoController: _medicoFiltroController,
+          personalAsignadoIdSeleccionado: _medicoFiltro,
+          bloquearFiltroPersonalAsignado: _bloquearFiltroMedicoPorSoloMisCitas,
+          etiquetaPersonalAsignadoBloqueado: _nombreMedicoActual,
+          onTapPersonalAsignado: _abrirSelectorMedicoFiltro,
+          onClearPersonalAsignado: () {
+            setState(() {
+              _medicoFiltro = null;
+              _medicoFiltroNombre = null;
+              _medicoFiltroController.clear();
+            });
+          },
+          lugarController: _lugarFiltroController,
+          lugarIdSeleccionado: _lugarFiltro,
+          onTapLugar: _abrirSelectorLugarFiltro,
+          onClearLugar: () {
+            setState(() {
+              _lugarFiltro = null;
+              _lugarFiltroNombre = null;
+              _lugarFiltroController.clear();
+            });
+          },
+          onLimpiar: _limpiarFiltros,
+          onAplicar: () {
+            _aplicarFiltros();
+            Navigator.pop(context);
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _abrirSelectorMedicoFiltro() async {
+    final seleccionado = await showModalBottomSheet<PersonalMedico>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return CitasMedicoSelectorModalWidget(
+          cargarMedicos: _service.obtenerPersonalMedico,
+        );
+      },
+    );
+
+    if (!mounted || seleccionado == null) return;
+    setState(() {
+      _medicoFiltro = seleccionado.id;
+      _medicoFiltroNombre = seleccionado.nombreCompleto;
+      _medicoFiltroController.text = seleccionado.nombreCompleto;
+    });
+  }
+
+  Future<void> _abrirSelectorLugarFiltro() async {
+    final seleccionado = await showModalBottomSheet<Lugar>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return CitasLugarSelectorModalWidget(
+          cargarLugares: _service.obtenerLugares,
+        );
+      },
+    );
+
+    if (!mounted || seleccionado == null) return;
+    setState(() {
+      _lugarFiltro = seleccionado.id;
+      _lugarFiltroNombre = seleccionado.nombre;
+      _lugarFiltroController.text = seleccionado.nombre;
+    });
   }
 
   String _estadoLabelNatural(String? estado) {
