@@ -1,232 +1,367 @@
-# Propuesta revisada: bandeja de citas con resumen + paginado por fecha
+# Propuesta integral: Bandeja Home de Citas (Mobile)
 
-## Contexto del ajuste
+## 1) Objetivo
 
-Se descarta `GET /citas/paginado` como base de la solución porque ya no se está usando en producto.
-La propuesta debe centrarse en:
+Definir desde cero una propuesta completa para la bandeja de citas del Home mobile que:
 
-1. **Resumen operativo** (totales útiles para la cabecera y tabs).
-2. **Listado paginado por fecha** (no por "número de página" tradicional).
-3. **Priorizar citas solicitadas arriba**, con opción de ocultarlas.
-4. Soportar escenarios donde hay demasiadas solicitadas (también paginadas).
+- priorice el trabajo operativo real del usuario,
+- funcione para `PERSONAL` y para el perfil supervisor de `PERSONAL_SALUD` (`esSupervisor=true`),
+- cargue rápido en la pantalla inicial,
+- soporte alto volumen de citas,
+- se actualice en tiempo real,
+- y permita abrir cada bandeja completa por separado con listados **paginados**.
 
-## Recomendación de UX móvil
-
-Pantalla única "Mis citas" con 3 bloques:
-
-1. **Resumen superior (cards/chips)**
-   - `solicitadasPendientesConfirmacion`
-   - `proximasConfirmadas`
-   - `totalDesdeHoy`
-
-2. **Bloque destacado: "Solicitadas" (colapsable)**
-   - Se muestra arriba por prioridad operativa.
-   - Tiene botón "Ocultar / Mostrar".
-   - Si son muchas, se pagina con cursor propio.
-
-3. **Timeline por fecha (desde hoy en adelante)**
-   - Lista agrupada por día (`2026-03-13`, `2026-03-14`, etc.).
-   - Scroll infinito por cursor de fecha/hora, no por page/limit clásico.
+> Nota: la app administra la navegación incremental en cliente; backend expone paginación (`limite` + `pagina`) para continuar carga.
 
 ---
 
-## APIs propuestas (reemplazo de la lógica anterior)
+## 2) Alcance funcional (lo que debe ver el usuario)
 
-> Regla transversal de alcance:
->
-> - **Personal estándar**: solo puede consultar "mis citas".
-> - **Administrador**: puede consultar "mis citas" o "citas de cualquier personal" usando filtros explícitos.
+La Home muestra primero un resumen y luego previews por prioridad.
 
-## 1) `GET /citas/mis-resumen`
+## Orden obligatorio en Home
 
-Entrega solo métricas para pintar rápidamente la parte superior.
+1. **Alertas operativas**
+   - Citas asignadas al usuario y pendientes de aprobación.
+   - Citas rechazadas donde el usuario fue quien solicitó.
+2. **Borradores creados por el usuario**
+3. **Citas confirmadas asignadas al usuario**
+
+---
+
+## 3) Reglas de visualización en Home
+
+## 3.1 Resumen superior (contadores)
+
+Debe mostrar los contadores de los 4 grupos:
+
+- pendientes de aprobación (asignadas),
+- rechazadas solicitadas por mí,
+- borradores,
+- confirmadas asignadas.
+
+Al tocar un contador, se abre la bandeja completa de ese grupo.
+
+## 3.2 Previews en Home
+
+Regla base de preview por grupo:
+
+- mostrar **máximo 10** ítems por grupo.
+
+Regla especial para confirmadas asignadas:
+
+- ordenar por `fechaInicio ASC` (las próximas primero),
+- si hoy tiene más de 10 confirmadas, mostrar **todas las de hoy**,
+- si hoy tiene 10 o menos, completar hasta 10 con fechas siguientes.
+
+Motivo: evitar ocultar carga crítica del día.
+
+## 3.3 Alto volumen
+
+Si un grupo tiene más resultados que su preview:
+
+- mostrar CTA `Ver todas (N)`.
+- al tocar CTA, abrir **solo esa** bandeja completa.
+- no recargar ni mezclar otros grupos.
+
+---
+
+## 4) Vista sugerida (ASCII)
+
+```text
+┌───────────────────────────────────────────────┐
+│ HOME - Citas                                  │
+│ [Ver: Mis citas v] [Lugar v] [Fecha base v]   │
+├───────────────────────────────────────────────┤
+│ CONTADORES                                    │
+│ [Pend. Aprobación: 12] [Rechazadas: 5]        │
+│ [Borradores: 8]       [Confirmadas: 34]       │
+├───────────────────────────────────────────────┤
+│ 1) ALERTAS OPERATIVAS                         │
+│   Pendientes de aprobación                     │
+│   • ... (preview)                             │
+│   [Ver todas (12)]                            │
+│                                               │
+│   Rechazadas                                  │
+│   • ... (preview)                             │
+│   [Ver todas (5)]                             │
+├───────────────────────────────────────────────┤
+│ 2) BORRADORES                                 │
+│   • ... (preview)                             │
+│   [Ver todas (8)]                             │
+├───────────────────────────────────────────────┤
+│ 3) CONFIRMADAS ASIGNADAS                      │
+│   • Hoy 08:00                                 │
+│   • Hoy 08:30                                 │
+│   • Hoy 09:00                                 │
+│   ... (si hoy >10, mostrar todas las de hoy)  │
+│   [Ver todas (34)]                            │
+└───────────────────────────────────────────────┘
+```
+
+---
+
+## 5) Modelo por rol
+
+## `PERSONAL`
+
+- Solo puede consultar su propio alcance.
+- Backend fuerza `scope=mine`.
+
+## `PERSONAL_ADMINISTRADOR` (funcional)
+
+En este proyecto corresponde a un usuario con rol `PERSONAL_SALUD` y `esSupervisor=true`.
+
+- Inicia por defecto igual que personal (`scope=mine`).
+- Puede cambiar a:
+  - `scope=personal` (`idPersonal` obligatorio),
+  - `scope=all` (según visibilidad permitida por políticas).
+
+## Selector recomendado para admin
+
+- `Mis citas` | `Un personal` | `Todos`
+- Si `Un personal`: selector/autocomplete.
+- Si `Todos`: permitir filtro por lugar y/o rango temporal para control de volumen.
+
+---
+
+## 6) Contrato API propuesto
+
+Se propone separar claramente:
+
+1. **Endpoint único de Home** (resumen + previews).
+2. **Endpoints por bandeja completa** (uno por tipo), todos paginados.
+
+## 6.1 Endpoint de Home
+
+`GET /citas/home/bandeja`
+
+### Propósito
+
+Retornar todo lo necesario para renderizar la Home en una sola llamada:
+
+- contadores,
+- previews por grupo,
+- metadata de filtros aplicados.
 
 ### Query params
 
-- `desde` (ISO opcional, default: inicio del día actual)
-- `hasta` (ISO opcional)
+- `scope` = `mine | personal | all` (default `mine`)
+- `idPersonal` (requerido cuando `scope=personal`)
 - `idLugar` (opcional)
-- `scope` (opcional: `mine` | `all`, default `mine`)
-- `idPersonal` (opcional; requerido cuando `scope=all` y se quiere un personal puntual)
-
-### Comportamiento por rol
-
-- Si el usuario **no es admin**, forzar `scope=mine` ignorando cualquier valor enviado.
-- Si el usuario **es admin**:
-  - `scope=mine`: resumen solo de sus citas.
-  - `scope=all` sin `idPersonal`: resumen global (todos los personales visibles por política).
-  - `scope=all` con `idPersonal`: resumen de un personal específico.
+- `fechaBase` (opcional; default hoy)
+- `limitPreview` (opcional; default 10)
 
 ### Response sugerida
 
 ```json
 {
-  "solicitadasPendientesConfirmacion": 12,
-  "proximasConfirmadas": 7,
-  "totalDesdeHoy": 19,
-  "primeraFechaConCitas": "2026-03-13"
+  "scopeAplicado": "mine",
+  "idPersonalAplicado": "p-123",
+  "fechaBase": "2026-03-16",
+  "contadores": {
+    "pendientesAprobacionAsignadas": 12,
+    "rechazadasSolicitadasPorMi": 5,
+    "borradores": 8,
+    "confirmadasAsignadas": 34
+  },
+  "preview": {
+    "pendientesAprobacionAsignadas": {
+      "items": [],
+      "total": 12,
+      "limitAplicado": 10,
+      "hasMore": true
+    },
+    "rechazadasSolicitadasPorMi": {
+      "items": [],
+      "total": 5,
+      "limitAplicado": 10,
+      "hasMore": false
+    },
+    "borradores": {
+      "items": [],
+      "total": 8,
+      "limitAplicado": 10,
+      "hasMore": false
+    },
+    "confirmadasAsignadas": {
+      "items": [],
+      "total": 34,
+      "reglaAplicada": "top10_o_todas_las_de_hoy_si_hoy_gt_10",
+      "hasMore": true
+    }
+  },
+  "updatedAt": "2026-03-16T14:20:00Z"
 }
 ```
 
 ---
 
-## 2) `GET /citas/mis-solicitadas`
+## 6.2 Endpoints de bandeja completa (uno por caso)
 
-Lista solamente citas en estado `SOLICITADA` para el usuario autenticado.
+Para que cada vista “Ver todas” consulte solo su propio dominio:
 
-### Query params
+1. `GET /citas/home/pendientes-aprobacion`
+2. `GET /citas/home/rechazadas-solicitadas`
+3. `GET /citas/home/borradores`
+4. `GET /citas/home/confirmadas-asignadas` (paginado y agrupado por días)
 
-- `cursor` (opcional; apunta al último item de la página anterior)
-- `limit` (default 20)
+### Query params comunes
+
+- `scope` = `mine | personal | all`
+- `idPersonal` (si aplica)
 - `idLugar` (opcional)
-- `ocultas` (opcional, default `false`; para recuperar lo oculto por el usuario si se requiere)
-- `scope` (opcional: `mine` | `all`, default `mine`)
-- `idPersonal` (opcional; filtro de personal cuando `scope=all`)
+- `fechaBase` (opcional)
+- `limite` (default 10)
+- `pagina` (default 1)
 
-### Orden
+### Query params adicionales para confirmadas (por días)
 
-- `fechaInicio ASC`
-- desempate por `id ASC`
+- `dia` (opcional, formato `YYYY-MM-DD`)
 
-### Response sugerida
+### Response común sugerida
 
 ```json
 {
-  "items": [],
-  "nextCursor": "2026-03-18T10:30:00Z|12345",
-  "hasMore": true,
-  "totalAprox": 120
+  "filas": [],
+  "total": 96
 }
 ```
 
-> `totalAprox` evita costo alto de conteo exacto cuando el volumen es grande.
+> Se propone paginación estándar con `limite` y `pagina`, heredando `PaginacionQueryDto`.
 
-### Nota admin
-
-- Para evitar payloads inmanejables en `scope=all`, se recomienda exigir al menos uno de:
-  - `idPersonal`, o
-  - `idLugar`, o
-  - `desde/hasta` acotado.
-
----
-
-## 3) `GET /citas/mis-timeline`
-
-Listado principal paginado por cursor temporal y agrupado por fecha.
-
-### Query params
-
-- `desde` (ISO opcional, default hoy 00:00)
-- `cursorFechaHora` (ISO opcional)
-- `cursorId` (opcional; desempate estable)
-- `limit` (default 30)
-- `idLugar` (opcional)
-- `incluirSolicitadas` (default `false`, porque ya viven en el bloque superior)
-- `scope` (opcional: `mine` | `all`, default `mine`)
-- `idPersonal` (opcional; filtro de personal cuando `scope=all`)
-
-### Reglas
-
-- Trae estados operativos futuros (por ejemplo `CONFIRMADA`, y opcionalmente `SOLICITADA` si `incluirSolicitadas=true`).
-- Orden ascendente por fecha.
-- Devuelve grupos por fecha para render directo en móvil.
-
-### Response sugerida
+### Respuesta sugerida para confirmadas por días
 
 ```json
 {
   "grupos": [
     {
-      "fecha": "2026-03-13",
+      "dia": "2026-03-16",
       "items": []
     },
     {
-      "fecha": "2026-03-14",
+      "dia": "2026-03-17",
       "items": []
     }
   ],
-  "nextCursor": {
-    "cursorFechaHora": "2026-03-14T16:00:00Z",
-    "cursorId": "98765"
-  },
-  "hasMore": true
+  "total": 96
 }
 ```
 
 ---
 
-## ¿Cuántas APIs conviene tener?
+## 7) Reglas de orden por endpoint
 
-Recomendación: **3 endpoints** (resumen + solicitadas + timeline).
-
-- Menos de 3 sobrecarga un endpoint con demasiada responsabilidad.
-- Más de 3 aumenta complejidad de integración móvil sin beneficio claro.
-
-Si se quiere simplificar al máximo en backend, alternativa de **2 endpoints**:
-
-1. `GET /citas/mis-home` (resumen + primera página solicitadas + primera página timeline)
-2. `GET /citas/mis-home/continuar` (cursor para siguientes páginas por sección)
-
-Pero esta opción suele ser más difícil de mantener.
+- `pendientes-aprobacion`: prioridad operativa, luego `fechaInicio ASC`, `id ASC`.
+- `rechazadas-solicitadas`: `updatedAt DESC`, `id DESC`.
+- `borradores`: `updatedAt DESC`, `id DESC`.
+- `confirmadas-asignadas`: agrupadas por día (`dia ASC`) y dentro de cada día `fechaInicio ASC`, `id ASC`.
 
 ---
 
-## ¿Cómo cubrir el caso administrador sin duplicar endpoints?
+## 8) Paginado en cliente (comportamiento esperado)
 
-La mejor estrategia es **mantener los mismos 3 endpoints** y agregar control de alcance por `scope` + `idPersonal`:
+Para cualquier bandeja completa:
 
-1. Evita crear pares duplicados como `/mis-*` y `/admin-*`.
-2. Reduce costo de mantenimiento en frontend y backend.
-3. Mantiene reglas de seguridad centralizadas por rol.
+1. al abrir, pedir `pagina=1`,
+2. para más resultados, incrementar `pagina`,
+3. usar `limite` para tamaño de página.
 
-### Reglas recomendadas
-
-- `scope=mine`: usa siempre el `idUsuarioRol` autenticado.
-- `scope=all`:
-  - permitido solo a admin,
-  - opcionalmente exige filtros mínimos para proteger performance,
-  - permite ver uno, varios o todos los personales (según políticas Casbin).
-
-### UX recomendada para admin en móvil
-
-- Agregar selector "Ver: Mis citas | Todo el personal".
-- Si elige "Todo el personal", mostrar filtros rápidos:
-  - Personal,
-  - Lugar,
-  - Rango de fechas.
-- Mantener el mismo comportamiento de bloque "Solicitadas" colapsable.
+Para **confirmadas**, además de paginar, se renderiza agrupado por día.
 
 ---
 
-## Comportamiento recomendado para "solicitadas arriba"
+## 9) Tiempo real (sockets)
 
-1. La UI abre con solicitadas **visibles** por defecto.
-2. El usuario puede colapsarlas (preferencia local persistida en app).
-3. Si `solicitadasPendientesConfirmacion > N` (ej. 20), mostrar:
-   - primeras 10/20,
-   - botón "Ver más" que pagina `mis-solicitadas`.
-4. El timeline debajo no se bloquea por cargar solicitadas.
+## Namespace/rooms sugeridos
 
-Así se evita que demasiadas solicitadas "se coman" toda la pantalla.
+- Namespace: `/citas-home`
+- Rooms:
+  - `user:{idUsuario}`
+  - `personal:{idPersonal}`
+  - `admin_scope:{tenantId}` (si aplica)
+
+## Eventos mínimos
+
+- `cita.creada`
+- `cita.actualizada`
+- `cita.estado_cambiado`
+- `cita.eliminada`
+
+## Reacción cliente
+
+- Si usuario está en Home:
+  - actualizar contadores,
+  - refrescar preview del bloque impactado.
+- Si usuario está en una bandeja completa:
+  - actualizar solo esa bandeja.
+- Fallback:
+  - polling suave cada 60–120s si no hay socket,
+  - re-sync tras reconexión con `syncSince`.
 
 ---
 
-## Notas de implementación backend
+## 10) Cambios backend necesarios
 
-1. Mantener autorización por usuario autenticado en servicio ("mis citas").
-2. Usar cursor-based pagination (fecha + id) para estabilidad con datos en movimiento.
-3. Index recomendado en tabla citas:
-   - `(id_personal, estado, fecha_inicio, id)`
-   - `(id_personal, fecha_inicio, id)`
-4. Evitar `COUNT(*)` pesado en cada request; usar conteo aproximado o diferido para badges.
+## 10.1 Crear
+
+- `GET /citas/home/bandeja`
+- `GET /citas/home/pendientes-aprobacion`
+- `GET /citas/home/rechazadas-solicitadas`
+- `GET /citas/home/borradores`
+- `GET /citas/home/confirmadas-asignadas`
+- Publicación de eventos socket de citas (creada/actualizada/estado/eliminada).
+
+## 10.2 Modificar
+
+- Capa de autorización para aplicar `scope` por rol en todos los endpoints.
+- Servicio de consultas para soportar paginación (`limite` + `saltar`).
+- Capa de agregación para construir `contadores + previews` del endpoint Home.
+- Reglas de negocio de confirmadas para excepción “todas las de hoy si hoy >10”.
+
+## 10.3 Reutilizar
+
+- DTO/base de cita para response `items`.
+- Middleware de autenticación/autorización existente.
+- Infraestructura actual de sockets (si ya existe en proyecto).
 
 ---
 
-## Plan de implementación sugerido
+## 11) Performance e índices
 
-1. Crear `GET /citas/mis-resumen`.
-2. Crear `GET /citas/mis-solicitadas` (cursor).
-3. Crear `GET /citas/mis-timeline` (cursor + agrupación por fecha).
-4. Mobile: nueva pantalla con bloque colapsable + timeline infinito.
-5. Métricas: tiempo medio de confirmación y tasa de no asistencia.
-6. Extender frontend/admin con selector de alcance (`mine/all`) + filtros de personal.
+Índices recomendados:
+
+- `(id_personal, estado, fecha_inicio, id)`
+- `(creado_por, estado, updated_at, id)`
+- `(estado, fecha_inicio, id)` para `scope=all`
+
+Recomendaciones:
+
+- evitar `COUNT(*)` pesado en cada request,
+- usar `totalAprox` cuando corresponda,
+- cache corto para contadores de Home si el tráfico crece.
+
+---
+
+## 12) Plan de implementación
+
+1. Definir mapa final de estados por cada bandeja.
+2. Implementar endpoint `GET /citas/home/bandeja`.
+3. Implementar los 4 endpoints de bandeja completa (paginados).
+4. Integrar sockets + eventos.
+5. Ajustar cliente mobile (Home + vistas Ver todas).
+6. QA funcional por rol.
+7. QA de volumen: >10, >100, >1000 por bandeja.
+
+---
+
+## 13) Criterios de aceptación
+
+- Home carga con una sola llamada (`/citas/home/bandeja`).
+- Orden en Home respeta prioridad funcional definida.
+- Cada contador/CTA abre solo su bandeja específica.
+- Cada bandeja completa carga con paginación por `limite` y `pagina`.
+- Confirmadas se renderiza agrupada por día (caso especial).
+- Regla especial de confirmadas de hoy aplicada correctamente.
+- Funciona para `PERSONAL` y para `PERSONAL_SALUD` supervisor (`esSupervisor=true`) según reglas de scope.
+- Cambios se reflejan en tiempo real o fallback de polling.
