@@ -8,103 +8,110 @@ import 'package:red_neuro_app/src/models/cita.dart';
 class MisCitasHomeService extends ServiceConfig {
   MisCitasHomeService(BuildContext context) : super('', context);
 
-  Future<MisCitasResumenResult> obtenerResumen({
-    DateTime? desde,
-    DateTime? hasta,
+  Future<HomeBandejaResult> obtenerBandeja({
+    String scope = 'mine',
+    String? idPersonal,
+    String? idLugar,
+    DateTime? fechaBase,
+    int? limitPreview,
   }) async {
     final response = await _fetchWithRetry(
-      '/citas/mis-resumen',
+      '/citas/home/bandeja',
       params: {
-        if (desde != null) 'desde': desde.toIso8601String(),
-        if (hasta != null) 'hasta': hasta.toIso8601String(),
+        'scope': scope,
+        if (idPersonal != null && idPersonal.isNotEmpty) 'idPersonal': idPersonal,
+        if (idLugar != null && idLugar.isNotEmpty) 'idLugar': idLugar,
+        if (fechaBase != null) 'fechaBase': _formatDate(fechaBase),
+        if (limitPreview != null) 'limitPreview': '$limitPreview',
       },
     );
 
     if (response.status != StatusNetwork.connected) {
-      return MisCitasResumenResult.empty(response.message, response.status);
+      return HomeBandejaResult.empty(response.message, response.status);
     }
 
-    final data = response.data;
-    return MisCitasResumenResult(
-      solicitadasPendientesConfirmacion:
-          _parseInt(data['solicitadasPendientesConfirmacion']),
-      proximasConfirmadas: _parseInt(data['proximasConfirmadas']),
-      totalDesdeHoy: _parseInt(data['totalDesdeHoy']),
-      primeraFechaConCitas: _parseDate(data['primeraFechaConCitas']),
+    return HomeBandejaResult(
+      datos: HomeBandejaData.fromJson(response.data),
       status: response.status,
       message: response.message,
     );
   }
 
-  Future<MisCitasSolicitadasResult> obtenerSolicitadas({
-    String? cursor,
+  Future<HomeBandejaListadoResult> obtenerPendientesAprobacion({
+    int pagina = 1,
+    int limite = 10,
+  }) {
+    return _obtenerListado(path: '/citas/home/pendientes-aprobacion', pagina: pagina, limite: limite);
+  }
+
+  Future<HomeBandejaListadoResult> obtenerRechazadasSolicitadas({
+    int pagina = 1,
+    int limite = 10,
+  }) {
+    return _obtenerListado(path: '/citas/home/rechazadas-solicitadas', pagina: pagina, limite: limite);
+  }
+
+  Future<HomeBandejaListadoResult> obtenerBorradores({
+    int pagina = 1,
+    int limite = 10,
+  }) {
+    return _obtenerListado(path: '/citas/home/borradores', pagina: pagina, limite: limite);
+  }
+
+  Future<HomeConfirmadasResult> obtenerConfirmadasAsignadas({
+    int pagina = 1,
+    int limite = 10,
   }) async {
     final response = await _fetchWithRetry(
-      '/citas/mis-solicitadas',
+      '/citas/home/confirmadas-asignadas',
       params: {
-        if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
+        'pagina': '$pagina',
+        'limite': '$limite',
       },
     );
 
     if (response.status != StatusNetwork.connected) {
-      return MisCitasSolicitadasResult.empty(response.message, response.status);
+      return HomeConfirmadasResult.empty(response.message, response.status);
     }
 
-    final data = response.data;
-    final itemsRaw = data['items'];
-    final items = (itemsRaw is List)
-        ? itemsRaw
-            .whereType<Map<String, dynamic>>()
-            .map(CitaMedica.fromJson)
-            .toList()
+    final filasRaw = response.data['filas'];
+    final filas = (filasRaw is List)
+        ? filasRaw.whereType<Map<String, dynamic>>().map(HomeGrupoDia.fromJson).toList()
+        : <HomeGrupoDia>[];
+
+    return HomeConfirmadasResult(
+      filas: filas,
+      total: _parseInt(response.data['total']),
+      status: response.status,
+      message: response.message,
+    );
+  }
+
+  Future<HomeBandejaListadoResult> _obtenerListado({
+    required String path,
+    required int pagina,
+    required int limite,
+  }) async {
+    final response = await _fetchWithRetry(
+      path,
+      params: {
+        'pagina': '$pagina',
+        'limite': '$limite',
+      },
+    );
+
+    if (response.status != StatusNetwork.connected) {
+      return HomeBandejaListadoResult.empty(response.message, response.status);
+    }
+
+    final filasRaw = response.data['filas'];
+    final filas = (filasRaw is List)
+        ? filasRaw.whereType<Map<String, dynamic>>().map(CitaMedica.fromJson).toList()
         : <CitaMedica>[];
 
-    return MisCitasSolicitadasResult(
-      items: items,
-      nextCursor: data['nextCursor']?.toString(),
-      hasMore: data['hasMore'] == true,
-      totalAprox: _parseInt(data['totalAprox']),
-      status: response.status,
-      message: response.message,
-    );
-  }
-
-  Future<MisCitasTimelineResult> obtenerTimeline({
-    String? cursorFechaHora,
-    String? cursorId,
-  }) async {
-    final response = await _fetchWithRetry(
-      '/citas/mis-timeline',
-      params: {
-        if (cursorFechaHora != null && cursorFechaHora.isNotEmpty)
-          'cursorFechaHora': cursorFechaHora,
-        if (cursorId != null && cursorId.isNotEmpty) 'cursorId': cursorId,
-      },
-    );
-
-    if (response.status != StatusNetwork.connected) {
-      return MisCitasTimelineResult.empty(response.message, response.status);
-    }
-
-    final data = response.data;
-    final gruposRaw = data['grupos'];
-    final grupos = (gruposRaw is List)
-        ? gruposRaw
-            .whereType<Map<String, dynamic>>()
-            .map(MisCitasTimelineGroup.fromJson)
-            .toList()
-        : <MisCitasTimelineGroup>[];
-
-    final cursorRaw = data['nextCursor'];
-    return MisCitasTimelineResult(
-      grupos: grupos,
-      hasMore: data['hasMore'] == true,
-      nextCursorFechaHora: cursorRaw is Map<String, dynamic>
-          ? cursorRaw['cursorFechaHora']?.toString()
-          : null,
-      nextCursorId: cursorRaw is Map<String, dynamic>
-          ? cursorRaw['cursorId']?.toString()
-          : null,
+    return HomeBandejaListadoResult(
+      filas: filas,
+      total: _parseInt(response.data['total']),
       status: response.status,
       message: response.message,
     );
@@ -133,114 +140,202 @@ class MisCitasHomeService extends ServiceConfig {
     return int.tryParse(value?.toString() ?? '') ?? 0;
   }
 
-  DateTime? _parseDate(dynamic value) {
-    if (value == null) return null;
-    return DateTime.tryParse(value.toString());
+  String _formatDate(DateTime date) {
+    final m = date.month.toString().padLeft(2, '0');
+    final d = date.day.toString().padLeft(2, '0');
+    return '${date.year}-$m-$d';
   }
 }
 
-class MisCitasResumenResult {
-  final int solicitadasPendientesConfirmacion;
-  final int proximasConfirmadas;
-  final int totalDesdeHoy;
-  final DateTime? primeraFechaConCitas;
+class HomeBandejaResult {
+  final HomeBandejaData datos;
   final StatusNetwork status;
   final String message;
 
-  const MisCitasResumenResult({
-    required this.solicitadasPendientesConfirmacion,
-    required this.proximasConfirmadas,
-    required this.totalDesdeHoy,
-    required this.primeraFechaConCitas,
+  const HomeBandejaResult({
+    required this.datos,
     required this.status,
     required this.message,
   });
 
-  factory MisCitasResumenResult.empty(String message, StatusNetwork status) {
-    return MisCitasResumenResult(
-      solicitadasPendientesConfirmacion: 0,
-      proximasConfirmadas: 0,
-      totalDesdeHoy: 0,
-      primeraFechaConCitas: null,
+  factory HomeBandejaResult.empty(String message, StatusNetwork status) {
+    return HomeBandejaResult(
+      datos: HomeBandejaData.empty(),
       status: status,
       message: message,
     );
   }
 }
 
-class MisCitasSolicitadasResult {
-  final List<CitaMedica> items;
-  final String? nextCursor;
-  final bool hasMore;
-  final int totalAprox;
-  final StatusNetwork status;
-  final String message;
+class HomeBandejaData {
+  final HomeContadores contadores;
+  final HomePreviewBloque pendientesAprobacionAsignadas;
+  final HomePreviewBloque rechazadasSolicitadasPorMi;
+  final HomePreviewBloque borradores;
+  final HomePreviewBloque confirmadasAsignadas;
 
-  const MisCitasSolicitadasResult({
+  const HomeBandejaData({
+    required this.contadores,
+    required this.pendientesAprobacionAsignadas,
+    required this.rechazadasSolicitadasPorMi,
+    required this.borradores,
+    required this.confirmadasAsignadas,
+  });
+
+  factory HomeBandejaData.fromJson(Map<String, dynamic> json) {
+    final preview = (json['preview'] is Map<String, dynamic>)
+        ? json['preview'] as Map<String, dynamic>
+        : <String, dynamic>{};
+
+    return HomeBandejaData(
+      contadores: HomeContadores.fromJson(json['contadores'] as Map<String, dynamic>? ?? {}),
+      pendientesAprobacionAsignadas: HomePreviewBloque.fromJson(
+        preview['pendientesAprobacionAsignadas'] as Map<String, dynamic>? ?? {},
+      ),
+      rechazadasSolicitadasPorMi: HomePreviewBloque.fromJson(
+        preview['rechazadasSolicitadasPorMi'] as Map<String, dynamic>? ?? {},
+      ),
+      borradores: HomePreviewBloque.fromJson(
+        preview['borradores'] as Map<String, dynamic>? ?? {},
+      ),
+      confirmadasAsignadas: HomePreviewBloque.fromJson(
+        preview['confirmadasAsignadas'] as Map<String, dynamic>? ?? {},
+      ),
+    );
+  }
+
+  factory HomeBandejaData.empty() {
+    return HomeBandejaData(
+      contadores: HomeContadores.empty(),
+      pendientesAprobacionAsignadas: HomePreviewBloque.empty(),
+      rechazadasSolicitadasPorMi: HomePreviewBloque.empty(),
+      borradores: HomePreviewBloque.empty(),
+      confirmadasAsignadas: HomePreviewBloque.empty(),
+    );
+  }
+}
+
+class HomeContadores {
+  final int pendientesAprobacionAsignadas;
+  final int rechazadasSolicitadasPorMi;
+  final int borradores;
+  final int confirmadasAsignadas;
+
+  const HomeContadores({
+    required this.pendientesAprobacionAsignadas,
+    required this.rechazadasSolicitadasPorMi,
+    required this.borradores,
+    required this.confirmadasAsignadas,
+  });
+
+  factory HomeContadores.fromJson(Map<String, dynamic> json) {
+    int parse(dynamic value) => int.tryParse(value?.toString() ?? '') ?? 0;
+    return HomeContadores(
+      pendientesAprobacionAsignadas: parse(json['pendientesAprobacionAsignadas']),
+      rechazadasSolicitadasPorMi: parse(json['rechazadasSolicitadasPorMi']),
+      borradores: parse(json['borradores']),
+      confirmadasAsignadas: parse(json['confirmadasAsignadas']),
+    );
+  }
+
+  factory HomeContadores.empty() {
+    return const HomeContadores(
+      pendientesAprobacionAsignadas: 0,
+      rechazadasSolicitadasPorMi: 0,
+      borradores: 0,
+      confirmadasAsignadas: 0,
+    );
+  }
+}
+
+class HomePreviewBloque {
+  final List<CitaMedica> items;
+  final int total;
+  final int limitAplicado;
+  final bool hasMore;
+
+  const HomePreviewBloque({
     required this.items,
-    required this.nextCursor,
+    required this.total,
+    required this.limitAplicado,
     required this.hasMore,
-    required this.totalAprox,
-    required this.status,
-    required this.message,
   });
 
-  factory MisCitasSolicitadasResult.empty(String message, StatusNetwork status) {
-    return MisCitasSolicitadasResult(
-      items: const [],
-      nextCursor: null,
-      hasMore: false,
-      totalAprox: 0,
-      status: status,
-      message: message,
+  factory HomePreviewBloque.fromJson(Map<String, dynamic> json) {
+    final itemsRaw = json['items'];
+    return HomePreviewBloque(
+      items: (itemsRaw is List)
+          ? itemsRaw.whereType<Map<String, dynamic>>().map(CitaMedica.fromJson).toList()
+          : <CitaMedica>[],
+      total: int.tryParse(json['total']?.toString() ?? '') ?? 0,
+      limitAplicado: int.tryParse(json['limitAplicado']?.toString() ?? '') ?? 0,
+      hasMore: json['hasMore'] == true,
     );
+  }
+
+  factory HomePreviewBloque.empty() {
+    return const HomePreviewBloque(items: [], total: 0, limitAplicado: 0, hasMore: false);
   }
 }
 
-class MisCitasTimelineResult {
-  final List<MisCitasTimelineGroup> grupos;
-  final String? nextCursorFechaHora;
-  final String? nextCursorId;
-  final bool hasMore;
+class HomeBandejaListadoResult {
+  final List<CitaMedica> filas;
+  final int total;
   final StatusNetwork status;
   final String message;
 
-  const MisCitasTimelineResult({
-    required this.grupos,
-    required this.nextCursorFechaHora,
-    required this.nextCursorId,
-    required this.hasMore,
+  const HomeBandejaListadoResult({
+    required this.filas,
+    required this.total,
     required this.status,
     required this.message,
   });
 
-  factory MisCitasTimelineResult.empty(String message, StatusNetwork status) {
-    return MisCitasTimelineResult(
-      grupos: const [],
-      nextCursorFechaHora: null,
-      nextCursorId: null,
-      hasMore: false,
+  factory HomeBandejaListadoResult.empty(String message, StatusNetwork status) {
+    return HomeBandejaListadoResult(
+      filas: const [],
+      total: 0,
       status: status,
       message: message,
     );
   }
 }
 
-class MisCitasTimelineGroup {
-  final DateTime? fecha;
+class HomeConfirmadasResult {
+  final List<HomeGrupoDia> filas;
+  final int total;
+  final StatusNetwork status;
+  final String message;
+
+  const HomeConfirmadasResult({
+    required this.filas,
+    required this.total,
+    required this.status,
+    required this.message,
+  });
+
+  factory HomeConfirmadasResult.empty(String message, StatusNetwork status) {
+    return HomeConfirmadasResult(
+      filas: const [],
+      total: 0,
+      status: status,
+      message: message,
+    );
+  }
+}
+
+class HomeGrupoDia {
+  final String dia;
   final List<CitaMedica> items;
 
-  const MisCitasTimelineGroup({required this.fecha, required this.items});
+  const HomeGrupoDia({required this.dia, required this.items});
 
-  factory MisCitasTimelineGroup.fromJson(Map<String, dynamic> json) {
+  factory HomeGrupoDia.fromJson(Map<String, dynamic> json) {
     final itemsRaw = json['items'];
-    return MisCitasTimelineGroup(
-      fecha: DateTime.tryParse(json['fecha']?.toString() ?? ''),
+    return HomeGrupoDia(
+      dia: json['dia']?.toString() ?? '',
       items: (itemsRaw is List)
-          ? itemsRaw
-                .whereType<Map<String, dynamic>>()
-                .map(CitaMedica.fromJson)
-                .toList()
+          ? itemsRaw.whereType<Map<String, dynamic>>().map(CitaMedica.fromJson).toList()
           : <CitaMedica>[],
     );
   }

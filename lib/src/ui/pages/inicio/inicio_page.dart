@@ -2,20 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
+import 'package:red_neuro_app/src/constants/citas_estado.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/plugins/utils/preferences.dart';
 import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
+import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_service.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_utils.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_detalle_modal.dart';
-import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/pages/inicio/inicio_citas_utils.dart';
 import 'package:red_neuro_app/src/ui/pages/inicio/inicio_service.dart';
+import 'package:red_neuro_app/src/ui/pages/inicio/widgets/inicio_bandeja_counter_card.dart';
+import 'package:red_neuro_app/src/ui/pages/inicio/widgets/inicio_bandeja_section_card.dart';
+import 'package:red_neuro_app/src/ui/pages/inicio/widgets/inicio_cita_compact_tile.dart';
 
 final GlobalKey<ScaffoldMessengerState> misCitasHomeMessenger =
     GlobalKey<ScaffoldMessengerState>();
+
+enum _BandejaTipo { pendientes, rechazadas, borradores, confirmadas }
 
 class MisCitasHomePage extends StatefulWidget {
   const MisCitasHomePage({super.key});
@@ -25,162 +31,97 @@ class MisCitasHomePage extends StatefulWidget {
 }
 
 class _MisCitasHomePageState extends State<MisCitasHomePage> {
-  static const _collapsedKey = 'mis_citas_solicitadas_collapsed';
-
   final _theme = ThemeController.instance;
-  final _scrollController = ScrollController();
-
   late final MisCitasHomeService _service;
   late final CitasService _citasService;
 
   final _dateFormat = DateFormat('dd/MM/yyyy', 'es');
   final _dateTimeFormat = DateFormat('dd/MM/yyyy HH:mm', 'es');
 
-  MisCitasResumenResult _resumen =
-      MisCitasResumenResult.empty('', StatusNetwork.noContent);
-  List<CitaMedica> _solicitadas = [];
-  List<MisCitasTimelineGroup> _timeline = [];
-
-  String? _solicitadasCursor;
-  bool _solicitadasHasMore = true;
-  int _solicitadasTotalAprox = 0;
-
-  bool _timelineHasMore = true;
-  String? _timelineCursorFechaHora;
-  String? _timelineCursorId;
-
+  HomeBandejaResult _bandeja = HomeBandejaResult.empty('', StatusNetwork.noContent);
   bool _loading = true;
-  bool _loadingSolicitadas = false;
-  bool _loadingTimeline = false;
-  bool _solicitadasCollapsed = false;
 
-  int get _timelineItemsCount => _timeline.fold<int>(
-        0,
-        (prev, element) => prev + element.items.length,
-      );
+  static const _collapsePendientesKey = 'inicio_bandeja_pendientes_collapsed';
+  static const _collapseRechazadasKey = 'inicio_bandeja_rechazadas_collapsed';
+  static const _collapseBorradoresKey = 'inicio_bandeja_borradores_collapsed';
+  static const _collapseConfirmadasKey = 'inicio_bandeja_confirmadas_collapsed';
+
+  bool _pendientesCollapsed = false;
+  bool _rechazadasCollapsed = false;
+  bool _borradoresCollapsed = false;
+  bool _confirmadasCollapsed = false;
 
   @override
   void initState() {
     super.initState();
     _service = MisCitasHomeService(context);
     _citasService = CitasService(context);
-    _scrollController.addListener(_onScroll);
-    _loadCollapsedPreference();
-    _loadInitial();
+    _loadCollapsedPreferences();
+    _loadBandeja();
   }
 
-  @override
-  void dispose() {
-    _scrollController
-      ..removeListener(_onScroll)
-      ..dispose();
-    super.dispose();
-  }
-
-  Future<void> _loadCollapsedPreference() async {
-    final saved = await PreferencesService.instance.getString(_collapsedKey);
-    if (!mounted || saved.isEmpty) return;
-    setState(() => _solicitadasCollapsed = saved == '1');
-  }
-
-  Future<void> _persistCollapsedPreference() async {
-    await PreferencesService.instance.setString(
-      _collapsedKey,
-      _solicitadasCollapsed ? '1' : '0',
-    );
-  }
-
-  Future<void> _loadInitial() async {
+  Future<void> _loadCollapsedPreferences() async {
+    final pendientes = await PreferencesService.instance.getString(_collapsePendientesKey);
+    final rechazadas = await PreferencesService.instance.getString(_collapseRechazadasKey);
+    final borradores = await PreferencesService.instance.getString(_collapseBorradoresKey);
+    final confirmadas = await PreferencesService.instance.getString(_collapseConfirmadasKey);
+    if (!mounted) return;
     setState(() {
-      _loading = true;
-      _solicitadas = [];
-      _timeline = [];
-      _solicitadasCursor = null;
-      _timelineCursorFechaHora = null;
-      _timelineCursorId = null;
-      _solicitadasHasMore = true;
-      _timelineHasMore = true;
-      _solicitadasTotalAprox = 0;
+      _pendientesCollapsed = pendientes == '1';
+      _rechazadasCollapsed = rechazadas == '1';
+      _borradoresCollapsed = borradores == '1';
+      _confirmadasCollapsed = confirmadas == '1';
     });
-
-    await Future.wait([
-      _loadResumen(),
-      _loadSolicitadas(reset: true),
-      _loadTimeline(reset: true),
-    ]);
-
-    if (!mounted) return;
-    setState(() => _loading = false);
   }
 
-  Future<void> _loadResumen() async {
-    final resumen = await _service.obtenerResumen();
-    if (!mounted) return;
-    setState(() => _resumen = resumen);
-    if (resumen.status != StatusNetwork.connected && resumen.message.isNotEmpty) {
-      _showError(resumen.message);
+  Future<void> _persistCollapsed(String key, bool value) async {
+    await PreferencesService.instance.setString(key, value ? '1' : '0');
+  }
+
+  Future<void> _toggleBloque(_BandejaTipo tipo) async {
+    switch (tipo) {
+      case _BandejaTipo.pendientes:
+        setState(() => _pendientesCollapsed = !_pendientesCollapsed);
+        await _persistCollapsed(_collapsePendientesKey, _pendientesCollapsed);
+        break;
+      case _BandejaTipo.rechazadas:
+        setState(() => _rechazadasCollapsed = !_rechazadasCollapsed);
+        await _persistCollapsed(_collapseRechazadasKey, _rechazadasCollapsed);
+        break;
+      case _BandejaTipo.borradores:
+        setState(() => _borradoresCollapsed = !_borradoresCollapsed);
+        await _persistCollapsed(_collapseBorradoresKey, _borradoresCollapsed);
+        break;
+      case _BandejaTipo.confirmadas:
+        setState(() => _confirmadasCollapsed = !_confirmadasCollapsed);
+        await _persistCollapsed(_collapseConfirmadasKey, _confirmadasCollapsed);
+        break;
     }
   }
 
-  Future<void> _loadSolicitadas({bool reset = false}) async {
-    if (_loadingSolicitadas) return;
-    if (!reset && !_solicitadasHasMore) return;
+  bool _isCollapsed(_BandejaTipo tipo) {
+    switch (tipo) {
+      case _BandejaTipo.pendientes:
+        return _pendientesCollapsed;
+      case _BandejaTipo.rechazadas:
+        return _rechazadasCollapsed;
+      case _BandejaTipo.borradores:
+        return _borradoresCollapsed;
+      case _BandejaTipo.confirmadas:
+        return _confirmadasCollapsed;
+    }
+  }
 
-    setState(() => _loadingSolicitadas = true);
-    final result = await _service.obtenerSolicitadas(
-      cursor: reset ? null : _solicitadasCursor,
-    );
-
+  Future<void> _loadBandeja() async {
+    setState(() => _loading = true);
+    final result = await _service.obtenerBandeja(limitPreview: 5);
     if (!mounted) return;
-
-    if (result.status != StatusNetwork.connected) {
+    setState(() {
+      _bandeja = result;
+      _loading = false;
+    });
+    if (result.status != StatusNetwork.connected && result.message.isNotEmpty) {
       _showError(result.message);
-      setState(() => _loadingSolicitadas = false);
-      return;
-    }
-
-    setState(() {
-      _solicitadas = reset ? result.items : [..._solicitadas, ...result.items];
-      _solicitadasCursor = result.nextCursor;
-      _solicitadasHasMore = result.hasMore;
-      _solicitadasTotalAprox = result.totalAprox;
-      _loadingSolicitadas = false;
-    });
-  }
-
-  Future<void> _loadTimeline({bool reset = false}) async {
-    if (_loadingTimeline) return;
-    if (!reset && !_timelineHasMore) return;
-
-    setState(() => _loadingTimeline = true);
-    final result = await _service.obtenerTimeline(
-      cursorFechaHora: reset ? null : _timelineCursorFechaHora,
-      cursorId: reset ? null : _timelineCursorId,
-    );
-
-    if (!mounted) return;
-
-    if (result.status != StatusNetwork.connected) {
-      _showError(result.message);
-      setState(() => _loadingTimeline = false);
-      return;
-    }
-
-    setState(() {
-      _timeline = reset ? result.grupos : [..._timeline, ...result.grupos];
-      _timelineHasMore = result.hasMore;
-      _timelineCursorFechaHora = result.nextCursorFechaHora;
-      _timelineCursorId = result.nextCursorId;
-      _loadingTimeline = false;
-    });
-  }
-
-  void _onScroll() {
-    if (!_scrollController.hasClients || _loading || _loadingTimeline) return;
-    final current = _scrollController.position.pixels;
-    final max = _scrollController.position.maxScrollExtent;
-    if (current >= max - 180) {
-      _loadTimeline();
     }
   }
 
@@ -194,9 +135,16 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
     );
   }
 
-  Future<void> _toggleSolicitadas() async {
-    setState(() => _solicitadasCollapsed = !_solicitadasCollapsed);
-    await _persistCollapsedPreference();
+  Future<void> _abrirDetalle(_BandejaTipo tipo) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => _BandejaDetallePage(
+          tipo: tipo,
+          service: _service,
+          onTapCita: _mostrarDetalleCita,
+        ),
+      ),
+    );
   }
 
   Future<void> _mostrarDetalleCita(CitaMedica cita) async {
@@ -251,7 +199,6 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
     );
   }
 
-
   Future<void> _abrirFormularioNoDisponible(CitaMedica cita) async {
     InicioCitasUtils.mostrarNoDisponible(
       messenger: misCitasHomeMessenger,
@@ -270,7 +217,7 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
       mounted: mounted,
       onError: _showError,
     );
-    if (ok) await _loadInitial();
+    if (ok) await _loadBandeja();
     return ok;
   }
 
@@ -283,7 +230,7 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
       mounted: mounted,
       onError: _showError,
     );
-    if (ok) await _loadInitial();
+    if (ok) await _loadBandeja();
     return ok;
   }
 
@@ -297,7 +244,7 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
       mounted: mounted,
       onError: _showError,
     );
-    if (ok) await _loadInitial();
+    if (ok) await _loadBandeja();
   }
 
   Future<void> _marcarNoAsistio(CitaMedica cita) async {
@@ -310,7 +257,7 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
       mounted: mounted,
       onError: _showError,
     );
-    if (ok) await _loadInitial();
+    if (ok) await _loadBandeja();
   }
 
   Future<void> _reprogramarCita(CitaMedica cita) async {
@@ -331,7 +278,7 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
       mounted: mounted,
       onError: _showError,
     );
-    if (ok) await _loadInitial();
+    if (ok) await _loadBandeja();
   }
 
   Future<void> _eliminarBorrador(CitaMedica cita) async {
@@ -344,12 +291,14 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
       mounted: mounted,
       onError: _showError,
     );
-    if (ok) await _loadInitial();
+    if (ok) await _loadBandeja();
   }
-
 
   @override
   Widget build(BuildContext context) {
+    final datos = _bandeja.datos;
+    final contadores = datos.contadores;
+
     return TemplatePage(
       showEnvironmentBanner: false,
       page: ScaffoldMessenger(
@@ -358,27 +307,43 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
           backgroundColor: _theme.background,
           appBar: const TrayModuleHeader(
             titulo: 'Inicio de citas',
-            subtitulo: 'Resumen, solicitadas y timeline de mis citas',
+            subtitulo: 'Alertas, borradores y confirmadas asignadas',
           ),
           body: RefreshIndicator(
-            onRefresh: _loadInitial,
+            onRefresh: _loadBandeja,
             child: _loading
-                ? ListView(
-                    children: const [
-                      SizedBox(height: 240),
-                      Center(child: CircularProgressIndicator()),
-                    ],
-                  )
-                : CustomScrollView(
-                    controller: _scrollController,
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    slivers: [
-                      SliverToBoxAdapter(child: _buildResumen()),
-                      SliverToBoxAdapter(child: _buildSolicitadasHeader()),
-                      if (!_solicitadasCollapsed)
-                        SliverToBoxAdapter(child: _buildSolicitadasItems()),
-                      SliverToBoxAdapter(child: _buildTimelineHeader()),
-                      ..._buildTimelineSlivers(),
+                ? ListView(children: const [SizedBox(height: 240), Center(child: CircularProgressIndicator())])
+                : ListView(
+                    padding: const EdgeInsets.all(12),
+                    children: [
+                      _buildContadores(contadores),
+                      const SizedBox(height: 12),
+                      _buildSeccionWidget(
+                        titulo: 'Pendientes de aprobación',
+                        bloque: datos.pendientesAprobacionAsignadas,
+                        tipo: _BandejaTipo.pendientes,
+                        isCollapsed: _isCollapsed(_BandejaTipo.pendientes),
+                      ),
+                      if (datos.rechazadasSolicitadasPorMi.total > 0)
+                        _buildSeccionWidget(
+                          titulo: 'Rechazadas solicitadas por mí',
+                          bloque: datos.rechazadasSolicitadasPorMi,
+                          tipo: _BandejaTipo.rechazadas,
+                          isCollapsed: _isCollapsed(_BandejaTipo.rechazadas),
+                        ),
+                      if (datos.borradores.total > 0)
+                        _buildSeccionWidget(
+                          titulo: 'Borradores',
+                          bloque: datos.borradores,
+                          tipo: _BandejaTipo.borradores,
+                          isCollapsed: _isCollapsed(_BandejaTipo.borradores),
+                        ),
+                      _buildSeccionWidget(
+                        titulo: 'Confirmadas asignadas',
+                        bloque: datos.confirmadasAsignadas,
+                        tipo: _BandejaTipo.confirmadas,
+                        isCollapsed: _isCollapsed(_BandejaTipo.confirmadas),
+                      ),
                     ],
                   ),
           ),
@@ -387,444 +352,210 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
     );
   }
 
-  Widget _buildResumen() {
-    final primeraFecha = _resumen.primeraFechaConCitas;
-    final textoPrimeraFecha = primeraFecha == null
-        ? 'Sin fecha'
-        : DateFormat('EEE d MMM', 'es').format(primeraFecha);
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
-      child: Row(
-        children: [
-          Expanded(
-            child: _SummaryMiniCard(
-              titulo: 'Solicitadas',
-              valor: _resumen.solicitadasPendientesConfirmacion,
-              icon: Icons.pending_actions,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: _SummaryMiniCard(
-              titulo: 'Confirmadas',
-              valor: _resumen.proximasConfirmadas,
-              icon: Icons.event_available,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: _SummaryMiniCard(
-              titulo: 'Desde hoy',
-              valor: _resumen.totalDesdeHoy,
-              icon: Icons.today,
-              extra: textoPrimeraFecha,
-            ),
-          ),
-        ],
+  Widget _buildContadores(HomeContadores contadores) {
+    final cards = <Widget>[
+      InicioBandejaCounterCard(
+        titulo: 'Pendientes',
+        valor: contadores.pendientesAprobacionAsignadas,
+        icon: Icons.pending_actions,
+        onTap: () => _abrirDetalle(_BandejaTipo.pendientes),
+        accentColor: CitasEstado.solicitada.color(_theme),
       ),
-    );
-  }
-
-  Widget _buildSolicitadasHeader() {
-    final totalLabel = _solicitadasTotalAprox > 0
-        ? 'Mostrando ${_solicitadas.length} de aprox $_solicitadasTotalAprox'
-        : '${_solicitadas.length} cargadas';
-
-    return ListTile(
-      dense: true,
-      visualDensity: VisualDensity.compact,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-      title: const Text(
-        'Solicitadas',
-        style: TextStyle(fontWeight: FontWeight.w700),
-      ),
-      subtitle: Text(totalLabel),
-      trailing: IconButton(
-        tooltip: _solicitadasCollapsed ? 'Expandir' : 'Colapsar',
-        onPressed: _toggleSolicitadas,
-        icon: Icon(_solicitadasCollapsed ? Icons.expand_more : Icons.expand_less),
-      ),
-    );
-  }
-
-  Widget _buildSolicitadasItems() {
-    if (_solicitadas.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.fromLTRB(12, 0, 12, 8),
-        child: Card(
-          child: Padding(
-            padding: EdgeInsets.all(12),
-            child: Text('No hay citas solicitadas.'),
-          ),
+      if (contadores.rechazadasSolicitadasPorMi > 0)
+        InicioBandejaCounterCard(
+          titulo: 'Rechazadas',
+          valor: contadores.rechazadasSolicitadasPorMi,
+          icon: Icons.warning_amber,
+          onTap: () => _abrirDetalle(_BandejaTipo.rechazadas),
+          accentColor: CitasEstado.rechazada.color(_theme),
         ),
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Column(
-        children: [
-          for (final cita in _solicitadas)
-            _CitaCompactTile(
-              cita: cita,
-              onTap: () => _mostrarDetalleCita(cita),
-            ),
-          if (_solicitadasHasMore)
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: _loadingSolicitadas ? null : () => _loadSolicitadas(),
-                icon: _loadingSolicitadas
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.expand_more),
-                label: const Text('Ver más solicitadas'),
-              ),
-            ),
-        ],
+      if (contadores.borradores > 0)
+        InicioBandejaCounterCard(
+          titulo: 'Borradores',
+          valor: contadores.borradores,
+          icon: Icons.edit_note,
+          onTap: () => _abrirDetalle(_BandejaTipo.borradores),
+          accentColor: CitasEstado.borrador.color(_theme),
+        ),
+      InicioBandejaCounterCard(
+        titulo: 'Confirmadas',
+        valor: contadores.confirmadasAsignadas,
+        icon: Icons.event_available,
+        onTap: () => _abrirDetalle(_BandejaTipo.confirmadas),
+        accentColor: CitasEstado.confirmada.color(_theme),
       ),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const spacing = 8.0;
+        final totalSpacing = spacing * (cards.length - 1);
+        final itemWidth = (constraints.maxWidth - totalSpacing) / cards.length;
+
+        return Row(
+          children: [
+            for (int i = 0; i < cards.length; i++) ...[
+              SizedBox(width: itemWidth, child: cards[i]),
+              if (i < cards.length - 1) const SizedBox(width: spacing),
+            ],
+          ],
+        );
+      },
     );
   }
 
-  Widget _buildTimelineHeader() {
-    final subtitle = _timelineHasMore
-        ? 'Cargadas: $_timelineItemsCount'
-        : 'Cargadas: $_timelineItemsCount · fin del timeline';
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Timeline por fecha',
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-          ),
-          Text(
-            subtitle,
-            style: TextStyle(color: _theme.secondary, fontSize: 12),
-          ),
-        ],
-      ),
-    );
-  }
-
-  List<Widget> _buildTimelineSlivers() {
-    if (_timeline.isEmpty) {
-      return const [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: EdgeInsets.all(12),
-            child: Card(
-              child: Padding(
-                padding: EdgeInsets.all(12),
-                child: Text('No hay citas para mostrar en el timeline.'),
-              ),
-            ),
-          ),
-        ),
-      ];
-    }
-
-    final slivers = <Widget>[];
-    for (final group in _timeline) {
-      final fechaTexto = group.fecha == null
-          ? 'Fecha no disponible'
-          : DateFormat('EEEE d MMM yyyy', 'es').format(group.fecha!);
-
-      slivers.add(
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-            child: Text(
-              fechaTexto,
-              style: TextStyle(
-                color: _theme.secondary,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ),
-      );
-
-      slivers.add(
-        SliverList.builder(
-          itemCount: group.items.length,
-          itemBuilder: (context, index) {
-            final cita = group.items[index];
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: _CitaCompactTile(
+  Widget _buildSeccionWidget({
+    required String titulo,
+    required HomePreviewBloque bloque,
+    required _BandejaTipo tipo,
+    required bool isCollapsed,
+  }) {
+    final contenido = bloque.items.isEmpty
+        ? <Widget>[const Text('Sin resultados')]
+        : bloque.items
+            .map(
+              (cita) => InicioCitaCompactTile(
                 cita: cita,
                 onTap: () => _mostrarDetalleCita(cita),
               ),
-            );
-          },
-        ),
-      );
-    }
+            )
+            .toList();
 
-    slivers.add(
-      SliverToBoxAdapter(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: _loadingTimeline
-              ? const Center(child: CircularProgressIndicator())
-              : (!_timelineHasMore
-                    ? const Center(child: Text('Fin del timeline'))
-                    : const SizedBox.shrink()),
-        ),
-      ),
+    return InicioBandejaSectionCard(
+      titulo: titulo,
+      total: bloque.total,
+      isCollapsed: isCollapsed,
+      onToggle: () => _toggleBloque(tipo),
+      content: contenido,
+      onViewAll: bloque.total > bloque.items.length ? () => _abrirDetalle(tipo) : null,
     );
-
-    return slivers;
   }
 }
 
-class _SummaryMiniCard extends StatelessWidget {
-  const _SummaryMiniCard({
-    required this.titulo,
-    required this.valor,
-    required this.icon,
-    this.extra,
+class _BandejaDetallePage extends StatefulWidget {
+  const _BandejaDetallePage({
+    required this.tipo,
+    required this.service,
+    required this.onTapCita,
   });
 
-  final String titulo;
-  final int valor;
-  final IconData icon;
-  final String? extra;
-
-  Color _cardAccent() {
-    final key = titulo.toLowerCase();
-    if (key.contains('solicit')) return Colors.deepOrange;
-    if (key.contains('confirm')) return Colors.indigo;
-    return Colors.purple;
-  }
-
+  final _BandejaTipo tipo;
+  final MisCitasHomeService service;
+  final Future<void> Function(CitaMedica cita) onTapCita;
 
   @override
-  Widget build(BuildContext context) {
-    final theme = ThemeController.instance;
-    final accent = _cardAccent();
-
-    return Container(
-      height: 78,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            accent.withValues(alpha: theme.isDark ? 0.18 : 0.10),
-            accent.withValues(alpha: theme.isDark ? 0.10 : 0.05),
-          ],
-        ),
-        border: Border.all(color: accent.withValues(alpha: 0.22)),
-        boxShadow: [
-          BoxShadow(
-            color: accent.withValues(alpha: 0.06),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 13, color: accent.withValues(alpha: 0.86)),
-              const SizedBox(width: 4),
-              Expanded(
-                child: Text(
-                  titulo,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: theme.neutral,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '$valor',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: theme.neutral,
-            ),
-          ),
-          if (extra != null)
-            Text(
-              extra!,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 10,
-                color: theme.neutral.withValues(alpha: 0.80),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
+  State<_BandejaDetallePage> createState() => _BandejaDetallePageState();
 }
 
-class _CitaCompactTile extends StatelessWidget {
-  const _CitaCompactTile({required this.cita, required this.onTap});
+class _BandejaDetallePageState extends State<_BandejaDetallePage> {
+  bool _loading = true;
+  bool _loadingMore = false;
+  int _pagina = 1;
+  int _total = 0;
+  List<CitaMedica> _items = [];
+  List<HomeGrupoDia> _grupos = [];
 
-  final CitaMedica cita;
-  final VoidCallback onTap;
-
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = ThemeController.instance;
-    final inicio = cita.fechaInicio;
-    final fin = cita.fechaFin;
-    final hora = inicio == null
-        ? '--:--'
-        : DateFormat('HH:mm').format(inicio.toLocal());
-    final rangoFin = fin == null ? '--:--' : DateFormat('HH:mm').format(fin.toLocal());
-    final estado = cita.estado.toUpperCase();
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 6),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                width: 8,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: _estadoColor(estado),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      cita.pacienteNombre?.isNotEmpty == true
-                          ? cita.pacienteNombre!
-                          : cita.detalle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        color: theme.neutral,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '$hora-$rangoFin · ${cita.servicioNombre ?? 'Sin servicio'}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 12, color: theme.secondary),
-                    ),
-                    Text(
-                      cita.lugarNombre ?? 'Lugar no definido',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 12, color: theme.secondary),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: _estadoColor(estado).withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  estado,
-                  style: TextStyle(
-                    color: _estadoColor(estado),
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+  bool get _isConfirmadas => widget.tipo == _BandejaTipo.confirmadas;
+  bool get _hasMore {
+    final loaded = _isConfirmadas
+        ? _grupos.fold<int>(0, (acc, g) => acc + g.items.length)
+        : _items.length;
+    return loaded < _total;
   }
 
-  Color _estadoColor(String estado) {
-    switch (estado) {
-      case 'SOLICITADA':
-        return Colors.orange;
-      case 'CONFIRMADA':
-        return Colors.blue;
-      case 'CANCELADA':
-      case 'RECHAZADA':
-        return Colors.red;
-      case 'COMPLETADA':
-        return Colors.indigo;
-      default:
-        return Colors.blueGrey;
+  @override
+  void initState() {
+    super.initState();
+    _load(reset: true);
+  }
+
+  Future<void> _load({bool reset = false}) async {
+    if (_loadingMore || (!reset && !_hasMore)) return;
+    setState(() {
+      if (reset) {
+        _loading = true;
+        _pagina = 1;
+        _items = [];
+        _grupos = [];
+      } else {
+        _loadingMore = true;
+      }
+    });
+
+    if (_isConfirmadas) {
+      final res = await widget.service.obtenerConfirmadasAsignadas(pagina: _pagina);
+      if (!mounted) return;
+      setState(() {
+        _total = res.total;
+        _grupos = [..._grupos, ...res.filas];
+        _loading = false;
+        _loadingMore = false;
+        _pagina += 1;
+      });
+      return;
     }
+
+    late HomeBandejaListadoResult res;
+    if (widget.tipo == _BandejaTipo.pendientes) {
+      res = await widget.service.obtenerPendientesAprobacion(pagina: _pagina);
+    } else if (widget.tipo == _BandejaTipo.rechazadas) {
+      res = await widget.service.obtenerRechazadasSolicitadas(pagina: _pagina);
+    } else {
+      res = await widget.service.obtenerBorradores(pagina: _pagina);
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _total = res.total;
+      _items = [..._items, ...res.filas];
+      _loading = false;
+      _loadingMore = false;
+      _pagina += 1;
+    });
   }
-}
-
-class _DetalleRow extends StatelessWidget {
-  const _DetalleRow({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
 
   @override
   Widget build(BuildContext context) {
-    final theme = ThemeController.instance;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 84,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: theme.secondary,
-              ),
+    final titulo = switch (widget.tipo) {
+      _BandejaTipo.pendientes => 'Pendientes de aprobación',
+      _BandejaTipo.rechazadas => 'Rechazadas solicitadas',
+      _BandejaTipo.borradores => 'Borradores',
+      _BandejaTipo.confirmadas => 'Confirmadas asignadas',
+    };
+
+    return Scaffold(
+      appBar: AppBar(title: Text(titulo)),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
+              padding: const EdgeInsets.all(12),
+              children: [
+                Text('Total: $_total', style: const TextStyle(fontWeight: FontWeight.w600)),
+                const SizedBox(height: 12),
+                if (_isConfirmadas)
+                  ..._buildConfirmadas()
+                else
+                  ..._items.map((cita) => InicioCitaCompactTile(cita: cita, onTap: () => widget.onTapCita(cita))),
+                if (_hasMore)
+                  TextButton(
+                    onPressed: _loadingMore ? null : () => _load(),
+                    child: _loadingMore ? const CircularProgressIndicator() : const Text('Cargar más'),
+                  ),
+              ],
             ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              value,
-              style: TextStyle(color: theme.neutral),
-            ),
-          ),
-        ],
-      ),
     );
   }
+
+  List<Widget> _buildConfirmadas() {
+    final widgets = <Widget>[];
+    for (final group in _grupos) {
+      widgets.add(Padding(
+        padding: const EdgeInsets.only(top: 8, bottom: 4),
+        child: Text(group.dia, style: const TextStyle(fontWeight: FontWeight.w700)),
+      ));
+      widgets.addAll(group.items.map((cita) => InicioCitaCompactTile(cita: cita, onTap: () => widget.onTapCita(cita))));
+    }
+    return widgets;
+  }
 }
+
