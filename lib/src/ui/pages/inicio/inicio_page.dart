@@ -3,10 +3,15 @@ import 'package:intl/intl.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
+import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/plugins/utils/preferences.dart';
 import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/citas_service.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/citas_utils.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_detalle_modal.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
+import 'package:red_neuro_app/src/ui/pages/inicio/inicio_citas_utils.dart';
 import 'package:red_neuro_app/src/ui/pages/inicio/inicio_service.dart';
 
 final GlobalKey<ScaffoldMessengerState> misCitasHomeMessenger =
@@ -26,6 +31,10 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
   final _scrollController = ScrollController();
 
   late final MisCitasHomeService _service;
+  late final CitasService _citasService;
+
+  final _dateFormat = DateFormat('dd/MM/yyyy', 'es');
+  final _dateTimeFormat = DateFormat('dd/MM/yyyy HH:mm', 'es');
 
   MisCitasResumenResult _resumen =
       MisCitasResumenResult.empty('', StatusNetwork.noContent);
@@ -54,6 +63,7 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
   void initState() {
     super.initState();
     _service = MisCitasHomeService(context);
+    _citasService = CitasService(context);
     _scrollController.addListener(_onScroll);
     _loadCollapsedPreference();
     _loadInitial();
@@ -189,73 +199,152 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
     await _persistCollapsedPreference();
   }
 
-  void _mostrarDetalleCita(CitaMedica cita) {
-    final inicio = cita.fechaInicio;
-    final fin = cita.fechaFin;
-    final fechaHora = inicio == null
-        ? 'Sin fecha'
-        : DateFormat('EEEE d MMM yyyy · HH:mm', 'es').format(inicio.toLocal());
-    final horaFin = fin == null ? '--:--' : DateFormat('HH:mm').format(fin.toLocal());
+  Future<void> _mostrarDetalleCita(CitaMedica cita) async {
+    final detallePayload = CitasUtils.construirDetalleModalPayload(
+      cita: cita,
+      theme: _theme,
+      titulo: 'Detalle de cita',
+      nombrePaciente: InicioCitasUtils.nombrePaciente,
+      formatearGenero: InicioCitasUtils.formatearGenero,
+      formatearFechaPaciente: InicioCitasUtils.formatearFechaPaciente,
+      calcularEdadPaciente: InicioCitasUtils.calcularEdadPaciente,
+      etiquetaPrestacion: InicioCitasUtils.etiquetaPrestacion,
+      nombreMedico: InicioCitasUtils.nombreMedico,
+      resolveAvatarUrl: (url) => (url ?? '').trim(),
+      inicialesPersonal: InicioCitasUtils.inicialesPersonal,
+      formatoFechaCita: InicioCitasUtils.formatoFechaCita,
+      formatoHorarioCita: InicioCitasUtils.formatoHorarioCita,
+    );
 
-    showModalBottomSheet<void>(
+    final acciones = CitasUtils.construirAccionesDetalleCita(
+      cita: cita,
+      puedeGestionarSolicitada: (item) =>
+          CitasUtils.puedeGestionarSolicitada(item, Auth.instance.profile),
+      puedeEditarCita: (_) => false,
+      citaYaIniciada: InicioCitasUtils.citaYaIniciada,
+      confirmarCitaSolicitada: _confirmarCitaSolicitada,
+      rechazarCitaSolicitada: _rechazarCitaSolicitada,
+      completarCita: _completarCita,
+      marcarNoAsistioCita: _marcarNoAsistio,
+      reprogramarCita: _reprogramarCita,
+      cancelarCita: _cancelarCita,
+      eliminarBorrador: _eliminarBorrador,
+      abrirFormulario: _abrirFormularioNoDisponible,
+    );
+
+    await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (sheetContext) {
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Detalle de cita',
-                        style: TextStyle(
-                          color: _theme.neutral,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 18,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => Navigator.of(sheetContext).pop(),
-                      icon: const Icon(Icons.close),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                _DetalleRow(label: 'Estado', value: cita.estado),
-                _DetalleRow(label: 'Fecha', value: '$fechaHora - $horaFin'),
-                _DetalleRow(
-                  label: 'Paciente',
-                  value: cita.pacienteNombre ?? 'No definido',
-                ),
-                _DetalleRow(
-                  label: 'Servicio',
-                  value: cita.servicioNombre ?? 'No definido',
-                ),
-                _DetalleRow(
-                  label: 'Lugar',
-                  value: cita.lugarNombre ?? 'No definido',
-                ),
-                _DetalleRow(
-                  label: 'Personal',
-                  value: cita.personalNombre ?? 'No definido',
-                ),
-                if (cita.detalle.trim().isNotEmpty)
-                  _DetalleRow(label: 'Detalle', value: cita.detalle),
-              ],
-            ),
-          ),
+        return CitasDetalleModal.fromPayload(
+          cita: cita,
+          theme: _theme,
+          payload: detallePayload,
+          acciones: acciones,
+          onClose: () => Navigator.of(sheetContext).pop(),
+          onVerHistorial: () => InicioCitasUtils.mostrarHistorialCita(context: context, cita: cita, service: _citasService, theme: _theme, dateFormat: _dateFormat, dateTimeFormat: _dateTimeFormat),
+          onCopiarDato: (value) async => InicioCitasUtils.mostrarNoDisponible(messenger: misCitasHomeMessenger, theme: _theme, accion: 'Copiar dato'),
         );
       },
     );
+  }
+
+
+  Future<void> _abrirFormularioNoDisponible(CitaMedica cita) async {
+    InicioCitasUtils.mostrarNoDisponible(
+      messenger: misCitasHomeMessenger,
+      theme: _theme,
+      accion: 'Edición de cita',
+    );
+  }
+
+  Future<bool> _confirmarCitaSolicitada(CitaMedica cita) async {
+    final ok = await InicioCitasUtils.confirmarYEnviar(
+      context: context,
+      titulo: 'Confirmar cita',
+      mensaje: '¿Deseas confirmar esta cita solicitada?',
+      request: () => _citasService.confirmarCita(cita.id),
+      fallback: 'No se pudo confirmar la cita.',
+      mounted: mounted,
+      onError: _showError,
+    );
+    if (ok) await _loadInitial();
+    return ok;
+  }
+
+  Future<bool> _rechazarCitaSolicitada(CitaMedica cita) async {
+    final motivo = await InicioCitasUtils.solicitarMotivoRechazo(context);
+    if (motivo == null) return false;
+    final ok = InicioCitasUtils.handleResponse(
+      response: await _citasService.rechazarCita(cita.id, motivoRechazo: motivo),
+      fallback: 'No se pudo rechazar la cita.',
+      mounted: mounted,
+      onError: _showError,
+    );
+    if (ok) await _loadInitial();
+    return ok;
+  }
+
+  Future<void> _completarCita(CitaMedica cita) async {
+    final ok = await InicioCitasUtils.confirmarYEnviar(
+      context: context,
+      titulo: 'Completar cita',
+      mensaje: '¿Deseas marcar la cita como completada?',
+      request: () => _citasService.completarCita(cita.id),
+      fallback: 'No se pudo completar la cita.',
+      mounted: mounted,
+      onError: _showError,
+    );
+    if (ok) await _loadInitial();
+  }
+
+  Future<void> _marcarNoAsistio(CitaMedica cita) async {
+    final ok = await InicioCitasUtils.confirmarYEnviar(
+      context: context,
+      titulo: 'Marcar no asistió',
+      mensaje: '¿Deseas marcar la cita como no asistió?',
+      request: () => _citasService.marcarNoAsistioCita(cita.id),
+      fallback: 'No se pudo actualizar la cita.',
+      mounted: mounted,
+      onError: _showError,
+    );
+    if (ok) await _loadInitial();
+  }
+
+  Future<void> _reprogramarCita(CitaMedica cita) async {
+    InicioCitasUtils.mostrarNoDisponible(
+      messenger: misCitasHomeMessenger,
+      theme: _theme,
+      accion: 'Reprogramación de cita',
+    );
+  }
+
+  Future<void> _cancelarCita(CitaMedica cita) async {
+    final ok = await InicioCitasUtils.confirmarYEnviar(
+      context: context,
+      titulo: 'Cancelar cita',
+      mensaje: '¿Deseas cancelar esta cita?',
+      request: () => _citasService.cancelarCita(cita.id),
+      fallback: 'No se pudo cancelar la cita.',
+      mounted: mounted,
+      onError: _showError,
+    );
+    if (ok) await _loadInitial();
+  }
+
+  Future<void> _eliminarBorrador(CitaMedica cita) async {
+    final ok = await InicioCitasUtils.confirmarYEnviar(
+      context: context,
+      titulo: 'Eliminar borrador',
+      mensaje: '¿Deseas eliminar este borrador?',
+      request: () => _citasService.eliminarCitaBorrador(cita.id),
+      fallback: 'No se pudo eliminar el borrador.',
+      mounted: mounted,
+      onError: _showError,
+    );
+    if (ok) await _loadInitial();
   }
 
 
