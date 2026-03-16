@@ -4,8 +4,51 @@ import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/models/estudio.dart';
 import 'package:red_neuro_app/src/models/historial_cita.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_detalle_modal.dart';
 
+class CitasDetalleModalData {
+  final String pacienteNombre;
+  final String? pacienteDocumento;
+  final String? pacienteTelefono;
+  final String? pacienteCorreo;
+  final String? pacienteGenero;
+  final String? pacienteFechaNacimiento;
+  final String? pacienteEdad;
+  final String etiquetaPrestacion;
+  final String? servicioNombre;
+  final int? servicioDuracion;
+  final String? lugarDisplay;
+  final String? lugarTipo;
+  final String? lugarDireccion;
+  final String personalAsignado;
+  final String? personalDocumento;
+  final String? personalTelefono;
+  final String? personalCorreo;
+  final String? personalOcupacion;
+  final String personalAvatarUrl;
 
+  const CitasDetalleModalData({
+    required this.pacienteNombre,
+    required this.pacienteDocumento,
+    required this.pacienteTelefono,
+    required this.pacienteCorreo,
+    required this.pacienteGenero,
+    required this.pacienteFechaNacimiento,
+    required this.pacienteEdad,
+    required this.etiquetaPrestacion,
+    required this.servicioNombre,
+    required this.servicioDuracion,
+    required this.lugarDisplay,
+    required this.lugarTipo,
+    required this.lugarDireccion,
+    required this.personalAsignado,
+    required this.personalDocumento,
+    required this.personalTelefono,
+    required this.personalCorreo,
+    required this.personalOcupacion,
+    required this.personalAvatarUrl,
+  });
+}
 
 enum CitasModalDestino { detalle, formulario }
 
@@ -93,6 +136,152 @@ class CitasUtils {
   static bool puedeEditarCita(CitaMedica cita) {
     final estado = cita.estado.trim().toUpperCase();
     return estado == 'BORRADOR' || estado == 'RECHAZADA';
+  }
+
+  static String? valorDetalle(String? value) {
+    final normalized = value?.trim();
+    if (normalized == null || normalized.isEmpty) return null;
+    return normalized;
+  }
+
+  static CitasDetalleModalData construirDetalleModalData({
+    required CitaMedica cita,
+    required String Function(CitaMedica cita) nombrePaciente,
+    required String Function(String? genero) formatearGenero,
+    required String Function(String? fechaRaw) formatearFechaPaciente,
+    required String Function(String? fechaRaw) calcularEdadPaciente,
+    required String Function(String? tipo) etiquetaPrestacion,
+    required String Function(CitaMedica cita) nombreMedico,
+    required String Function(String? urlFoto) resolveAvatarUrl,
+  }) {
+    final pacienteDocumento = valorDetalle(cita.pacienteNroDocumento);
+    final pacienteTelefono = valorDetalle(cita.pacienteTelefono);
+    final pacienteCorreo = valorDetalle(cita.pacienteCorreoElectronico);
+    final pacienteGenero = valorDetalle(formatearGenero(cita.pacienteGenero));
+    final pacienteFechaNacimiento =
+        valorDetalle(formatearFechaPaciente(cita.pacienteFechaNacimiento));
+    final pacienteEdad = valorDetalle(calcularEdadPaciente(cita.pacienteFechaNacimiento));
+    final servicioNombre = valorDetalle(cita.servicioNombre ?? cita.servicioId);
+
+    final lugarNombre = valorDetalle(cita.lugarNombre ?? cita.lugarId);
+    final lugarSigla = valorDetalle(cita.lugarSigla);
+    final lugarDisplay = (lugarSigla != null && lugarNombre != null)
+        ? '${lugarSigla.toUpperCase()} • $lugarNombre'
+        : lugarNombre;
+
+    return CitasDetalleModalData(
+      pacienteNombre: nombrePaciente(cita),
+      pacienteDocumento: pacienteDocumento,
+      pacienteTelefono: pacienteTelefono,
+      pacienteCorreo: pacienteCorreo,
+      pacienteGenero: pacienteGenero,
+      pacienteFechaNacimiento: pacienteFechaNacimiento,
+      pacienteEdad: pacienteEdad,
+      etiquetaPrestacion: etiquetaPrestacion(cita.servicioTipo ?? cita.tipoCita),
+      servicioNombre: servicioNombre,
+      servicioDuracion: cita.servicioDuracionMinutos,
+      lugarDisplay: lugarDisplay,
+      lugarTipo: valorDetalle(cita.lugarTipo),
+      lugarDireccion: valorDetalle(cita.lugarDireccion),
+      personalAsignado: nombreMedico(cita),
+      personalDocumento: valorDetalle(cita.personalNroDocumento),
+      personalTelefono: valorDetalle(cita.personalTelefono),
+      personalCorreo: valorDetalle(cita.personalCorreoElectronico),
+      personalOcupacion: valorDetalle(cita.personalOcupacion),
+      personalAvatarUrl: resolveAvatarUrl(cita.personalUrlFoto),
+    );
+  }
+
+
+  static List<CitaDetalleAccion> construirAccionesDetalleCita({
+    required CitaMedica cita,
+    required bool Function(CitaMedica cita) puedeGestionarSolicitada,
+    required bool Function(CitaMedica cita) puedeEditarCita,
+    required bool Function(CitaMedica cita) citaYaIniciada,
+    required Future<bool> Function(CitaMedica cita) confirmarCitaSolicitada,
+    required Future<bool> Function(CitaMedica cita) rechazarCitaSolicitada,
+    required Future<void> Function(CitaMedica cita) completarCita,
+    required Future<void> Function(CitaMedica cita) marcarNoAsistioCita,
+    required Future<void> Function(CitaMedica cita) reprogramarCita,
+    required Future<void> Function(CitaMedica cita) cancelarCita,
+    required Future<void> Function(CitaMedica cita) eliminarBorrador,
+    required Future<void> Function(CitaMedica cita) abrirFormulario,
+  }) {
+    return <CitaDetalleAccion>[
+      if (cita.estado == 'SOLICITADA' && puedeGestionarSolicitada(cita))
+        CitaDetalleAccion(
+          label: 'Confirmar',
+          icon: Icons.check_circle_outline,
+          isPrimary: true,
+          onTap: () => confirmarCitaSolicitada(cita),
+        ),
+      if (puedeEditarCita(cita))
+        CitaDetalleAccion(
+          label: 'Editar',
+          icon: Icons.edit_outlined,
+          onTap: () async {
+            await abrirFormulario(cita);
+            return true;
+          },
+        ),
+      if (cita.estado == 'SOLICITADA' && puedeGestionarSolicitada(cita))
+        CitaDetalleAccion(
+          label: 'Rechazar',
+          icon: Icons.block_outlined,
+          isDestructive: true,
+          onTap: () => rechazarCitaSolicitada(cita),
+        ),
+      if (cita.estado == 'CONFIRMADA' && citaYaIniciada(cita))
+        CitaDetalleAccion(
+          label: 'Completar',
+          icon: Icons.task_alt_outlined,
+          isPrimary: true,
+          onTap: () async {
+            await completarCita(cita);
+            return true;
+          },
+        ),
+      if (cita.estado == 'CONFIRMADA' && citaYaIniciada(cita))
+        CitaDetalleAccion(
+          label: 'No asistió',
+          icon: Icons.person_off_outlined,
+          onTap: () async {
+            await marcarNoAsistioCita(cita);
+            return true;
+          },
+        ),
+      if (cita.estado == 'CONFIRMADA' ||
+          cita.estado == 'CANCELADA' ||
+          cita.estado == 'NO_ASISTIO')
+        CitaDetalleAccion(
+          label: 'Reprogramar',
+          icon: Icons.schedule_outlined,
+          onTap: () async {
+            await reprogramarCita(cita);
+            return true;
+          },
+        ),
+      if (cita.estado == 'CONFIRMADA')
+        CitaDetalleAccion(
+          label: 'Cancelar',
+          icon: Icons.cancel_outlined,
+          isDestructive: true,
+          onTap: () async {
+            await cancelarCita(cita);
+            return true;
+          },
+        ),
+      if (cita.estado == 'BORRADOR')
+        CitaDetalleAccion(
+          label: 'Eliminar borrador',
+          icon: Icons.delete_outline,
+          isDestructive: true,
+          onTap: () async {
+            await eliminarBorrador(cita);
+            return true;
+          },
+        ),
+    ];
   }
 
   static CitasModalDestino resolverDestinoModalCita({
