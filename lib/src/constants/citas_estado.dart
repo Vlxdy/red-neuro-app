@@ -47,19 +47,19 @@ enum CitasEstado {
       case CitasEstado.borrador:
         return theme.grey.withValues(alpha: 0.75);
       case CitasEstado.solicitada:
-        return theme.accent500;
+        return theme.warning;
       case CitasEstado.confirmada:
         return theme.primary;
       case CitasEstado.completada:
         return theme.success;
       case CitasEstado.noAsistio:
-        return theme.warning;
+        return const Color(0xFFB45309);
       case CitasEstado.cancelada:
         return theme.error;
       case CitasEstado.rechazada:
-        return theme.accent500;
+        return const Color(0xFF7E22CE);
       case CitasEstado.reprogramada:
-        return const Color(0xFF8E7CC3);
+        return const Color(0xFF0F766E);
     }
   }
 
