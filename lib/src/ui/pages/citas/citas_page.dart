@@ -38,7 +38,6 @@ import 'package:socket_io_client/socket_io_client.dart' as io;
 
 part 'widgets/citas_filtros_modal_part.dart';
 part 'widgets/citas_medico_selector_modal_part.dart';
-part 'widgets/citas_detalle_modal_part.dart';
 
 final GlobalKey<ScaffoldMessengerState> citasMessenger =
     GlobalKey<ScaffoldMessengerState>();
@@ -1567,10 +1566,76 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     }
   }
 
-  String? _valorDetalle(String? value) {
-    final normalized = value?.trim();
-    if (normalized == null || normalized.isEmpty) return null;
-    return normalized;
+
+  Future<void> _mostrarDetalleCita(CitaMedica cita) async {
+    final detalleData = CitasUtils.construirDetalleModalData(
+      cita: cita,
+      nombrePaciente: _nombrePaciente,
+      formatearGenero: _formatearGenero,
+      formatearFechaPaciente: _formatearFechaPaciente,
+      calcularEdadPaciente: _calcularEdadPaciente,
+      etiquetaPrestacion: _etiquetaPrestacion,
+      nombreMedico: _nombreMedico,
+      resolveAvatarUrl: _resolveAvatarUrl,
+    );
+
+    final accionesDetalleModal = CitasUtils.construirAccionesDetalleCita(
+      cita: cita,
+      puedeGestionarSolicitada: (citaItem) =>
+          CitasUtils.puedeGestionarSolicitada(citaItem, Auth.instance.profile),
+      puedeEditarCita: _puedeEditarCita,
+      citaYaIniciada: _citaYaIniciada,
+      confirmarCitaSolicitada: _confirmarCitaSolicitadaConOpciones,
+      rechazarCitaSolicitada: _rechazarCitaSolicitadaConConfirmacion,
+      completarCita: _completarCitaConConfirmacion,
+      marcarNoAsistioCita: _marcarNoAsistioCitaConConfirmacion,
+      reprogramarCita: _reprogramarCitaConConfirmacion,
+      cancelarCita: _cancelarCitaConConfirmacion,
+      eliminarBorrador: _eliminarBorradorConConfirmacion,
+      abrirFormulario: (citaItem) => _abrirFormulario(cita: citaItem),
+    );
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return CitasDetalleModal(
+          cita: cita,
+          theme: _theme,
+          titulo: _tituloCita(cita),
+          pacienteNombre: detalleData.pacienteNombre,
+          pacienteDocumento: detalleData.pacienteDocumento,
+          pacienteTelefono: detalleData.pacienteTelefono,
+          pacienteCorreo: detalleData.pacienteCorreo,
+          pacienteGenero: detalleData.pacienteGenero,
+          pacienteFechaNacimiento: detalleData.pacienteFechaNacimiento,
+          pacienteEdad: detalleData.pacienteEdad,
+          etiquetaPrestacion: detalleData.etiquetaPrestacion,
+          servicioNombre: detalleData.servicioNombre,
+          servicioDuracion: detalleData.servicioDuracion,
+          servicioDescripcion: cita.servicioDescripcion,
+          lugarDisplay: detalleData.lugarDisplay,
+          lugarTipo: detalleData.lugarTipo,
+          lugarDireccion: detalleData.lugarDireccion,
+          personalAsignado: detalleData.personalAsignado,
+          personalDocumento: detalleData.personalDocumento,
+          personalTelefono: detalleData.personalTelefono,
+          personalCorreo: detalleData.personalCorreo,
+          personalOcupacion: detalleData.personalOcupacion,
+          personalAvatarUrl: detalleData.personalAvatarUrl,
+          inicialesPersonal: _inicialesPersonal(cita),
+          fechaCita: _formatoFechaCita(cita.fechaInicio),
+          horaCita: _formatoHorarioCita(cita.fechaInicio, cita.fechaFin),
+          detalleCita: cita.detalle,
+          estadoColor: CitasUtils.colorEstado(cita.estado, _theme),
+          acciones: accionesDetalleModal,
+          onClose: () => Navigator.of(context).pop(),
+          onVerHistorial: () => _mostrarHistorialCita(cita),
+          onCopiarDato: _copiarDato,
+        );
+      },
+    );
   }
 }
 
