@@ -1,10 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/constants/citas_estado.dart';
+import 'package:red_neuro_app/src/constants/constants.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
+import 'package:red_neuro_app/src/models/personal_medico.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
+import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:red_neuro_app/src/plugins/utils/preferences.dart';
 import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
@@ -12,11 +17,13 @@ import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_service.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_utils.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_detalle_modal.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_catalogo_selector_modal_widget.dart';
 import 'package:red_neuro_app/src/ui/pages/inicio/inicio_citas_utils.dart';
 import 'package:red_neuro_app/src/ui/pages/inicio/inicio_service.dart';
 import 'package:red_neuro_app/src/ui/pages/inicio/widgets/inicio_bandeja_counter_card.dart';
 import 'package:red_neuro_app/src/ui/pages/inicio/widgets/inicio_bandeja_section_card.dart';
 import 'package:red_neuro_app/src/ui/pages/inicio/widgets/inicio_cita_compact_tile.dart';
+import 'package:socket_io_client/socket_io_client.dart' as io;
 
 final GlobalKey<ScaffoldMessengerState> misCitasHomeMessenger =
     GlobalKey<ScaffoldMessengerState>();
@@ -41,6 +48,10 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
   HomeBandejaResult _bandeja = HomeBandejaResult.empty('', StatusNetwork.noContent);
   bool _loading = true;
 
+  String _scope = 'mine';
+  String? _idPersonalSeleccionado;
+  String? _nombrePersonalSeleccionado;
+
   static const _collapsePendientesKey = 'inicio_bandeja_pendientes_collapsed';
   static const _collapseRechazadasKey = 'inicio_bandeja_rechazadas_collapsed';
   static const _collapseBorradoresKey = 'inicio_bandeja_borradores_collapsed';
@@ -51,13 +62,34 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
   bool _borradoresCollapsed = false;
   bool _confirmadasCollapsed = false;
 
+  late final _InicioCitasSocketClient _socketClient;
+  Timer? _socketReloadDebouncer;
+
   @override
   void initState() {
     super.initState();
     _service = MisCitasHomeService(context);
     _citasService = CitasService(context);
+    _socketClient = _InicioCitasSocketClient(onEvent: _onSocketEvent);
     _loadCollapsedPreferences();
     _loadBandeja();
+    unawaited(_socketClient.connect());
+  }
+
+  @override
+  void dispose() {
+    _socketReloadDebouncer?.cancel();
+    _socketClient.dispose();
+    super.dispose();
+  }
+
+  void _onSocketEvent(dynamic payload) {
+    Logger.info('Inicio citas socket evento recibido: $payload');
+    _socketReloadDebouncer?.cancel();
+    _socketReloadDebouncer = Timer(const Duration(milliseconds: 450), () {
+      if (!mounted) return;
+      unawaited(_loadBandeja());
+    });
   }
 
   Future<void> _loadCollapsedPreferences() async {
@@ -99,6 +131,22 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
     }
   }
 
+  bool get _esPersonalAdministrador {
+    final profile = Auth.instance.profile;
+    final rolActivo = (profile.rol ?? '').toUpperCase();
+    final esPersonalSalud = rolActivo == 'PERSONAL_SALUD' ||
+        profile.roles.any((rol) => rol.rol.toUpperCase() == 'PERSONAL_SALUD');
+    return esPersonalSalud && profile.esSupervisor;
+  }
+
+  String get _scopeAplicado {
+    if (!_esPersonalAdministrador) return 'mine';
+    if (_scope == 'personal' && (_idPersonalSeleccionado == null || _idPersonalSeleccionado!.isEmpty)) {
+      return 'mine';
+    }
+    return _scope;
+  }
+
   bool _isCollapsed(_BandejaTipo tipo) {
     switch (tipo) {
       case _BandejaTipo.pendientes:
@@ -114,7 +162,11 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
 
   Future<void> _loadBandeja() async {
     setState(() => _loading = true);
-    final result = await _service.obtenerBandeja(limitPreview: 5);
+    final result = await _service.obtenerBandeja(
+      limitPreview: 5,
+      scope: _scopeAplicado,
+      idPersonal: _scopeAplicado == 'personal' ? _idPersonalSeleccionado : null,
+    );
     if (!mounted) return;
     setState(() {
       _bandeja = result;
@@ -135,6 +187,36 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
     );
   }
 
+  Future<void> _seleccionarPersonal() async {
+    final seleccionado = await showModalBottomSheet<PersonalMedico>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => CitasMedicoSelectorModalWidget(
+        cargarMedicos: ({page = 1, limit = 10, filtro}) =>
+            _citasService.obtenerPersonalMedico(page: page, limit: limit, filtro: filtro),
+      ),
+    );
+
+    if (seleccionado == null || !mounted) return;
+    setState(() {
+      _idPersonalSeleccionado = seleccionado.id;
+      _nombrePersonalSeleccionado = seleccionado.nombreCompleto;
+    });
+    await _loadBandeja();
+  }
+
+  Future<void> _cambiarScope(String? value) async {
+    if (value == null || value == _scope) return;
+    setState(() {
+      _scope = value;
+      if (_scope != 'personal') {
+        _idPersonalSeleccionado = null;
+        _nombrePersonalSeleccionado = null;
+      }
+    });
+    await _loadBandeja();
+  }
+
   Future<void> _abrirDetalle(_BandejaTipo tipo) async {
     await Navigator.of(context).push(
       MaterialPageRoute(
@@ -142,6 +224,8 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
           tipo: tipo,
           service: _service,
           onTapCita: _mostrarDetalleCita,
+          scope: _scopeAplicado,
+          idPersonal: _scopeAplicado == 'personal' ? _idPersonalSeleccionado : null,
         ),
       ),
     );
@@ -294,6 +378,18 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
     if (ok) await _loadBandeja();
   }
 
+  IconData get _scopeIcon {
+    switch (_scope) {
+      case 'personal':
+        return Icons.badge_outlined;
+      case 'all':
+        return Icons.groups_rounded;
+      case 'mine':
+      default:
+        return Icons.person_rounded;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final datos = _bandeja.datos;
@@ -305,9 +401,33 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
         key: misCitasHomeMessenger,
         child: Scaffold(
           backgroundColor: _theme.background,
-          appBar: const TrayModuleHeader(
+          appBar: TrayModuleHeader(
             titulo: 'Inicio de citas',
             subtitulo: 'Alertas, borradores y confirmadas asignadas',
+            actions: _esPersonalAdministrador
+                ? [
+                    PopupMenuButton<String>(
+                      tooltip: 'Cambiar alcance',
+                      onSelected: _cambiarScope,
+                      initialValue: _scope,
+                      itemBuilder: (_) => const [
+                        PopupMenuItem(value: 'mine', child: Text('Mis citas')),
+                        PopupMenuItem(value: 'personal', child: Text('Un personal')),
+                        PopupMenuItem(value: 'all', child: Text('Todos')),
+                      ],
+                      child: Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: _theme.white.withValues(alpha: 0.35)),
+                          color: _theme.white.withValues(alpha: 0.08),
+                        ),
+                        child: Icon(_scopeIcon, size: 19, color: _theme.white),
+                      ),
+                    ),
+                  ]
+                : const [],
           ),
           body: RefreshIndicator(
             onRefresh: _loadBandeja,
@@ -316,6 +436,10 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
                 : ListView(
                     padding: const EdgeInsets.all(12),
                     children: [
+                      if (_esPersonalAdministrador && _scope == 'personal')
+                        _buildCompactPersonalSelector(),
+                      if (_esPersonalAdministrador && _scope == 'personal')
+                        const SizedBox(height: 8),
                       _buildContadores(contadores),
                       const SizedBox(height: 12),
                       _buildSeccionWidget(
@@ -346,6 +470,50 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
                       ),
                     ],
                   ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompactPersonalSelector() {
+    final titulo = (_nombrePersonalSeleccionado ?? '').trim().isEmpty
+        ? 'Seleccionar personal'
+        : _nombrePersonalSeleccionado!;
+
+    return SizedBox(
+      width: double.infinity,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: _seleccionarPersonal,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: _theme.primary.withValues(alpha: 0.32)),
+            color: _theme.bgCard,
+            boxShadow: [
+              BoxShadow(
+                color: _theme.primary.withValues(alpha: 0.10),
+                blurRadius: 10,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.person_search, size: 16, color: _theme.primary),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  titulo,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(Icons.keyboard_arrow_down_rounded, color: _theme.monochromatic500),
+            ],
           ),
         ),
       ),
@@ -432,16 +600,94 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
   }
 }
 
+
+class _InicioCitasSocketClient {
+  _InicioCitasSocketClient({required this.onEvent});
+
+  final void Function(dynamic payload) onEvent;
+  io.Socket? _socket;
+
+  static const _events = <String>[
+    'cita.creada',
+    'cita.actualizada',
+    'cita.estado_cambiado',
+    'cita.eliminada',
+    'citas:home-actualizada',
+    // compatibilidad con eventos existentes
+    'citas:created',
+    'citas:actualizada',
+    'citas:estado-actualizado',
+    'citas:cancelada',
+  ];
+
+  Future<void> connect() async {
+    if (_socket != null) {
+      if (_socket!.connected != true) _socket!.connect();
+      return;
+    }
+
+    final token = await Auth.instance.apiToken;
+    _socket = io.io(
+      '${Constantes.sockets}/realtime',
+      io.OptionBuilder()
+          .setTransports(['websocket'])
+          .setAuth({'token': token})
+          .setReconnectionAttempts(20)
+          .setReconnectionDelay(1000)
+          .setReconnectionDelayMax(5000)
+          .setTimeout(5000)
+          .disableAutoConnect()
+          .build(),
+    );
+
+    _socket!.on('connect', (_) {
+      Logger.info('Inicio citas socket conectado: ${_socket?.id}');
+    });
+    _socket!.on('disconnect', (reason) {
+      Logger.warning('Inicio citas socket desconectado: $reason');
+    });
+    _socket!.on('connect_error', (error) {
+      Logger.warning('Inicio citas socket connect_error: $error');
+    });
+    _socket!.on('error', (error) {
+      Logger.warning('Inicio citas socket error: $error');
+    });
+
+    for (final event in _events) {
+      _socket!.on(event, onEvent);
+    }
+
+    _socket!.connect();
+  }
+
+  void dispose() {
+    if (_socket == null) return;
+    for (final event in _events) {
+      _socket?.off(event);
+    }
+    _socket?.off('connect');
+    _socket?.off('disconnect');
+    _socket?.off('connect_error');
+    _socket?.off('error');
+    _socket?.disconnect();
+    _socket = null;
+  }
+}
+
 class _BandejaDetallePage extends StatefulWidget {
   const _BandejaDetallePage({
     required this.tipo,
     required this.service,
     required this.onTapCita,
+    required this.scope,
+    required this.idPersonal,
   });
 
   final _BandejaTipo tipo;
   final MisCitasHomeService service;
   final Future<void> Function(CitaMedica cita) onTapCita;
+  final String scope;
+  final String? idPersonal;
 
   @override
   State<_BandejaDetallePage> createState() => _BandejaDetallePageState();
@@ -483,7 +729,11 @@ class _BandejaDetallePageState extends State<_BandejaDetallePage> {
     });
 
     if (_isConfirmadas) {
-      final res = await widget.service.obtenerConfirmadasAsignadas(pagina: _pagina);
+      final res = await widget.service.obtenerConfirmadasAsignadas(
+        pagina: _pagina,
+        scope: widget.scope,
+        idPersonal: widget.idPersonal,
+      );
       if (!mounted) return;
       setState(() {
         _total = res.total;
@@ -497,11 +747,23 @@ class _BandejaDetallePageState extends State<_BandejaDetallePage> {
 
     late HomeBandejaListadoResult res;
     if (widget.tipo == _BandejaTipo.pendientes) {
-      res = await widget.service.obtenerPendientesAprobacion(pagina: _pagina);
+      res = await widget.service.obtenerPendientesAprobacion(
+        pagina: _pagina,
+        scope: widget.scope,
+        idPersonal: widget.idPersonal,
+      );
     } else if (widget.tipo == _BandejaTipo.rechazadas) {
-      res = await widget.service.obtenerRechazadasSolicitadas(pagina: _pagina);
+      res = await widget.service.obtenerRechazadasSolicitadas(
+        pagina: _pagina,
+        scope: widget.scope,
+        idPersonal: widget.idPersonal,
+      );
     } else {
-      res = await widget.service.obtenerBorradores(pagina: _pagina);
+      res = await widget.service.obtenerBorradores(
+        pagina: _pagina,
+        scope: widget.scope,
+        idPersonal: widget.idPersonal,
+      );
     }
 
     if (!mounted) return;
