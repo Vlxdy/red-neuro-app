@@ -622,9 +622,9 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
       page: ScaffoldMessenger(
         key: misCitasHomeMessenger,
         child: Scaffold(
-          backgroundColor: _theme.background,
+          backgroundColor: _theme.transparent,
           appBar: TrayModuleHeader(
-            titulo: 'Inicio de citas',
+            titulo: 'Inicio',
             subtitulo: 'Alertas, borradores y programadas asignadas',
             actions: _esPersonalAdministrador
                 ? [

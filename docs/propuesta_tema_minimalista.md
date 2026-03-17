@@ -11,7 +11,7 @@ Objetivo: mejorar legibilidad y jerarquía visual usando una paleta sobria (neut
 
 ## Paleta (modo claro)
 
-- **Primary**: `#334155`
+- **Primary**: `#2F4F72`
 - **Secondary**: `#334155`
 - **Accent (acciones)**: `#2563EB`
 - **Background**: `#F8FAFC`

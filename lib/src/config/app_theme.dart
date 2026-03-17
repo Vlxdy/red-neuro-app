@@ -77,9 +77,9 @@ class AppTheme {
     primary20: Color(0xFFF1F5F9),
     primary50: Color(0xFFE2E8F0),
     primary200: Color(0xFFCBD5E1),
-    primary: Color(0xFF334155),
-    primary700: Color(0xFF475569),
-    primary900: Color(0xFF1E293B),
+    primary: Color(0xFF2F4F72),
+    primary700: Color(0xFF3D5F84),
+    primary900: Color(0xFF22344B),
     secondary: Color(0xFF334155),
     accent50: Color(0xFFEFF6FF),
     accent100: Color(0xFFDBEAFE),
@@ -105,7 +105,7 @@ class AppTheme {
     otherAccent: Color(0xFF2563EB),
     bgCard: Color(0xFFFFFFFF),
     bgCard2: Color(0xFFF8FAFC),
-    ciudadaniaBoton: Color(0xFF334155),
+    ciudadaniaBoton: Color(0xFF2F4F72),
     bgBlue: Color(0xFF1D4ED8),
   );
 
