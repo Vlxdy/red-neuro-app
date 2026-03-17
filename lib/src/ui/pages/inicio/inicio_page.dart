@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/config/service_config.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/constants/citas_estado.dart';
 import 'package:red_neuro_app/src/constants/constants.dart';
@@ -12,12 +13,15 @@ import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:red_neuro_app/src/plugins/utils/preferences.dart';
 import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
+import 'package:red_neuro_app/src/ui/common/dialogs/dialogos.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_service.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_utils.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_detalle_modal.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_catalogo_selector_modal_widget.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_confirmacion_dialog.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_formulario_modal_widget.dart';
 import 'package:red_neuro_app/src/ui/pages/inicio/inicio_citas_utils.dart';
 import 'package:red_neuro_app/src/ui/pages/inicio/inicio_service.dart';
 import 'package:red_neuro_app/src/ui/pages/inicio/widgets/inicio_bandeja_counter_card.dart';
@@ -232,6 +236,16 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
   }
 
   Future<void> _mostrarDetalleCita(CitaMedica cita) async {
+    final destino = CitasUtils.resolverDestinoModalCita(
+      cita: cita,
+      perfil: Auth.instance.profile,
+    );
+
+    if (destino == CitasModalDestino.formulario) {
+      await _abrirFormulario(cita: cita);
+      return;
+    }
+
     final detallePayload = CitasUtils.construirDetalleModalPayload(
       cita: cita,
       theme: _theme,
@@ -280,6 +294,129 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
           onCopiarDato: (value) async => InicioCitasUtils.mostrarNoDisponible(messenger: misCitasHomeMessenger, theme: _theme, accion: 'Copiar dato'),
         );
       },
+    );
+  }
+
+  Future<bool> _handleResponseError(ResponseApi response, String fallback) async {
+    if (response.status == StatusNetwork.connected) return true;
+    final message = response.message.isNotEmpty ? response.message : fallback;
+    await showErrorDialog(context, message);
+    return false;
+  }
+
+  String _validarRequerido(String? value, String alias) {
+    if (value == null || value.trim().isEmpty) return 'Campo requerido';
+    return '';
+  }
+
+  DateTime _resolveDefaultStartTime(DateTime baseDay) {
+    return DateTime(baseDay.year, baseDay.month, baseDay.day, 8);
+  }
+
+  Future<String?> _confirmarAccionCita({
+    required bool esNueva,
+    required String tipoCita,
+    required String servicioNombre,
+    required DateTime fechaInicio,
+    int? duracionMinutos,
+    String? pacienteNombre,
+    String? ocupacionNombre,
+    String? medicoNombre,
+    String? pacienteDocumento,
+    String? pacienteTelefono,
+    String? pacienteGenero,
+    String? lugarNombre,
+    String? lugarDireccion,
+    String? detalle,
+  }) {
+    return showCitaConfirmacionDialog(
+      context: context,
+      data: CitaAccionConfirmacionData(
+        esNueva: esNueva,
+        tipoCita: tipoCita,
+        servicioNombre: servicioNombre,
+        fechaInicio: fechaInicio,
+        duracionMinutos: duracionMinutos,
+        pacienteNombre: pacienteNombre,
+        ocupacionNombre: ocupacionNombre,
+        medicoNombre: medicoNombre,
+        pacienteDocumento: pacienteDocumento,
+        pacienteTelefono: pacienteTelefono,
+        pacienteGenero: pacienteGenero,
+        lugarNombre: lugarNombre,
+        lugarDireccion: lugarDireccion,
+        detalle: detalle,
+      ),
+      dateTimeFormat: _dateTimeFormat,
+      formatearGenero: InicioCitasUtils.formatearGenero,
+    );
+  }
+
+  Future<bool> _confirmarAccionSimple({
+    required String titulo,
+    required String mensaje,
+    required String accion,
+  }) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(titulo),
+        content: Text(mensaje),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(accion),
+          ),
+        ],
+      ),
+    );
+    return confirmar == true;
+  }
+
+  Future<String?> _solicitarMotivoRechazo() =>
+      InicioCitasUtils.solicitarMotivoRechazo(context);
+
+  Future<void> _abrirFormulario({CitaMedica? cita, DateTime? fechaBase}) async {
+    await abrirCitasFormularioModal(
+      context: context,
+      theme: _theme,
+      service: _citasService,
+      dateFormat: _dateFormat,
+      timeFormat: DateFormat('HH:mm'),
+      messengerKey: misCitasHomeMessenger,
+      selectedDay: null,
+      currentTabIndex: 0,
+      resolveDefaultStartTime: _resolveDefaultStartTime,
+      validarRequerido: _validarRequerido,
+      calcularEdadPaciente: InicioCitasUtils.calcularEdadPaciente,
+      formatearFechaPaciente: InicioCitasUtils.formatearFechaPaciente,
+      formatearGenero: InicioCitasUtils.formatearGenero,
+      puedeGestionarSolicitada: (citaItem) =>
+          CitasUtils.puedeGestionarSolicitada(citaItem, Auth.instance.profile),
+      colorEstado: (estado) => CitasUtils.colorEstado(estado, _theme),
+      formatearTipoCita: CitasUtils.formatearTipoCita,
+      confirmarAccionCita: _confirmarAccionCita,
+      confirmarAccionSimple: _confirmarAccionSimple,
+      solicitarMotivoRechazo: _solicitarMotivoRechazo,
+      handleResponseError: (response, fallback) =>
+          _handleResponseError(response, fallback),
+      cargarCitasCalendario: _loadBandeja,
+      cargarCitasListado: ({int? page}) => _loadBandeja(),
+      mostrarHistorialCita: (citaItem) => InicioCitasUtils.mostrarHistorialCita(
+        context: context,
+        cita: citaItem,
+        service: _citasService,
+        theme: _theme,
+        dateFormat: _dateFormat,
+        dateTimeFormat: _dateTimeFormat,
+      ),
+      eliminarCitaEditable: _eliminarCitaEditable,
+      cita: cita,
+      fechaBase: fechaBase,
     );
   }
 
@@ -376,6 +513,20 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
       onError: _showError,
     );
     if (ok) await _loadBandeja();
+  }
+
+  Future<bool> _eliminarCitaEditable(CitaMedica cita) async {
+    final ok = await InicioCitasUtils.confirmarYEnviar(
+      context: context,
+      titulo: 'Eliminar borrador',
+      mensaje: '¿Deseas eliminar este borrador?',
+      request: () => _citasService.eliminarCitaBorrador(cita.id),
+      fallback: 'No se pudo eliminar el borrador.',
+      mounted: mounted,
+      onError: _showError,
+    );
+    if (ok) await _loadBandeja();
+    return ok;
   }
 
   IconData get _scopeIcon {

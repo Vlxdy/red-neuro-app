@@ -170,6 +170,7 @@ Future<void> abrirCitasFormularioModal({
   required Future<void> Function() cargarCitasCalendario,
   required Future<void> Function({int? page}) cargarCitasListado,
   required Future<void> Function(CitaMedica cita) mostrarHistorialCita,
+  required Future<bool> Function(CitaMedica cita) eliminarCitaEditable,
   CitaMedica? cita,
   DateTime? fechaBase,
 }) async {
@@ -1530,6 +1531,18 @@ Future<void> abrirCitasFormularioModal({
                 ? AutovalidateMode.always
                 : AutovalidateMode.disabled,
             headerActions: [
+              if (cita != null &&
+                  (cita.estado == CitasEstado.borrador.value ||
+                      cita.estado == CitasEstado.rechazada.value))
+                IconButton(
+                  tooltip: 'Eliminar cita',
+                  onPressed: () async {
+                    final ok = await eliminarCitaEditable(cita);
+                    if (!modalContext.mounted || !ok) return;
+                    Navigator.pop(modalContext, false);
+                  },
+                  icon: const Icon(Icons.delete_outline),
+                ),
               if (cita?.estado == CitasEstado.rechazada.value)
                 IconButton(
                   tooltip: 'Ver historial',
