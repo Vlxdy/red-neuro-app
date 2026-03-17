@@ -31,7 +31,6 @@ class _LugaresPageState extends State<LugaresPage> {
   bool _loadingMore = false;
   int _page = 1;
   int _limit = 10;
-  int _total = 0;
   String _filtro = '';
   bool _hasMore = true;
 
@@ -80,7 +79,10 @@ class _LugaresPageState extends State<LugaresPage> {
         text: label,
         style: Theme.of(context).textTheme.bodyMedium,
         children: [
-          TextSpan(text: ' *', style: TextStyle(color: _theme.error)),
+          TextSpan(
+            text: ' *',
+            style: TextStyle(color: _theme.error),
+          ),
         ],
       ),
     );
@@ -103,7 +105,10 @@ class _LugaresPageState extends State<LugaresPage> {
   }
 
   void _handleScroll() {
-    if (!_scrollController.hasClients || _loading || _loadingMore || !_hasMore) {
+    if (!_scrollController.hasClients ||
+        _loading ||
+        _loadingMore ||
+        !_hasMore) {
       return;
     }
     final current = _scrollController.position.pixels;
@@ -141,7 +146,6 @@ class _LugaresPageState extends State<LugaresPage> {
       _lugares = nextData;
       _page = requestedPage;
       _limit = result.limit;
-      _total = result.total;
       _hasMore = hasMore;
       _loading = false;
       _loadingMore = false;
@@ -254,7 +258,9 @@ class _LugaresPageState extends State<LugaresPage> {
                       const SizedBox(height: 16),
                       TextFormField(
                         controller: nombreController,
-                        decoration: InputDecoration(label: _requiredLabel('Nombre')),
+                        decoration: InputDecoration(
+                          label: _requiredLabel('Nombre'),
+                        ),
                         maxLength: 120,
                         inputFormatters: [
                           LengthLimitingTextInputFormatter(120),
@@ -268,16 +274,14 @@ class _LugaresPageState extends State<LugaresPage> {
                       const SizedBox(height: 12),
                       TextFormField(
                         controller: siglaController,
-                        decoration: const InputDecoration(labelText: 'Sigla (opcional)'),
+                        decoration: const InputDecoration(
+                          labelText: 'Sigla (opcional)',
+                        ),
                         textCapitalization: TextCapitalization.characters,
                         maxLength: 20,
-                        inputFormatters: [
-                          LengthLimitingTextInputFormatter(20),
-                        ],
-                        validator: (value) => _validarTextoOpcional(
-                          value,
-                          maxLength: 20,
-                        ),
+                        inputFormatters: [LengthLimitingTextInputFormatter(20)],
+                        validator: (value) =>
+                            _validarTextoOpcional(value, maxLength: 20),
                       ),
                       const SizedBox(height: 12),
                       TextFormField(
@@ -290,16 +294,16 @@ class _LugaresPageState extends State<LugaresPage> {
                         inputFormatters: [
                           LengthLimitingTextInputFormatter(255),
                         ],
-                        validator: (value) => _validarTextoOpcional(
-                          value,
-                          maxLength: 255,
-                        ),
+                        validator: (value) =>
+                            _validarTextoOpcional(value, maxLength: 255),
                       ),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
                         value: tipo,
                         autovalidateMode: AutovalidateMode.onUserInteraction,
-                        decoration: InputDecoration(label: _requiredLabel('Tipo')),
+                        decoration: InputDecoration(
+                          label: _requiredLabel('Tipo'),
+                        ),
                         items: _tiposLugar
                             .map(
                               (item) => DropdownMenuItem(
@@ -360,9 +364,14 @@ class _LugaresPageState extends State<LugaresPage> {
                                 final body = {
                                   'nombre': nombreController.text.trim(),
                                   if (siglaController.text.trim().isNotEmpty)
-                                    'sigla': siglaController.text.trim().toUpperCase(),
-                                  if (direccionController.text.trim().isNotEmpty)
-                                    'direccion': direccionController.text.trim(),
+                                    'sigla': siglaController.text
+                                        .trim()
+                                        .toUpperCase(),
+                                  if (direccionController.text
+                                      .trim()
+                                      .isNotEmpty)
+                                    'direccion': direccionController.text
+                                        .trim(),
                                   'tipo': tipo,
                                   if (lugar != null) 'estado': estado,
                                 };
@@ -376,7 +385,8 @@ class _LugaresPageState extends State<LugaresPage> {
 
                                 if (!mounted) return;
 
-                                if (response.status == StatusNetwork.connected) {
+                                if (response.status ==
+                                    StatusNetwork.connected) {
                                   Navigator.of(context).pop();
                                   showSnackBar(
                                     lugaresMessenger,
@@ -435,12 +445,8 @@ class _LugaresPageState extends State<LugaresPage> {
   }
 
   Widget _estadoBadge(String estado) {
-    return TrayStatusBadge(
-      status: estado,
-      activeColor: _theme.success,
-    );
+    return TrayStatusBadge(status: estado, activeColor: _theme.success);
   }
-
 
   Widget _buildFiltroActivo() {
     if (_filtro.trim().isEmpty) return const SizedBox.shrink();
@@ -488,7 +494,10 @@ class _LugaresPageState extends State<LugaresPage> {
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 dense: true,
-                leading: Icon(Icons.location_city_outlined, color: _theme.primary),
+                leading: Icon(
+                  Icons.location_city_outlined,
+                  color: _theme.primary,
+                ),
                 title: Text(
                   lugar.nombre.isEmpty ? '-' : lugar.nombre,
                   maxLines: 1,
@@ -644,7 +653,8 @@ class _LugaresPageState extends State<LugaresPage> {
           backgroundColor: _theme.transparent,
           appBar: TrayModuleHeader(
             titulo: 'Lugares',
-            subtitulo: 'Gestiona instituciones y lugares de atención disponibles.',
+            subtitulo:
+                'Gestiona instituciones y lugares de atención disponibles.',
             actions: [
               IconButton(
                 tooltip: 'Filtrar',
@@ -652,9 +662,7 @@ class _LugaresPageState extends State<LugaresPage> {
                 icon: Icon(Icons.filter_list, color: _theme.white),
                 style: IconButton.styleFrom(
                   minimumSize: const Size(36, 36),
-                  side: BorderSide(
-                    color: _theme.white.withValues(alpha: 0.35),
-                  ),
+                  side: BorderSide(color: _theme.white.withValues(alpha: 0.35)),
                 ),
               ),
               IconButton(
@@ -663,9 +671,7 @@ class _LugaresPageState extends State<LugaresPage> {
                 icon: Icon(Icons.add, color: _theme.white),
                 style: IconButton.styleFrom(
                   minimumSize: const Size(36, 36),
-                  side: BorderSide(
-                    color: _theme.white.withValues(alpha: 0.35),
-                  ),
+                  side: BorderSide(color: _theme.white.withValues(alpha: 0.35)),
                 ),
               ),
             ],
@@ -702,5 +708,4 @@ class _LugaresPageState extends State<LugaresPage> {
       ),
     );
   }
-
 }

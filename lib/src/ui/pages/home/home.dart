@@ -10,7 +10,9 @@ import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/pages/perfil/perfil.dart';
 import 'package:red_neuro_app/src/ui/pages/usuarios/usuarios_page.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_page.dart';
-import 'package:red_neuro_app/src/ui/pages/estudios/estudios_page.dart';
+import 'package:red_neuro_app/src/ui/pages/inicio/inicio_page.dart';
+import 'package:red_neuro_app/src/ui/pages/categorias/categorias_page.dart';
+import 'package:red_neuro_app/src/ui/pages/servicios/servicios_page.dart';
 import 'package:red_neuro_app/src/ui/pages/lugares/lugares_page.dart';
 import 'package:red_neuro_app/src/ui/pages/pacientes/pacientes_page.dart';
 import 'package:red_neuro_app/src/ui/pages/personal_salud/personal_salud_page.dart';
@@ -346,7 +348,8 @@ class _HomePageState extends State<HomePage> {
                               ? SolarIconsBold.roundDoubleAltArrowLeft
                               : SolarIconsOutline.menuDots,
                           size: 15,
-                          color: navColor ?? (isSelected ? theme.primary : null),
+                          color:
+                              navColor ?? (isSelected ? theme.primary : null),
                         ),
                       )
                     : const SizedBox(),
@@ -396,6 +399,11 @@ class _HomePageState extends State<HomePage> {
         ),
       );
     }
+    final Color shellColor = theme.isDark ? theme.bgCard : theme.primary;
+    final Color bottomNavColor = _usePrimaryTrayShell
+        ? (theme.isDark ? theme.bgCard : theme.primary900)
+        : theme.background;
+
     return TemplatePage(
       page: ScaffoldMessenger(
         key: homeMessenger,
@@ -410,11 +418,11 @@ class _HomePageState extends State<HomePage> {
                   ? Brightness.dark
                   : Brightness.light,
               statusBarColor: _usePrimaryTrayShell
-                  ? theme.primary
+                  ? shellColor
                   : theme.transparent,
             ),
             backgroundColor: _usePrimaryTrayShell
-                ? theme.primary
+                ? shellColor
                 : theme.transparent,
             centerTitle: false,
           ),
@@ -458,17 +466,21 @@ class _HomePageState extends State<HomePage> {
           ),
           bottomNavigationBar: Container(
             decoration: BoxDecoration(
-              color: _usePrimaryTrayShell ? theme.primary900 : theme.background,
+              color: bottomNavColor,
               border: Border(
                 top: BorderSide(
                   color: _usePrimaryTrayShell
-                      ? theme.white.withValues(alpha: 0.12)
+                      ? (theme.isDark
+                          ? theme.monochromatic500.withValues(alpha: 0.9)
+                          : theme.white.withValues(alpha: 0.12))
                       : theme.monochromatic200.withValues(alpha: 0.35),
                 ),
               ),
               boxShadow: [
                 BoxShadow(
-                  color: theme.black.withValues(alpha: theme.isDark ? 0.26 : 0.08),
+                  color: theme.black.withValues(
+                    alpha: theme.isDark ? 0.26 : 0.08,
+                  ),
                   blurRadius: 16,
                   offset: const Offset(0, -4),
                 ),
@@ -514,8 +526,7 @@ List<ChildrenItem> _itemsByRole({
   required double screenWidth,
 }) {
   final theme = ThemeController.instance;
-  final resolvedRole =
-      _normalizarRol(selectedRole?.rol ?? user.rol ?? '');
+  final resolvedRole = _normalizarRol(selectedRole?.rol ?? user.rol ?? '');
 
   final perfilNav = ChildrenItem(
     iconoImagen: SolarIconsOutline.user,
@@ -578,6 +589,62 @@ List<ChildrenItem> _itemsByRole({
   return navigation;
 }
 
+String _normalizeRoute(String? value) {
+  final normalized = (value ?? '').trim().toLowerCase();
+  if (normalized.isEmpty) return normalized;
+  if (normalized.length > 1 && normalized.endsWith('/')) {
+    return normalized.substring(0, normalized.length - 1);
+  }
+  return normalized;
+}
+
+String _canonicalSupportedRoute(String? value) {
+  final normalized = _normalizeRoute(value);
+  switch (normalized) {
+    case '/admin/inicio':
+      return '/admin/home';
+    default:
+      return normalized;
+  }
+}
+
+ChildrenItem _homeMenuItem(ThemeController theme) => ChildrenItem(
+  iconoImagen: PhosphorIconsRegular.house,
+  iconoImagenSeleccionada: PhosphorIconsFill.house,
+  titulo: 'Inicio',
+  color: theme.primary,
+  children: const KeepAlivePage(child: MisCitasHomePage()),
+);
+
+List<ChildrenItem> _ensureHomeFirst(
+  List<ChildrenItem> items,
+  ThemeController theme,
+) {
+  if (items.isEmpty) return [_homeMenuItem(theme)];
+
+  final hasHome = items.any(
+    (item) =>
+        _normalizeRoute(item.titulo) == 'home' ||
+        _normalizeRoute(item.titulo) == 'inicio',
+  );
+  if (hasHome) {
+    final ordered = [...items]
+      ..sort((a, b) {
+        final aHome =
+            _normalizeRoute(a.titulo) == 'home' ||
+            _normalizeRoute(a.titulo) == 'inicio';
+        final bHome =
+            _normalizeRoute(b.titulo) == 'home' ||
+            _normalizeRoute(b.titulo) == 'inicio';
+        if (aHome == bHome) return 0;
+        return aHome ? -1 : 1;
+      });
+    return ordered;
+  }
+
+  return [_homeMenuItem(theme), ...items];
+}
+
 String _normalizarRol(String rol) {
   final normalized = rol.toUpperCase();
   switch (normalized) {
@@ -606,22 +673,22 @@ List<ChildrenItem> _submodulesFromRole({
   required bool esSupervisor,
   required ThemeController theme,
 }) {
-  const adminRoutesOrder = [
-    '/admin/notificaciones',
+  const supportedRoutesOrder = [
+    '/admin/home',
     '/admin/citas',
     '/admin/pacientes',
     '/admin/personal_medico',
-    '/admin/usuarios',
-    '/admin/lugares',
-    '/admin/estudios',
     '/admin/servicios',
+    '/admin/lugares',
   ];
+
+  const adminRoutesOrder = [...supportedRoutesOrder];
 
   if (selectedRole != null && selectedRole.modulos.isNotEmpty) {
     final filteredModules = selectedRole.modulos.where((module) {
-      final name = module.nombre.toLowerCase();
-      final label = module.label.toLowerCase();
-      final url = module.url.toLowerCase();
+      final name = _normalizeRoute(module.nombre);
+      final label = _normalizeRoute(module.label);
+      final url = _canonicalSupportedRoute(module.url);
       return name != 'principal' && label != 'principal' && url != '/principal';
     }).toList();
 
@@ -640,6 +707,11 @@ List<ChildrenItem> _submodulesFromRole({
         );
 
       for (final subModule in orderedSubmodules) {
+        if (!supportedRoutesOrder.contains(
+          _canonicalSupportedRoute(subModule.url),
+        )) {
+          continue;
+        }
         submodules.add(_submoduleToItem(subModule, theme: theme));
       }
     }
@@ -647,7 +719,7 @@ List<ChildrenItem> _submodulesFromRole({
     final submodulesByUrl = <String, ChildrenItem>{};
     for (final module in orderedModules) {
       for (final subModule in module.subModulos) {
-        final normalizedUrl = subModule.url.toLowerCase();
+        final normalizedUrl = _canonicalSupportedRoute(subModule.url);
         if (adminRoutesOrder.contains(normalizedUrl)) {
           submodulesByUrl.putIfAbsent(
             normalizedUrl,
@@ -663,9 +735,9 @@ List<ChildrenItem> _submodulesFromRole({
         .toList();
 
     if (orderedByPermission.isNotEmpty) {
-      return orderedByPermission;
+      return _ensureHomeFirst(orderedByPermission, theme);
     }
-    if (submodules.isNotEmpty) return submodules;
+    if (submodules.isNotEmpty) return _ensureHomeFirst(submodules, theme);
   }
 
   switch (resolvedRole) {
@@ -685,12 +757,18 @@ ChildrenItem _submoduleToItem(
   required ThemeController theme,
 }) {
   final blueprint = _resolveTrayBlueprint(subModule);
-  final normalizedUrl = subModule.url.toLowerCase();
-  final normalizedName = subModule.nombre.toLowerCase();
+  final normalizedUrl = _canonicalSupportedRoute(subModule.url);
+  final normalizedName = _normalizeRoute(subModule.nombre);
 
   final isUsuariosModule =
       normalizedUrl.contains('usuarios') || normalizedName == 'usuarios';
-  final isEstudiosModule =
+  final isHomeModule =
+      normalizedUrl == '/admin/home' ||
+      normalizedName == 'home' ||
+      normalizedName == 'inicio';
+  final isCategoriasModule =
+      normalizedUrl.contains('categorias') || normalizedName == 'categorias';
+  final isServiciosModule =
       normalizedUrl.contains('estudios') ||
       normalizedUrl.contains('servicios') ||
       normalizedName == 'estudios' ||
@@ -704,42 +782,52 @@ ChildrenItem _submoduleToItem(
       normalizedName == 'notificaciones';
   final isPacientesModule =
       normalizedUrl.contains('pacientes') || normalizedName == 'pacientes';
-  final isPersonalMedicoModule = normalizedUrl.contains('personal_medico') ||
+  final isPersonalMedicoModule =
+      normalizedUrl.contains('personal_medico') ||
       normalizedName.contains('personal');
 
   final resolvedIconName = isNotificacionesModule
       ? 'notificaciones'
+      : isHomeModule
+      ? 'home'
       : isCitasModule
       ? 'citas'
+      : isCategoriasModule
+      ? 'categorias'
       : isPacientesModule
       ? 'pacientes'
       : isPersonalMedicoModule
       ? 'personal_medico'
       : isLugaresModule
       ? 'lugares'
-      : isEstudiosModule
+      : isServiciosModule
       ? 'servicios'
       : subModule.propiedades?.icono;
 
   return ChildrenItem(
     iconoImagen: _moduleIconData(resolvedIconName),
-    iconoImagenSeleccionada: _moduleIconData(
-      resolvedIconName,
-      filled: true,
-    ),
-    titulo: isEstudiosModule
+    iconoImagenSeleccionada: _moduleIconData(resolvedIconName, filled: true),
+    titulo: isHomeModule
+        ? (subModule.label.isNotEmpty ? subModule.label : 'Inicio')
+        : isCategoriasModule
+        ? 'Categorías'
+        : isServiciosModule
         ? 'Servicios'
         : (subModule.label.isNotEmpty ? subModule.label : subModule.nombre),
     color: theme.primary,
     children: KeepAlivePage(
       child: isUsuariosModule
           ? const UsuariosPage()
+          : isHomeModule
+          ? const MisCitasHomePage()
           : isNotificacionesModule
           ? const NotificacionesPage()
+          : isCategoriasModule
+          ? const CategoriasPage()
           : isLugaresModule
           ? const LugaresPage()
-          : isEstudiosModule
-          ? const EstudiosPage()
+          : isServiciosModule
+          ? const ServiciosPage()
           : isCitasModule
           ? const CitasPage(
               soloMisCitas: false,
@@ -777,6 +865,9 @@ IconData _moduleIconData(String? iconName, {bool filled = false}) {
       return filled
           ? PhosphorIconsFill.stethoscope
           : PhosphorIconsRegular.stethoscope;
+    case 'categorias':
+    case 'category':
+      return filled ? Icons.category : Icons.category_outlined;
     case 'ocupaciones':
     case 'medical_services':
       return filled ? Icons.medical_services : Icons.medical_services_outlined;
@@ -812,14 +903,7 @@ IconData _moduleIconData(String? iconName, {bool filled = false}) {
 }
 
 List<ChildrenItem> _adminMenu(ThemeController theme) => [
-  ChildrenItem(
-    iconoImagen: Icons.notifications_none_rounded,
-    iconoImagenSeleccionada: Icons.notifications,
-    titulo: 'Notificaciones',
-    children: const KeepAlivePage(
-      child: NotificacionesPage(),
-    ),
-  ),
+  _homeMenuItem(theme),
   ChildrenItem(
     iconoImagen: PhosphorIconsRegular.calendarCheck,
     iconoImagenSeleccionada: PhosphorIconsFill.calendarCheck,
@@ -836,32 +920,19 @@ List<ChildrenItem> _adminMenu(ThemeController theme) => [
     iconoImagen: PhosphorIconsRegular.userCircle,
     iconoImagenSeleccionada: PhosphorIconsFill.userCircle,
     titulo: 'Pacientes',
-    children: const KeepAlivePage(
-      child: PacientesPage(),
-    ),
+    children: const KeepAlivePage(child: PacientesPage()),
   ),
   ChildrenItem(
     iconoImagen: PhosphorIconsRegular.stethoscope,
     iconoImagenSeleccionada: PhosphorIconsFill.stethoscope,
     titulo: 'Personal médico',
-    children: const KeepAlivePage(
-      child: RoleTrayPlaceholder(
-        title: 'Personal médico',
-        description:
-            'Gestiona el catálogo de médicos y personal de salud disponibles.',
-        actions: [
-          'Listar personal médico activo',
-          'Registrar o actualizar perfiles médicos',
-        ],
-        leadingIcon: PhosphorIconsRegular.stethoscope,
-      ),
-    ),
+    children: const KeepAlivePage(child: PersonalSaludPage()),
   ),
   ChildrenItem(
-    iconoImagen: PhosphorIconsRegular.users,
-    iconoImagenSeleccionada: PhosphorIconsFill.users,
-    titulo: 'Usuarios',
-    children: const KeepAlivePage(child: UsuariosPage()),
+    iconoImagen: Icons.science_outlined,
+    iconoImagenSeleccionada: Icons.science,
+    titulo: 'Servicios',
+    children: const KeepAlivePage(child: ServiciosPage()),
   ),
   ChildrenItem(
     iconoImagen: Icons.location_city_outlined,
@@ -869,29 +940,9 @@ List<ChildrenItem> _adminMenu(ThemeController theme) => [
     titulo: 'Lugares',
     children: const KeepAlivePage(child: LugaresPage()),
   ),
-  ChildrenItem(
-    iconoImagen: Icons.science_outlined,
-    iconoImagenSeleccionada: Icons.science,
-    titulo: 'Servicios',
-    children: const KeepAlivePage(child: EstudiosPage()),
-  ),
 ];
-
 List<ChildrenItem> _personalSaludAdminMenu(ThemeController theme) => [
-  ChildrenItem(
-    iconoImagen: Icons.notifications_none_rounded,
-    iconoImagenSeleccionada: Icons.notifications,
-    titulo: 'Notificaciones',
-    children: const KeepAlivePage(
-      child: NotificacionesPage(),
-    ),
-  ),
-  ChildrenItem(
-    iconoImagen: PhosphorIconsRegular.users,
-    iconoImagenSeleccionada: PhosphorIconsFill.users,
-    titulo: 'Usuarios',
-    children: const KeepAlivePage(child: UsuariosPage()),
-  ),
+  _homeMenuItem(theme),
   ChildrenItem(
     iconoImagen: PhosphorIconsRegular.calendarPlus,
     iconoImagenSeleccionada: PhosphorIconsFill.calendarPlus,
@@ -904,27 +955,66 @@ List<ChildrenItem> _personalSaludAdminMenu(ThemeController theme) => [
       ),
     ),
   ),
-];
-
-List<ChildrenItem> _personalSaludMenu(ThemeController theme) => [
   ChildrenItem(
-    iconoImagen: Icons.notifications_none_rounded,
-    iconoImagenSeleccionada: Icons.notifications,
-    titulo: 'Notificaciones',
-    children: const KeepAlivePage(
-      child: NotificacionesPage(),
-    ),
+    iconoImagen: PhosphorIconsRegular.userCircle,
+    iconoImagenSeleccionada: PhosphorIconsFill.userCircle,
+    titulo: 'Pacientes',
+    children: const KeepAlivePage(child: PacientesPage()),
   ),
+  ChildrenItem(
+    iconoImagen: PhosphorIconsRegular.stethoscope,
+    iconoImagenSeleccionada: PhosphorIconsFill.stethoscope,
+    titulo: 'Personal médico',
+    children: const KeepAlivePage(child: PersonalSaludPage()),
+  ),
+  ChildrenItem(
+    iconoImagen: Icons.science_outlined,
+    iconoImagenSeleccionada: Icons.science,
+    titulo: 'Servicios',
+    children: const KeepAlivePage(child: ServiciosPage()),
+  ),
+  ChildrenItem(
+    iconoImagen: Icons.location_city_outlined,
+    iconoImagenSeleccionada: Icons.location_city,
+    titulo: 'Lugares',
+    children: const KeepAlivePage(child: LugaresPage()),
+  ),
+];
+List<ChildrenItem> _personalSaludMenu(ThemeController theme) => [
+  _homeMenuItem(theme),
   ChildrenItem(
     iconoImagen: SolarIconsOutline.calendarSearch,
     iconoImagenSeleccionada: SolarIconsBold.calendarSearch,
-    titulo: 'Mis citas',
+    titulo: 'Citas',
     children: const KeepAlivePage(
       child: CitasPage(soloMisCitas: true, titulo: 'Mis citas'),
     ),
   ),
+  ChildrenItem(
+    iconoImagen: PhosphorIconsRegular.userCircle,
+    iconoImagenSeleccionada: PhosphorIconsFill.userCircle,
+    titulo: 'Pacientes',
+    children: const KeepAlivePage(child: PacientesPage()),
+  ),
+  ChildrenItem(
+    iconoImagen: PhosphorIconsRegular.stethoscope,
+    iconoImagenSeleccionada: PhosphorIconsFill.stethoscope,
+    titulo: 'Personal médico',
+    children: const KeepAlivePage(child: PersonalSaludPage()),
+  ),
+  ChildrenItem(
+    iconoImagen: Icons.science_outlined,
+    iconoImagenSeleccionada: Icons.science,
+    titulo: 'Servicios',
+    children: const KeepAlivePage(child: ServiciosPage()),
+  ),
+  ChildrenItem(
+    iconoImagen: Icons.location_city_outlined,
+    iconoImagenSeleccionada: Icons.location_city,
+    titulo: 'Lugares',
+    children: const KeepAlivePage(child: LugaresPage()),
+  ),
 ];
-
 ChildrenItem _noModulesPlaceholder(ThemeController theme) => ChildrenItem(
   iconoImagen: PhosphorIconsRegular.chatTeardropText,
   iconoImagenSeleccionada: PhosphorIconsFill.chatTeardropText,
@@ -1095,6 +1185,39 @@ _TrayBlueprint _resolveTrayBlueprint(SubModulo subModule) {
       ],
       icon: _moduleIconData('person'),
     ),
+    '/admin/home': _TrayBlueprint(
+      title: 'Home',
+      description:
+          'Vista principal de Mis citas con resumen, solicitadas y timeline por fecha.',
+      actions: const [
+        'Ver resumen de citas desde hoy',
+        'Expandir o colapsar solicitadas pendientes',
+        'Recorrer timeline por fecha con paginación',
+      ],
+      icon: _moduleIconData('home'),
+    ),
+    '/admin/categorias': _TrayBlueprint(
+      title: 'Categorías',
+      description:
+          'Administra categorías utilizadas para organizar los servicios.',
+      actions: const [
+        'Listar categorías activas e inactivas',
+        'Crear y editar categorías',
+        'Cambiar estado de categorías',
+      ],
+      icon: _moduleIconData('categorias'),
+    ),
+    '/admin/servicios': _TrayBlueprint(
+      title: 'Servicios',
+      description:
+          'Gestiona el catálogo de servicios y estudios disponibles en la plataforma.',
+      actions: const [
+        'Listar servicios por categoría',
+        'Crear y editar servicios',
+        'Actualizar disponibilidad de servicios',
+      ],
+      icon: _moduleIconData('servicios'),
+    ),
     '/admin/usuarios': _TrayBlueprint(
       title: 'Usuarios',
       description:
@@ -1182,8 +1305,8 @@ _TrayBlueprint _resolveTrayBlueprint(SubModulo subModule) {
     ),
   };
 
-  final normalizedUrl = (subModule.url).toLowerCase();
-  final normalizedName = (subModule.nombre).toLowerCase();
+  final normalizedUrl = _canonicalSupportedRoute(subModule.url);
+  final normalizedName = _normalizeRoute(subModule.nombre);
 
   final match = knownTrays[normalizedUrl] ?? knownTrays[normalizedName];
   if (match != null) return match;

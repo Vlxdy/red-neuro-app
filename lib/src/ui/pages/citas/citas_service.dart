@@ -3,7 +3,7 @@ import 'package:red_neuro_app/src/config/service_config.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/models/ocupacion.dart';
-import 'package:red_neuro_app/src/models/estudio.dart';
+import 'package:red_neuro_app/src/models/servicio.dart';
 import 'package:red_neuro_app/src/models/historial_cita.dart';
 import 'package:red_neuro_app/src/models/lugar.dart';
 import 'package:red_neuro_app/src/models/paciente.dart';

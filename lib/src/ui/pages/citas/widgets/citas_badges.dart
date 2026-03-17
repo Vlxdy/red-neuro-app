@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+import '../../../../constants/citas_estado.dart';
+
 class CitasEstadoBadge extends StatelessWidget {
   final String estado;
   final Color color;
@@ -20,7 +22,7 @@ class CitasEstadoBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
-        estado,
+        CitasEstado.labelFromValue(estado),
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
               color: color,
               fontWeight: FontWeight.bold,

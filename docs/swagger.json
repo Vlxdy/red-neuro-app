@@ -1627,6 +1627,362 @@
         ]
       }
     },
+    "/citas/mis-resumen": {
+      "get": {
+        "operationId": "CitasController_misResumen",
+        "parameters": [
+          {
+            "name": "desde",
+            "required": false,
+            "in": "query",
+            "description": "Fecha inicial desde donde consultar (ISO)",
+            "schema": {
+              "example": "2026-03-13T00:00:00Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "hasta",
+            "required": false,
+            "in": "query",
+            "description": "Fecha final del rango (ISO)",
+            "schema": {
+              "example": "2026-03-31T23:59:59Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "idLugar",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por lugar/institución",
+            "schema": {
+              "example": "2",
+              "type": "string"
+            }
+          },
+          {
+            "name": "scope",
+            "required": false,
+            "in": "query",
+            "description": "Alcance de consulta (admin puede usar all)",
+            "schema": {
+              "example": "mine",
+              "type": "string",
+              "enum": [
+                "mine",
+                "personal",
+                "all"
+              ]
+            }
+          },
+          {
+            "name": "idPersonal",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por personal cuando scope=all",
+            "schema": {
+              "example": "42",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/MisResumenResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Obtiene el resumen operativo de citas desde hoy",
+        "tags": [
+          "Gestión de Citas"
+        ]
+      }
+    },
+    "/citas/mis-solicitadas": {
+      "get": {
+        "operationId": "CitasController_misSolicitadas",
+        "parameters": [
+          {
+            "name": "desde",
+            "required": false,
+            "in": "query",
+            "description": "Fecha inicial desde donde consultar (ISO)",
+            "schema": {
+              "example": "2026-03-13T00:00:00Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "hasta",
+            "required": false,
+            "in": "query",
+            "description": "Fecha final del rango (ISO)",
+            "schema": {
+              "example": "2026-03-31T23:59:59Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "idLugar",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por lugar/institución",
+            "schema": {
+              "example": "2",
+              "type": "string"
+            }
+          },
+          {
+            "name": "scope",
+            "required": false,
+            "in": "query",
+            "description": "Alcance de consulta (admin puede usar all)",
+            "schema": {
+              "example": "mine",
+              "type": "string",
+              "enum": [
+                "mine",
+                "personal",
+                "all"
+              ]
+            }
+          },
+          {
+            "name": "idPersonal",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por personal cuando scope=all",
+            "schema": {
+              "example": "42",
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "description": "Cursor en formato ISO|id",
+            "schema": {
+              "example": "2026-03-18T10:30:00Z|12345",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limite",
+            "required": false,
+            "in": "query",
+            "description": "Cantidad de resultados por página",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 20,
+              "type": "number"
+            }
+          },
+          {
+            "name": "ocultas",
+            "required": false,
+            "in": "query",
+            "description": "Si true, devuelve también citas ocultas por preferencia local",
+            "schema": {
+              "default": false,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/MisSolicitadasResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lista citas solicitadas con paginación por cursor",
+        "tags": [
+          "Gestión de Citas"
+        ]
+      }
+    },
+    "/citas/mis-timeline": {
+      "get": {
+        "operationId": "CitasController_misTimeline",
+        "parameters": [
+          {
+            "name": "desde",
+            "required": false,
+            "in": "query",
+            "description": "Fecha inicial desde donde consultar (ISO)",
+            "schema": {
+              "example": "2026-03-13T00:00:00Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "hasta",
+            "required": false,
+            "in": "query",
+            "description": "Fecha final del rango (ISO)",
+            "schema": {
+              "example": "2026-03-31T23:59:59Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "idLugar",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por lugar/institución",
+            "schema": {
+              "example": "2",
+              "type": "string"
+            }
+          },
+          {
+            "name": "scope",
+            "required": false,
+            "in": "query",
+            "description": "Alcance de consulta (admin puede usar all)",
+            "schema": {
+              "example": "mine",
+              "type": "string",
+              "enum": [
+                "mine",
+                "personal",
+                "all"
+              ]
+            }
+          },
+          {
+            "name": "idPersonal",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por personal cuando scope=all",
+            "schema": {
+              "example": "42",
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursorFechaHora",
+            "required": false,
+            "in": "query",
+            "description": "Cursor temporal ISO para continuar el timeline",
+            "schema": {
+              "example": "2026-03-14T16:00:00Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "cursorId",
+            "required": false,
+            "in": "query",
+            "description": "Cursor de desempate por id",
+            "schema": {
+              "example": "98765",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limite",
+            "required": false,
+            "in": "query",
+            "description": "Cantidad de resultados por página",
+            "schema": {
+              "minimum": 1,
+              "maximum": 50,
+              "default": 30,
+              "type": "number"
+            }
+          },
+          {
+            "name": "incluirSolicitadas",
+            "required": false,
+            "in": "query",
+            "description": "Incluye citas solicitadas en el timeline",
+            "schema": {
+              "default": false,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/MisTimelineResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lista timeline de citas agrupado por fecha y con cursor",
+        "tags": [
+          "Gestión de Citas"
+        ]
+      }
+    },
     "/citas": {
       "get": {
         "operationId": "CitasController_listar",
@@ -1682,7 +2038,7 @@
                 "INACTIVO",
                 "BORRADOR",
                 "SOLICITADA",
-                "CONFIRMADA",
+                "PROGRAMADA",
                 "COMPLETADA",
                 "NO_ASISTIO",
                 "REPROGRAMADA",
@@ -1867,7 +2223,7 @@
                 "INACTIVO",
                 "BORRADOR",
                 "SOLICITADA",
-                "CONFIRMADA",
+                "PROGRAMADA",
                 "COMPLETADA",
                 "NO_ASISTIO",
                 "REPROGRAMADA",
@@ -1977,7 +2333,7 @@
                 "INACTIVO",
                 "BORRADOR",
                 "SOLICITADA",
-                "CONFIRMADA",
+                "PROGRAMADA",
                 "COMPLETADA",
                 "NO_ASISTIO",
                 "REPROGRAMADA",
@@ -2080,7 +2436,7 @@
                 "INACTIVO",
                 "BORRADOR",
                 "SOLICITADA",
-                "CONFIRMADA",
+                "PROGRAMADA",
                 "COMPLETADA",
                 "NO_ASISTIO",
                 "REPROGRAMADA",
@@ -2533,7 +2889,7 @@
             "bearer": []
           }
         ],
-        "summary": "Completa una cita confirmada",
+        "summary": "Completa una cita programada",
         "tags": [
           "Gestión de Citas"
         ]
@@ -2591,7 +2947,7 @@
             "bearer": []
           }
         ],
-        "summary": "Marca una cita confirmada como no asistida",
+        "summary": "Marca una cita programada como no asistida",
         "tags": [
           "Gestión de Citas"
         ]
@@ -2707,9 +3063,643 @@
             "bearer": []
           }
         ],
-        "summary": "Cancela una cita confirmada",
+        "summary": "Cancela una cita programada",
         "tags": [
           "Gestión de Citas"
+        ]
+      }
+    },
+    "/citas/home/bandeja": {
+      "get": {
+        "operationId": "HomeCitasController_homeBandeja",
+        "parameters": [
+          {
+            "name": "scope",
+            "required": false,
+            "in": "query",
+            "description": "Alcance de consulta",
+            "schema": {
+              "example": "mine",
+              "type": "string",
+              "enum": [
+                "mine",
+                "personal",
+                "all"
+              ]
+            }
+          },
+          {
+            "name": "idPersonal",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por personal cuando scope=personal",
+            "schema": {
+              "example": "42",
+              "type": "string"
+            }
+          },
+          {
+            "name": "idLugar",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por lugar/institución",
+            "schema": {
+              "example": "2",
+              "type": "string"
+            }
+          },
+          {
+            "name": "fechaBase",
+            "required": false,
+            "in": "query",
+            "description": "Fecha base de referencia para la bandeja",
+            "schema": {
+              "example": "2026-03-16",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limitPreview",
+            "required": false,
+            "in": "query",
+            "description": "Límite de preview por bloque",
+            "schema": {
+              "minimum": 1,
+              "maximum": 20,
+              "default": 10,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/HomeBandejaResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Obtiene la bandeja Home (contadores + preview por bloques)",
+        "tags": [
+          "Gestión de Citas Home"
+        ]
+      }
+    },
+    "/citas/home/pendientes-aprobacion": {
+      "get": {
+        "operationId": "HomeCitasController_homePendientesAprobacion",
+        "parameters": [
+          {
+            "name": "limite",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 10,
+              "maximum": 50,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pagina",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "filtro",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ordenRaw",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scope",
+            "required": false,
+            "in": "query",
+            "description": "Alcance de consulta",
+            "schema": {
+              "example": "mine",
+              "type": "string",
+              "enum": [
+                "mine",
+                "personal",
+                "all"
+              ]
+            }
+          },
+          {
+            "name": "idPersonal",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por personal cuando scope=personal",
+            "schema": {
+              "example": "42",
+              "type": "string"
+            }
+          },
+          {
+            "name": "idLugar",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por lugar/institución",
+            "schema": {
+              "example": "2",
+              "type": "string"
+            }
+          },
+          {
+            "name": "fechaBase",
+            "required": false,
+            "in": "query",
+            "description": "Fecha base de referencia para la bandeja",
+            "schema": {
+              "example": "2026-03-16",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "number"
+                            },
+                            "filas": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/CitaResponseDto"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lista incremental de pendientes de aprobación asignadas",
+        "tags": [
+          "Gestión de Citas Home"
+        ]
+      }
+    },
+    "/citas/home/rechazadas-solicitadas": {
+      "get": {
+        "operationId": "HomeCitasController_homeRechazadasSolicitadas",
+        "parameters": [
+          {
+            "name": "limite",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 10,
+              "maximum": 50,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pagina",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "filtro",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ordenRaw",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scope",
+            "required": false,
+            "in": "query",
+            "description": "Alcance de consulta",
+            "schema": {
+              "example": "mine",
+              "type": "string",
+              "enum": [
+                "mine",
+                "personal",
+                "all"
+              ]
+            }
+          },
+          {
+            "name": "idPersonal",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por personal cuando scope=personal",
+            "schema": {
+              "example": "42",
+              "type": "string"
+            }
+          },
+          {
+            "name": "idLugar",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por lugar/institución",
+            "schema": {
+              "example": "2",
+              "type": "string"
+            }
+          },
+          {
+            "name": "fechaBase",
+            "required": false,
+            "in": "query",
+            "description": "Fecha base de referencia para la bandeja",
+            "schema": {
+              "example": "2026-03-16",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "number"
+                            },
+                            "filas": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/CitaResponseDto"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lista incremental de rechazadas solicitadas",
+        "tags": [
+          "Gestión de Citas Home"
+        ]
+      }
+    },
+    "/citas/home/borradores": {
+      "get": {
+        "operationId": "HomeCitasController_homeBorradores",
+        "parameters": [
+          {
+            "name": "limite",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 10,
+              "maximum": 50,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pagina",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "filtro",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ordenRaw",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scope",
+            "required": false,
+            "in": "query",
+            "description": "Alcance de consulta",
+            "schema": {
+              "example": "mine",
+              "type": "string",
+              "enum": [
+                "mine",
+                "personal",
+                "all"
+              ]
+            }
+          },
+          {
+            "name": "idPersonal",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por personal cuando scope=personal",
+            "schema": {
+              "example": "42",
+              "type": "string"
+            }
+          },
+          {
+            "name": "idLugar",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por lugar/institución",
+            "schema": {
+              "example": "2",
+              "type": "string"
+            }
+          },
+          {
+            "name": "fechaBase",
+            "required": false,
+            "in": "query",
+            "description": "Fecha base de referencia para la bandeja",
+            "schema": {
+              "example": "2026-03-16",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "number"
+                            },
+                            "filas": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/CitaResponseDto"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lista incremental de borradores",
+        "tags": [
+          "Gestión de Citas Home"
+        ]
+      }
+    },
+    "/citas/home/programadas-asignadas": {
+      "get": {
+        "operationId": "HomeCitasController_homeProgramadasAsignadas",
+        "parameters": [
+          {
+            "name": "limite",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 10,
+              "maximum": 50,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pagina",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "filtro",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ordenRaw",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scope",
+            "required": false,
+            "in": "query",
+            "description": "Alcance de consulta",
+            "schema": {
+              "example": "mine",
+              "type": "string",
+              "enum": [
+                "mine",
+                "personal",
+                "all"
+              ]
+            }
+          },
+          {
+            "name": "idPersonal",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por personal cuando scope=personal",
+            "schema": {
+              "example": "42",
+              "type": "string"
+            }
+          },
+          {
+            "name": "idLugar",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por lugar/institución",
+            "schema": {
+              "example": "2",
+              "type": "string"
+            }
+          },
+          {
+            "name": "fechaBase",
+            "required": false,
+            "in": "query",
+            "description": "Fecha base de referencia para la bandeja",
+            "schema": {
+              "example": "2026-03-16",
+              "type": "string"
+            }
+          },
+          {
+            "name": "dia",
+            "required": false,
+            "in": "query",
+            "description": "Filtro opcional por día (YYYY-MM-DD)",
+            "schema": {
+              "example": "2026-03-17",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "number"
+                            },
+                            "filas": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/HomeGrupoDiaResponseDto"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lista incremental de programadas asignadas agrupadas por día",
+        "tags": [
+          "Gestión de Citas Home"
         ]
       }
     },
@@ -4560,6 +5550,36 @@
         ]
       }
     },
+    "/personal-salud/{id}/restauracion-contrasena": {
+      "patch": {
+        "operationId": "PersonalSaludController_restablecerContrasena",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Restablece la contraseña del profesional de salud y la envía por correo",
+        "tags": [
+          "Personal Salud"
+        ]
+      }
+    },
     "/pacientes": {
       "get": {
         "operationId": "PacienteController_listar",
@@ -6072,6 +7092,32 @@
           "id"
         ]
       },
+      "MisResumenResponseDto": {
+        "type": "object",
+        "properties": {
+          "solicitadasPendientesConfirmacion": {
+            "type": "number",
+            "example": 12
+          },
+          "proximasProgramadas": {
+            "type": "number",
+            "example": 7
+          },
+          "totalDesdeHoy": {
+            "type": "number",
+            "example": 19
+          },
+          "primeraFechaConCitas": {
+            "type": "object",
+            "example": "2026-03-13"
+          }
+        },
+        "required": [
+          "solicitadasPendientesConfirmacion",
+          "proximasProgramadas",
+          "totalDesdeHoy"
+        ]
+      },
       "PersonalResponseDto": {
         "type": "object",
         "properties": {
@@ -6368,7 +7414,7 @@
               "INACTIVO",
               "BORRADOR",
               "SOLICITADA",
-              "CONFIRMADA",
+              "PROGRAMADA",
               "COMPLETADA",
               "NO_ASISTIO",
               "REPROGRAMADA",
@@ -6459,7 +7505,7 @@
               "INACTIVO",
               "BORRADOR",
               "SOLICITADA",
-              "CONFIRMADA",
+              "PROGRAMADA",
               "COMPLETADA",
               "NO_ASISTIO",
               "REPROGRAMADA",
@@ -6587,6 +7633,89 @@
           "estado",
           "idPersonal",
           "personal"
+        ]
+      },
+      "MisSolicitadasResponseDto": {
+        "type": "object",
+        "properties": {
+          "nextCursor": {
+            "type": "string",
+            "example": "2026-03-18T10:30:00Z|12345"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "example": true
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CitaResponseDto"
+            }
+          },
+          "totalAprox": {
+            "type": "number",
+            "example": 120
+          }
+        },
+        "required": [
+          "hasMore",
+          "items",
+          "totalAprox"
+        ]
+      },
+      "GrupoCitasPorFechaDto": {
+        "type": "object",
+        "properties": {
+          "fecha": {
+            "type": "string",
+            "example": "2026-03-13"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CitaResponseDto"
+            }
+          }
+        },
+        "required": [
+          "fecha",
+          "items"
+        ]
+      },
+      "TimelineCursorDto": {
+        "type": "object",
+        "properties": {
+          "cursorFechaHora": {
+            "type": "string",
+            "example": "2026-03-14T16:00:00Z"
+          },
+          "cursorId": {
+            "type": "string",
+            "example": "98765"
+          }
+        }
+      },
+      "MisTimelineResponseDto": {
+        "type": "object",
+        "properties": {
+          "grupos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GrupoCitasPorFechaDto"
+            }
+          },
+          "nextCursor": {
+            "$ref": "#/components/schemas/TimelineCursorDto"
+          },
+          "hasMore": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "grupos",
+          "nextCursor",
+          "hasMore"
         ]
       },
       "CantidadCitasPorDiaResponseDto": {
@@ -6818,6 +7947,172 @@
           }
         }
       },
+      "HomeContadoresResponseDto": {
+        "type": "object",
+        "properties": {
+          "pendientesAprobacionAsignadas": {
+            "type": "number",
+            "example": 12
+          },
+          "rechazadasSolicitadasPorMi": {
+            "type": "number",
+            "example": 5
+          },
+          "borradores": {
+            "type": "number",
+            "example": 8
+          },
+          "programadasAsignadas": {
+            "type": "number",
+            "example": 34
+          }
+        },
+        "required": [
+          "pendientesAprobacionAsignadas",
+          "rechazadasSolicitadasPorMi",
+          "borradores",
+          "programadasAsignadas"
+        ]
+      },
+      "HomePreviewBloqueResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CitaResponseDto"
+            }
+          },
+          "total": {
+            "type": "number",
+            "example": 12
+          },
+          "limitAplicado": {
+            "type": "number",
+            "example": 10
+          },
+          "hasMore": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limitAplicado",
+          "hasMore"
+        ]
+      },
+      "HomePreviewProgramadasResponseDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CitaResponseDto"
+            }
+          },
+          "total": {
+            "type": "number",
+            "example": 12
+          },
+          "limitAplicado": {
+            "type": "number",
+            "example": 10
+          },
+          "hasMore": {
+            "type": "boolean",
+            "example": true
+          },
+          "reglaAplicada": {
+            "type": "string",
+            "example": "top10_o_todas_las_de_hoy_si_hoy_gt_10"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "limitAplicado",
+          "hasMore",
+          "reglaAplicada"
+        ]
+      },
+      "HomePreviewResponseDto": {
+        "type": "object",
+        "properties": {
+          "pendientesAprobacionAsignadas": {
+            "$ref": "#/components/schemas/HomePreviewBloqueResponseDto"
+          },
+          "rechazadasSolicitadasPorMi": {
+            "$ref": "#/components/schemas/HomePreviewBloqueResponseDto"
+          },
+          "borradores": {
+            "$ref": "#/components/schemas/HomePreviewBloqueResponseDto"
+          },
+          "programadasAsignadas": {
+            "$ref": "#/components/schemas/HomePreviewProgramadasResponseDto"
+          }
+        },
+        "required": [
+          "pendientesAprobacionAsignadas",
+          "rechazadasSolicitadasPorMi",
+          "borradores",
+          "programadasAsignadas"
+        ]
+      },
+      "HomeBandejaResponseDto": {
+        "type": "object",
+        "properties": {
+          "scopeAplicado": {
+            "type": "string",
+            "example": "mine"
+          },
+          "idPersonalAplicado": {
+            "type": "string",
+            "example": "42"
+          },
+          "fechaBase": {
+            "type": "string",
+            "example": "2026-03-16"
+          },
+          "contadores": {
+            "$ref": "#/components/schemas/HomeContadoresResponseDto"
+          },
+          "preview": {
+            "$ref": "#/components/schemas/HomePreviewResponseDto"
+          },
+          "updatedAt": {
+            "type": "string",
+            "example": "2026-03-16T14:20:00.000Z"
+          }
+        },
+        "required": [
+          "scopeAplicado",
+          "fechaBase",
+          "contadores",
+          "preview",
+          "updatedAt"
+        ]
+      },
+      "HomeGrupoDiaResponseDto": {
+        "type": "object",
+        "properties": {
+          "dia": {
+            "type": "string",
+            "example": "2026-03-16"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CitaResponseDto"
+            }
+          }
+        },
+        "required": [
+          "dia",
+          "items"
+        ]
+      },
       "HistorialCambioDto": {
         "type": "object",
         "properties": {
@@ -6938,7 +8233,7 @@
       "ResumenDiarioResponseDto": {
         "type": "object",
         "properties": {
-          "citasConfirmadasAsignadas": {
+          "citasProgramadasAsignadas": {
             "type": "number"
           },
           "citasConPersonal": {

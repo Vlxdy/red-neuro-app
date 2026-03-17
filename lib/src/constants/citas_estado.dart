@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 enum CitasEstado {
   borrador('BORRADOR'),
   solicitada('SOLICITADA'),
-  confirmada('CONFIRMADA'),
+  programada('PROGRAMADA'),
   completada('COMPLETADA'),
   noAsistio('NO_ASISTIO'),
   cancelada('CANCELADA'),
@@ -14,11 +14,27 @@ enum CitasEstado {
   final String value;
   const CitasEstado(this.value);
 
+  static List<String> get valuesAsString =>
+      CitasEstado.values.map((estado) => estado.value).toList(growable: false);
+
   static CitasEstado fromValue(String? value) {
-    return CitasEstado.values.firstWhere(
-      (estado) => estado.value == value,
-      orElse: () => CitasEstado.borrador,
-    );
+    return tryFromValue(value) ?? CitasEstado.borrador;
+  }
+
+  static CitasEstado? tryFromValue(String? value) {
+    final normalized = value?.trim();
+    if (normalized == null || normalized.isEmpty) return null;
+    for (final estado in CitasEstado.values) {
+      if (estado.value == normalized) return estado;
+    }
+    return null;
+  }
+
+  static String labelFromValue(String? value, {String emptyLabel = 'Todos'}) {
+    final estado = tryFromValue(value);
+    if (estado != null) return estado.label;
+    final normalized = value?.trim();
+    return (normalized == null || normalized.isEmpty) ? emptyLabel : normalized;
   }
 
   String get label {
@@ -27,8 +43,8 @@ enum CitasEstado {
         return 'Borrador';
       case CitasEstado.solicitada:
         return 'Solicitada';
-      case CitasEstado.confirmada:
-        return 'Confirmada';
+      case CitasEstado.programada:
+        return 'Programada';
       case CitasEstado.completada:
         return 'Completada';
       case CitasEstado.noAsistio:
@@ -45,31 +61,31 @@ enum CitasEstado {
   Color color(ThemeController theme) {
     switch (this) {
       case CitasEstado.borrador:
-        return theme.grey.withValues(alpha: 0.75);
+        return const Color(0xFF64748B);
       case CitasEstado.solicitada:
-        return theme.accent500;
-      case CitasEstado.confirmada:
-        return theme.primary;
+        return const Color(0xFFF59E0B);
+      case CitasEstado.programada:
+        return const Color(0xFF2563EB);
       case CitasEstado.completada:
-        return theme.success;
+        return const Color(0xFF16A34A);
       case CitasEstado.noAsistio:
-        return theme.warning;
+        return const Color(0xFFEA580C);
       case CitasEstado.cancelada:
-        return theme.error;
+        return const Color(0xFFDC2626);
       case CitasEstado.rechazada:
-        return theme.accent500;
+        return const Color(0xFF9333EA);
       case CitasEstado.reprogramada:
-        return const Color(0xFF8E7CC3);
+        return const Color(0xFF0D9488);
     }
   }
 
   Color textColor(ThemeController theme) {
     switch (this) {
-      case CitasEstado.borrador:
       case CitasEstado.solicitada:
-      case CitasEstado.confirmada:
-      case CitasEstado.completada:
         return theme.black;
+      case CitasEstado.borrador:
+      case CitasEstado.programada:
+      case CitasEstado.completada:
       case CitasEstado.noAsistio:
       case CitasEstado.cancelada:
       case CitasEstado.rechazada:

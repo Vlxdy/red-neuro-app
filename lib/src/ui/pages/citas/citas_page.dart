@@ -7,39 +7,30 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:red_neuro_app/src/config/service_config.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/constants.dart';
+import 'package:red_neuro_app/src/constants/citas_estado.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
-import 'package:red_neuro_app/src/extensions/colores_extension.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
-import 'package:red_neuro_app/src/models/ocupacion.dart';
-import 'package:red_neuro_app/src/models/estudio.dart';
-import 'package:red_neuro_app/src/models/historial_cita.dart';
 import 'package:red_neuro_app/src/models/lugar.dart';
-import 'package:red_neuro_app/src/models/paciente.dart';
 import 'package:red_neuro_app/src/models/personal_medico.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:red_neuro_app/src/plugins/utils/preferences.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
-import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_service.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/citas_utils.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_active_filters.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_agenda.dart';
-import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_badges.dart';
-import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_detalle_widgets.dart';
-import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_filters_fields.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_detalle_modal.dart';
 import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
-import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_autocomplete_selector_field.dart';
-import 'package:red_neuro_app/src/ui/pages/citas/widgets/fecha_selector.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_confirmacion_dialog.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_formulario_modal_widget.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_filtros_modal_widget.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_catalogo_selector_modal_widget.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_historial_modal_widget.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_modo_mis_citas_banner.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
-part 'widgets/citas_filtros_modal_part.dart';
-part 'widgets/citas_medico_selector_modal_part.dart';
-part 'widgets/citas_formulario_modal_part.dart';
-part 'widgets/citas_historial_modal_part.dart';
-part 'widgets/citas_detalle_modal_part.dart';
 
 final GlobalKey<ScaffoldMessengerState> citasMessenger =
     GlobalKey<ScaffoldMessengerState>();
@@ -103,11 +94,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   String? _lugarFiltroNombre;
   int _listPage = 1;
   int _listLimit = 10;
-  int _listTotal = 0;
 
-  bool get _listHasNext => _listTotal > 0
-      ? (_listPage * _listLimit) < _listTotal
-      : _citasListado.length == _listLimit;
   late final _CitasSocketClient _socketClient;
   bool get _usarSoloMisCitas => widget.soloMisCitas || _soloCitasAsignadas;
   bool get _bloquearFiltroMedicoPorSoloMisCitas =>
@@ -134,7 +121,9 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     _agendaFocusedDay = _agendaDay;
     _buscarController = TextEditingController();
     _medicoFiltroController = TextEditingController();
-    _estadoFiltroController = TextEditingController(text: _estadoLabelNatural(null));
+    _estadoFiltroController = TextEditingController(
+      text: CitasEstado.labelFromValue(null),
+    );
     _lugarFiltroController = TextEditingController();
     _service = CitasService(context);
     _socketClient = _CitasSocketClient(
@@ -245,7 +234,6 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
           : result.citas;
       _listPage = result.page;
       _listLimit = result.limit;
-      _listTotal = result.total;
       _loading = false;
     });
   }
@@ -447,9 +435,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
 
   Map<String, dynamic>? _normalizeSocketMap(dynamic data) {
     if (data is! Map) return null;
-    return data.map(
-      (key, value) => MapEntry(key.toString(), value),
-    );
+    return data.map((key, value) => MapEntry(key.toString(), value));
   }
 
   void _syncSocketCita(CitaMedica cita) {
@@ -491,7 +477,13 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
 
   bool _matchesBaseSocketFilters(CitaMedica cita) {
     final estado = cita.estado.trim();
-    if (_estadoFiltro != null && _estadoFiltro!.isNotEmpty && estado != _estadoFiltro) {
+    final isRestrictedStatus =
+        estado == CitasEstado.borrador.value ||
+        estado == CitasEstado.rechazada.value;
+
+    if (_estadoFiltro != null &&
+        _estadoFiltro!.isNotEmpty &&
+        estado != _estadoFiltro) {
       return false;
     }
 
@@ -501,7 +493,13 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
         ? (Auth.instance.profile.idUsuarioRol ?? '')
         : '';
 
-    if (medicoFiltro.isNotEmpty && cita.idPersonal != medicoFiltro) {
+    final canIncludeRestrictedByOwnFilter = isRestrictedStatus &&
+        _isFilteringByLoggedPersonal(medicoFiltro) &&
+        _canViewRestrictedDraftStatus(cita);
+
+    if (medicoFiltro.isNotEmpty &&
+        cita.idPersonal != medicoFiltro &&
+        !canIncludeRestrictedByOwnFilter) {
       return false;
     }
 
@@ -509,11 +507,19 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
       return false;
     }
 
-    if ((estado == 'BORRADOR' || estado == 'RECHAZADA') && !_canViewRestrictedDraftStatus(cita)) {
+    if (isRestrictedStatus && !_canViewRestrictedDraftStatus(cita)) {
       return false;
     }
 
     return true;
+  }
+
+  bool _isFilteringByLoggedPersonal(String medicoFiltro) {
+    final filtro = medicoFiltro.trim();
+    if (filtro.isEmpty) return false;
+
+    final idUsuarioRol = (Auth.instance.profile.idUsuarioRol ?? '').trim();
+    return idUsuarioRol.isNotEmpty && filtro == idUsuarioRol;
   }
 
   bool _canViewRestrictedDraftStatus(CitaMedica cita) {
@@ -572,7 +578,10 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     return [cita, ...lista];
   }
 
-  List<CitaMedica> _upsertOrRemoveCitaEnAgenda(List<CitaMedica> lista, CitaMedica cita) {
+  List<CitaMedica> _upsertOrRemoveCitaEnAgenda(
+    List<CitaMedica> lista,
+    CitaMedica cita,
+  ) {
     final index = lista.indexWhere((item) => item.id == cita.id);
     final include = _shouldIncludeInAgenda(cita);
 
@@ -702,20 +711,12 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   _DateRange _resolveCalendarRange() {
     final focusedDay = _agendaFocusedDay;
     if (_agendaCalendarFormat == CalendarFormat.week) {
-      final start = focusedDay.subtract(
-        Duration(days: focusedDay.weekday - 1),
-      );
+      final start = focusedDay.subtract(Duration(days: focusedDay.weekday - 1));
       final end = start.add(const Duration(days: 6, hours: 23, minutes: 59));
       return _DateRange(start: start, end: end);
     }
     final firstDay = DateTime(focusedDay.year, focusedDay.month, 1);
-    final lastDay = DateTime(
-      focusedDay.year,
-      focusedDay.month + 1,
-      0,
-      23,
-      59,
-    );
+    final lastDay = DateTime(focusedDay.year, focusedDay.month + 1, 0, 23, 59);
     return _DateRange(start: firstDay, end: lastDay);
   }
 
@@ -731,37 +732,98 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   }
 
 
-
-  String _estadoLabelNatural(String? estado) {
-    if (estado == null || estado.trim().isEmpty) return 'Todos';
-    const etiquetas = {
-      'BORRADOR': 'Borrador',
-      'SOLICITADA': 'Solicitada',
-      'CONFIRMADA': 'Confirmada',
-      'COMPLETADA': 'Completada',
-      'NO_ASISTIO': 'No asistió',
-      'CANCELADA': 'Cancelada',
-      'RECHAZADA': 'Rechazada',
-      'REPROGRAMADA': 'Reprogramada',
-    };
-    return etiquetas[estado] ??
-        estado
-            .toLowerCase()
-            .split('_')
-            .where((segmento) => segmento.isNotEmpty)
-            .map(
-              (segmento) =>
-                  '${segmento[0].toUpperCase()}${segmento.substring(1)}',
-            )
-            .join(' ');
+  Future<void> _abrirFiltrosModal() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return CitasFiltrosModalWidget(
+          filtersScrollController: _filtersScrollController,
+          buscarController: _buscarController,
+          onBuscarChanged: (value) => setState(() => _buscarTexto = value),
+          estadoController: _estadoFiltroController,
+          onTapEstado: _abrirSelectorEstadoFiltro,
+          mostrarFiltroMedico: widget.mostrarFiltroMedico,
+          personalAsignadoController: _medicoFiltroController,
+          personalAsignadoIdSeleccionado: _medicoFiltro,
+          bloquearFiltroPersonalAsignado: _bloquearFiltroMedicoPorSoloMisCitas,
+          etiquetaPersonalAsignadoBloqueado: _nombreMedicoActual,
+          onTapPersonalAsignado: _abrirSelectorMedicoFiltro,
+          onClearPersonalAsignado: () {
+            setState(() {
+              _medicoFiltro = null;
+              _medicoFiltroNombre = null;
+              _medicoFiltroController.clear();
+            });
+          },
+          lugarController: _lugarFiltroController,
+          lugarIdSeleccionado: _lugarFiltro,
+          onTapLugar: _abrirSelectorLugarFiltro,
+          onClearLugar: () {
+            setState(() {
+              _lugarFiltro = null;
+              _lugarFiltroNombre = null;
+              _lugarFiltroController.clear();
+            });
+          },
+          onLimpiar: _limpiarFiltros,
+          onAplicar: () {
+            _aplicarFiltros();
+            Navigator.pop(context);
+          },
+        );
+      },
+    );
   }
+
+  Future<void> _abrirSelectorMedicoFiltro() async {
+    final seleccionado = await showModalBottomSheet<PersonalMedico>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return CitasMedicoSelectorModalWidget(
+          cargarMedicos: _service.obtenerPersonalMedico,
+        );
+      },
+    );
+
+    if (!mounted || seleccionado == null) return;
+    setState(() {
+      _medicoFiltro = seleccionado.id;
+      _medicoFiltroNombre = seleccionado.nombreCompleto;
+      _medicoFiltroController.text = seleccionado.nombreCompleto;
+    });
+  }
+
+  Future<void> _abrirSelectorLugarFiltro() async {
+    final seleccionado = await showModalBottomSheet<Lugar>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return CitasLugarSelectorModalWidget(
+          cargarLugares: _service.obtenerLugares,
+        );
+      },
+    );
+
+    if (!mounted || seleccionado == null) return;
+    setState(() {
+      _lugarFiltro = seleccionado.id;
+      _lugarFiltroNombre = seleccionado.nombre;
+      _lugarFiltroController.text = seleccionado.nombre;
+    });
+  }
+
 
   Future<void> _abrirSelectorEstadoFiltro() async {
     final seleccionado = await showModalBottomSheet<String?>(
       context: context,
       isScrollControlled: true,
       builder: (context) {
-        final opciones = <String?>[null, ...CitaEstado.values];
+        final opciones = <String?>[null, ...CitasEstado.valuesAsString];
         return SafeArea(
           child: ConstrainedBox(
             constraints: BoxConstraints(
@@ -774,7 +836,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
                 final estado = opciones[index];
                 final seleccionadoActual = _estadoFiltro == estado;
                 return ListTile(
-                  title: Text(_estadoLabelNatural(estado)),
+                  title: Text(CitasEstado.labelFromValue(estado)),
                   trailing: seleccionadoActual
                       ? Icon(Icons.check_rounded, color: _theme.primary)
                       : null,
@@ -789,7 +851,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     if (!mounted) return;
     setState(() {
       _estadoFiltro = seleccionado;
-      _estadoFiltroController.text = _estadoLabelNatural(seleccionado);
+      _estadoFiltroController.text = CitasEstado.labelFromValue(seleccionado);
     });
   }
 
@@ -808,7 +870,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   void _limpiarFiltroEstado() {
     setState(() {
       _estadoFiltro = null;
-      _estadoFiltroController.text = _estadoLabelNatural(null);
+      _estadoFiltroController.text = CitasEstado.labelFromValue(null);
     });
     _aplicarFiltrosTrasCambiosRapidos();
   }
@@ -831,12 +893,10 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     _aplicarFiltrosTrasCambiosRapidos();
   }
 
-
-
   void _limpiarFiltros() {
     setState(() {
       _estadoFiltro = null;
-      _estadoFiltroController.text = _estadoLabelNatural(null);
+      _estadoFiltroController.text = CitasEstado.labelFromValue(null);
       _medicoFiltro = null;
       _medicoFiltroNombre = null;
       _lugarFiltro = null;
@@ -898,6 +958,19 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
       _agendaFocusedDay = fecha;
       _selectedDay = fecha;
       _focusedDay = fecha;
+    });
+    await _cargarCitasAgendaDay(day: _agendaDay);
+  }
+
+  Future<void> _irAHoy() async {
+    final now = DateTime.now();
+    final hoy = DateTime(now.year, now.month, now.day);
+    if (isSameDay(hoy, _agendaDay)) return;
+    setState(() {
+      _agendaDay = hoy;
+      _agendaFocusedDay = hoy;
+      _selectedDay = hoy;
+      _focusedDay = hoy;
     });
     await _cargarCitasAgendaDay(day: _agendaDay);
   }
@@ -980,7 +1053,9 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
                         CitasActiveFiltersRibbon(
                           theme: _theme,
                           buscarTexto: _buscarTexto,
-                          estadoFiltro: _estadoFiltro == null ? null : _estadoLabelNatural(_estadoFiltro),
+                          estadoFiltro: _estadoFiltro == null
+                              ? null
+                              : CitasEstado.labelFromValue(_estadoFiltro),
                           medicoFiltroNombre: _medicoFiltroNombre,
                           lugarFiltroNombre: _lugarFiltroNombre,
                           onClearBuscar: _limpiarFiltroBuscar,
@@ -1022,16 +1097,15 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
                             isLoading: _agendaLoading,
                             isCalendarLoading: _agendaCalendarLoading,
                             scrollController: _agendaScrollController,
-                            colorEstado: _colorEstado,
+                            colorEstado: (estado) =>
+                                CitasUtils.colorEstado(estado, _theme),
                             formatoHoraAgenda: _formatoHoraAgenda,
                             formatoHorarioCita: _formatoHorarioCita,
                             tituloCita: _tituloCita,
                             nombrePaciente: _nombrePaciente,
                             nombreMedico: _nombreMedico,
                             iconoTipoCita: _iconoTipoCita,
-                            colorOcupacion: _colorOcupacion,
-                            onTapCita: (cita) =>
-                                () => _abrirCitaSegunEstado(cita),
+                            onTapCita: (cita) => _abrirCitaSegunEstado(cita),
                             onTapHora: (hour) {
                               final fechaBase = DateTime(
                                 _agendaDay.year,
@@ -1050,11 +1124,37 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
                   Positioned(
                     bottom: 24,
                     right: 24,
-                    child: FloatingActionButton(
-                      onPressed: () =>
-                          _abrirFormulario(fechaBase: _selectedDay),
-                      backgroundColor: _theme.primary,
-                      child: Icon(Icons.add, color: _theme.white),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        if (!isSameDay(_agendaDay, DateTime.now()))
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: FloatingActionButton(
+                              heroTag: 'citas_fab_hoy',
+                              mini: true,
+                              onPressed: _irAHoy,
+                              backgroundColor: _theme.primary,
+                              foregroundColor: _theme.white,
+                              child: const Text(
+                                'Hoy',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        FloatingActionButton(
+                          heroTag: 'citas_fab_nueva',
+                          mini: true,
+                          onPressed: () =>
+                              _abrirFormulario(fechaBase: _selectedDay),
+                          backgroundColor: _theme.primary,
+                          child: Icon(Icons.add, color: _theme.white),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -1087,10 +1187,6 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     return _timeFormat.format(referencia);
   }
 
-  Color _colorOcupacion(CitaMedica cita) {
-    return HexColor.fromHex(cita.ocupacionColorHex ?? '#64748b');
-  }
-
   String _nombreMedico(CitaMedica cita) {
     return (cita.medicoNombre ?? '').trim();
   }
@@ -1098,7 +1194,6 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   String _nombrePaciente(CitaMedica cita) {
     return (cita.pacienteNombre ?? '').trim();
   }
-
 
   String _resolveAvatarUrl(String? urlFoto) {
     final trimmed = (urlFoto ?? '').trim();
@@ -1108,13 +1203,15 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   }
 
   String _inicialesPersonal(CitaMedica cita) {
-    final partes = [
-      cita.personalNombre ?? '',
-    ].join(' ').trim().split(RegExp(r'\s+')).where((p) => p.trim().isNotEmpty).toList();
+    final partes = [cita.personalNombre ?? '']
+        .join(' ')
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((p) => p.trim().isNotEmpty)
+        .toList();
     if (partes.isEmpty) return 'PS';
     return partes.take(2).map((p) => p[0]).join().toUpperCase();
   }
-
 
   Future<void> _copiarDato(String valor) async {
     await Clipboard.setData(ClipboardData(text: valor));
@@ -1173,7 +1270,6 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     if (tipo == 'CONSULTA') return 'Consulta';
     if (tipo == 'ESTUDIO') return 'Servicio';
     if (tipo.isNotEmpty) return cita.tipoCita!.trim();
-    if ((cita.ocupacionNombre ?? '').trim().isNotEmpty) return 'Consulta';
     return 'Cita médica';
   }
 
@@ -1182,17 +1278,13 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     if (tipo == 'ESTUDIO' || (cita.servicioNombre ?? '').trim().isNotEmpty) {
       return PhosphorIconsRegular.testTube;
     }
-    if (tipo == 'CONSULTA' ||
-        (cita.ocupacionNombre ?? '').trim().isNotEmpty) {
+    if (tipo == 'CONSULTA') {
       return PhosphorIconsRegular.stethoscope;
     }
     return PhosphorIconsRegular.calendarCheck;
   }
 
-  bool _puedeEditarCita(CitaMedica cita) {
-    final estado = cita.estado;
-    return estado == 'BORRADOR' || estado == 'RECHAZADA';
-  }
+  bool _puedeEditarCita(CitaMedica cita) => CitasUtils.puedeEditarCita(cita);
 
   Future<bool> _confirmarAccionSimple({
     required String titulo,
@@ -1332,22 +1424,28 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   }
 
   Future<void> _eliminarBorradorConConfirmacion(CitaMedica cita) async {
+    final ok = await _eliminarBorradorEditable(cita);
+    if (!ok || !mounted) return;
+    Navigator.of(context).pop();
+  }
+
+  Future<bool> _eliminarBorradorEditable(CitaMedica cita) async {
     final confirmar = await _confirmarAccionSimple(
       titulo: 'Eliminar borrador',
       mensaje: '¿Confirmas eliminar este borrador de cita?',
       accion: 'Sí, eliminar',
     );
-    if (!confirmar) return;
+    if (!confirmar) return false;
     final ok = await _handleResponseError(
       await _service.eliminarCitaBorrador(cita.id),
       'No se pudo eliminar el borrador.',
     );
-    if (!ok) return;
+    if (!ok) return false;
     if (mounted) {
-      Navigator.of(context).pop();
       await _cargarCitasCalendario();
       if (_currentTabIndex == 2) await _cargarCitasListado();
     }
+    return true;
   }
 
   Future<String?> _solicitarMotivoRechazo() async {
@@ -1367,7 +1465,8 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(dialogContext, rootNavigator: true).pop(),
+            onPressed: () =>
+                Navigator.of(dialogContext, rootNavigator: true).pop(),
             child: const Text('Cancelar'),
           ),
           FilledButton(
@@ -1421,7 +1520,10 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
             TextButton(
               onPressed: enviando
                   ? null
-                  : () => Navigator.of(dialogContext, rootNavigator: true).pop(false),
+                  : () => Navigator.of(
+                      dialogContext,
+                      rootNavigator: true,
+                    ).pop(false),
               child: const Text('Cancelar'),
             ),
             FilledButton(
@@ -1451,7 +1553,10 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
                         setStateDialog(() => enviando = false);
                         return;
                       }
-                      Navigator.of(dialogContext, rootNavigator: true).pop(true);
+                      Navigator.of(
+                        dialogContext,
+                        rootNavigator: true,
+                      ).pop(true);
                     },
               child: const Text('Rechazar'),
             ),
@@ -1462,7 +1567,8 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   }
 
   Future<bool> _rechazarCitaSolicitadaConConfirmacion(CitaMedica cita) async {
-    if (!_puedeGestionarSolicitada(cita)) return false;
+    if (!CitasUtils.puedeGestionarSolicitada(cita, Auth.instance.profile))
+      return false;
     final resultado = await _solicitarMotivoRechazoYEnviar(cita);
     if (resultado != true) {
       if (resultado == false && mounted) {
@@ -1478,9 +1584,9 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     return true;
   }
 
-
   Future<bool> _confirmarCitaSolicitadaConOpciones(CitaMedica cita) async {
-    if (!_puedeGestionarSolicitada(cita)) return false;
+    if (!CitasUtils.puedeGestionarSolicitada(cita, Auth.instance.profile))
+      return false;
 
     final detalleController = TextEditingController(text: cita.detalle);
     DateTime? fechaSeleccionada = cita.fechaInicio;
@@ -1560,36 +1666,129 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   }
 
   Future<void> _abrirCitaSegunEstado(CitaMedica cita) async {
-    if (cita.estado == 'BORRADOR' || cita.estado == 'RECHAZADA') {
-      _abrirFormulario(cita: cita);
-      return;
+    final destino = CitasUtils.resolverDestinoModalCita(
+      cita: cita,
+      perfil: Auth.instance.profile,
+    );
+
+    switch (destino) {
+      case CitasModalDestino.formulario:
+        await _abrirFormulario(cita: cita);
+        return;
+      case CitasModalDestino.detalle:
+        await _mostrarDetalleCita(cita);
+        return;
     }
-    await _mostrarDetalleCita(cita);
   }
 
-  String? _valorDetalle(String? value) {
-    final normalized = value?.trim();
-    if (normalized == null || normalized.isEmpty) return null;
-    return normalized;
+  Future<void> _mostrarDetalleCita(CitaMedica cita) async {
+    final detallePayload = CitasUtils.construirDetalleModalPayload(
+      cita: cita,
+      theme: _theme,
+      titulo: _tituloCita(cita),
+      nombrePaciente: _nombrePaciente,
+      formatearGenero: _formatearGenero,
+      formatearFechaPaciente: _formatearFechaPaciente,
+      calcularEdadPaciente: _calcularEdadPaciente,
+      etiquetaPrestacion: _etiquetaPrestacion,
+      nombreMedico: _nombreMedico,
+      resolveAvatarUrl: _resolveAvatarUrl,
+      inicialesPersonal: _inicialesPersonal,
+      formatoFechaCita: _formatoFechaCita,
+      formatoHorarioCita: _formatoHorarioCita,
+    );
+
+    final accionesDetalleModal = CitasUtils.construirAccionesDetalleCita(
+      cita: cita,
+      puedeGestionarSolicitada: (citaItem) =>
+          CitasUtils.puedeGestionarSolicitada(citaItem, Auth.instance.profile),
+      puedeEditarCita: _puedeEditarCita,
+      citaYaIniciada: _citaYaIniciada,
+      confirmarCitaSolicitada: _confirmarCitaSolicitadaConOpciones,
+      rechazarCitaSolicitada: _rechazarCitaSolicitadaConConfirmacion,
+      completarCita: _completarCitaConConfirmacion,
+      marcarNoAsistioCita: _marcarNoAsistioCitaConConfirmacion,
+      reprogramarCita: _reprogramarCitaConConfirmacion,
+      cancelarCita: _cancelarCitaConConfirmacion,
+      eliminarBorrador: _eliminarBorradorConConfirmacion,
+      abrirFormulario: (citaItem) => _abrirFormulario(cita: citaItem),
+    );
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return CitasDetalleModal.fromPayload(
+          cita: cita,
+          theme: _theme,
+          payload: detallePayload,
+          acciones: accionesDetalleModal,
+          onClose: () => Navigator.of(context).pop(),
+          onVerHistorial: () => _mostrarHistorialCita(cita),
+          onCopiarDato: _copiarDato,
+        );
+      },
+    );
   }
 }
 
-class _CitaDetalleAccion {
-  final String label;
-  final IconData icon;
-  final bool isPrimary;
-  final bool isDestructive;
-  final bool cierraModal;
-  final Future<bool> Function() onTap;
+extension _CitasPageFormularioModalPart on _CitasPageState {
+  Future<void> _abrirFormulario({CitaMedica? cita, DateTime? fechaBase}) async {
+    await abrirCitasFormularioModal(
+      context: context,
+      theme: _theme,
+      service: _service,
+      dateFormat: _dateFormat,
+      timeFormat: _timeFormat,
+      messengerKey: citasMessenger,
+      selectedDay: _selectedDay,
+      currentTabIndex: _currentTabIndex,
+      resolveDefaultStartTime: _resolveDefaultStartTime,
+      validarRequerido: _validarRequerido,
+      calcularEdadPaciente: _calcularEdadPaciente,
+      formatearFechaPaciente: _formatearFechaPaciente,
+      formatearGenero: _formatearGenero,
+      puedeGestionarSolicitada: (citaItem) =>
+          CitasUtils.puedeGestionarSolicitada(citaItem, Auth.instance.profile),
+      colorEstado: (estado) => CitasUtils.colorEstado(estado, _theme),
+      formatearTipoCita: CitasUtils.formatearTipoCita,
+      confirmarAccionCita: _confirmarAccionCita,
+      confirmarAccionSimple: _confirmarAccionSimple,
+      solicitarMotivoRechazo: _solicitarMotivoRechazo,
+      handleResponseError: (response, fallback) =>
+          _handleResponseError(response, fallback),
+      cargarCitasCalendario: _cargarCitasCalendario,
+      cargarCitasListado: _cargarCitasListado,
+      mostrarHistorialCita: _mostrarHistorialCita,
+      eliminarCitaEditable: _eliminarBorradorEditable,
+      cita: cita,
+      fechaBase: fechaBase,
+    );
+  }
+}
 
-  const _CitaDetalleAccion({
-    required this.label,
-    required this.icon,
-    required this.onTap,
-    this.isPrimary = false,
-    this.isDestructive = false,
-    this.cierraModal = true,
-  });
+extension _CitasPageHistorialModalPart on _CitasPageState {
+  Future<void> _mostrarHistorialCita(CitaMedica cita) async {
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return CitasHistorialModalDialog(
+          cita: cita,
+          service: _service,
+          theme: _theme,
+          dateFormat: _dateFormat,
+          inicioDia: CitasUtils.inicioDia,
+          finDia: CitasUtils.finDia,
+          formatoFechaHoraHistorial: (fecha) =>
+              CitasUtils.formatoFechaHoraHistorial(fecha, _dateTimeFormat),
+          tituloHistorial: CitasUtils.tituloHistorial,
+          formatearDetalleCambio: (cambio) =>
+              CitasUtils.formatearDetalleCambio(cambio, _dateTimeFormat),
+        );
+      },
+    );
+  }
 }
 
 class _CitasSocketClient {

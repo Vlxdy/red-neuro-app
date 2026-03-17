@@ -1097,10 +1097,12 @@ class _PacientesPageState extends State<PacientesPage> with FormController {
                       filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: _theme.white.withValues(alpha: 0.72),
+                          color: _theme.bgCard,
                           borderRadius: BorderRadius.circular(18),
                           border: Border.all(
-                            color: _theme.white.withValues(alpha: 0.55),
+                            color: _theme.monochromatic500.withValues(
+                              alpha: _theme.isDark ? 0.85 : 0.55,
+                            ),
                           ),
                         ),
                         child: Padding(
