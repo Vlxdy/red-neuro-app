@@ -55,7 +55,6 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
   final ScrollController _scrollController = ScrollController();
 
   List<NotificacionItem> _items = [];
-  ResumenDiario? _resumen;
   bool _loading = true;
   bool _loadingMore = false;
   int _page = 1;
@@ -177,7 +176,7 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
       _loading = true;
       _hasMore = true;
     });
-    await Future.wait([_cargarBandeja(page: 1), _cargarResumen()]);
+    await _cargarBandeja(page: 1);
     if (!mounted) return;
     setState(() => _loading = false);
   }
@@ -186,12 +185,11 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
     final result = await _service.obtenerNotificaciones(page: page, limit: _limit);
     if (!mounted) return;
 
-    final userId = Auth.instance.profile.id ?? '';
     final merged = append ? [..._items, ...result.notificaciones] : result.notificaciones;
     final seen = <String>{};
     final next = <NotificacionItem>[];
     for (final item in merged) {
-      final key = item.dedupeKey(userId);
+      final key = item.id;
       if (seen.add(key)) next.add(item);
     }
 
@@ -214,11 +212,6 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
     }
   }
 
-  Future<void> _cargarResumen() async {
-    final resumen = await _service.obtenerResumenDiario();
-    if (!mounted) return;
-    setState(() => _resumen = resumen);
-  }
 
   void _onScroll() {
     if (_loadingMore || !_hasMore || _loading || !_scrollController.hasClients) {
@@ -264,9 +257,6 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
 
   @override
   Widget build(BuildContext context) {
-    final user = Auth.instance.profile;
-    final isAdmin = (user.rol ?? '').toUpperCase().contains('ADMIN');
-
     return TemplatePage(
       showEnvironmentBanner: false,
       page: ScaffoldMessenger(
@@ -275,7 +265,7 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
           backgroundColor: _theme.transparent,
           appBar: TrayModuleHeader(
             titulo: 'Notificaciones',
-            subtitulo: 'Resumen diario y bandeja de notificaciones',
+            subtitulo: 'Bandeja personal de notificaciones',
             showNotificationsAction: false,
             actions: [
               if (Navigator.of(context).canPop())
@@ -292,10 +282,8 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
                 ? const Center(child: CircularProgressIndicator())
                 : ListView(
                     controller: _scrollController,
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
                     children: [
-                      _ResumenCard(resumen: _resumen, isAdmin: isAdmin),
-                      const SizedBox(height: 12),
                       _buildUnreadHeader(),
                       const SizedBox(height: 8),
                       ..._groupedWidgets(),
@@ -317,24 +305,30 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
       children: [
         Text(
           'Bandeja',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
         ),
         const SizedBox(width: 8),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
           decoration: BoxDecoration(
             color: _theme.primary.withValues(alpha: 0.14),
             borderRadius: BorderRadius.circular(20),
           ),
-          child: Text('$_noLeidas sin leer'),
+          child: Text(
+            '$_noLeidas sin leer',
+            style: const TextStyle(fontSize: 12, height: 1.1),
+          ),
         ),
         const Spacer(),
         TextButton.icon(
           onPressed: _noLeidas > 0 ? _marcarTodas : null,
-          icon: const Icon(Icons.done_all, size: 18),
-          label: const Text('Marcar todas'),
+          icon: const Icon(Icons.done_all, size: 16),
+          label: const Text(
+            'Marcar todas',
+            style: TextStyle(fontSize: 12),
+          ),
         ),
       ],
     );
@@ -375,7 +369,7 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
       if (items.isEmpty) return;
       widgets
         ..add(Padding(
-          padding: const EdgeInsets.only(top: 10, bottom: 6),
+          padding: const EdgeInsets.only(top: 8, bottom: 4),
           child: Text(title, style: Theme.of(context).textTheme.titleSmall),
         ))
         ..addAll(items.map(_tileFor));
@@ -390,66 +384,101 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
   Widget _tileFor(NotificacionItem item) {
     final formatter = DateFormat('dd/MM/yyyy HH:mm', 'es');
     return Card(
-      child: ListTile(
-        onTap: () => _marcarComoVista(item),
-        leading: Icon(
-          item.visto ? Icons.mark_email_read_outlined : Icons.mark_email_unread,
-          color: item.visto ? _theme.secondary : _theme.primary,
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: item.visto
+              ? _theme.grey.withValues(alpha: 0.25)
+              : _theme.primary.withValues(alpha: 0.28),
         ),
-        title: Text(item.mensaje),
-        subtitle: Text(formatter.format(item.fechaCreacion)),
-        trailing: !item.visto
-            ? Container(
-                width: 10,
-                height: 10,
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () => _marcarComoVista(item),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                margin: const EdgeInsets.only(top: 2),
+                width: 28,
+                height: 28,
                 decoration: BoxDecoration(
-                  color: _theme.primary,
+                  color: item.visto
+                      ? _theme.grey.withValues(alpha: 0.16)
+                      : _theme.primary.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-              )
-            : null,
-      ),
-    );
-  }
-}
-
-class _ResumenCard extends StatelessWidget {
-  const _ResumenCard({required this.resumen, required this.isAdmin});
-
-  final ResumenDiario? resumen;
-  final bool isAdmin;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = ThemeController.instance;
-    return Card(
-      color: theme.primary.withValues(alpha: 0.06),
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Resumen diario',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 6),
-            if (resumen == null)
-              const Text('No se encontró resumen para hoy.')
-            else ...[
-              if (isAdmin) ...[
-                Text('• Citas con personal: ${resumen!.citasConPersonal}'),
-                Text('• Citas sin personal: ${resumen!.citasSinPersonal}'),
-              ] else
-                Text(
-                  '• Citas programadas asignadas: ${resumen!.citasProgramadasAsignadas}',
+                child: Icon(
+                  item.visto
+                      ? Icons.mark_email_read_outlined
+                      : Icons.mark_email_unread,
+                  size: 16,
+                  color: item.visto ? _theme.secondary : _theme.primary,
                 ),
-              const SizedBox(height: 6),
-              Text('Fecha: ${resumen!.fecha}'),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.mensaje,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        height: 1.25,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _theme.grey.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.schedule,
+                            size: 12,
+                            color: _theme.secondary.withValues(alpha: 0.85),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Fecha: ${formatter.format(item.fechaCreacion)}',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              height: 1.1,
+                              color: _theme.secondary.withValues(alpha: 0.88),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (!item.visto)
+                Container(
+                  margin: const EdgeInsets.only(top: 4, left: 8),
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: _theme.primary,
+                    shape: BoxShape.circle,
+                  ),
+                ),
             ],
-          ],
+          ),
         ),
       ),
     );

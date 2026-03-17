@@ -43,34 +43,4 @@ class NotificacionItem {
     );
   }
 
-  String dedupeKey(String userId) {
-    final fecha = fechaCreacion.toIso8601String().split('T').first;
-    return '$fecha|$tipo|$userId';
-  }
-}
-
-class ResumenDiario {
-  final int citasProgramadasAsignadas;
-  final int citasConPersonal;
-  final int citasSinPersonal;
-  final String fecha;
-
-  const ResumenDiario({
-    required this.citasProgramadasAsignadas,
-    required this.citasConPersonal,
-    required this.citasSinPersonal,
-    required this.fecha,
-  });
-
-  factory ResumenDiario.fromJson(Map<String, dynamic> json) {
-    int parseNum(dynamic value) =>
-        value is int ? value : int.tryParse('$value') ?? 0;
-
-    return ResumenDiario(
-      citasProgramadasAsignadas: parseNum(json['citasProgramadasAsignadas']),
-      citasConPersonal: parseNum(json['citasConPersonal']),
-      citasSinPersonal: parseNum(json['citasSinPersonal']),
-      fecha: '${json['fecha'] ?? ''}',
-    );
-  }
 }

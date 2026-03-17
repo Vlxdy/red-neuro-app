@@ -139,11 +139,14 @@ class SocketProvider extends ChangeNotifier with WidgetsBindingObserver {
     if (context == null || !context.mounted) return;
 
     final service = NotificacionesService(context);
-    final response = await service.obtenerNotificaciones(page: 1, limit: 50);
+    final response = await service.obtenerNotificaciones(
+      page: 1,
+      limit: 50,
+      soloNoLeidas: true,
+    );
     if (response.status != StatusNetwork.connected) return;
 
-    final totalNoLeidas =
-        response.notificaciones.where((item) => !item.visto).length;
+    final totalNoLeidas = response.total;
     notificacionesNoLeidasNotifier.value =
         totalNoLeidas < minimo ? minimo : totalNoLeidas;
   }
