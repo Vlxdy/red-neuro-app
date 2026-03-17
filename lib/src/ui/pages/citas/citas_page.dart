@@ -962,6 +962,19 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     await _cargarCitasAgendaDay(day: _agendaDay);
   }
 
+  Future<void> _irAHoy() async {
+    final now = DateTime.now();
+    final hoy = DateTime(now.year, now.month, now.day);
+    if (isSameDay(hoy, _agendaDay)) return;
+    setState(() {
+      _agendaDay = hoy;
+      _agendaFocusedDay = hoy;
+      _selectedDay = hoy;
+      _focusedDay = hoy;
+    });
+    await _cargarCitasAgendaDay(day: _agendaDay);
+  }
+
   Widget build(BuildContext context) {
     final isCompactHeader = MediaQuery.sizeOf(context).width < 980;
 
@@ -1111,11 +1124,37 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
                   Positioned(
                     bottom: 24,
                     right: 24,
-                    child: FloatingActionButton(
-                      onPressed: () =>
-                          _abrirFormulario(fechaBase: _selectedDay),
-                      backgroundColor: _theme.primary,
-                      child: Icon(Icons.add, color: _theme.white),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        if (!isSameDay(_agendaDay, DateTime.now()))
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: FloatingActionButton(
+                              heroTag: 'citas_fab_hoy',
+                              mini: true,
+                              onPressed: _irAHoy,
+                              backgroundColor: _theme.primary,
+                              foregroundColor: _theme.white,
+                              child: const Text(
+                                'Hoy',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        FloatingActionButton(
+                          heroTag: 'citas_fab_nueva',
+                          mini: true,
+                          onPressed: () =>
+                              _abrirFormulario(fechaBase: _selectedDay),
+                          backgroundColor: _theme.primary,
+                          child: Icon(Icons.add, color: _theme.white),
+                        ),
+                      ],
                     ),
                   ),
                 ],
