@@ -477,6 +477,10 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
 
   bool _matchesBaseSocketFilters(CitaMedica cita) {
     final estado = cita.estado.trim();
+    final isRestrictedStatus =
+        estado == CitasEstado.borrador.value ||
+        estado == CitasEstado.rechazada.value;
+
     if (_estadoFiltro != null &&
         _estadoFiltro!.isNotEmpty &&
         estado != _estadoFiltro) {
@@ -489,7 +493,13 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
         ? (Auth.instance.profile.idUsuarioRol ?? '')
         : '';
 
-    if (medicoFiltro.isNotEmpty && cita.idPersonal != medicoFiltro) {
+    final canIncludeRestrictedByOwnFilter = isRestrictedStatus &&
+        _isFilteringByLoggedPersonal(medicoFiltro) &&
+        _canViewRestrictedDraftStatus(cita);
+
+    if (medicoFiltro.isNotEmpty &&
+        cita.idPersonal != medicoFiltro &&
+        !canIncludeRestrictedByOwnFilter) {
       return false;
     }
 
@@ -497,12 +507,19 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
       return false;
     }
 
-    if ((estado == 'BORRADOR' || estado == 'RECHAZADA') &&
-        !_canViewRestrictedDraftStatus(cita)) {
+    if (isRestrictedStatus && !_canViewRestrictedDraftStatus(cita)) {
       return false;
     }
 
     return true;
+  }
+
+  bool _isFilteringByLoggedPersonal(String medicoFiltro) {
+    final filtro = medicoFiltro.trim();
+    if (filtro.isEmpty) return false;
+
+    final idUsuarioRol = (Auth.instance.profile.idUsuarioRol ?? '').trim();
+    return idUsuarioRol.isNotEmpty && filtro == idUsuarioRol;
   }
 
   bool _canViewRestrictedDraftStatus(CitaMedica cita) {
