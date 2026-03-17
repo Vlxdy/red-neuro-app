@@ -61,31 +61,31 @@ enum CitasEstado {
   Color color(ThemeController theme) {
     switch (this) {
       case CitasEstado.borrador:
-        return theme.grey.withValues(alpha: 0.75);
+        return const Color(0xFF64748B);
       case CitasEstado.solicitada:
-        return theme.warning;
+        return const Color(0xFFF59E0B);
       case CitasEstado.programada:
-        return theme.primary;
+        return const Color(0xFF2563EB);
       case CitasEstado.completada:
-        return theme.success;
+        return const Color(0xFF16A34A);
       case CitasEstado.noAsistio:
-        return const Color(0xFFB45309);
+        return const Color(0xFFEA580C);
       case CitasEstado.cancelada:
-        return theme.error;
+        return const Color(0xFFDC2626);
       case CitasEstado.rechazada:
-        return const Color(0xFF7E22CE);
+        return const Color(0xFF9333EA);
       case CitasEstado.reprogramada:
-        return const Color(0xFF0F766E);
+        return const Color(0xFF0D9488);
     }
   }
 
   Color textColor(ThemeController theme) {
     switch (this) {
-      case CitasEstado.borrador:
       case CitasEstado.solicitada:
+        return theme.black;
+      case CitasEstado.borrador:
       case CitasEstado.programada:
       case CitasEstado.completada:
-        return theme.black;
       case CitasEstado.noAsistio:
       case CitasEstado.cancelada:
       case CitasEstado.rechazada:
