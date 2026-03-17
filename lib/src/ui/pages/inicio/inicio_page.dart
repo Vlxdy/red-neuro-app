@@ -664,12 +664,13 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
                         const SizedBox(height: 8),
                       _buildContadores(contadores),
                       const SizedBox(height: 12),
-                      _buildSeccionWidget(
-                        titulo: 'Pendientes de aprobación',
-                        bloque: datos.pendientesAprobacionAsignadas,
-                        tipo: _BandejaTipo.pendientes,
-                        isCollapsed: _isCollapsed(_BandejaTipo.pendientes),
-                      ),
+                      if (datos.pendientesAprobacionAsignadas.total > 0)
+                        _buildSeccionWidget(
+                          titulo: 'Pendientes de aprobación',
+                          bloque: datos.pendientesAprobacionAsignadas,
+                          tipo: _BandejaTipo.pendientes,
+                          isCollapsed: _isCollapsed(_BandejaTipo.pendientes),
+                        ),
                       if (datos.rechazadasSolicitadasPorMi.total > 0)
                         _buildSeccionWidget(
                           titulo: 'Rechazadas solicitadas por mí',
