@@ -306,15 +306,3 @@ class CitaMedica {
   }
 }
 
-class CitaEstado {
-  static const List<String> values = [
-    'BORRADOR',
-    'SOLICITADA',
-    'PROGRAMADA',
-    'COMPLETADA',
-    'NO_ASISTIO',
-    'CANCELADA',
-    'RECHAZADA',
-    'REPROGRAMADA',
-  ];
-}

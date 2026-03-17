@@ -7,6 +7,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:red_neuro_app/src/config/service_config.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/constants.dart';
+import 'package:red_neuro_app/src/constants/citas_estado.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/models/lugar.dart';
@@ -121,7 +122,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     _buscarController = TextEditingController();
     _medicoFiltroController = TextEditingController();
     _estadoFiltroController = TextEditingController(
-      text: _estadoLabelNatural(null),
+      text: CitasEstado.labelFromValue(null),
     );
     _lugarFiltroController = TextEditingController();
     _service = CitasService(context);
@@ -799,36 +800,13 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     });
   }
 
-  String _estadoLabelNatural(String? estado) {
-    if (estado == null || estado.trim().isEmpty) return 'Todos';
-    const etiquetas = {
-      'BORRADOR': 'Borrador',
-      'SOLICITADA': 'Solicitada',
-      'PROGRAMADA': 'Programada',
-      'COMPLETADA': 'Completada',
-      'NO_ASISTIO': 'No asistió',
-      'CANCELADA': 'Cancelada',
-      'RECHAZADA': 'Rechazada',
-      'REPROGRAMADA': 'Reprogramada',
-    };
-    return etiquetas[estado] ??
-        estado
-            .toLowerCase()
-            .split('_')
-            .where((segmento) => segmento.isNotEmpty)
-            .map(
-              (segmento) =>
-                  '${segmento[0].toUpperCase()}${segmento.substring(1)}',
-            )
-            .join(' ');
-  }
 
   Future<void> _abrirSelectorEstadoFiltro() async {
     final seleccionado = await showModalBottomSheet<String?>(
       context: context,
       isScrollControlled: true,
       builder: (context) {
-        final opciones = <String?>[null, ...CitaEstado.values];
+        final opciones = <String?>[null, ...CitasEstado.valuesAsString];
         return SafeArea(
           child: ConstrainedBox(
             constraints: BoxConstraints(
@@ -841,7 +819,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
                 final estado = opciones[index];
                 final seleccionadoActual = _estadoFiltro == estado;
                 return ListTile(
-                  title: Text(_estadoLabelNatural(estado)),
+                  title: Text(CitasEstado.labelFromValue(estado)),
                   trailing: seleccionadoActual
                       ? Icon(Icons.check_rounded, color: _theme.primary)
                       : null,
@@ -856,7 +834,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     if (!mounted) return;
     setState(() {
       _estadoFiltro = seleccionado;
-      _estadoFiltroController.text = _estadoLabelNatural(seleccionado);
+      _estadoFiltroController.text = CitasEstado.labelFromValue(seleccionado);
     });
   }
 
@@ -875,7 +853,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   void _limpiarFiltroEstado() {
     setState(() {
       _estadoFiltro = null;
-      _estadoFiltroController.text = _estadoLabelNatural(null);
+      _estadoFiltroController.text = CitasEstado.labelFromValue(null);
     });
     _aplicarFiltrosTrasCambiosRapidos();
   }
@@ -901,7 +879,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   void _limpiarFiltros() {
     setState(() {
       _estadoFiltro = null;
-      _estadoFiltroController.text = _estadoLabelNatural(null);
+      _estadoFiltroController.text = CitasEstado.labelFromValue(null);
       _medicoFiltro = null;
       _medicoFiltroNombre = null;
       _lugarFiltro = null;
@@ -1047,7 +1025,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
                           buscarTexto: _buscarTexto,
                           estadoFiltro: _estadoFiltro == null
                               ? null
-                              : _estadoLabelNatural(_estadoFiltro),
+                              : CitasEstado.labelFromValue(_estadoFiltro),
                           medicoFiltroNombre: _medicoFiltroNombre,
                           lugarFiltroNombre: _lugarFiltroNombre,
                           onClearBuscar: _limpiarFiltroBuscar,

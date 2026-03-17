@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/constants/citas_estado.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/models/historial_cita.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_service.dart';
@@ -185,7 +186,7 @@ class _CitasHistorialModalDialogState extends State<CitasHistorialModalDialog> {
                   labelText: 'Estado anterior',
                   border: OutlineInputBorder(),
                 ),
-                items: CitaEstado.values
+                items: CitasEstado.valuesAsString
                     .map(
                       (estado) =>
                           DropdownMenuItem(value: estado, child: Text(estado)),
