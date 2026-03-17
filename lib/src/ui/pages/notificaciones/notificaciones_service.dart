@@ -38,11 +38,21 @@ class NotificacionesService extends ServiceConfig {
   Future<NotificacionesPageResult> obtenerNotificaciones({
     int page = 1,
     int limit = 10,
+    bool? soloNoLeidas,
+    String? tipo,
   }) async {
     try {
+      final params = <String, String>{'pagina': '$page', 'limite': '$limit'};
+      if (soloNoLeidas != null) {
+        params['noLeidasRaw'] = '$soloNoLeidas';
+      }
+      if (tipo != null && tipo.isNotEmpty) {
+        params['tipo'] = tipo;
+      }
+
       final response = await fetch(
         '/notificaciones',
-        params: {'pagina': '$page', 'limite': '$limit'},
+        params: params,
       );
 
       if (response.status != StatusNetwork.connected) {
@@ -79,21 +89,6 @@ class NotificacionesService extends ServiceConfig {
         'No se pudieron cargar las notificaciones',
       );
     }
-  }
-
-  Future<ResumenDiario?> obtenerResumenDiario() async {
-    try {
-      final response = await fetch('/notificaciones/resumen-diario');
-      if (response.status != StatusNetwork.connected) return null;
-      final data = response.data;
-      final datos = data['datos'] ?? data['data'] ?? data;
-      if (datos is Map<String, dynamic>) {
-        return ResumenDiario.fromJson(datos);
-      }
-    } catch (e) {
-      Logger.error('Error al obtener resumen diario $e');
-    }
-    return null;
   }
 
   Future<bool> marcarVista(String id) async {

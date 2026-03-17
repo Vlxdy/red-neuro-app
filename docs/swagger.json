@@ -4057,44 +4057,6 @@
         ]
       }
     },
-    "/notificaciones/resumen-diario": {
-      "get": {
-        "operationId": "NotificacionesController_resumen",
-        "parameters": [],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/BaseResponseDto"
-                    },
-                    {
-                      "properties": {
-                        "datos": {
-                          "$ref": "#/components/schemas/ResumenDiarioResponseDto"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "summary": "Resumen diario de citas para notificaciones",
-        "tags": [
-          "Notificaciones"
-        ]
-      }
-    },
     "/notificaciones/ejecutar-resumen-diario": {
       "post": {
         "operationId": "NotificacionesController_ejecutarResumen",
@@ -8229,26 +8191,6 @@
       "Object": {
         "type": "object",
         "properties": {}
-      },
-      "ResumenDiarioResponseDto": {
-        "type": "object",
-        "properties": {
-          "citasProgramadasAsignadas": {
-            "type": "number"
-          },
-          "citasConPersonal": {
-            "type": "number"
-          },
-          "citasSinPersonal": {
-            "type": "number"
-          },
-          "fecha": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "fecha"
-        ]
       },
       "RegistrarDispositivoPushDto": {
         "type": "object",
