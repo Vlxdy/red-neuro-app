@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
@@ -48,6 +49,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
   int _total = 0;
   String _filtro = '';
   bool _processingAction = false;
+  bool _canRestorePassword = false;
   String? _currentUsuarioRolId;
 
   final TextEditingController _searchController = TextEditingController();
@@ -87,18 +89,63 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     return activeRole.idUsuarioRol.trim();
   }
 
+
+  Rol? _resolverRolActivo(Usuario profile) {
+    final roles = profile.roles;
+    if (roles.isEmpty) return null;
+
+    final roleId = (profile.idRol ?? '').trim();
+    if (roleId.isNotEmpty) {
+      for (final rol in roles) {
+        if (rol.idRol == roleId) return rol;
+      }
+    }
+    return roles.first;
+  }
+
+  String _normalizarRol(String rol) {
+    final normalized = rol.trim().toUpperCase();
+    switch (normalized) {
+      case 'ADMIN':
+        return 'ADMINISTRADOR';
+      case 'PERSONAL_SALUD_ADMIN':
+      case 'SUPERVISOR':
+        return 'PERSONAL_SALUD_ADMIN';
+      default:
+        return normalized;
+    }
+  }
+
+  bool _esRolAdministrador(String rol) => _normalizarRol(rol) == 'ADMINISTRADOR';
+
+  bool _esRolPersonalAdministrador(String rol) =>
+      _normalizarRol(rol) == 'PERSONAL_SALUD_ADMIN';
+
+  bool _puedeRestaurarContrasena(Usuario profile) {
+    final activeRole = _resolverRolActivo(profile);
+    if (activeRole == null) {
+      final fallbackRol = profile.rol ?? '';
+      return _esRolAdministrador(fallbackRol) || _esRolPersonalAdministrador(fallbackRol);
+    }
+
+    if (_esRolAdministrador(activeRole.rol)) return true;
+    if (_esRolPersonalAdministrador(activeRole.rol)) return true;
+    return activeRole.esSupervisor;
+  }
+
   Future<void> _cargarUsuarioActual() async {
-    final profile = Auth.instance.profile;
+    var profile = Auth.instance.profile;
     String id = _resolverIdUsuarioRol(profile);
 
     if (id.isEmpty) {
-      final profileAsync = await Auth.instance.profileAsync();
-      id = _resolverIdUsuarioRol(profileAsync);
+      profile = await Auth.instance.profileAsync();
+      id = _resolverIdUsuarioRol(profile);
     }
 
     if (!mounted) return;
     setState(() {
       _currentUsuarioRolId = id.isEmpty ? null : id;
+      _canRestorePassword = _puedeRestaurarContrasena(profile);
     });
   }
 
@@ -598,6 +645,17 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                           icon: const Icon(Icons.edit_outlined),
                           label: const Text('Editar'),
                         ),
+                        if (_canRestorePassword)
+                          FilledButton.icon(
+                            onPressed: _processingAction
+                                ? null
+                                : () {
+                                    Navigator.pop(context);
+                                    _restaurarContrasenaPersonal(persona);
+                                  },
+                            icon: const Icon(Icons.lock_reset_outlined),
+                            label: const Text('Restaurar contraseña'),
+                          ),
                         OutlinedButton.icon(
                           onPressed: _processingAction
                               ? null
@@ -1354,6 +1412,91 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     setState(() => _processingAction = false);
   }
 
+
+  Future<void> _restaurarContrasenaPersonal(PersonalSalud personal) async {
+    if (_processingAction) return;
+
+    final confirmed = await _confirmarRestauracionContrasena(personal);
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _processingAction = true);
+
+    final response = await _service.restaurarContrasenaPersonal(personal.id);
+
+    if (!mounted) return;
+
+    if (response.status != StatusNetwork.connected) {
+      setState(() => _processingAction = false);
+      showSnackBar(
+        personalSaludMessenger,
+        response.message.isEmpty
+            ? 'No se pudo restaurar la contraseña.'
+            : response.message,
+        state: StatusSnackBar.error,
+        colorText: _theme.white,
+      );
+      return;
+    }
+
+    setState(() => _processingAction = false);
+    showSnackBar(
+      personalSaludMessenger,
+      'Contraseña restaurada correctamente para ${personal.nombreCompleto}.',
+      state: StatusSnackBar.success,
+      colorText: _theme.white,
+    );
+  }
+
+  Future<bool?> _confirmarRestauracionContrasena(PersonalSalud personal) async {
+    int countdown = 5;
+    Timer? timer;
+
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            timer ??= Timer.periodic(const Duration(seconds: 1), (t) {
+              if (countdown <= 0) {
+                t.cancel();
+                return;
+              }
+              if (!context.mounted) {
+                t.cancel();
+                return;
+              }
+              setStateDialog(() => countdown -= 1);
+            });
+
+            final canAccept = countdown == 0;
+            return AlertDialog(
+              title: const Text('Restaurar contraseña'),
+              content: Text(
+                'Se restaurará la contraseña de ${personal.nombreCompleto}. '
+                'Esta acción enviará una contraseña temporal.\n\n'
+                'Podrás aceptar en ${countdown}s.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Cancelar'),
+                ),
+                FilledButton(
+                  onPressed: canAccept ? () => Navigator.pop(context, true) : null,
+                  child: Text(canAccept ? 'Aceptar' : 'Aceptar (${countdown}s)'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    timer?.cancel();
+    return result;
+  }
+
   Widget _buildPagination() {
     final inicio = _personal.isEmpty ? 0 : ((_page - 1) * _limit) + 1;
     final fin = (_page - 1) * _limit + _personal.length;
@@ -1746,6 +1889,14 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                     onPressed: () =>
                                         _mostrarDetallesPersonal(persona),
                                   ),
+                                  if (!_esUsuarioActual(persona) && _canRestorePassword)
+                                    IconButton(
+                                      tooltip: 'Restaurar contraseña',
+                                      icon: const Icon(Icons.lock_reset_outlined),
+                                      onPressed: _processingAction
+                                          ? null
+                                          : () => _restaurarContrasenaPersonal(persona),
+                                    ),
                                   if (!_esUsuarioActual(persona))
                                     IconButton(
                                       tooltip: persona.estaActivo
