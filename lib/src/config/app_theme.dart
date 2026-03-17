@@ -77,9 +77,9 @@ class AppTheme {
     primary20: Color(0xFFF1F5F9),
     primary50: Color(0xFFE2E8F0),
     primary200: Color(0xFFCBD5E1),
-    primary: Color(0xFF1E293B),
-    primary700: Color(0xFF334155),
-    primary900: Color(0xFF0F172A),
+    primary: Color(0xFF334155),
+    primary700: Color(0xFF475569),
+    primary900: Color(0xFF1E293B),
     secondary: Color(0xFF334155),
     accent50: Color(0xFFEFF6FF),
     accent100: Color(0xFFDBEAFE),
@@ -105,7 +105,7 @@ class AppTheme {
     otherAccent: Color(0xFF2563EB),
     bgCard: Color(0xFFFFFFFF),
     bgCard2: Color(0xFFF8FAFC),
-    ciudadaniaBoton: Color(0xFF1E293B),
+    ciudadaniaBoton: Color(0xFF334155),
     bgBlue: Color(0xFF1D4ED8),
   );
 
@@ -159,12 +159,19 @@ class AppTheme {
     required AppColorPalette palette,
     required Brightness brightness,
   }) {
+    final primaryOnColor = palette.primary.computeLuminance() > 0.45
+        ? const Color(0xFF0F172A)
+        : palette.white;
+    final secondaryOnColor = palette.secondary.computeLuminance() > 0.45
+        ? const Color(0xFF0F172A)
+        : palette.white;
+
     final scheme = ColorScheme(
       brightness: brightness,
       primary: palette.primary,
-      onPrimary: palette.fontColorBrightness,
+      onPrimary: primaryOnColor,
       secondary: palette.secondary,
-      onSecondary: palette.fontColorBrightness,
+      onSecondary: secondaryOnColor,
       error: palette.error,
       onError: palette.white,
       surface: palette.background,
@@ -194,6 +201,44 @@ class AppTheme {
         elevation: 1,
       ),
       dividerColor: palette.monochromatic500,
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          backgroundColor: palette.primary,
+          foregroundColor: primaryOnColor,
+          disabledBackgroundColor: palette.monochromatic700,
+          disabledForegroundColor: palette.monochromatic900.withValues(
+            alpha: 0.75,
+          ),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: palette.primary,
+          foregroundColor: primaryOnColor,
+          disabledBackgroundColor: palette.monochromatic700,
+          disabledForegroundColor: palette.monochromatic900.withValues(
+            alpha: 0.75,
+          ),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: palette.primary,
+          side: BorderSide(color: palette.primary.withValues(alpha: 0.45)),
+        ),
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) return palette.primary;
+          return palette.monochromatic700;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return palette.primary.withValues(alpha: 0.38);
+          }
+          return palette.monochromatic500;
+        }),
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: palette.bgCard,
