@@ -68,6 +68,7 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
 
   late final _InicioCitasSocketClient _socketClient;
   Timer? _socketReloadDebouncer;
+  final ValueNotifier<int> _bandejasRefreshNotifier = ValueNotifier<int>(0);
 
   @override
   void initState() {
@@ -84,6 +85,7 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
   void dispose() {
     _socketReloadDebouncer?.cancel();
     _socketClient.dispose();
+    _bandejasRefreshNotifier.dispose();
     super.dispose();
   }
 
@@ -94,6 +96,10 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
       if (!mounted) return;
       unawaited(_loadBandeja());
     });
+  }
+
+  void _notificarRefreshBandejas() {
+    _bandejasRefreshNotifier.value++;
   }
 
   Future<void> _loadCollapsedPreferences() async {
@@ -230,6 +236,7 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
           onTapCita: _mostrarDetalleCita,
           scope: _scopeAplicado,
           idPersonal: _scopeAplicado == 'personal' ? _idPersonalSeleccionado : null,
+          refreshNotifier: _bandejasRefreshNotifier,
         ),
       ),
     );
@@ -404,8 +411,14 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
       solicitarMotivoRechazo: _solicitarMotivoRechazo,
       handleResponseError: (response, fallback) =>
           _handleResponseError(response, fallback),
-      cargarCitasCalendario: _loadBandeja,
-      cargarCitasListado: ({int? page}) => _loadBandeja(),
+      cargarCitasCalendario: () async {
+        await _loadBandeja();
+        _notificarRefreshBandejas();
+      },
+      cargarCitasListado: ({int? page}) async {
+        await _loadBandeja();
+        _notificarRefreshBandejas();
+      },
       mostrarHistorialCita: (citaItem) => InicioCitasUtils.mostrarHistorialCita(
         context: context,
         cita: citaItem,
@@ -438,7 +451,10 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
       mounted: mounted,
       onError: _showError,
     );
-    if (ok) await _loadBandeja();
+    if (ok) {
+      await _loadBandeja();
+      _notificarRefreshBandejas();
+    }
     return ok;
   }
 
@@ -451,7 +467,10 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
       mounted: mounted,
       onError: _showError,
     );
-    if (ok) await _loadBandeja();
+    if (ok) {
+      await _loadBandeja();
+      _notificarRefreshBandejas();
+    }
     return ok;
   }
 
@@ -465,7 +484,10 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
       mounted: mounted,
       onError: _showError,
     );
-    if (ok) await _loadBandeja();
+    if (ok) {
+      await _loadBandeja();
+      _notificarRefreshBandejas();
+    }
   }
 
   Future<void> _marcarNoAsistio(CitaMedica cita) async {
@@ -478,7 +500,10 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
       mounted: mounted,
       onError: _showError,
     );
-    if (ok) await _loadBandeja();
+    if (ok) {
+      await _loadBandeja();
+      _notificarRefreshBandejas();
+    }
   }
 
   Future<void> _reprogramarCita(CitaMedica cita) async {
@@ -499,7 +524,10 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
       mounted: mounted,
       onError: _showError,
     );
-    if (ok) await _loadBandeja();
+    if (ok) {
+      await _loadBandeja();
+      _notificarRefreshBandejas();
+    }
   }
 
   Future<void> _eliminarBorrador(CitaMedica cita) async {
@@ -512,7 +540,10 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
       mounted: mounted,
       onError: _showError,
     );
-    if (ok) await _loadBandeja();
+    if (ok) {
+      await _loadBandeja();
+      _notificarRefreshBandejas();
+    }
   }
 
   Future<bool> _eliminarCitaEditable(CitaMedica cita) async {
@@ -525,7 +556,10 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
       mounted: mounted,
       onError: _showError,
     );
-    if (ok) await _loadBandeja();
+    if (ok) {
+      await _loadBandeja();
+      _notificarRefreshBandejas();
+    }
     return ok;
   }
 
@@ -832,6 +866,7 @@ class _BandejaDetallePage extends StatefulWidget {
     required this.onTapCita,
     required this.scope,
     required this.idPersonal,
+    required this.refreshNotifier,
   });
 
   final _BandejaTipo tipo;
@@ -839,14 +874,17 @@ class _BandejaDetallePage extends StatefulWidget {
   final Future<void> Function(CitaMedica cita) onTapCita;
   final String scope;
   final String? idPersonal;
+  final ValueNotifier<int> refreshNotifier;
 
   @override
   State<_BandejaDetallePage> createState() => _BandejaDetallePageState();
 }
 
 class _BandejaDetallePageState extends State<_BandejaDetallePage> {
+  final ScrollController _scrollController = ScrollController();
   bool _loading = true;
   bool _loadingMore = false;
+  bool _refreshing = false;
   int _pagina = 1;
   int _total = 0;
   List<CitaMedica> _items = [];
@@ -863,17 +901,48 @@ class _BandejaDetallePageState extends State<_BandejaDetallePage> {
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(_onScroll);
+    widget.refreshNotifier.addListener(_onExternalRefreshRequested);
     _load(reset: true);
   }
 
+  @override
+  void dispose() {
+    widget.refreshNotifier.removeListener(_onExternalRefreshRequested);
+    _scrollController
+      ..removeListener(_onScroll)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _onExternalRefreshRequested() {
+    if (!mounted) return;
+    unawaited(_load(reset: true));
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients || _loading || _loadingMore || _refreshing || !_hasMore) {
+      return;
+    }
+    final current = _scrollController.position.pixels;
+    final max = _scrollController.position.maxScrollExtent;
+    if (current >= max - 120) {
+      unawaited(_load());
+    }
+  }
+
   Future<void> _load({bool reset = false}) async {
-    if (_loadingMore || (!reset && !_hasMore)) return;
+    if (_loadingMore || _refreshing || (!reset && !_hasMore)) return;
+
+    final paginaSolicitada = reset ? 1 : _pagina;
+    final cargarConPantallaInicial = reset && _items.isEmpty && _grupos.isEmpty;
+
     setState(() {
       if (reset) {
-        _loading = true;
-        _pagina = 1;
-        _items = [];
-        _grupos = [];
+        _refreshing = true;
+        if (cargarConPantallaInicial) {
+          _loading = true;
+        }
       } else {
         _loadingMore = true;
       }
@@ -881,17 +950,18 @@ class _BandejaDetallePageState extends State<_BandejaDetallePage> {
 
     if (_isProgramadas) {
       final res = await widget.service.obtenerProgramadasAsignadas(
-        pagina: _pagina,
+        pagina: paginaSolicitada,
         scope: widget.scope,
         idPersonal: widget.idPersonal,
       );
       if (!mounted) return;
       setState(() {
         _total = res.total;
-        _grupos = [..._grupos, ...res.filas];
+        _grupos = reset ? [...res.filas] : [..._grupos, ...res.filas];
         _loading = false;
         _loadingMore = false;
-        _pagina += 1;
+        _refreshing = false;
+        _pagina = paginaSolicitada + 1;
       });
       return;
     }
@@ -899,19 +969,19 @@ class _BandejaDetallePageState extends State<_BandejaDetallePage> {
     late HomeBandejaListadoResult res;
     if (widget.tipo == _BandejaTipo.pendientes) {
       res = await widget.service.obtenerPendientesAprobacion(
-        pagina: _pagina,
+        pagina: paginaSolicitada,
         scope: widget.scope,
         idPersonal: widget.idPersonal,
       );
     } else if (widget.tipo == _BandejaTipo.rechazadas) {
       res = await widget.service.obtenerRechazadasSolicitadas(
-        pagina: _pagina,
+        pagina: paginaSolicitada,
         scope: widget.scope,
         idPersonal: widget.idPersonal,
       );
     } else {
       res = await widget.service.obtenerBorradores(
-        pagina: _pagina,
+        pagina: paginaSolicitada,
         scope: widget.scope,
         idPersonal: widget.idPersonal,
       );
@@ -920,11 +990,18 @@ class _BandejaDetallePageState extends State<_BandejaDetallePage> {
     if (!mounted) return;
     setState(() {
       _total = res.total;
-      _items = [..._items, ...res.filas];
+      _items = reset ? [...res.filas] : [..._items, ...res.filas];
       _loading = false;
       _loadingMore = false;
-      _pagina += 1;
+      _refreshing = false;
+      _pagina = paginaSolicitada + 1;
     });
+  }
+
+  Future<void> _abrirDetalleCita(CitaMedica cita) async {
+    await widget.onTapCita(cita);
+    if (!mounted) return;
+    await _load(reset: true);
   }
 
   @override
@@ -938,24 +1015,37 @@ class _BandejaDetallePageState extends State<_BandejaDetallePage> {
 
     return Scaffold(
       appBar: AppBar(title: Text(titulo)),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(12),
-              children: [
-                Text('Total: $_total', style: const TextStyle(fontWeight: FontWeight.w600)),
-                const SizedBox(height: 12),
-                if (_isProgramadas)
-                  ..._buildProgramadas()
-                else
-                  ..._items.map((cita) => InicioCitaCompactTile(cita: cita, onTap: () => widget.onTapCita(cita))),
-                if (_hasMore)
-                  TextButton(
-                    onPressed: _loadingMore ? null : () => _load(),
-                    child: _loadingMore ? const CircularProgressIndicator() : const Text('Cargar más'),
+      body: RefreshIndicator(
+        onRefresh: () => _load(reset: true),
+        child: _loading
+            ? ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                children: const [
+                  SizedBox(
+                    height: 260,
+                    child: Center(child: CircularProgressIndicator()),
                   ),
-              ],
-            ),
+                ],
+              )
+            : ListView(
+                controller: _scrollController,
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(12),
+                children: [
+                  Text('Total: $_total', style: const TextStyle(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 12),
+                  if (_isProgramadas)
+                    ..._buildProgramadas()
+                  else
+                    ..._items.map((cita) => InicioCitaCompactTile(cita: cita, onTap: () => _abrirDetalleCita(cita))),
+                  if (_loadingMore)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                ],
+              ),
+      ),
     );
   }
 
@@ -966,9 +1056,8 @@ class _BandejaDetallePageState extends State<_BandejaDetallePage> {
         padding: const EdgeInsets.only(top: 8, bottom: 4),
         child: Text(group.dia, style: const TextStyle(fontWeight: FontWeight.w700)),
       ));
-      widgets.addAll(group.items.map((cita) => InicioCitaCompactTile(cita: cita, onTap: () => widget.onTapCita(cita))));
+      widgets.addAll(group.items.map((cita) => InicioCitaCompactTile(cita: cita, onTap: () => _abrirDetalleCita(cita))));
     }
     return widgets;
   }
 }
-
