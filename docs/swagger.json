@@ -8115,6 +8115,10 @@
             "type": "string",
             "description": "Identificador de la cita asociada"
           },
+          "historialCitaId": {
+            "type": "string",
+            "description": "Identificador compartido de la cadena de reprogramaciones"
+          },
           "idEjecutor": {
             "type": "string",
             "description": "Identificador del usuario que ejecutó la acción (usuario-rol)"

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:red_neuro_app/src/config/socket_service.dart';
+import 'package:red_neuro_app/src/constants/citas_estado.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/models/notificacion.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
@@ -255,6 +257,131 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
     _actualizarBadgeNoLeidas();
   }
 
+
+
+  bool _esProgramador(CitaMedica cita) {
+    final profile = Auth.instance.profile;
+    final candidatosUsuario = <String>{
+      if (profile.id != null && profile.id!.isNotEmpty) profile.id!,
+      if (profile.idUsuarioRol != null && profile.idUsuarioRol!.isNotEmpty)
+        profile.idUsuarioRol!,
+      if (profile.idRol != null && profile.idRol!.isNotEmpty) profile.idRol!,
+    };
+    final idProgramador = (cita.idUsuarioProgramo ?? '').trim();
+    return idProgramador.isNotEmpty && candidatosUsuario.contains(idProgramador);
+  }
+
+  Future<void> _mostrarEstadoNotificacion(NotificacionItem item) async {
+    await _marcarComoVista(item);
+    final idCita = (item.idCita ?? '').trim();
+    if (idCita.isEmpty) {
+      showSnackBar(
+        notificacionesMessenger,
+        'Esta notificación no tiene una cita asociada.',
+        state: StatusSnackBar.info,
+        colorText: _theme.white,
+      );
+      return;
+    }
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+
+    final cita = await _service.obtenerCitaPorId(idCita);
+    if (mounted && Navigator.of(context, rootNavigator: true).canPop()) {
+      Navigator.of(context, rootNavigator: true).pop();
+    }
+
+    if (!mounted) return;
+
+    if (cita == null) {
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Estado no disponible'),
+          content: const Text(
+            'No pudimos consultar el estado actual de la cita asociada a esta notificación.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Cerrar'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    final estado = CitasEstado.fromValue(cita.estado.toUpperCase());
+    final esProgramador = _esProgramador(cita);
+
+    if (estado == CitasEstado.rechazada && !esProgramador) {
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('Cita no disponible'),
+          content: const Text(
+            'La cita fue rechazada y ya no está disponible para tu perfil.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text('Entendido'),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    final mensajes = <CitasEstado, String>{
+      CitasEstado.solicitada: 'La cita está solicitada y pendiente de validación.',
+      CitasEstado.programada: 'La cita está programada y activa.',
+      CitasEstado.completada: 'La cita fue completada exitosamente.',
+      CitasEstado.noAsistio: 'La cita se cerró como no asistida.',
+      CitasEstado.cancelada: 'La cita fue cancelada.',
+      CitasEstado.rechazada: esProgramador
+          ? 'La cita está rechazada. Puedes revisarla en la bandeja de Citas.'
+          : 'La cita está rechazada.',
+      CitasEstado.borrador: 'La cita está en estado borrador.',
+      CitasEstado.reprogramada: 'La cita fue reprogramada.',
+    };
+
+    final paciente = (cita.pacienteNombre ?? '').trim();
+    final servicio = (cita.servicioNombre ?? '').trim();
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('Estado: ${estado.label}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(mensajes[estado] ?? 'Estado actualizado de la cita.'),
+            if (paciente.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text('Paciente: $paciente'),
+            ],
+            if (servicio.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text('Servicio: $servicio'),
+            ],
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cerrar'),
+          ),
+        ],
+      ),
+    );
+  }
   @override
   Widget build(BuildContext context) {
     return TemplatePage(
@@ -467,16 +594,32 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
                   ],
                 ),
               ),
-              if (!item.visto)
-                Container(
-                  margin: const EdgeInsets.only(top: 4, left: 8),
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: _theme.primary,
-                    shape: BoxShape.circle,
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () => _mostrarEstadoNotificacion(item),
+                    icon: const Icon(Icons.visibility_outlined, size: 14),
+                    label: const Text('Ver estado'),
+                    style: OutlinedButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+                    ),
                   ),
-                ),
+                  if (!item.visto)
+                    Container(
+                      margin: const EdgeInsets.only(top: 8),
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: _theme.primary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                ],
+              ),
             ],
           ),
         ),

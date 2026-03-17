@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:red_neuro_app/src/config/service_config.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
+import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/models/notificacion.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 
@@ -34,6 +35,27 @@ class NotificacionesPageResult {
 
 class NotificacionesService extends ServiceConfig {
   NotificacionesService(BuildContext context) : super('', context);
+
+  Future<CitaMedica?> obtenerCitaPorId(String idCita) async {
+    try {
+      final response = await fetch('/citas/$idCita');
+      if (response.status != StatusNetwork.connected) {
+        return null;
+      }
+
+      final data = response.data;
+      final payload = (data['datos'] is Map<String, dynamic>)
+          ? data['datos'] as Map<String, dynamic>
+          : (data is Map<String, dynamic> ? data : <String, dynamic>{});
+      if (payload.isEmpty) return null;
+
+      return CitaMedica.fromJson(payload);
+    } catch (e, st) {
+      Logger.error('Error al obtener cita desde notificaciones $e');
+      Logger.error('stacktrace $st');
+      return null;
+    }
+  }
 
   Future<NotificacionesPageResult> obtenerNotificaciones({
     int page = 1,
