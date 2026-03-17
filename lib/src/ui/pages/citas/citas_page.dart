@@ -1368,22 +1368,28 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   }
 
   Future<void> _eliminarBorradorConConfirmacion(CitaMedica cita) async {
+    final ok = await _eliminarBorradorEditable(cita);
+    if (!ok || !mounted) return;
+    Navigator.of(context).pop();
+  }
+
+  Future<bool> _eliminarBorradorEditable(CitaMedica cita) async {
     final confirmar = await _confirmarAccionSimple(
       titulo: 'Eliminar borrador',
       mensaje: '¿Confirmas eliminar este borrador de cita?',
       accion: 'Sí, eliminar',
     );
-    if (!confirmar) return;
+    if (!confirmar) return false;
     final ok = await _handleResponseError(
       await _service.eliminarCitaBorrador(cita.id),
       'No se pudo eliminar el borrador.',
     );
-    if (!ok) return;
+    if (!ok) return false;
     if (mounted) {
-      Navigator.of(context).pop();
       await _cargarCitasCalendario();
       if (_currentTabIndex == 2) await _cargarCitasListado();
     }
+    return true;
   }
 
   Future<String?> _solicitarMotivoRechazo() async {
@@ -1699,6 +1705,7 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
       cargarCitasCalendario: _cargarCitasCalendario,
       cargarCitasListado: _cargarCitasListado,
       mostrarHistorialCita: _mostrarHistorialCita,
+      eliminarCitaEditable: _eliminarBorradorEditable,
       cita: cita,
       fechaBase: fechaBase,
     );
