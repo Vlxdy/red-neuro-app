@@ -4,6 +4,7 @@ import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/citas_estado.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/models/historial_cita.dart';
+import 'package:red_neuro_app/src/models/rol.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_detalle_modal.dart';
 
 class CitasDetalleModalData {
@@ -92,14 +93,31 @@ class CitasUtils {
   static bool tieneRol(String rol, dynamic perfil) {
     final normalized = normalizarRol(rol);
     final roles = <String>{};
-    if ((perfil.rol ?? '').trim().isNotEmpty) {
-      roles.add(normalizarRol(perfil.rol!));
+
+    final rolActivo = (perfil?.rol ?? '').toString().trim();
+    if (rolActivo.isNotEmpty) {
+      roles.add(normalizarRol(rolActivo));
     }
-    roles.addAll(
-      perfil.roles
-          .map((rolItem) => normalizarRol(rolItem.rol))
-          .where((rolItem) => rolItem.trim().isNotEmpty),
-    );
+
+    final rawRoles = perfil?.roles;
+    if (rawRoles is Iterable) {
+      for (final rolItem in rawRoles) {
+        String rolNombre = '';
+        if (rolItem is Rol) {
+          rolNombre = rolItem.rol;
+        } else if (rolItem is Map<String, dynamic>) {
+          rolNombre = (rolItem['rol'] ?? '').toString();
+        } else if (rolItem is Map) {
+          rolNombre = (rolItem['rol'] ?? '').toString();
+        }
+
+        final normalizedRolItem = normalizarRol(rolNombre);
+        if (normalizedRolItem.isNotEmpty) {
+          roles.add(normalizedRolItem);
+        }
+      }
+    }
+
     return roles.contains(normalized);
   }
 
@@ -331,14 +349,14 @@ class CitasUtils {
   }) {
     final estado = cita.estado.trim().toUpperCase();
 
-    if (puedeEditarCita(cita)) {
-      return CitasModalDestino.formulario;
+    if (estado == CitasEstado.solicitada.value) {
+      // En SOLICITADA siempre debe abrirse el detalle.
+      // Las acciones se controlan dentro del modal por permisos.
+      return CitasModalDestino.detalle;
     }
 
-    if (estado == CitasEstado.solicitada.value) {
-      // La solicitada siempre puede abrir detalle informativo.
-      // Los permisos impactan acciones internas, no la apertura del modal.
-      return CitasModalDestino.detalle;
+    if (puedeEditarCita(cita)) {
+      return CitasModalDestino.formulario;
     }
 
     return CitasModalDestino.detalle;
