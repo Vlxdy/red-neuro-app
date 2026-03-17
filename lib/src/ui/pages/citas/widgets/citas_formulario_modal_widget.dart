@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/citas_estado.dart';
 import 'package:red_neuro_app/src/constants/constants.dart';
+import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/models/servicio.dart';
 import 'package:red_neuro_app/src/models/lugar.dart';
@@ -294,6 +295,10 @@ Future<void> abrirCitasFormularioModal({
   bool pacientesLoading = false;
   bool medicosLoading = false;
   bool lugaresLoading = false;
+  bool serviciosError = false;
+  bool pacientesError = false;
+  bool medicosError = false;
+  bool lugaresError = false;
   bool pacientesHasMore = true;
   bool medicosHasMore = true;
   int serviciosPage = 1;
@@ -352,8 +357,10 @@ Future<void> abrirCitasFormularioModal({
               limit: 10,
               filtro: serviciosFiltro,
             );
+            final requestError = result.status != StatusNetwork.connected;
             if (!context.mounted) return;
             setStateDialog(() {
+              serviciosError = requestError;
               if (reset) {
                 serviciosDisponibles
                   ..clear()
@@ -361,7 +368,9 @@ Future<void> abrirCitasFormularioModal({
               } else {
                 serviciosDisponibles.addAll(result.items);
               }
-              serviciosPage += 1;
+              if (!requestError) {
+                serviciosPage += 1;
+              }
               serviciosLoading = false;
             });
             onUpdated?.call();
@@ -383,8 +392,10 @@ Future<void> abrirCitasFormularioModal({
               limit: 10,
               filtro: pacientesFiltro,
             );
+            final requestError = result.status != StatusNetwork.connected;
             if (!context.mounted) return;
             setStateDialog(() {
+              pacientesError = requestError;
               if (reset) {
                 pacientesDisponibles
                   ..clear()
@@ -392,8 +403,11 @@ Future<void> abrirCitasFormularioModal({
               } else {
                 pacientesDisponibles.addAll(result.items);
               }
-              pacientesHasMore = pacientesDisponibles.length < result.total;
-              pacientesPage += 1;
+              pacientesHasMore =
+                  !requestError && pacientesDisponibles.length < result.total;
+              if (!requestError) {
+                pacientesPage += 1;
+              }
               pacientesLoading = false;
             });
             onUpdated?.call();
@@ -415,8 +429,10 @@ Future<void> abrirCitasFormularioModal({
               limit: 10,
               filtro: medicosFiltro,
             );
+            final requestError = result.status != StatusNetwork.connected;
             if (!context.mounted) return;
             setStateDialog(() {
+              medicosError = requestError;
               if (reset) {
                 medicosDisponibles
                   ..clear()
@@ -424,8 +440,11 @@ Future<void> abrirCitasFormularioModal({
               } else {
                 medicosDisponibles.addAll(result.items);
               }
-              medicosHasMore = medicosDisponibles.length < result.total;
-              medicosPage += 1;
+              medicosHasMore =
+                  !requestError && medicosDisponibles.length < result.total;
+              if (!requestError) {
+                medicosPage += 1;
+              }
               medicosLoading = false;
             });
             onUpdated?.call();
@@ -443,8 +462,10 @@ Future<void> abrirCitasFormularioModal({
               limit: 10,
               filtro: lugaresFiltro,
             );
+            final requestError = result.status != StatusNetwork.connected;
             if (!context.mounted) return;
             setStateDialog(() {
+              lugaresError = requestError;
               if (reset) {
                 lugaresDisponibles
                   ..clear()
@@ -452,7 +473,9 @@ Future<void> abrirCitasFormularioModal({
               } else {
                 lugaresDisponibles.addAll(result.items);
               }
-              lugaresPage += 1;
+              if (!requestError) {
+                lugaresPage += 1;
+              }
               lugaresLoading = false;
             });
           }
@@ -529,10 +552,14 @@ Future<void> abrirCitasFormularioModal({
                         bottom: MediaQuery.of(context).viewInsets.bottom,
                       ),
                       child: SafeArea(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxHeight: MediaQuery.of(context).size.height * .85,
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
                             Padding(
                               padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
                               child: Text(
@@ -568,8 +595,40 @@ Future<void> abrirCitasFormularioModal({
                                     );
                                   }
                                   if (pacientesDisponibles.isEmpty) {
+                                    if (pacientesError) {
+                                      return Center(
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 24,
+                                          ),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Text(
+                                                'No se pudo obtener los resultados de las búsquedas.',
+                                                textAlign: TextAlign.center,
+                                              ),
+                                              const SizedBox(height: 12),
+                                              FilledButton.icon(
+                                                onPressed: pacientesLoading
+                                                    ? null
+                                                    : () => cargar(reset: true),
+                                                icon: const Icon(Icons.refresh_rounded),
+                                                label: const Text('Reintentar'),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    }
                                     return const Center(
-                                      child: Text('Sin resultados'),
+                                      child: Padding(
+                                        padding: EdgeInsets.symmetric(horizontal: 24),
+                                        child: Text(
+                                          'No se encontraron datos registrados.',
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
                                     );
                                   }
                                   return ListView.builder(
@@ -621,7 +680,8 @@ Future<void> abrirCitasFormularioModal({
                             ],
                           ),
                         ),
-                      );
+                      ),
+                    );
                   },
                 );
               },
@@ -720,8 +780,40 @@ Future<void> abrirCitasFormularioModal({
                                     );
                                   }
                                   if (medicosDisponibles.isEmpty) {
+                                    if (medicosError) {
+                                      return Center(
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 24,
+                                          ),
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Text(
+                                                'No se pudo obtener los resultados de las búsquedas.',
+                                                textAlign: TextAlign.center,
+                                              ),
+                                              const SizedBox(height: 12),
+                                              FilledButton.icon(
+                                                onPressed: medicosLoading
+                                                    ? null
+                                                    : () => cargar(reset: true),
+                                                icon: const Icon(Icons.refresh_rounded),
+                                                label: const Text('Reintentar'),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    }
                                     return const Center(
-                                      child: Text('Sin resultados'),
+                                      child: Padding(
+                                        padding: EdgeInsets.symmetric(horizontal: 24),
+                                        child: Text(
+                                          'No se encontraron datos registrados.',
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      ),
                                     );
                                   }
                                   return ListView.builder(
@@ -948,39 +1040,93 @@ Future<void> abrirCitasFormularioModal({
                         bottom: MediaQuery.of(context).viewInsets.bottom,
                       ),
                       child: SafeArea(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(20),
-                              child: CustomTextInput(
-                                controller: searchController,
-                                title: 'Buscar servicio',
-                                onChange: (value) {
-                                  serviciosFiltro = value;
-                                  serviciosDebounce?.cancel();
-                                  serviciosDebounce = Timer(
-                                    const Duration(milliseconds: 300),
-                                    () => cargar(reset: true),
-                                  );
-                                },
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxHeight: MediaQuery.of(context).size.height * .85,
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(20),
+                                child: CustomTextInput(
+                                  controller: searchController,
+                                  title: 'Buscar servicio',
+                                  onChange: (value) {
+                                    serviciosFiltro = value;
+                                    serviciosDebounce?.cancel();
+                                    serviciosDebounce = Timer(
+                                      const Duration(milliseconds: 300),
+                                      () => cargar(reset: true),
+                                    );
+                                  },
+                                ),
                               ),
-                            ),
-                            Flexible(
-                              child: ListView.builder(
-                                shrinkWrap: true,
-                                itemCount: serviciosDisponibles.length,
-                                itemBuilder: (context, index) {
-                                  final option = serviciosDisponibles[index];
-                                  return ListTile(
-                                    title: Text(option.nombre),
-                                    subtitle: Text(option.descripcion),
-                                    onTap: () => Navigator.pop(context, option),
-                                  );
-                                },
+                              Flexible(
+                                child: Builder(
+                                  builder: (context) {
+                                    if (serviciosDisponibles.isEmpty &&
+                                        serviciosLoading) {
+                                      return const Center(
+                                        child: CircularProgressIndicator(),
+                                      );
+                                    }
+                                    if (serviciosDisponibles.isEmpty) {
+                                      if (serviciosError) {
+                                        return Center(
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 24,
+                                            ),
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const Text(
+                                                  'No se pudo obtener los resultados de las búsquedas.',
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                const SizedBox(height: 12),
+                                                FilledButton.icon(
+                                                  onPressed: serviciosLoading
+                                                      ? null
+                                                      : () => cargar(reset: true),
+                                                  icon: const Icon(Icons.refresh_rounded),
+                                                  label: const Text('Reintentar'),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                      return const Center(
+                                        child: Padding(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 24,
+                                          ),
+                                          child: Text(
+                                            'No se encontraron datos registrados.',
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                    return ListView.builder(
+                                      shrinkWrap: true,
+                                      itemCount: serviciosDisponibles.length,
+                                      itemBuilder: (context, index) {
+                                        final option = serviciosDisponibles[index];
+                                        return ListTile(
+                                          title: Text(option.nombre),
+                                          subtitle: Text(option.descripcion),
+                                          onTap: () => Navigator.pop(context, option),
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     );
@@ -1019,39 +1165,93 @@ Future<void> abrirCitasFormularioModal({
                         bottom: MediaQuery.of(context).viewInsets.bottom,
                       ),
                       child: SafeArea(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(20),
-                              child: CustomTextInput(
-                                controller: searchController,
-                                title: 'Buscar lugar',
-                                onChange: (value) {
-                                  lugaresFiltro = value;
-                                  lugaresDebounce?.cancel();
-                                  lugaresDebounce = Timer(
-                                    const Duration(milliseconds: 300),
-                                    () => cargar(reset: true),
-                                  );
-                                },
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxHeight: MediaQuery.of(context).size.height * .85,
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(20),
+                                child: CustomTextInput(
+                                  controller: searchController,
+                                  title: 'Buscar lugar',
+                                  onChange: (value) {
+                                    lugaresFiltro = value;
+                                    lugaresDebounce?.cancel();
+                                    lugaresDebounce = Timer(
+                                      const Duration(milliseconds: 300),
+                                      () => cargar(reset: true),
+                                    );
+                                  },
+                                ),
                               ),
-                            ),
-                            Flexible(
-                              child: ListView.builder(
-                                shrinkWrap: true,
-                                itemCount: lugaresDisponibles.length,
-                                itemBuilder: (context, index) {
-                                  final option = lugaresDisponibles[index];
-                                  return ListTile(
-                                    title: Text(option.nombre),
-                                    subtitle: Text(option.direccion),
-                                    onTap: () => Navigator.pop(context, option),
-                                  );
-                                },
+                              Flexible(
+                                child: Builder(
+                                  builder: (context) {
+                                    if (lugaresDisponibles.isEmpty &&
+                                        lugaresLoading) {
+                                      return const Center(
+                                        child: CircularProgressIndicator(),
+                                      );
+                                    }
+                                    if (lugaresDisponibles.isEmpty) {
+                                      if (lugaresError) {
+                                        return Center(
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 24,
+                                            ),
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                const Text(
+                                                  'No se pudo obtener los resultados de las búsquedas.',
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                                const SizedBox(height: 12),
+                                                FilledButton.icon(
+                                                  onPressed: lugaresLoading
+                                                      ? null
+                                                      : () => cargar(reset: true),
+                                                  icon: const Icon(Icons.refresh_rounded),
+                                                  label: const Text('Reintentar'),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                      return const Center(
+                                        child: Padding(
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 24,
+                                          ),
+                                          child: Text(
+                                            'No se encontraron datos registrados.',
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                    return ListView.builder(
+                                      shrinkWrap: true,
+                                      itemCount: lugaresDisponibles.length,
+                                      itemBuilder: (context, index) {
+                                        final option = lugaresDisponibles[index];
+                                        return ListTile(
+                                          title: Text(option.nombre),
+                                          subtitle: Text(option.direccion),
+                                          onTap: () => Navigator.pop(context, option),
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     );
