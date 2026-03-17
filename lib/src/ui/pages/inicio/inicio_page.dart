@@ -507,11 +507,48 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
   }
 
   Future<void> _reprogramarCita(CitaMedica cita) async {
-    InicioCitasUtils.mostrarNoDisponible(
-      messenger: misCitasHomeMessenger,
-      theme: _theme,
-      accion: 'Reprogramación de cita',
+    final now = DateTime.now();
+    final fechaBase = cita.fechaInicio ?? now;
+
+    final fechaSeleccionada = await showDatePicker(
+      context: context,
+      initialDate: fechaBase,
+      firstDate: DateTime(now.year - 1),
+      lastDate: DateTime(now.year + 3),
     );
+    if (fechaSeleccionada == null) return;
+
+    final horaSeleccionada = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(fechaBase),
+    );
+    if (horaSeleccionada == null) return;
+
+    final nuevaFecha = DateTime(
+      fechaSeleccionada.year,
+      fechaSeleccionada.month,
+      fechaSeleccionada.day,
+      horaSeleccionada.hour,
+      horaSeleccionada.minute,
+    );
+
+    final ok = await InicioCitasUtils.confirmarYEnviar(
+      context: context,
+      titulo: 'Reprogramar cita',
+      mensaje: '¿Confirmas reprogramar la cita para ${_dateTimeFormat.format(nuevaFecha)}?',
+      request: () => _citasService.reprogramarCita(cita.id, {
+        'fechaInicio': nuevaFecha.toUtc().toIso8601String(),
+        'tipoCita': cita.tipoCita,
+        if ((cita.servicioId ?? '').trim().isNotEmpty) 'idServicio': cita.servicioId,
+      }),
+      fallback: 'No se pudo reprogramar la cita.',
+      mounted: mounted,
+      onError: _showError,
+    );
+    if (ok) {
+      await _loadBandeja();
+      _notificarRefreshBandejas();
+    }
   }
 
   Future<void> _cancelarCita(CitaMedica cita) async {
