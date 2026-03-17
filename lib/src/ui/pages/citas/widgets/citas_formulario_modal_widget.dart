@@ -10,6 +10,8 @@ import 'package:red_neuro_app/src/models/servicio.dart';
 import 'package:red_neuro_app/src/models/lugar.dart';
 import 'package:red_neuro_app/src/models/paciente.dart';
 import 'package:red_neuro_app/src/models/personal_medico.dart';
+import 'package:red_neuro_app/src/models/user.dart';
+import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_service.dart';
@@ -174,6 +176,48 @@ Future<void> abrirCitasFormularioModal({
   CitaMedica? cita,
   DateTime? fechaBase,
 }) async {
+  String resolverIdUsuarioRol(Usuario profile) {
+    final directo = (profile.idUsuarioRol ?? '').trim();
+    if (directo.isNotEmpty) return directo;
+
+    final roles = profile.roles;
+    final roleId = (profile.idRol ?? '').trim();
+    if (roles.isEmpty) return '';
+
+    if (roleId.isNotEmpty) {
+      for (final rol in roles) {
+        if (rol.idRol == roleId) return rol.idUsuarioRol.trim();
+      }
+    }
+
+    return roles.first.idUsuarioRol.trim();
+  }
+
+  PersonalMedico? resolverPersonalActual(Usuario profile) {
+    final id = resolverIdUsuarioRol(profile);
+    final nombres = profile.nombres.trim();
+    if (id.isEmpty || nombres.isEmpty) return null;
+    return PersonalMedico(
+      id: id,
+      nombres: nombres,
+      primerApellido: profile.primerApellido.trim().isEmpty
+          ? null
+          : profile.primerApellido.trim(),
+      segundoApellido: profile.segundoApellido.trim().isEmpty
+          ? null
+          : profile.segundoApellido.trim(),
+      nroDocumento: profile.nroDocumento.trim().isEmpty
+          ? null
+          : profile.nroDocumento.trim(),
+    );
+  }
+
+  var personalActual = resolverPersonalActual(Auth.instance.profile);
+  if (personalActual == null) {
+    final profile = await Auth.instance.profileAsync();
+    personalActual = resolverPersonalActual(profile);
+  }
+
   final formKey = GlobalKey<FormState>();
   final detalleController = TextEditingController(text: cita?.detalle ?? '');
   final medicoController = TextEditingController(
@@ -574,10 +618,10 @@ Future<void> abrirCitasFormularioModal({
                               ),
                             ),
                             const SizedBox(height: 12),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    );
+                      );
                   },
                 );
               },
@@ -617,17 +661,37 @@ Future<void> abrirCitasFormularioModal({
                         bottom: MediaQuery.of(context).viewInsets.bottom,
                       ),
                       child: SafeArea(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-                              child: Text(
-                                'Selecciona personal asignado',
-                                style: Theme.of(context).textTheme.titleMedium,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxHeight: MediaQuery.of(context).size.height * .85,
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        'Seleccionar personal',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleSmall,
+                                      ),
+                                    ),
+                                    if (personalActual != null)
+                                      TextButton.icon(
+                                        onPressed: () {
+                                          Navigator.pop(context, personalActual);
+                                        },
+                                        icon: const Icon(Icons.person_pin_circle_outlined),
+                                        label: const Text('Asignarme'),
+                                      ),
+                                  ],
+                                ),
                               ),
-                            ),
                             Padding(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 20,
@@ -704,7 +768,8 @@ Future<void> abrirCitasFormularioModal({
                               ),
                             ),
                             const SizedBox(height: 12),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     );
