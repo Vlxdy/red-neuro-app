@@ -69,11 +69,14 @@ class _TrayModuleHeaderState extends State<TrayModuleHeader> {
   @override
   Widget build(BuildContext context) {
     final theme = ThemeController.instance;
+    final Color headerBaseColor = theme.isDark ? theme.bgCard : theme.primary;
+    final Color headerEndColor = theme.isDark ? theme.bgCard2 : theme.primary700;
+
     return AppBar(
       automaticallyImplyLeading: false,
       elevation: 0,
       scrolledUnderElevation: 0,
-      backgroundColor: theme.primary,
+      backgroundColor: headerBaseColor,
       surfaceTintColor: theme.transparent,
       titleSpacing: 16,
       toolbarHeight: widget.isCompact ? 52 : 48,
@@ -83,8 +86,8 @@ class _TrayModuleHeaderState extends State<TrayModuleHeader> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: <Color>[
-              theme.primary.withOpacity(theme.isDark ? 0.90 : 0.96),
-              theme.primary700.withOpacity(theme.isDark ? 0.84 : 0.90),
+              headerBaseColor.withOpacity(theme.isDark ? 0.98 : 0.96),
+              headerEndColor.withOpacity(theme.isDark ? 0.98 : 0.90),
             ],
           ),
           border: Border(
