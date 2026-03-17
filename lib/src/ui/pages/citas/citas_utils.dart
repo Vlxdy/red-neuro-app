@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/constants/citas_estado.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/models/historial_cita.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_detalle_modal.dart';
@@ -68,26 +69,10 @@ class CitasUtils {
   };
 
   static Color colorEstado(String estado, ThemeController theme) {
-    switch (estado) {
-      case 'BORRADOR':
-        return theme.grey.withValues(alpha: 0.75);
-      case 'SOLICITADA':
-        return theme.accent500;
-      case 'PROGRAMADA':
-        return theme.primary;
-      case 'COMPLETADA':
-        return theme.success;
-      case 'NO_ASISTIO':
-        return theme.warning;
-      case 'CANCELADA':
-        return theme.error;
-      case 'RECHAZADA':
-        return theme.accent500;
-      case 'REPROGRAMADA':
-        return const Color(0xFF8E7CC3);
-      default:
-        return theme.grey.withValues(alpha: 0.6);
-    }
+    final estadoNormalizado = estado.trim().toUpperCase();
+    final estadoCita = CitasEstado.tryFromValue(estadoNormalizado);
+    if (estadoCita != null) return estadoCita.color(theme);
+    return theme.grey.withValues(alpha: 0.6);
   }
 
   static String normalizarRol(String rol) {
@@ -134,7 +119,7 @@ class CitasUtils {
 
   static bool puedeEditarCita(CitaMedica cita) {
     final estado = cita.estado.trim().toUpperCase();
-    return estado == 'BORRADOR' || estado == 'RECHAZADA';
+    return estado == CitasEstado.borrador.value || estado == CitasEstado.rechazada.value;
   }
 
   static String? valorDetalle(String? value) {
@@ -264,7 +249,7 @@ class CitasUtils {
     required Future<void> Function(CitaMedica cita) abrirFormulario,
   }) {
     return <CitaDetalleAccion>[
-      if (cita.estado == 'SOLICITADA' && puedeGestionarSolicitada(cita))
+      if (cita.estado == CitasEstado.solicitada.value && puedeGestionarSolicitada(cita))
         CitaDetalleAccion(
           label: 'Confirmar',
           icon: Icons.check_circle_outline,
@@ -280,14 +265,14 @@ class CitasUtils {
             return true;
           },
         ),
-      if (cita.estado == 'SOLICITADA' && puedeGestionarSolicitada(cita))
+      if (cita.estado == CitasEstado.solicitada.value && puedeGestionarSolicitada(cita))
         CitaDetalleAccion(
           label: 'Rechazar',
           icon: Icons.block_outlined,
           isDestructive: true,
           onTap: () => rechazarCitaSolicitada(cita),
         ),
-      if (cita.estado == 'PROGRAMADA' && citaYaIniciada(cita))
+      if (cita.estado == CitasEstado.programada.value && citaYaIniciada(cita))
         CitaDetalleAccion(
           label: 'Completar',
           icon: Icons.task_alt_outlined,
@@ -297,7 +282,7 @@ class CitasUtils {
             return true;
           },
         ),
-      if (cita.estado == 'PROGRAMADA' && citaYaIniciada(cita))
+      if (cita.estado == CitasEstado.programada.value && citaYaIniciada(cita))
         CitaDetalleAccion(
           label: 'No asistió',
           icon: Icons.person_off_outlined,
@@ -306,9 +291,9 @@ class CitasUtils {
             return true;
           },
         ),
-      if (cita.estado == 'PROGRAMADA' ||
-          cita.estado == 'CANCELADA' ||
-          cita.estado == 'NO_ASISTIO')
+      if (cita.estado == CitasEstado.programada.value ||
+          cita.estado == CitasEstado.cancelada.value ||
+          cita.estado == CitasEstado.noAsistio.value)
         CitaDetalleAccion(
           label: 'Reprogramar',
           icon: Icons.schedule_outlined,
@@ -317,7 +302,7 @@ class CitasUtils {
             return true;
           },
         ),
-      if (cita.estado == 'PROGRAMADA')
+      if (cita.estado == CitasEstado.programada.value)
         CitaDetalleAccion(
           label: 'Cancelar',
           icon: Icons.cancel_outlined,
@@ -327,7 +312,7 @@ class CitasUtils {
             return true;
           },
         ),
-      if (cita.estado == 'BORRADOR')
+      if (cita.estado == CitasEstado.borrador.value)
         CitaDetalleAccion(
           label: 'Eliminar borrador',
           icon: Icons.delete_outline,
@@ -350,7 +335,7 @@ class CitasUtils {
       return CitasModalDestino.formulario;
     }
 
-    if (estado == 'SOLICITADA') {
+    if (estado == CitasEstado.solicitada.value) {
       // La solicitada siempre puede abrir detalle informativo.
       // Los permisos impactan acciones internas, no la apertura del modal.
       return CitasModalDestino.detalle;

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/constants/citas_estado.dart';
 import 'package:red_neuro_app/src/constants/constants.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/models/servicio.dart';
@@ -1480,12 +1481,12 @@ Future<void> abrirCitasFormularioModal({
                     ),
                   ),
                 if (cita != null &&
-                    (cita.estado == 'SOLICITADA' ||
-                        cita.estado == 'PROGRAMADA'))
+                    (cita.estado == CitasEstado.solicitada.value ||
+                        cita.estado == CitasEstado.programada.value))
                   const SizedBox(height: 12),
                 if (cita != null &&
-                    (cita.estado == 'SOLICITADA' ||
-                        cita.estado == 'PROGRAMADA'))
+                    (cita.estado == CitasEstado.solicitada.value ||
+                        cita.estado == CitasEstado.programada.value))
                   DropdownButtonFormField<String?>(
                     initialValue: estado,
                     decoration: CustomTextInputStyles.decoration(
@@ -1494,15 +1495,15 @@ Future<void> abrirCitasFormularioModal({
                     items:
                         {
                           cita.estado,
-                          if (cita.estado == 'SOLICITADA') ...[
-                            'PROGRAMADA',
-                            'RECHAZADA',
+                          if (cita.estado == CitasEstado.solicitada.value) ...[
+                            CitasEstado.programada.value,
+                            CitasEstado.rechazada.value,
                           ],
-                          if (cita.estado == 'PROGRAMADA') 'CANCELADA',
+                          if (cita.estado == CitasEstado.programada.value) CitasEstado.cancelada.value,
                         }.map((estadoItem) {
                           final requierePermiso =
-                              estadoItem == 'PROGRAMADA' ||
-                              estadoItem == 'RECHAZADA';
+                              estadoItem == CitasEstado.programada.value ||
+                              estadoItem == CitasEstado.rechazada.value;
                           final habilitado =
                               !requierePermiso ||
                               puedeGestionarSolicitada(cita) ||
@@ -1529,7 +1530,7 @@ Future<void> abrirCitasFormularioModal({
                 ? AutovalidateMode.always
                 : AutovalidateMode.disabled,
             headerActions: [
-              if (cita?.estado == 'RECHAZADA')
+              if (cita?.estado == CitasEstado.rechazada.value)
                 IconButton(
                   tooltip: 'Ver historial',
                   onPressed: () => mostrarHistorialCita(cita!),
@@ -1540,9 +1541,9 @@ Future<void> abrirCitasFormularioModal({
             onCancel: () => Navigator.pop(modalContext, false),
             submitLabel: cita == null
                 ? 'Crear cita'
-                : (cita.estado == 'BORRADOR'
+                : (cita.estado == CitasEstado.borrador.value
                       ? 'Guardar'
-                      : cita.estado == 'RECHAZADA'
+                      : cita.estado == CitasEstado.rechazada.value
                       ? 'Confirmar'
                       : 'Actualizar cita'),
             onSubmit: () async {
@@ -1550,7 +1551,7 @@ Future<void> abrirCitasFormularioModal({
               if (!validarFormulario()) {
                 return;
               }
-              if (cita == null || cita.estado == 'BORRADOR') {
+              if (cita == null || cita.estado == CitasEstado.borrador.value) {
                 final accion = await confirmarAccionCita(
                   esNueva: cita == null,
                   tipoCita: formatearTipoCita(tipoCita),
@@ -1569,7 +1570,7 @@ Future<void> abrirCitasFormularioModal({
                 );
                 if (accion == null) return;
                 accionFormulario = accion;
-              } else if (cita.estado == 'RECHAZADA') {
+              } else if (cita.estado == CitasEstado.rechazada.value) {
                 final confirmar = await confirmarAccionSimple(
                   titulo: 'Confirmar envío',
                   mensaje:
@@ -1640,7 +1641,7 @@ Future<void> abrirCitasFormularioModal({
   final cambioLugar = lugarId != (cita.lugarId ?? '');
   final cambioServicio = servicioSeleccionado?.id != (cita.servicioId ?? '');
 
-  if (estadoActual == 'BORRADOR') {
+  if (estadoActual == CitasEstado.borrador.value) {
     final updates = <String, dynamic>{};
     if (cambioDetalle) updates['detalle'] = detalle;
     if (cambioMedico) updates['idPersonal'] = medicoId;
@@ -1673,7 +1674,7 @@ Future<void> abrirCitasFormularioModal({
       );
       if (!ok) return;
     }
-  } else if (estadoActual == 'RECHAZADA') {
+  } else if (estadoActual == CitasEstado.rechazada.value) {
     final updates = <String, dynamic>{};
     if (cambioDetalle) updates['detalle'] = detalle;
     if (cambioMedico) updates['idPersonal'] = medicoId;
@@ -1696,7 +1697,7 @@ Future<void> abrirCitasFormularioModal({
       'No se pudo enviar la cita.',
     );
     if (!ok) return;
-  } else if (estadoActual == 'SOLICITADA') {
+  } else if (estadoActual == CitasEstado.solicitada.value) {
     if (cambioMedico ||
         cambioPaciente ||
         cambioTipoCita ||
@@ -1738,7 +1739,7 @@ Future<void> abrirCitasFormularioModal({
       return;
     }
 
-    if (estadoSeleccionado == 'CANCELADA') {
+    if (estadoSeleccionado == CitasEstado.cancelada.value) {
       showSnackBar(
         messengerKey,
         'Una cita solicitada no puede cancelarse directamente.',
@@ -1748,13 +1749,13 @@ Future<void> abrirCitasFormularioModal({
       return;
     }
 
-    if (estadoSeleccionado == 'PROGRAMADA') {
+    if (estadoSeleccionado == CitasEstado.programada.value) {
       final ok = await handleResponseError(
         await service.confirmarCita(cita.id, body: ajuste),
         'No se pudo confirmar la cita.',
       );
       if (!ok) return;
-    } else if (estadoSeleccionado == 'RECHAZADA') {
+    } else if (estadoSeleccionado == CitasEstado.rechazada.value) {
       final motivo = await solicitarMotivoRechazo();
       if (motivo == null) return;
       final ok = await handleResponseError(
@@ -1771,7 +1772,7 @@ Future<void> abrirCitasFormularioModal({
       );
       return;
     }
-  } else if (estadoActual == 'PROGRAMADA') {
+  } else if (estadoActual == CitasEstado.programada.value) {
     if (cambioDetalle ||
         cambioMedico ||
         cambioPaciente ||
@@ -1786,7 +1787,7 @@ Future<void> abrirCitasFormularioModal({
       );
       return;
     }
-    if (estadoSeleccionado == 'CANCELADA') {
+    if (estadoSeleccionado == CitasEstado.cancelada.value) {
       final ok = await handleResponseError(
         await service.cancelarCita(cita.id),
         'No se pudo cancelar la cita.',
@@ -1813,7 +1814,7 @@ Future<void> abrirCitasFormularioModal({
       );
       return;
     }
-  } else if (estadoActual == 'CANCELADA' || estadoActual == 'NO_ASISTIO') {
+  } else if (estadoActual == CitasEstado.cancelada.value || estadoActual == CitasEstado.noAsistio.value) {
     if (cambioDetalle ||
         cambioMedico ||
         cambioPaciente ||

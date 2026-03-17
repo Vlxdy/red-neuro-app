@@ -14,11 +14,27 @@ enum CitasEstado {
   final String value;
   const CitasEstado(this.value);
 
+  static List<String> get valuesAsString =>
+      CitasEstado.values.map((estado) => estado.value).toList(growable: false);
+
   static CitasEstado fromValue(String? value) {
-    return CitasEstado.values.firstWhere(
-      (estado) => estado.value == value,
-      orElse: () => CitasEstado.borrador,
-    );
+    return tryFromValue(value) ?? CitasEstado.borrador;
+  }
+
+  static CitasEstado? tryFromValue(String? value) {
+    final normalized = value?.trim();
+    if (normalized == null || normalized.isEmpty) return null;
+    for (final estado in CitasEstado.values) {
+      if (estado.value == normalized) return estado;
+    }
+    return null;
+  }
+
+  static String labelFromValue(String? value, {String emptyLabel = 'Todos'}) {
+    final estado = tryFromValue(value);
+    if (estado != null) return estado.label;
+    final normalized = value?.trim();
+    return (normalized == null || normalized.isEmpty) ? emptyLabel : normalized;
   }
 
   String get label {
