@@ -399,6 +399,11 @@ class _HomePageState extends State<HomePage> {
         ),
       );
     }
+    final Color shellColor = theme.isDark ? theme.bgCard : theme.primary;
+    final Color bottomNavColor = _usePrimaryTrayShell
+        ? (theme.isDark ? theme.bgCard : theme.primary900)
+        : theme.background;
+
     return TemplatePage(
       page: ScaffoldMessenger(
         key: homeMessenger,
@@ -413,11 +418,11 @@ class _HomePageState extends State<HomePage> {
                   ? Brightness.dark
                   : Brightness.light,
               statusBarColor: _usePrimaryTrayShell
-                  ? theme.primary
+                  ? shellColor
                   : theme.transparent,
             ),
             backgroundColor: _usePrimaryTrayShell
-                ? theme.primary
+                ? shellColor
                 : theme.transparent,
             centerTitle: false,
           ),
@@ -461,11 +466,13 @@ class _HomePageState extends State<HomePage> {
           ),
           bottomNavigationBar: Container(
             decoration: BoxDecoration(
-              color: _usePrimaryTrayShell ? theme.primary900 : theme.background,
+              color: bottomNavColor,
               border: Border(
                 top: BorderSide(
                   color: _usePrimaryTrayShell
-                      ? theme.white.withValues(alpha: 0.12)
+                      ? (theme.isDark
+                          ? theme.monochromatic500.withValues(alpha: 0.9)
+                          : theme.white.withValues(alpha: 0.12))
                       : theme.monochromatic200.withValues(alpha: 0.35),
                 ),
               ),
