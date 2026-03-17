@@ -24,9 +24,10 @@ class InicioBandejaSectionCard extends StatelessWidget {
     final subtleColor = theme.colorScheme.onSurface.withValues(alpha: 0.45);
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: const EdgeInsets.only(bottom: 6),
+      color: theme.colorScheme.surface.withValues(alpha: 0.78),
       child: Padding(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -34,7 +35,7 @@ class InicioBandejaSectionCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               onTap: onToggle,
               child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
+                padding: const EdgeInsets.symmetric(vertical: 1),
                 child: Row(
                   children: [
                     Expanded(
@@ -69,15 +70,44 @@ class InicioBandejaSectionCard extends StatelessWidget {
               ),
             ),
             if (!isCollapsed) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               ...content,
               if (onViewAll != null)
                 Align(
                   alignment: Alignment.centerLeft,
-                  child: TextButton.icon(
-                    onPressed: onViewAll,
-                    icon: const Icon(Icons.chevron_right),
-                    label: Text('Ver todas ($total)'),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(6),
+                    onTap: onViewAll,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Ver todo',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            '($total)',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: subtleColor,
+                            ),
+                          ),
+                          const SizedBox(width: 1),
+                          Icon(
+                            Icons.chevron_right,
+                            size: 16,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
             ],
