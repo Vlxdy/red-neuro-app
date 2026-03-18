@@ -272,12 +272,20 @@ class _CitasHistorialModalDialogState extends State<CitasHistorialModalDialog> {
                     detalles.add('Sin detalles adicionales');
                   }
 
+                  final auditoriaCita = item.citaId.trim().isNotEmpty
+                      ? 'Cita #${item.citaId}'
+                      : '';
+                  final ejecutor = item.ejecutorNombre.trim().isNotEmpty
+                      ? item.ejecutorNombre
+                      : 'Sistema';
+                  final subtitulo = auditoriaCita.isNotEmpty
+                      ? '$auditoriaCita · $ejecutor'
+                      : ejecutor;
+
                   return CitasHistorialTimelineItem(
                     fecha: widget.formatoFechaHoraHistorial(item.fechaCreacion),
                     titulo: widget.tituloHistorial(item),
-                    subtitulo: item.ejecutorNombre.trim().isNotEmpty
-                        ? item.ejecutorNombre
-                        : 'Sistema',
+                    subtitulo: subtitulo,
                     detalles: detalles,
                     theme: widget.theme,
                     isLast: index == _historial.length - 1,
