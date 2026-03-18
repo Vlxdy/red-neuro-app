@@ -20,6 +20,7 @@ import 'package:red_neuro_app/src/ui/pages/citas/citas_service.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_utils.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_detalle_modal.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_catalogo_selector_modal_widget.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_confirmar_solicitada_dialog.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_confirmacion_dialog.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_formulario_modal_widget.dart';
 import 'package:red_neuro_app/src/ui/pages/inicio/inicio_citas_utils.dart';
@@ -442,11 +443,18 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
   }
 
   Future<bool> _confirmarCitaSolicitada(CitaMedica cita) async {
-    final ok = await InicioCitasUtils.confirmarYEnviar(
+    final result = await showCitasConfirmarSolicitadaDialog(
       context: context,
-      titulo: 'Confirmar cita',
-      mensaje: '¿Deseas confirmar esta cita solicitada?',
-      request: () => _citasService.confirmarCita(cita.id),
+      cita: cita,
+      dateTimeFormat: _dateTimeFormat,
+    );
+    if (result == null) return false;
+
+    final ok = InicioCitasUtils.handleResponse(
+      response: await _citasService.confirmarCita(
+        cita.id,
+        body: result.toRequestBody(cita),
+      ),
       fallback: 'No se pudo confirmar la cita.',
       mounted: mounted,
       onError: _showError,
