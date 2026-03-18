@@ -8,6 +8,7 @@ import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_service.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_utils.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_historial_modal_widget.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_motivo_rechazo_dialog.dart';
 
 class InicioCitasUtils {
   static bool citaYaIniciada(CitaMedica cita) {
@@ -132,34 +133,7 @@ class InicioCitasUtils {
   }
 
   static Future<String?> solicitarMotivoRechazo(BuildContext context) async {
-    var motivo = '';
-    return showDialog<String>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Motivo de rechazo'),
-        content: TextFormField(
-          maxLines: 3,
-          maxLength: 255,
-          onChanged: (value) => motivo = value,
-          decoration: const InputDecoration(labelText: 'Motivo'),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () {
-              final value = motivo.trim();
-              if (value.isEmpty) return;
-              Navigator.of(dialogContext).pop(value);
-            },
-            child: const Text('Rechazar'),
-          ),
-        ],
-      ),
-    );
+    return showCitasMotivoRechazoDialog(context: context);
   }
 
   static Future<void> mostrarHistorialCita({

@@ -29,6 +29,7 @@ import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_filtros_modal_wid
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_catalogo_selector_modal_widget.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_historial_modal_widget.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_modo_mis_citas_banner.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_motivo_rechazo_dialog.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
 
@@ -1449,120 +1450,22 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   }
 
   Future<String?> _solicitarMotivoRechazo() async {
-    var motivo = '';
-    return showDialog<String>(
+    return showCitasMotivoRechazoDialog(
       context: context,
       useRootNavigator: true,
-      barrierDismissible: false,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Motivo de rechazo'),
-        content: TextFormField(
-          initialValue: motivo,
-          maxLines: 3,
-          maxLength: 255,
-          decoration: const InputDecoration(labelText: 'Motivo'),
-          onChanged: (value) => motivo = value,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () =>
-                Navigator.of(dialogContext, rootNavigator: true).pop(),
-            child: const Text('Cancelar'),
-          ),
-          FilledButton(
-            onPressed: () {
-              final motivoNormalizado = motivo.trim();
-              if (motivoNormalizado.isEmpty) {
-                return;
-              }
-              FocusScope.of(dialogContext).unfocus();
-              Navigator.of(
-                dialogContext,
-                rootNavigator: true,
-              ).pop(motivoNormalizado);
-            },
-            child: const Text('Rechazar'),
-          ),
-        ],
-      ),
     );
   }
 
   Future<bool?> _solicitarMotivoRechazoYEnviar(CitaMedica cita) async {
-    var motivo = '';
-    var enviando = false;
-    return showDialog<bool>(
+    return showCitasMotivoRechazoSubmitDialog(
       context: context,
       useRootNavigator: true,
-      barrierDismissible: false,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setStateDialog) => AlertDialog(
-          title: const Text('Motivo de rechazo'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              TextFormField(
-                initialValue: motivo,
-                enabled: !enviando,
-                maxLines: 3,
-                maxLength: 255,
-                decoration: const InputDecoration(labelText: 'Motivo'),
-                onChanged: (value) => motivo = value,
-              ),
-              if (enviando) ...[
-                const SizedBox(height: 8),
-                const LinearProgressIndicator(minHeight: 2),
-              ],
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: enviando
-                  ? null
-                  : () => Navigator.of(
-                      dialogContext,
-                      rootNavigator: true,
-                    ).pop(false),
-              child: const Text('Cancelar'),
-            ),
-            FilledButton(
-              onPressed: enviando
-                  ? null
-                  : () async {
-                      FocusScope.of(dialogContext).unfocus();
-                      final motivoNormalizado = motivo.trim();
-                      if (motivoNormalizado.isEmpty) {
-                        await showErrorDialog(
-                          context,
-                          'Debes ingresar un motivo de rechazo.',
-                        );
-                        return;
-                      }
-
-                      setStateDialog(() => enviando = true);
-                      final ok = await _handleResponseError(
-                        await _service.rechazarCita(
-                          cita.id,
-                          motivoRechazo: motivoNormalizado,
-                        ),
-                        'No se pudo rechazar la cita.',
-                      );
-                      if (!dialogContext.mounted) return;
-                      if (!ok) {
-                        setStateDialog(() => enviando = false);
-                        return;
-                      }
-                      Navigator.of(
-                        dialogContext,
-                        rootNavigator: true,
-                      ).pop(true);
-                    },
-              child: const Text('Rechazar'),
-            ),
-          ],
-        ),
-      ),
+      onSubmit: (motivo) async {
+        return _handleResponseError(
+          await _service.rechazarCita(cita.id, motivoRechazo: motivo),
+          'No se pudo rechazar la cita.',
+        );
+      },
     );
   }
 
