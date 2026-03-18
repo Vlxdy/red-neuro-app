@@ -6648,11 +6648,6 @@
             "items": {
               "$ref": "#/components/schemas/ModuloPermisoDto"
             }
-          },
-          "esSupervisor": {
-            "type": "boolean",
-            "description": "Indica si el rol de personal de salud cuenta con permisos de supervisión",
-            "example": false
           }
         },
         "required": [
@@ -6714,11 +6709,6 @@
           "rol": {
             "type": "string",
             "example": "ADMINISTRADOR"
-          },
-          "esSupervisor": {
-            "type": "boolean",
-            "description": "Indica si el rol activo de personal de salud cuenta con permisos de supervisión",
-            "example": false
           }
         },
         "required": [
@@ -6832,11 +6822,6 @@
             "items": {
               "type": "string"
             }
-          },
-          "esSupervisor": {
-            "type": "boolean",
-            "example": false,
-            "description": "Habilita permisos de supervisión para el rol PERSONAL_SALUD."
           }
         },
         "required": [
@@ -7029,11 +7014,6 @@
             "items": {
               "type": "string"
             }
-          },
-          "esSupervisor": {
-            "type": "boolean",
-            "example": false,
-            "description": "Habilita permisos de supervisión para el rol PERSONAL_SALUD."
           }
         },
         "required": [
@@ -7092,11 +7072,6 @@
             "type": "string",
             "description": "Estado del personal de salud en su rol",
             "example": "ACTIVO"
-          },
-          "esSupervisor": {
-            "type": "boolean",
-            "description": "Indica si el personal de salud tiene habilitadas funciones de supervisión",
-            "example": false
           },
           "nroDocumento": {
             "type": "string",
@@ -8556,22 +8531,30 @@
               }
             ]
           },
-          "esSupervisor": {
-            "type": "boolean",
-            "example": false,
-            "description": "Habilita permisos de supervisión para el rol PERSONAL_SALUD."
-          },
           "ocupacion": {
             "type": "string",
             "description": "Ocupación del profesional de salud",
             "example": "Cardiología"
+          },
+          "rol": {
+            "type": "string",
+            "description": "Rol principal a asignar al usuario creado. Jefe puede crear COORDINADOR, PERSONAL o PROFESIONAL_INVITADO; Administrador puede crear cualquier rol.",
+            "enum": [
+              "ADMINISTRADOR",
+              "JEFE",
+              "COORDINADOR",
+              "PERSONAL",
+              "PROFESIONAL_INVITADO"
+            ],
+            "example": "PERSONAL"
           }
         },
         "required": [
           "contrasena",
           "repetirContrasena",
           "correoElectronico",
-          "persona"
+          "persona",
+          "rol"
         ]
       },
       "ActualizarPersonalSaludDto": {
@@ -8589,15 +8572,22 @@
               }
             ]
           },
-          "esSupervisor": {
-            "type": "boolean",
-            "example": false,
-            "description": "Habilita permisos de supervisión para el rol PERSONAL_SALUD."
-          },
           "ocupacion": {
             "type": "string",
             "description": "Ocupación del profesional de salud",
             "example": "Cardiología"
+          },
+          "rol": {
+            "type": "string",
+            "description": "Rol principal a asignar al usuario creado. Jefe puede crear COORDINADOR, PERSONAL o PROFESIONAL_INVITADO; Administrador puede crear cualquier rol.",
+            "enum": [
+              "ADMINISTRADOR",
+              "JEFE",
+              "COORDINADOR",
+              "PERSONAL",
+              "PROFESIONAL_INVITADO"
+            ],
+            "example": "PERSONAL"
           }
         }
       },
