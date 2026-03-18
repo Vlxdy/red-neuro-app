@@ -5,6 +5,7 @@ import 'package:red_neuro_app/src/constants/citas_estado.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/models/historial_cita.dart';
 import 'package:red_neuro_app/src/models/rol.dart';
+import 'package:red_neuro_app/src/utils/role_utils.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_detalle_modal.dart';
 
 class CitasDetalleModalData {
@@ -76,52 +77,13 @@ class CitasUtils {
     return theme.grey.withValues(alpha: 0.6);
   }
 
-  static String normalizarRol(String rol) {
-    final normalized = rol.toUpperCase();
-    switch (normalized) {
-      case 'ADMIN':
-        return 'ADMINISTRADOR';
-      case 'MEDICO':
-      case 'PERSONAL_MEDICO':
-      case 'SUPERVISOR':
-        return 'PERSONAL_SALUD';
-      default:
-        return normalized;
-    }
-  }
+  static String normalizarRol(String rol) => RoleUtils.normalizeRole(rol);
 
-  static bool tieneRol(String rol, dynamic perfil) {
-    final normalized = normalizarRol(rol);
-    final roles = <String>{};
+  static bool tieneRol(String rol, dynamic perfil) =>
+      RoleUtils.hasRole(perfil, rol);
 
-    final rolActivo = (perfil?.rol ?? '').toString().trim();
-    if (rolActivo.isNotEmpty) {
-      roles.add(normalizarRol(rolActivo));
-    }
-
-    final rawRoles = perfil?.roles;
-    if (rawRoles is Iterable) {
-      for (final rolItem in rawRoles) {
-        String rolNombre = '';
-        if (rolItem is Rol) {
-          rolNombre = rolItem.rol;
-        } else if (rolItem is Map<String, dynamic>) {
-          rolNombre = (rolItem['rol'] ?? '').toString();
-        } else if (rolItem is Map) {
-          rolNombre = (rolItem['rol'] ?? '').toString();
-        }
-
-        final normalizedRolItem = normalizarRol(rolNombre);
-        if (normalizedRolItem.isNotEmpty) {
-          roles.add(normalizedRolItem);
-        }
-      }
-    }
-
-    return roles.contains(normalized);
-  }
-
-  static bool esAdministrador(dynamic perfil) => tieneRol('ADMINISTRADOR', perfil);
+  static bool esAdministrador(dynamic perfil) =>
+      RoleUtils.hasRole(perfil, RoleUtils.administrador);
 
   static bool esMedicoAsignado(CitaMedica cita, String idUsuario) {
     final medicoId = cita.medicoId.trim();

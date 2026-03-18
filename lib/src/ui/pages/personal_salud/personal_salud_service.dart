@@ -125,7 +125,7 @@ class PersonalSaludService extends ServiceConfig {
 
   Future<ResponseApi> restaurarContrasenaPersonal(String id) async {
     return fetch(
-      '/usuarios/$id/restauracion',
+      '/personal-salud/$id/restauracion-contrasena',
       type: HttpProtocol.patch,
     );
   }

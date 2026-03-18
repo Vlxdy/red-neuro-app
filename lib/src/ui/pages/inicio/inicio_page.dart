@@ -10,6 +10,7 @@ import 'package:red_neuro_app/src/constants/constants.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/models/personal_medico.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
+import 'package:red_neuro_app/src/utils/role_utils.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:red_neuro_app/src/plugins/utils/preferences.dart';
 import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
@@ -142,13 +143,8 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
     }
   }
 
-  bool get _esPersonalAdministrador {
-    final profile = Auth.instance.profile;
-    final rolActivo = (profile.rol ?? '').toUpperCase();
-    final esPersonalSalud = rolActivo == 'PERSONAL_SALUD' ||
-        profile.roles.any((rol) => rol.rol.toUpperCase() == 'PERSONAL_SALUD');
-    return esPersonalSalud && profile.esSupervisor;
-  }
+  bool get _esPersonalAdministrador =>
+      RoleUtils.canCoordinateOperation(Auth.instance.profile);
 
   String get _scopeAplicado {
     if (!_esPersonalAdministrador) return 'mine';

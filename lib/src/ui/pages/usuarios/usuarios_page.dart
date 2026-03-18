@@ -7,6 +7,7 @@ import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/models/user.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
+import 'package:red_neuro_app/src/utils/role_utils.dart';
 import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
 import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
@@ -78,8 +79,8 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
   }
 
   Future<void> _cargarRoles() async {
-    setState(() => _loadingRoles = true);
     final roles = await _service.obtenerRoles();
+    if (!mounted) return;
     setState(() {
       _roles = roles;
       _loadingRoles = false;
@@ -124,36 +125,23 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
   }
 
   List<RolOption> get _rolesVisibles {
-    if (_esAdministrador(_currentRole)) return _roles;
-    return _roles.where((rol) => _esRolPersonalSalud(rol.codigo)).toList();
+    final permitidos = _rolesCreablesParaRolActual.toSet();
+    if (permitidos.isEmpty) return const <RolOption>[];
+    return _roles.where((rol) => permitidos.contains(_normalizarRol(rol.codigo))).toList();
   }
 
-  String _normalizarRol(String rol) {
-    final normalized = rol.toUpperCase();
-    switch (normalized) {
-      case 'ADMIN':
-        return 'ADMINISTRADOR';
-      case 'MEDICO':
-      case 'PERSONAL_MEDICO':
-      case 'SUPERVISOR':
-        return 'PERSONAL_SALUD';
-      default:
-        return normalized;
-    }
-  }
+  String _normalizarRol(String rol) => RoleUtils.normalizeRole(rol);
 
-  bool _esAdministrador(String rol) => _normalizarRol(rol) == 'ADMINISTRADOR';
+  bool _esAdministrador(String rol) =>
+      _normalizarRol(rol) == RoleUtils.administrador;
 
-  bool _esRolPersonalSalud(String? rol) =>
-      _normalizarRol(rol ?? '') == 'PERSONAL_SALUD';
+  bool _esRolPermitidoParaPersonal(String? rol) =>
+      _rolesCreablesParaRolActual.contains(_normalizarRol(rol ?? ''));
 
-  String _formatearRol(String rol, {required bool esSupervisor}) {
-    final normalized = _normalizarRol(rol);
-    if (normalized == 'PERSONAL_SALUD' && esSupervisor) {
-      return 'PERSONAL_SALUD (Admin)';
-    }
-    return normalized;
-  }
+  String _formatearRol(String rol) => RoleUtils.roleLabel(rol);
+
+  List<String> get _rolesCreablesParaRolActual =>
+      RoleUtils.creatableStaffRolesFor(_currentRole);
 
   DateTime? _parseFechaNacimiento(String value) {
     try {
@@ -243,15 +231,23 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
     );
     final contrasena = TextEditingController();
     final repetirContrasena = TextEditingController();
-    bool esSupervisor = usuario?.esSupervisor ?? false;
-
     final selectedRoles = <String>{
       if (usuario != null) ...usuario.roles.map((rol) => rol.rol.toUpperCase()),
       if (usuario?.rol != null) usuario!.rol!.toUpperCase(),
     };
     String? rolSeleccionado = selectedRoles.isNotEmpty
-        ? selectedRoles.first
+        ? _normalizarRol(selectedRoles.first)
         : null;
+    final rolesDisponibles = <RolOption>[
+      ..._rolesVisibles,
+      if (rolSeleccionado != null &&
+          _rolesVisibles.every((rol) => rol.codigo != rolSeleccionado))
+        RolOption(
+          id: rolSeleccionado,
+          codigo: rolSeleccionado,
+          nombre: RoleUtils.roleLabel(rolSeleccionado),
+        ),
+    ];
     if (rolSeleccionado != null) {
       selectedRoles
         ..clear()
@@ -567,7 +563,7 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
                             isDense: true,
                           ),
                           initialValue: rolSeleccionado,
-                          items: _rolesVisibles
+                          items: rolesDisponibles
                               .map(
                                 (rol) => DropdownMenuItem<String>(
                                   value: rol.codigo,
@@ -582,28 +578,9 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
                               if (value != null) {
                                 selectedRoles.add(value);
                               }
-                              if (!_esRolPersonalSalud(value)) {
-                                esSupervisor = false;
-                              }
                             });
                           },
                         ),
-                      if (_esRolPersonalSalud(rolSeleccionado)) ...[
-                        const SizedBox(height: 12),
-                        SwitchListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text('Permisos administrativos'),
-                          subtitle: const Text(
-                            'Habilita acciones de supervisión para personal de salud.',
-                          ),
-                          value: esSupervisor,
-                          onChanged: (value) {
-                            setState(() {
-                              esSupervisor = value;
-                            });
-                          },
-                        ),
-                      ],
                       const SizedBox(height: 16),
                       Align(
                         alignment: Alignment.centerRight,
@@ -630,12 +607,12 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
                             }
                             if (!_esAdministrador(_currentRole)) {
                               final invalid = selectedRoles.any(
-                                (rol) => !_esRolPersonalSalud(rol),
+                                (rol) => !_esRolPermitidoParaPersonal(rol),
                               );
                               if (invalid) {
                                 showSnackBar(
                                   usuariosMessenger,
-                                  'El personal de salud con permisos administrativos solo puede asignar el rol PERSONAL_SALUD',
+                                  'Tu rol no puede asignar uno de los roles seleccionados',
                                   state: StatusSnackBar.error,
                                   colorText: _theme.white,
                                 );
@@ -671,8 +648,6 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
                                 'contrasena': contrasena.text,
                                 'repetirContrasena': repetirContrasena.text,
                                 'roles': selectedRoles.toList(),
-                                if (_esRolPersonalSalud(rolSeleccionado))
-                                  'esSupervisor': esSupervisor,
                               };
                             } else {
                               body = {
@@ -683,8 +658,6 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
                                 if (repetirContrasena.text.isNotEmpty)
                                   'repetirContrasena': repetirContrasena.text,
                                 'roles': selectedRoles.toList(),
-                                if (_esRolPersonalSalud(rolSeleccionado))
-                                  'esSupervisor': esSupervisor,
                               };
                             }
 
@@ -806,7 +779,7 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
   String _rolesTexto(Usuario usuario) {
     if (usuario.roles.isNotEmpty) {
       final roles = usuario.roles
-          .map((rol) => _formatearRol(rol.rol, esSupervisor: rol.esSupervisor))
+          .map((rol) => _formatearRol(rol.rol))
           .where((rol) => rol.trim().isNotEmpty)
           .toSet()
           .toList();
@@ -816,7 +789,7 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
     }
     final rolActivo = usuario.rol ?? '';
     if (rolActivo.trim().isEmpty) return '-';
-    return _formatearRol(rolActivo, esSupervisor: usuario.esSupervisor);
+    return _formatearRol(rolActivo);
   }
 
   Widget _buildEstadoChip(Usuario usuario) {
@@ -873,7 +846,7 @@ class _UsuariosPageState extends State<UsuariosPage> with FormController {
                     value: null,
                     child: Text('Todos'),
                   ),
-                  ..._rolesVisibles.map(
+                  ..._roles.map(
                     (rol) => DropdownMenuItem<String?>(
                       value: rol.codigo,
                       child: Text(rol.nombre),

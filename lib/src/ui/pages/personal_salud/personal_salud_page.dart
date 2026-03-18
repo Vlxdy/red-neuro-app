@@ -14,6 +14,7 @@ import 'package:red_neuro_app/src/models/personal_salud.dart';
 import 'package:red_neuro_app/src/models/rol.dart';
 import 'package:red_neuro_app/src/models/user.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
+import 'package:red_neuro_app/src/utils/role_utils.dart';
 import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
 import 'package:red_neuro_app/src/ui/common/customdatatable/custom_datatable.dart';
 import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
@@ -82,37 +83,11 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     return roles.first;
   }
 
-  String _normalizarRol(String rol) {
-    final normalized = rol.trim().toUpperCase();
-    switch (normalized) {
-      case 'ADMIN':
-        return 'ADMINISTRADOR';
-      case 'PERSONAL_SALUD_ADMIN':
-      case 'SUPERVISOR':
-        return 'PERSONAL_SALUD_ADMIN';
-      default:
-        return normalized;
-    }
-  }
+  bool _puedeRestaurarContrasena(Usuario profile) =>
+      RoleUtils.canManageStaff(profile);
 
-  bool _esRolAdministrador(String rol) =>
-      _normalizarRol(rol) == 'ADMINISTRADOR';
-
-  bool _esRolPersonalAdministrador(String rol) =>
-      _normalizarRol(rol) == 'PERSONAL_SALUD_ADMIN';
-
-  bool _puedeRestaurarContrasena(Usuario profile) {
-    final activeRole = _resolverRolActivo(profile);
-    if (activeRole == null) {
-      final fallbackRol = profile.rol ?? '';
-      return _esRolAdministrador(fallbackRol) ||
-          _esRolPersonalAdministrador(fallbackRol);
-    }
-
-    if (_esRolAdministrador(activeRole.rol)) return true;
-    if (_esRolPersonalAdministrador(activeRole.rol)) return true;
-    return activeRole.esSupervisor;
-  }
+  List<String> get _rolesCreables =>
+      RoleUtils.creatableStaffRolesFor(Auth.instance.profile.rol);
 
   Future<void> _cargarUsuarioActual() async {
     var profile = Auth.instance.profile;
@@ -536,7 +511,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                     trailing: _buildEstadoChip(persona.estaActivo),
                   ),
                   const SizedBox(height: 8),
-                  _buildTipoPersonalChip(persona.esSupervisor),
+                  _buildTipoPersonalChip(persona.rol),
                   const SizedBox(height: 6),
                   Wrap(
                     spacing: 8,
@@ -590,11 +565,11 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                             persona.fechaNacimiento,
                           ),
                         ),
-                      if (persona.esSupervisor)
+                      if ((persona.rol ?? '').trim().isNotEmpty)
                         CopyableInfoPill(
-                          icon: Icons.admin_panel_settings_outlined,
+                          icon: Icons.badge_outlined,
                           label: 'Rol',
-                          value: 'Administrador',
+                          value: RoleUtils.roleLabel(persona.rol),
                         ),
                     ],
                   ),
@@ -720,9 +695,23 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     );
   }
 
-  Widget _buildTipoPersonalChip(bool esSupervisor) {
-    if (!esSupervisor) return const SizedBox.shrink();
-    return const TrayAdminBadge();
+  Widget _buildTipoPersonalChip(String? rol) {
+    final normalizedRole = RoleUtils.normalizeRole(rol);
+    if (normalizedRole.isEmpty) return const SizedBox.shrink();
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: _theme.primary20,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        RoleUtils.roleLabel(normalizedRole),
+        style: TextStyle(
+          color: _theme.primary,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
   }
 
   void _abrirFormulario({PersonalSalud? personal}) {
@@ -746,7 +735,16 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     );
     final contrasena = TextEditingController();
     final repetirContrasena = TextEditingController();
-    bool esSupervisor = personal?.esSupervisor ?? false;
+    final rolesDisponibles = <String>[
+      ..._rolesCreables,
+      if (personal != null &&
+          (personal.rol ?? '').trim().isNotEmpty &&
+          !_rolesCreables.contains(RoleUtils.normalizeRole(personal.rol)))
+        RoleUtils.normalizeRole(personal.rol),
+    ];
+    String? rolSeleccionado = personal != null
+        ? RoleUtils.normalizeRole(personal.rol)
+        : (rolesDisponibles.length == 1 ? rolesDisponibles.first : null);
     String? generoSeleccionado = personal?.genero;
     String apellidoErrorText = '';
     String? modalErrorText;
@@ -757,6 +755,16 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     final int lastStepIndex = isEditing ? 2 : 3;
 
     final ocupacion = TextEditingController(text: personal?.ocupacion ?? '');
+
+    if (personal == null && rolesDisponibles.isEmpty) {
+      showSnackBar(
+        personalSaludMessenger,
+        'Tu rol no tiene permisos para crear personal.',
+        state: StatusSnackBar.error,
+        colorText: _theme.white,
+      );
+      return;
+    }
 
     showModalBottomSheet(
       context: context,
@@ -1040,28 +1048,38 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Ocupación (opcional)',
+                      'Rol y ocupación',
                       style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      decoration: CustomTextInputStyles.decoration(
+                        label: 'Rol',
+                      ),
+                      initialValue: rolesDisponibles.contains(rolSeleccionado)
+                          ? rolSeleccionado
+                          : null,
+                      items: rolesDisponibles
+                          .map(
+                            (rol) => DropdownMenuItem<String>(
+                              value: rol,
+                              child: Text(RoleUtils.roleLabel(rol)),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        setStateDialog(() {
+                          rolSeleccionado = value;
+                        });
+                      },
+                      validator: (value) =>
+                          (value == null || value.isEmpty) ? 'Campo requerido' : null,
                     ),
                     const SizedBox(height: 12),
                     CustomTextInput(
                       title: 'Ocupación',
                       controller: ocupacion,
                       placeholder: 'Ej: Cardiología',
-                    ),
-                    const SizedBox(height: 16),
-                    SwitchListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: const Text('Permisos administrativos'),
-                      subtitle: const Text(
-                        'Habilita acciones de supervisión para personal de salud.',
-                      ),
-                      value: esSupervisor,
-                      onChanged: (value) {
-                        setStateDialog(() {
-                          esSupervisor = value;
-                        });
-                      },
                     ),
                   ],
                 );
@@ -1265,7 +1283,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                 'correoElectronico': correo.text.trim(),
                                 'contrasena': contrasena.text,
                                 'repetirContrasena': repetirContrasena.text,
-                                'esSupervisor': esSupervisor,
+                                'rol': rolSeleccionado,
                                 if (ocupacion.text.trim().isNotEmpty)
                                   'ocupacion': ocupacion.text.trim(),
                               };
@@ -1273,7 +1291,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                               body = {
                                 'persona': persona,
                                 'correoElectronico': correo.text.trim(),
-                                'esSupervisor': esSupervisor,
+                                'rol': rolSeleccionado,
                                 if (ocupacion.text.trim().isNotEmpty)
                                   'ocupacion': ocupacion.text.trim(),
                               };
@@ -1742,8 +1760,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                   ],
                                 ),
                                 const SizedBox(height: 8),
-                                if (persona.esSupervisor) ...[
-                                  _buildTipoPersonalChip(persona.esSupervisor),
+                                if ((persona.rol ?? '').trim().isNotEmpty) ...[
+                                  _buildTipoPersonalChip(persona.rol),
                                   const SizedBox(height: 8),
                                 ],
                                 _buildOcupacionesResumen(persona),
@@ -1781,7 +1799,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
           appBar: TrayModuleHeader(
             titulo: 'Personal de salud',
             subtitulo:
-                'Administra perfiles, ocupación y permisos administrativos.',
+                'Administra perfiles, roles y ocupación del personal.',
             isCompact: isNarrowHeader,
             actions: [
               IconButton(
@@ -1832,7 +1850,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                           CriterioOrdenType(nombre: 'Documento'),
                           CriterioOrdenType(nombre: 'Estado'),
                           CriterioOrdenType(nombre: 'Ocupación'),
-                          CriterioOrdenType(nombre: 'Admin'),
+                          CriterioOrdenType(nombre: 'Rol'),
                           CriterioOrdenType(nombre: 'Acciones'),
                         ],
                         contenidoTabla: _personal
@@ -1865,16 +1883,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                   ),
                                 ),
                                 _buildOcupacionesCell(persona),
-                                persona.esSupervisor
-                                    ? Chip(
-                                        label: const Text('Admin'),
-                                        backgroundColor: _theme.primary
-                                            .withValues(alpha: .15),
-                                        labelStyle: TextStyle(
-                                          color: _theme.primary,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      )
+                                (persona.rol ?? '').trim().isNotEmpty
+                                    ? _buildTipoPersonalChip(persona.rol)
                                     : const Text('—'),
                                 Row(
                                   children: [
