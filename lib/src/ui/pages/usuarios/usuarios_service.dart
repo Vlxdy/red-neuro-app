@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:red_neuro_app/src/config/service_config.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/models/user.dart';
-import 'package:red_neuro_app/src/plugins/utils/logger.dart';
+import 'package:red_neuro_app/src/utils/role_utils.dart';
 
 class RolOption {
   final String id;
@@ -55,29 +55,15 @@ class UsuariosService extends ServiceConfig {
   UsuariosService(BuildContext context) : super('', context);
 
   Future<List<RolOption>> obtenerRoles() async {
-    try {
-      final response = await fetch('/autorizacion/roles');
-      if (response.status != StatusNetwork.connected) {
-        return [];
-      }
-
-      final raw = response.data['list'] ??
-          response.data['data'] ??
-          response.data['roles'] ??
-          response.data['items'] ??
-          [];
-
-      if (raw is List) {
-        return raw
-            .whereType<Map<String, dynamic>>()
-            .map(RolOption.fromJson)
-            .toList();
-      }
-    } catch (e, stacktrace) {
-      Logger.error('Error al obtener roles $e');
-      Logger.error('stacktrace $stacktrace');
-    }
-    return [];
+    return RoleUtils.explicitStaffRoleOptions
+        .map(
+          (rol) => RolOption(
+            id: rol.codigo,
+            codigo: rol.codigo,
+            nombre: rol.nombre,
+          ),
+        )
+        .toList();
   }
 
   Future<UsuarioPageResult> obtenerUsuarios({

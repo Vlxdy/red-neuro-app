@@ -6,7 +6,6 @@ class Rol {
   String rol;
   String nombre;
   String descripcion;
-  bool esSupervisor;
   List<Modulo> modulos;
 
   Rol({
@@ -15,7 +14,6 @@ class Rol {
     required this.rol,
     required this.nombre,
     required this.descripcion,
-    required this.esSupervisor,
     required this.modulos,
   });
 
@@ -25,7 +23,6 @@ class Rol {
     rol: json['rol']?.toString() ?? '',
     nombre: json['nombre']?.toString() ?? '',
     descripcion: json['descripcion']?.toString() ?? '',
-    esSupervisor: json['esSupervisor'] == true || json['es_supervisor'] == true,
     modulos:
         (json['modulos'] as List<dynamic>?)
             ?.map((m) => Modulo.fromJson(m))
@@ -39,7 +36,6 @@ class Rol {
     'rol': rol,
     'nombre': nombre,
     'descripcion': descripcion,
-    'esSupervisor': esSupervisor,
     'modulos': modulos.map((m) => m.toJson()).toList(),
   };
 }

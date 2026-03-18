@@ -13,6 +13,7 @@ import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/models/lugar.dart';
 import 'package:red_neuro_app/src/models/personal_medico.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
+import 'package:red_neuro_app/src/utils/role_utils.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:red_neuro_app/src/plugins/utils/preferences.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
@@ -525,7 +526,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   }
 
   bool _canViewRestrictedDraftStatus(CitaMedica cita) {
-    if (Auth.instance.profile.esSupervisor) return true;
+    if (RoleUtils.canCoordinateOperation(Auth.instance.profile)) return true;
     final idUsuario = (Auth.instance.profile.id ?? '').trim();
     if (idUsuario.isEmpty) return false;
     final idCreador = (cita.idUsuarioProgramo ?? '').trim();

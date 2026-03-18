@@ -1,7 +1,7 @@
 class PersonalSalud {
   final String id;
   final String estado;
-  final bool esSupervisor;
+  final String? rol;
   final String nombres;
   final String? primerApellido;
   final String? segundoApellido;
@@ -16,7 +16,7 @@ class PersonalSalud {
   const PersonalSalud({
     required this.id,
     required this.estado,
-    required this.esSupervisor,
+    required this.rol,
     required this.nombres,
     required this.primerApellido,
     required this.segundoApellido,
@@ -53,11 +53,11 @@ class PersonalSalud {
       return null;
     }
 
+    final rol = resolveString('rol').trim();
     return PersonalSalud(
       id: (json['id'] ?? '').toString(),
       estado: (json['estado'] ?? 'ACTIVO').toString(),
-      esSupervisor: json['esSupervisor'] == true ||
-          json['es_supervisor'] == true,
+      rol: rol.isEmpty ? null : rol,
       nroDocumento: resolveString('nroDocumento').trim().isEmpty
           ? null
           : resolveString('nroDocumento'),
