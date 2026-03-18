@@ -27,6 +27,7 @@ import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_confirmacion_dial
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_formulario_modal_widget.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_filtros_modal_widget.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_catalogo_selector_modal_widget.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_confirmar_solicitada_dialog.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_historial_modal_widget.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_modo_mis_citas_banner.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_motivo_rechazo_dialog.dart';
@@ -1490,73 +1491,15 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   Future<bool> _confirmarCitaSolicitadaConOpciones(CitaMedica cita) async {
     if (!CitasUtils.puedeGestionarSolicitada(cita, Auth.instance.profile))
       return false;
-
-    final detalleController = TextEditingController(text: cita.detalle);
-    DateTime? fechaSeleccionada = cita.fechaInicio;
-
-    final aplicar = await showDialog<bool>(
+    final result = await showCitasConfirmarSolicitadaDialog(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setStateDialog) {
-          Future<void> seleccionarFechaHora() async {
-            final nueva = await _seleccionarFechaHoraReprogramacion(
-              fechaSeleccionada,
-            );
-            if (nueva == null) return;
-            setStateDialog(() => fechaSeleccionada = nueva);
-          }
-
-          return AlertDialog(
-            title: const Text('Confirmar cita solicitada'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextFormField(
-                  controller: detalleController,
-                  minLines: 2,
-                  maxLines: null,
-                  keyboardType: TextInputType.multiline,
-                  decoration: const InputDecoration(labelText: 'Detalle'),
-                ),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  onPressed: seleccionarFechaHora,
-                  icon: const Icon(Icons.schedule),
-                  label: Text(
-                    fechaSeleccionada == null
-                        ? 'Ajustar hora'
-                        : 'Hora: ${_dateTimeFormat.format(fechaSeleccionada!)}',
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext, false),
-                child: const Text('Cancelar'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(dialogContext, true),
-                child: const Text('Confirmar'),
-              ),
-            ],
-          );
-        },
-      ),
+      cita: cita,
+      dateTimeFormat: _dateTimeFormat,
     );
-
-    if (aplicar != true) return false;
-
-    final body = <String, dynamic>{};
-    final detalle = detalleController.text.trim();
-    if (detalle != cita.detalle) body['detalle'] = detalle;
-    if (fechaSeleccionada != null && fechaSeleccionada != cita.fechaInicio) {
-      body['fechaInicio'] = fechaSeleccionada!.toUtc().toIso8601String();
-    }
+    if (result == null) return false;
 
     final ok = await _handleResponseError(
-      await _service.confirmarCita(cita.id, body: body),
+      await _service.confirmarCita(cita.id, body: result.toRequestBody(cita)),
       'No se pudo confirmar la cita.',
     );
     if (!ok) return false;
