@@ -1,6 +1,7 @@
 class HistorialCita {
   final String id;
   final String citaId;
+  final String? historialCitaId;
   final String estadoAnterior;
   final String rolEjecutor;
   final String idEjecutor;
@@ -12,6 +13,7 @@ class HistorialCita {
   const HistorialCita({
     required this.id,
     required this.citaId,
+    required this.historialCitaId,
     required this.estadoAnterior,
     required this.rolEjecutor,
     required this.idEjecutor,
@@ -36,6 +38,9 @@ class HistorialCita {
     return HistorialCita(
       id: (jsonRaw['id'] ?? '').toString(),
       citaId: (jsonRaw['citaId'] ?? '').toString(),
+      historialCitaId: _parseOptionalString(
+        jsonRaw['historialCitaId'] ?? jsonRaw['idHistorialCita'],
+      ),
       estadoAnterior: (jsonRaw['estadoAnterior'] ?? '').toString(),
       rolEjecutor: (jsonRaw['rolEjecutor'] ?? '').toString(),
       idEjecutor: (jsonRaw['idEjecutor'] ?? '').toString(),
@@ -57,6 +62,12 @@ class HistorialCita {
       ejecutorNombre: ejecutorNombre,
       fechaCreacion: _parseDate(jsonRaw['fechaCreacion']),
     );
+  }
+
+  static String? _parseOptionalString(dynamic value) {
+    if (value == null) return null;
+    final raw = value.toString().trim();
+    return raw.isEmpty ? null : raw;
   }
 
   static DateTime? _parseDate(dynamic value) {
