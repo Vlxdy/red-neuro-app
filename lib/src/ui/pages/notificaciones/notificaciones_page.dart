@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:red_neuro_app/src/config/socket_service.dart';
 import 'package:red_neuro_app/src/constants/citas_estado.dart';
@@ -10,6 +11,10 @@ import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/citas_service.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/citas_utils.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_detalle_modal.dart';
+import 'package:red_neuro_app/src/ui/pages/inicio/inicio_citas_utils.dart';
 import 'package:red_neuro_app/src/ui/pages/notificaciones/notificaciones_service.dart';
 
 final GlobalKey<ScaffoldMessengerState> notificacionesMessenger =
@@ -54,7 +59,10 @@ class NotificacionesPage extends StatefulWidget {
 class _NotificacionesPageState extends State<NotificacionesPage> {
   final _theme = ThemeController.instance;
   late final NotificacionesService _service;
+  late final CitasService _citasService;
   final ScrollController _scrollController = ScrollController();
+  final DateFormat _dateFormat = DateFormat('dd/MM/yyyy');
+  final DateFormat _dateTimeFormat = DateFormat('dd/MM/yyyy HH:mm');
 
   List<NotificacionItem> _items = [];
   bool _loading = true;
@@ -74,6 +82,7 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
   void initState() {
     super.initState();
     _service = NotificacionesService(context);
+    _citasService = CitasService(context);
     _scrollController.addListener(_onScroll);
     _bindSocketEvents();
     notificacionesBandejaAbiertaNotifier.value = true;
@@ -258,19 +267,6 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
   }
 
 
-
-  bool _esProgramador(CitaMedica cita) {
-    final profile = Auth.instance.profile;
-    final candidatosUsuario = <String>{
-      if (profile.id != null && profile.id!.isNotEmpty) profile.id!,
-      if (profile.idUsuarioRol != null && profile.idUsuarioRol!.isNotEmpty)
-        profile.idUsuarioRol!,
-      if (profile.idRol != null && profile.idRol!.isNotEmpty) profile.idRol!,
-    };
-    final idProgramador = (cita.idUsuarioProgramo ?? '').trim();
-    return idProgramador.isNotEmpty && candidatosUsuario.contains(idProgramador);
-  }
-
   Future<void> _mostrarEstadoNotificacion(NotificacionItem item) async {
     await _marcarComoVista(item);
     final idCita = (item.idCita ?? '').trim();
@@ -317,70 +313,259 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
     }
 
     final estado = CitasEstado.fromValue(cita.estado.toUpperCase());
-    final esProgramador = _esProgramador(cita);
+    final puedeGestionarSolicitada = CitasUtils.puedeGestionarSolicitada(
+      cita,
+      Auth.instance.profile,
+    );
+    final esAsignadaAlUsuario = _esAsignadaAlUsuarioLogueado(cita);
+    final citaYaIniciada = InicioCitasUtils.citaYaIniciada(cita);
 
-    if (estado == CitasEstado.rechazada && !esProgramador) {
-      await showDialog<void>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: const Text('Cita no disponible'),
-          content: const Text(
-            'La cita fue rechazada y ya no está disponible para tu perfil.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Entendido'),
-            ),
-          ],
+    final acciones = <CitaDetalleAccion>[
+      if (estado == CitasEstado.solicitada && puedeGestionarSolicitada)
+        CitaDetalleAccion(
+          label: 'Confirmar',
+          icon: Icons.check_circle_outline,
+          isPrimary: true,
+          onTap: () => _confirmarCitaSolicitada(cita),
         ),
-      );
-      return;
-    }
+      if (estado == CitasEstado.solicitada && puedeGestionarSolicitada)
+        CitaDetalleAccion(
+          label: 'Rechazar',
+          icon: Icons.cancel_outlined,
+          isDestructive: true,
+          onTap: () => _rechazarCitaSolicitada(cita),
+        ),
+      if (estado == CitasEstado.programada && esAsignadaAlUsuario && citaYaIniciada)
+        CitaDetalleAccion(
+          label: 'Completar',
+          icon: Icons.task_alt_outlined,
+          isPrimary: true,
+          onTap: () async {
+            await _completarCita(cita);
+            return true;
+          },
+        ),
+      if (estado == CitasEstado.programada && esAsignadaAlUsuario && citaYaIniciada)
+        CitaDetalleAccion(
+          label: 'No asistió',
+          icon: Icons.person_off_outlined,
+          onTap: () async {
+            await _marcarNoAsistio(cita);
+            return true;
+          },
+        ),
+      if (estado == CitasEstado.programada && esAsignadaAlUsuario)
+        CitaDetalleAccion(
+          label: 'Reprogramar',
+          icon: Icons.schedule_outlined,
+          onTap: () async {
+            await _reprogramarCita(cita);
+            return true;
+          },
+        ),
+      if (estado == CitasEstado.programada && esAsignadaAlUsuario)
+        CitaDetalleAccion(
+          label: 'Cancelar',
+          icon: Icons.cancel_outlined,
+          isDestructive: true,
+          onTap: () async {
+            await _cancelarCita(cita);
+            return true;
+          },
+        ),
+    ];
 
-    final mensajes = <CitasEstado, String>{
-      CitasEstado.solicitada: 'La cita está solicitada y pendiente de validación.',
-      CitasEstado.programada: 'La cita está programada y activa.',
-      CitasEstado.completada: 'La cita fue completada exitosamente.',
-      CitasEstado.noAsistio: 'La cita se cerró como no asistida.',
-      CitasEstado.cancelada: 'La cita fue cancelada.',
-      CitasEstado.rechazada: esProgramador
-          ? 'La cita está rechazada. Puedes revisarla en la bandeja de Citas.'
-          : 'La cita está rechazada.',
-      CitasEstado.borrador: 'La cita está en estado borrador.',
-      CitasEstado.reprogramada: 'La cita fue reprogramada.',
-    };
+    final payload = CitasUtils.construirDetalleModalPayload(
+      cita: cita,
+      theme: _theme,
+      titulo: 'Detalle de cita',
+      nombrePaciente: InicioCitasUtils.nombrePaciente,
+      formatearGenero: InicioCitasUtils.formatearGenero,
+      formatearFechaPaciente: InicioCitasUtils.formatearFechaPaciente,
+      calcularEdadPaciente: InicioCitasUtils.calcularEdadPaciente,
+      etiquetaPrestacion: InicioCitasUtils.etiquetaPrestacion,
+      nombreMedico: InicioCitasUtils.nombreMedico,
+      resolveAvatarUrl: (url) => (url ?? '').trim(),
+      inicialesPersonal: InicioCitasUtils.inicialesPersonal,
+      formatoFechaCita: InicioCitasUtils.formatoFechaCita,
+      formatoHorarioCita: InicioCitasUtils.formatoHorarioCita,
+    );
 
-    final paciente = (cita.pacienteNombre ?? '').trim();
-    final servicio = (cita.servicioNombre ?? '').trim();
-
-    await showDialog<void>(
+    await showModalBottomSheet<void>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text('Estado: ${estado.label}'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(mensajes[estado] ?? 'Estado actualizado de la cita.'),
-            if (paciente.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text('Paciente: $paciente'),
-            ],
-            if (servicio.isNotEmpty) ...[
-              const SizedBox(height: 4),
-              Text('Servicio: $servicio'),
-            ],
-          ],
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => CitasDetalleModal.fromPayload(
+        cita: cita,
+        theme: _theme,
+        payload: payload,
+        acciones: acciones,
+        onClose: () => Navigator.of(sheetContext).pop(),
+        onVerHistorial: () => InicioCitasUtils.mostrarHistorialCita(
+          context: context,
+          cita: cita,
+          service: _citasService,
+          theme: _theme,
+          dateFormat: _dateFormat,
+          dateTimeFormat: _dateTimeFormat,
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cerrar'),
-          ),
-        ],
+        onCopiarDato: _copiarDato,
       ),
     );
+  }
+
+  Future<void> _copiarDato(String value) async {
+    final text = value.trim();
+    if (text.isEmpty) return;
+    await Clipboard.setData(ClipboardData(text: text));
+    if (!mounted) return;
+    showSnackBar(
+      notificacionesMessenger,
+      'Dato copiado al portapapeles.',
+      state: StatusSnackBar.success,
+      colorText: _theme.white,
+    );
+  }
+
+
+  void _showError(String message) {
+    showSnackBar(
+      notificacionesMessenger,
+      message,
+      state: StatusSnackBar.error,
+      colorText: _theme.white,
+    );
+  }
+
+
+  bool _esAsignadaAlUsuarioLogueado(CitaMedica cita) {
+    return CitasUtils.esMedicoAsignado(
+      cita,
+      Auth.instance.profile.idUsuarioRol ?? '',
+    );
+  }
+
+  Future<void> _completarCita(CitaMedica cita) async {
+    final ok = await InicioCitasUtils.confirmarYEnviar(
+      context: context,
+      titulo: 'Completar cita',
+      mensaje: '¿Deseas marcar la cita como completada?',
+      request: () => _citasService.completarCita(cita.id),
+      fallback: 'No se pudo completar la cita.',
+      mounted: mounted,
+      onError: _showError,
+    );
+    if (ok) {
+      await _cargarInicial();
+    }
+  }
+
+  Future<void> _marcarNoAsistio(CitaMedica cita) async {
+    final ok = await InicioCitasUtils.confirmarYEnviar(
+      context: context,
+      titulo: 'Marcar no asistió',
+      mensaje: '¿Deseas marcar la cita como no asistió?',
+      request: () => _citasService.marcarNoAsistioCita(cita.id),
+      fallback: 'No se pudo actualizar la cita.',
+      mounted: mounted,
+      onError: _showError,
+    );
+    if (ok) {
+      await _cargarInicial();
+    }
+  }
+
+  Future<void> _reprogramarCita(CitaMedica cita) async {
+    final now = DateTime.now();
+    final fechaBase = cita.fechaInicio ?? now;
+
+    final fechaSeleccionada = await showDatePicker(
+      context: context,
+      initialDate: fechaBase,
+      firstDate: DateTime(now.year - 1),
+      lastDate: DateTime(now.year + 3),
+    );
+    if (fechaSeleccionada == null) return;
+
+    final horaSeleccionada = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(fechaBase),
+    );
+    if (horaSeleccionada == null) return;
+
+    final nuevaFecha = DateTime(
+      fechaSeleccionada.year,
+      fechaSeleccionada.month,
+      fechaSeleccionada.day,
+      horaSeleccionada.hour,
+      horaSeleccionada.minute,
+    );
+
+    final ok = await InicioCitasUtils.confirmarYEnviar(
+      context: context,
+      titulo: 'Reprogramar cita',
+      mensaje:
+          '¿Confirmas reprogramar la cita para ${_dateTimeFormat.format(nuevaFecha)}?',
+      request: () => _citasService.reprogramarCita(cita.id, {
+        'fechaInicio': nuevaFecha.toUtc().toIso8601String(),
+        'tipoCita': cita.tipoCita,
+        if ((cita.servicioId ?? '').trim().isNotEmpty)
+          'idServicio': cita.servicioId,
+      }),
+      fallback: 'No se pudo reprogramar la cita.',
+      mounted: mounted,
+      onError: _showError,
+    );
+    if (ok) {
+      await _cargarInicial();
+    }
+  }
+
+  Future<void> _cancelarCita(CitaMedica cita) async {
+    final ok = await InicioCitasUtils.confirmarYEnviar(
+      context: context,
+      titulo: 'Cancelar cita',
+      mensaje: '¿Deseas cancelar esta cita?',
+      request: () => _citasService.cancelarCita(cita.id),
+      fallback: 'No se pudo cancelar la cita.',
+      mounted: mounted,
+      onError: _showError,
+    );
+    if (ok) {
+      await _cargarInicial();
+    }
+  }
+
+  Future<bool> _confirmarCitaSolicitada(CitaMedica cita) async {
+    final ok = await InicioCitasUtils.confirmarYEnviar(
+      context: context,
+      titulo: 'Confirmar cita',
+      mensaje: '¿Deseas confirmar esta cita solicitada?',
+      request: () => _citasService.confirmarCita(cita.id),
+      fallback: 'No se pudo confirmar la cita.',
+      mounted: mounted,
+      onError: _showError,
+    );
+    if (ok) {
+      await _cargarInicial();
+    }
+    return ok;
+  }
+
+  Future<bool> _rechazarCitaSolicitada(CitaMedica cita) async {
+    final motivo = await InicioCitasUtils.solicitarMotivoRechazo(context);
+    if (motivo == null) return false;
+    final ok = InicioCitasUtils.handleResponse(
+      response: await _citasService.rechazarCita(cita.id, motivoRechazo: motivo),
+      fallback: 'No se pudo rechazar la cita.',
+      mounted: mounted,
+      onError: _showError,
+    );
+    if (ok) {
+      await _cargarInicial();
+    }
+    return ok;
   }
   @override
   Widget build(BuildContext context) {
@@ -598,15 +783,13 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  OutlinedButton.icon(
+                  IconButton(
+                    tooltip: 'Ver estado de la cita',
                     onPressed: () => _mostrarEstadoNotificacion(item),
-                    icon: const Icon(Icons.visibility_outlined, size: 14),
-                    label: const Text('Ver estado'),
-                    style: OutlinedButton.styleFrom(
-                      visualDensity: VisualDensity.compact,
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                      textStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-                    ),
+                    icon: const Icon(Icons.visibility_outlined, size: 18),
+                    visualDensity: VisualDensity.compact,
+                    padding: const EdgeInsets.all(4),
+                    constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                   ),
                   if (!item.visto)
                     Container(
