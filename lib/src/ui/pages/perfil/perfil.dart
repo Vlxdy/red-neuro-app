@@ -101,7 +101,7 @@ class _PerfilState extends State<Perfil> {
 
         showSnackBar(
           perfilMessenger,
-          'Rol activo: ${selectedRole.rol.isEmpty ? idRol : selectedRole.rol}',
+          'Rol activo: ${_humanRoleLabel(selectedRole)}',
           state: StatusSnackBar.success,
           colorText: theme.white,
         );
@@ -142,14 +142,13 @@ class _PerfilState extends State<Perfil> {
 
     final ThemeController theme = ThemeController.instance;
 
-    // 1) Esto es un async gap, aún no tocaste UI “peligrosa”
     final FilePickerResult? selected = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: _allowedAvatarExtensions,
       allowMultiple: false,
     );
 
-    if (!mounted) return; // <- recomendable tras el await del picker
+    if (!mounted) return;
     if (selected == null || selected.files.isEmpty) return;
 
     final PlatformFile platformFile = selected.files.first;
@@ -199,7 +198,6 @@ class _PerfilState extends State<Perfil> {
 
     setState(() => _updatingPhoto = true);
 
-    // Captura el service ANTES del await de red
     final PerfilService service = PerfilService('', context);
 
     try {
@@ -430,6 +428,10 @@ class _PerfilState extends State<Perfil> {
         final String? avatarUrl = _avatarUrl(profile.urlFoto);
         final bool showRemoteAvatar =
             avatarUrl != null && avatarUrl != _avatarFailedUrl;
+        final String fullName = _fullName(profile);
+        final Rol? activeRole = _resolveActiveRole();
+        final String activeRoleLabel = _humanRoleLabel(activeRole);
+        final String roleDescription = _humanRoleDescription(activeRole);
 
         return TemplatePage(
           showEnvironmentBanner: false,
@@ -438,182 +440,174 @@ class _PerfilState extends State<Perfil> {
             child: Scaffold(
               backgroundColor: theme.transparent,
               appBar: TrayModuleHeader(
-              titulo: 'Perfil',
-              subtitulo: 'Administra tu perfil y seguridad de tu cuenta.',
-              isCompact: MediaQuery.of(context).size.width < 560,
-            ),
-            body: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: SingleChildScrollView(
+                titulo: 'Perfil',
+                subtitulo: 'Administra tu perfil y la seguridad de tu cuenta.',
+                isCompact: MediaQuery.of(context).size.width < 560,
+              ),
+              body: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
                 child: Column(
                   children: <Widget>[
-                    const SizedBox(height: 20),
-                    Center(
-                      child: Column(
-                        children: <Widget>[
-                          Container(
-                            width: 120,
-                            height: 120,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              boxShadow: <BoxShadow>[
-                                BoxShadow(
-                                  color: theme.black.withValues(
-                                    alpha: theme.isLight ? 0.1 : 0.4,
-                                  ),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ],
-                              border: Border.all(
-                                color: theme.primary.withValues(alpha: 0.6),
-                                width: 2,
+                    _ProfileHeroCard(
+                      theme: theme,
+                      fullName: fullName,
+                      roleLabel: activeRoleLabel,
+                      roleDescription: roleDescription,
+                      avatar: Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          boxShadow: <BoxShadow>[
+                            BoxShadow(
+                              color: theme.black.withValues(
+                                alpha: theme.isLight ? 0.12 : 0.34,
+                              ),
+                              blurRadius: 14,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                          border: Border.all(
+                            color: theme.primary.withValues(alpha: 0.45),
+                            width: 3,
+                          ),
+                        ),
+                        child: Stack(
+                          children: <Widget>[
+                            Positioned.fill(
+                              child: ClipOval(
+                                child: showRemoteAvatar
+                                    ? FutureBuilder<Uint8List?>(
+                                        future: _fetchAvatarBytes(avatarUrl),
+                                        builder: (
+                                          BuildContext context,
+                                          AsyncSnapshot<Uint8List?> snapshot,
+                                        ) {
+                                          final Uint8List? bytes = snapshot.data;
+                                          if (snapshot.connectionState ==
+                                                  ConnectionState.done &&
+                                              bytes == null &&
+                                              mounted &&
+                                              _avatarFailedUrl != avatarUrl) {
+                                            WidgetsBinding.instance
+                                                .addPostFrameCallback((_) {
+                                              if (!mounted) return;
+                                              setState(() {
+                                                _avatarFailedUrl = avatarUrl;
+                                              });
+                                            });
+                                          }
+
+                                          if (bytes != null) {
+                                            return Image.memory(
+                                              bytes,
+                                              fit: BoxFit.cover,
+                                              gaplessPlayback: true,
+                                            );
+                                          }
+
+                                          return _buildAvatarFallback(
+                                            theme,
+                                            profile,
+                                          );
+                                        },
+                                      )
+                                    : _buildAvatarFallback(theme, profile),
                               ),
                             ),
-                            child: Stack(
-                              children: <Widget>[
-                                Positioned.fill(
-                                  child: ClipOval(
-                                    child: showRemoteAvatar
-                                        ? FutureBuilder<Uint8List?>(
-                                            future: _fetchAvatarBytes(
-                                              avatarUrl,
-                                            ),
-                                            builder:
-                                                (
-                                                  BuildContext context,
-                                                  AsyncSnapshot<Uint8List?>
-                                                  snapshot,
-                                                ) {
-                                                  final Uint8List? bytes =
-                                                      snapshot.data;
-                                                  if (snapshot.connectionState ==
-                                                          ConnectionState
-                                                              .done &&
-                                                      bytes == null &&
-                                                      mounted &&
-                                                      _avatarFailedUrl !=
-                                                          avatarUrl) {
-                                                    WidgetsBinding.instance
-                                                        .addPostFrameCallback((
-                                                          _,
-                                                        ) {
-                                                          if (!mounted) return;
-                                                          setState(() {
-                                                            _avatarFailedUrl =
-                                                                avatarUrl;
-                                                          });
-                                                        });
-                                                  }
-
-                                                  if (bytes != null) {
-                                                    return Image.memory(
-                                                      bytes,
-                                                      fit: BoxFit.cover,
-                                                      gaplessPlayback: true,
-                                                    );
-                                                  }
-
-                                                  return _buildAvatarFallback(
-                                                    theme,
-                                                    profile,
-                                                  );
-                                                },
-                                          )
-                                        : _buildAvatarFallback(theme, profile),
+                            if (_updatingPhoto)
+                              Positioned.fill(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: theme.black.withValues(alpha: 0.35),
+                                    shape: BoxShape.circle,
                                   ),
-                                ),
-                                if (_updatingPhoto)
-                                  Positioned.fill(
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        color: theme.black.withValues(
-                                          alpha: 0.35,
-                                        ),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Center(
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2.5,
-                                          color: theme.white,
-                                        ),
-                                      ),
+                                  child: Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      color: theme.white,
                                     ),
                                   ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          Wrap(
-                            spacing: 8,
-                            children: <Widget>[
-                              FilledButton.icon(
-                                onPressed: _updatingPhoto
-                                    ? null
-                                    : _pickAndUploadPhoto,
-                                icon: const Icon(Icons.photo_camera_outlined),
-                                label: const Text('Cambiar foto'),
-                                style: _profilePrimaryButtonStyle(theme),
-                              ),
-                              if (profile.urlFoto != null &&
-                                  profile.urlFoto!.trim().isNotEmpty)
-                                OutlinedButton.icon(
-                                  onPressed: _updatingPhoto
-                                      ? null
-                                      : _deletePhoto,
-                                  icon: const Icon(Icons.delete_outline),
-                                  label: const Text('Quitar'),
-                                  style: _profileDangerButtonStyle(theme),
                                 ),
-                            ],
+                              ),
+                          ],
+                        ),
+                      ),
+                      actions: Wrap(
+                        alignment: WrapAlignment.center,
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: <Widget>[
+                          FilledButton.icon(
+                            onPressed:
+                                _updatingPhoto ? null : _pickAndUploadPhoto,
+                            icon: const Icon(Icons.photo_camera_outlined),
+                            label: const Text('Cambiar foto'),
+                            style: _profilePrimaryButtonStyle(theme),
                           ),
+                          if (profile.urlFoto != null &&
+                              profile.urlFoto!.trim().isNotEmpty)
+                            OutlinedButton.icon(
+                              onPressed: _updatingPhoto ? null : _deletePhoto,
+                              icon: const Icon(Icons.delete_outline),
+                              label: const Text('Quitar'),
+                              style: _profileDangerButtonStyle(theme),
+                            ),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      "${profile.nombres} ${profile.primerApellido} ${profile.segundoApellido}",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18,
-                        color: theme.fontColor,
-                      ),
+                      summaryItems: <_ProfileSummaryItemData>[
+                        _ProfileSummaryItemData(
+                          icon: Icons.email_outlined,
+                          label: 'Correo',
+                          value: _fallbackValue(profile.correoElectronico),
+                        ),
+                        _ProfileSummaryItemData(
+                          icon: Icons.phone_outlined,
+                          label: 'Celular',
+                          value: _fallbackValue(profile.telefono),
+                        ),
+                        _ProfileSummaryItemData(
+                          icon: Icons.badge_outlined,
+                          label: 'Documento',
+                          value:
+                              '${_fallbackValue(profile.tipoDocumento)} · ${_fallbackValue(profile.nroDocumento)}',
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 20),
                     PerfilInfoCard(
                       bgColor: theme.bgCard,
-                      borderColor: theme.grey.withValues(alpha: .4),
+                      borderColor: theme.grey.withValues(alpha: .22),
                       headerIcon: Icons.person_outline_rounded,
-                      headerTitle: 'Datitos personales',
+                      headerTitle: 'Información personal',
                       items: <Map<String, dynamic>>[
                         <String, dynamic>{
-                          "clave": "Nombres",
-                          "valor":
-                              "${profile.nombres} ${profile.primerApellido} ${profile.segundoApellido}",
+                          'clave': 'Nombre completo',
+                          'valor': fullName,
                         },
                         <String, dynamic>{
-                          "clave": "Fecha de nacimiento",
-                          "valor": profile.fechaNacimiento,
+                          'clave': 'Fecha de nacimiento',
+                          'valor': _fallbackValue(profile.fechaNacimiento),
                         },
                       ],
                     ),
                     const SizedBox(height: 20),
                     PerfilInfoCard(
                       bgColor: theme.bgCard,
-                      borderColor: theme.grey.withValues(alpha: .4),
+                      borderColor: theme.grey.withValues(alpha: .22),
                       headerIcon: Icons.contact_page_outlined,
                       headerTitle: 'Datos de contacto',
                       onCopy: _copyField,
                       items: <Map<String, dynamic>>[
                         <String, dynamic>{
-                          "clave": "Celular",
-                          "valor": profile.telefono,
-                          "copiable": true,
+                          'clave': 'Celular',
+                          'valor': _fallbackValue(profile.telefono),
+                          'copiable': true,
                         },
                         <String, dynamic>{
-                          "clave": "Correo electrónico",
-                          "valor": profile.correoElectronico,
-                          "copiable": true,
+                          'clave': 'Correo electrónico',
+                          'valor': _fallbackValue(profile.correoElectronico),
+                          'copiable': true,
                         },
                       ],
                     ),
@@ -638,15 +632,224 @@ class _PerfilState extends State<Perfil> {
                       onLogout: _logout,
                       loggingOut: _loggingOut,
                     ),
-                    const SizedBox(height: 20),
                   ],
                 ),
               ),
             ),
-            ),
           ),
         );
       },
+    );
+  }
+
+  Rol? _resolveActiveRole() {
+    if (_roles.isEmpty) return null;
+    for (final Rol rol in _roles) {
+      if (rol.idRol == _activeRoleId) {
+        return rol;
+      }
+    }
+    return _roles.first;
+  }
+
+  String _fullName(Usuario profile) {
+    final List<String> parts = <String>[
+      profile.nombres,
+      profile.primerApellido,
+      profile.segundoApellido,
+    ].where((String value) => value.trim().isNotEmpty).toList();
+
+    return parts.isEmpty ? 'Usuario sin nombre' : parts.join(' ');
+  }
+}
+
+class _ProfileHeroCard extends StatelessWidget {
+  const _ProfileHeroCard({
+    required this.theme,
+    required this.fullName,
+    required this.roleLabel,
+    required this.roleDescription,
+    required this.avatar,
+    required this.actions,
+    required this.summaryItems,
+  });
+
+  final ThemeController theme;
+  final String fullName;
+  final String roleLabel;
+  final String roleDescription;
+  final Widget avatar;
+  final Widget actions;
+  final List<_ProfileSummaryItemData> summaryItems;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(28),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: <Color>[
+            theme.primary.withValues(alpha: theme.isLight ? 0.14 : 0.26),
+            theme.bgCard,
+            theme.primary.withValues(alpha: theme.isLight ? 0.05 : 0.14),
+          ],
+        ),
+        border: Border.all(color: theme.primary.withValues(alpha: 0.18)),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: theme.black.withValues(alpha: theme.isLight ? 0.06 : 0.22),
+            blurRadius: 22,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        children: <Widget>[
+          avatar,
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: theme.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              roleLabel,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: theme.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            fullName,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: theme.fontColor,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            roleDescription,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: theme.fontColor.withValues(alpha: 0.75),
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 18),
+          actions,
+          const SizedBox(height: 18),
+          LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              final bool stackItems = constraints.maxWidth < 560;
+              if (stackItems) {
+                return Column(
+                  children: summaryItems
+                      .map(
+                        (_ProfileSummaryItemData item) => Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: _ProfileSummaryItemCard(item: item),
+                        ),
+                      )
+                      .toList(),
+                );
+              }
+
+              return Row(
+                children: summaryItems
+                    .map(
+                      (_ProfileSummaryItemData item) => Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: _ProfileSummaryItemCard(item: item),
+                        ),
+                      ),
+                    )
+                    .toList(),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileSummaryItemData {
+  const _ProfileSummaryItemData({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+}
+
+class _ProfileSummaryItemCard extends StatelessWidget {
+  const _ProfileSummaryItemCard({required this.item});
+
+  final _ProfileSummaryItemData item;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeController theme = ThemeController.instance;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: theme.bgCard2.withValues(alpha: theme.isLight ? 0.55 : 0.3),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: theme.grey.withValues(alpha: 0.14)),
+      ),
+      child: Row(
+        children: <Widget>[
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: theme.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(item.icon, color: theme.primary, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  item.label,
+                  style: TextStyle(
+                    color: theme.fontColor.withValues(alpha: 0.62),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  item.value,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: theme.fontColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -675,19 +878,73 @@ class _ThemePreference extends StatelessWidget {
             builder: (BuildContext context, bool isLight, Widget? child) {
               final bool isDark = !isLight;
 
-              return SwitchListTile.adaptive(
-                contentPadding: EdgeInsets.zero,
-                secondary: Icon(
-                  isDark ? Icons.dark_mode : Icons.light_mode,
-                  color: theme.primary,
+              return Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
                 ),
-                title: const Text('Tema oscuro'),
-                subtitle: Text(
-                  isDark ? 'Activado' : 'Desactivado',
-                  style: TextStyle(color: theme.grey),
+                decoration: BoxDecoration(
+                  color: theme.bgCard2.withValues(
+                    alpha: theme.isLight ? 0.55 : 0.22,
+                  ),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: theme.primary.withValues(
+                      alpha: theme.isLight ? 0.12 : 0.2,
+                    ),
+                  ),
                 ),
-                value: isDark,
-                onChanged: (_) => theme.changeTheme(),
+                child: Row(
+                  children: <Widget>[
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: theme.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Icon(
+                        isDark ? Icons.dark_mode : Icons.light_mode,
+                        color: theme.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            'Tema oscuro',
+                            style: TextStyle(
+                              color: theme.fontColor,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            isDark
+                                ? 'Activo para una visualización más cómoda en ambientes con poca luz.'
+                                : 'Activo el tema claro con colores alineados al estilo principal de la app.',
+                            style: TextStyle(
+                              color: theme.fontColor.withValues(alpha: 0.68),
+                              fontSize: 13,
+                              height: 1.35,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Switch.adaptive(
+                      value: isDark,
+                      activeThumbColor: theme.primary,
+                      activeTrackColor: theme.primary.withValues(alpha: 0.3),
+                      inactiveThumbColor: theme.grey,
+                      inactiveTrackColor: theme.grey.withValues(alpha: 0.3),
+                      onChanged: (_) => theme.changeTheme(),
+                    ),
+                  ],
+                ),
               );
             },
           ),
@@ -787,77 +1044,116 @@ class _RoleCard extends StatelessWidget {
             ),
     );
 
+    final String activeRoleLabel = _humanRoleLabel(activeRole);
+    final String activeRoleDescription = _humanRoleDescription(activeRole);
+
     return _ProfileSectionCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: <Widget>[
-              Text(
-                'Rol activo',
-                style: TextStyle(
-                  color: theme.secondary,
-                  fontWeight: FontWeight.w700,
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: theme.bgCard2.withValues(alpha: theme.isLight ? 0.52 : 0.22),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: theme.primary.withValues(alpha: 0.12)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: <Widget>[
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: theme.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Icon(
+                        Icons.workspace_premium_outlined,
+                        color: theme.primary,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.primary.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        activeRoleLabel,
+                        style: TextStyle(
+                          color: theme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: theme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  activeRole.rol.isEmpty ? 'Sin rol' : activeRole.rol,
+                const SizedBox(height: 14),
+                Text(
+                  'Tipo de acceso',
                   style: TextStyle(
-                    color: theme.primary,
-                    fontWeight: FontWeight.bold,
+                    color: theme.secondary,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 8),
+                Text(
+                  activeRoleDescription,
+                  style: TextStyle(
+                    color: theme.fontColor.withValues(alpha: 0.78),
+                    fontSize: 14,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Text(
-            'Elige otro rol para actualizar los módulos visibles.',
+            onRoleSelected == null
+                ? 'Tu cuenta tiene un único perfil de acceso asignado.'
+                : 'Si tienes varios perfiles, cambia aquí la vista y los módulos disponibles.',
             style: TextStyle(
-              color: theme.fontColor.withValues(alpha: 0.7),
+              color: theme.fontColor.withValues(alpha: 0.72),
               fontSize: 13,
+              height: 1.4,
             ),
           ),
-          if (onRoleSelected == null) ...<Widget>[
-            const SizedBox(height: 8),
-            Text(
-              'Este usuario solo tiene un rol asignado.',
-              style: TextStyle(color: theme.fontColor.withValues(alpha: 0.7)),
-            ),
-          ] else ...<Widget>[
-            const SizedBox(height: 12),
+          if (onRoleSelected != null) ...<Widget>[
+            const SizedBox(height: 16),
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              spacing: 10,
+              runSpacing: 10,
               children: roles.map((Rol rol) {
                 final bool isSelected = rol.idRol == activeRoleId;
+                final String label = _humanRoleLabel(rol);
                 return isSelected
-                    ? FilledButton(
+                    ? FilledButton.icon(
                         onPressed: null,
+                        icon: const Icon(Icons.check_circle_outline, size: 18),
                         style: _roleFilledButtonStyle(theme),
-                        child: Text(rol.rol.isEmpty ? 'Rol' : rol.rol),
+                        label: Text(label),
                       )
                     : OutlinedButton(
                         onPressed: changing
                             ? null
                             : () => onRoleSelected?.call(rol.idRol),
                         style: _roleOutlinedButtonStyle(theme),
-                        child: Text(rol.rol.isEmpty ? 'Rol' : rol.rol),
+                        child: Text(label),
                       );
               }).toList(),
             ),
             if (changing) ...<Widget>[
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               Row(
                 children: <Widget>[
                   SizedBox(
@@ -870,7 +1166,7 @@ class _RoleCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Cambiando rol...',
+                    'Actualizando perfil de acceso...',
                     style: TextStyle(
                       color: theme.fontColor.withValues(alpha: 0.7),
                     ),
@@ -897,11 +1193,12 @@ class _ProfileSectionCard extends StatelessWidget {
     return Card(
       margin: EdgeInsets.zero,
       elevation: 0,
+      color: theme.bgCard,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
-        side: BorderSide(color: theme.grey.withValues(alpha: 0.3)),
+        borderRadius: BorderRadius.circular(22),
+        side: BorderSide(color: theme.grey.withValues(alpha: 0.2)),
       ),
-      child: Padding(padding: const EdgeInsets.all(16), child: child),
+      child: Padding(padding: const EdgeInsets.all(18), child: child),
     );
   }
 }
@@ -911,47 +1208,158 @@ ButtonStyle _roleFilledButtonStyle(ThemeController theme) {
     disabledBackgroundColor: theme.primary,
     disabledForegroundColor: theme.white,
     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
   );
 }
 
 ButtonStyle _roleOutlinedButtonStyle(ThemeController theme) {
   return OutlinedButton.styleFrom(
     foregroundColor: theme.secondary,
-    side: BorderSide(color: theme.grey.withValues(alpha: 0.4)),
     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    side: BorderSide(color: theme.grey.withValues(alpha: 0.45)),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
   );
 }
 
 ButtonStyle _profilePrimaryButtonStyle(ThemeController theme) {
   return FilledButton.styleFrom(
-    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    backgroundColor: theme.primary,
+    foregroundColor: theme.white,
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
   );
 }
 
 ButtonStyle _profileDangerButtonStyle(ThemeController theme) {
   return OutlinedButton.styleFrom(
     foregroundColor: theme.error,
-    side: BorderSide(color: theme.error.withValues(alpha: 0.45)),
-    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    side: BorderSide(color: theme.error.withValues(alpha: 0.4)),
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
   );
 }
 
 Widget _buildAvatarFallback(ThemeController theme, Usuario profile) {
+  final String initials = _buildInitials(profile);
   return Container(
-    color: theme.primary,
+    color: theme.primary.withValues(alpha: 0.14),
     alignment: Alignment.center,
     child: Text(
-      '${profile.nombres.isNotEmpty ? profile.nombres[0] : ''}'
-      '${profile.primerApellido.isNotEmpty ? profile.primerApellido[0] : ''}',
+      initials,
       style: TextStyle(
-        color: theme.white,
-        fontSize: 40,
+        color: theme.primary,
+        fontSize: 34,
         fontWeight: FontWeight.bold,
       ),
     ),
   );
+}
+
+String _buildInitials(Usuario profile) {
+  final String nombres = profile.nombres.trim();
+  final String primerApellido = profile.primerApellido.trim();
+  final String segundoApellido = profile.segundoApellido.trim();
+  final String first = nombres.isNotEmpty ? nombres[0] : '';
+  final String second = primerApellido.isNotEmpty
+      ? primerApellido[0]
+      : (segundoApellido.isNotEmpty ? segundoApellido[0] : '');
+  final String initials = '$first$second'.trim().toUpperCase();
+  return initials.isEmpty ? 'RN' : initials;
+}
+
+String _fallbackValue(String? value, {String empty = 'No disponible'}) {
+  final String normalized = (value ?? '').trim();
+  return normalized.isEmpty ? empty : normalized;
+}
+
+String _humanRoleLabel(Rol? rol) {
+  if (rol == null) return 'Sin acceso asignado';
+
+  final String source = _fallbackRoleSource(rol).toUpperCase();
+  final String normalized = source
+      .replaceAll('-', '_')
+      .replaceAll(' ', '_')
+      .replaceAll(RegExp(r'_+'), '_');
+
+  switch (normalized) {
+    case 'ADMIN':
+    case 'ADMINISTRADOR':
+      return 'Administrador';
+    case 'SUPERVISOR':
+      return 'Supervisor clínico';
+    case 'MEDICO':
+    case 'PERSONAL_MEDICO':
+    case 'PERSONAL_SALUD':
+      return rol.esSupervisor ? 'Supervisor clínico' : 'Personal de salud';
+    case 'PACIENTE':
+      return 'Paciente';
+    case 'RECEPCION':
+    case 'RECEPCIONISTA':
+      return 'Recepción';
+    default:
+      return _toTitleCase(
+        _fallbackValue(_fallbackRoleSource(rol), empty: 'Acceso general'),
+      );
+  }
+}
+
+String _humanRoleDescription(Rol? rol) {
+  if (rol == null) {
+    return 'Aún no se identificó un perfil de acceso para esta cuenta.';
+  }
+
+  final String source = _fallbackRoleSource(rol).toUpperCase();
+  final String normalized = source
+      .replaceAll('-', '_')
+      .replaceAll(' ', '_')
+      .replaceAll(RegExp(r'_+'), '_');
+
+  switch (normalized) {
+    case 'ADMIN':
+    case 'ADMINISTRADOR':
+      return 'Gestiona configuraciones, usuarios y módulos con acceso administrativo.';
+    case 'SUPERVISOR':
+      return 'Supervisa la operación clínica y puede revisar bandejas del equipo.';
+    case 'MEDICO':
+    case 'PERSONAL_MEDICO':
+    case 'PERSONAL_SALUD':
+      return rol.esSupervisor
+          ? 'Cuenta con permisos ampliados para coordinar y supervisar la operación clínica.'
+          : 'Accede a las herramientas clínicas y a la gestión diaria de atención.';
+    case 'PACIENTE':
+      return 'Consulta tu información personal y el seguimiento de tus servicios.';
+    case 'RECEPCION':
+    case 'RECEPCIONISTA':
+      return 'Administra agenda, registro y seguimiento de atención al usuario.';
+    default:
+      return _fallbackValue(
+        rol.descripcion,
+        empty: 'Este perfil define los módulos y permisos visibles en tu cuenta.',
+      );
+  }
+}
+
+String _fallbackRoleSource(Rol rol) {
+  final List<String> candidates = <String>[rol.nombre, rol.rol, rol.descripcion];
+  return candidates.firstWhere(
+    (String value) => value.trim().isNotEmpty,
+    orElse: () => '',
+  );
+}
+
+String _toTitleCase(String value) {
+  final String normalized = value
+      .replaceAll('_', ' ')
+      .replaceAll(RegExp(r'\s+'), ' ')
+      .trim()
+      .toLowerCase();
+  if (normalized.isEmpty) return normalized;
+
+  return normalized
+      .split(' ')
+      .map((String word) {
+        if (word.isEmpty) return word;
+        return '${word[0].toUpperCase()}${word.substring(1)}';
+      })
+      .join(' ');
 }
