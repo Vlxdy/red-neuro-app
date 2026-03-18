@@ -177,25 +177,8 @@ Future<void> abrirCitasFormularioModal({
   CitaMedica? cita,
   DateTime? fechaBase,
 }) async {
-  String resolverIdUsuarioRol(Usuario profile) {
-    final directo = (profile.idUsuarioRol ?? '').trim();
-    if (directo.isNotEmpty) return directo;
-
-    final roles = profile.roles;
-    final roleId = (profile.idRol ?? '').trim();
-    if (roles.isEmpty) return '';
-
-    if (roleId.isNotEmpty) {
-      for (final rol in roles) {
-        if (rol.idRol == roleId) return rol.idUsuarioRol.trim();
-      }
-    }
-
-    return roles.first.idUsuarioRol.trim();
-  }
-
   PersonalMedico? resolverPersonalActual(Usuario profile) {
-    final id = resolverIdUsuarioRol(profile);
+    final id = profile.idPersonalActivo;
     final nombres = profile.nombres.trim();
     if (id.isEmpty || nombres.isEmpty) return null;
     return PersonalMedico(

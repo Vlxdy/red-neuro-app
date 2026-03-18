@@ -123,6 +123,31 @@ class Usuario extends Persona {
     return usuario;
   }
 
+
+  String get idUsuarioActivo => (id ?? '').trim();
+
+  String get idPersonalActivo {
+    final directo = (idUsuarioRol ?? '').trim();
+    if (directo.isNotEmpty) return directo;
+
+    final roleId = (idRol ?? '').trim();
+    if (roleId.isNotEmpty) {
+      for (final rolItem in roles) {
+        if (rolItem.idRol == roleId) {
+          final idPersonal = rolItem.idUsuarioRol.trim();
+          if (idPersonal.isNotEmpty) return idPersonal;
+        }
+      }
+    }
+
+    for (final rolItem in roles) {
+      final idPersonal = rolItem.idUsuarioRol.trim();
+      if (idPersonal.isNotEmpty) return idPersonal;
+    }
+
+    return '';
+  }
+
   @override
   Map<String, dynamic> toJson() {
     final data = <String, dynamic>{};

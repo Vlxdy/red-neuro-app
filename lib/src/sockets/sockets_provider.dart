@@ -16,16 +16,16 @@ class SocketProvider extends ChangeNotifier with WidgetsBindingObserver {
   SocketProvider();
   bool _initialized = false;
   bool _listenersBound = false;
-  String? _idUsuarioRol;
+  String? _idUsuario;
 
   void Function(dynamic)? _onConnectHandler;
   void Function(dynamic)? _onDisconnectHandler;
   void Function(dynamic)? _onNotificacionNuevaHandler;
 
-  /// Llamar tras el login, cuando tengas el idUsuarioRol
-  Future<void> init(String idUsuarioRol) async {
-    _idUsuarioRol = idUsuarioRol;
-    SocketService.instance.connect(idUsuarioRol);
+  /// Llamar tras el login, cuando tengas el idUsuario
+  Future<void> init(String idUsuario) async {
+    _idUsuario = idUsuario;
+    SocketService.instance.connect(idUsuario);
 
     if (!_initialized) {
       WidgetsBinding.instance.addObserver(this);
@@ -104,10 +104,10 @@ class SocketProvider extends ChangeNotifier with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (!_initialized) return;
     if (state == AppLifecycleState.resumed) {
-      final idUsuarioRol = _idUsuarioRol;
-      if (idUsuarioRol == null || idUsuarioRol.isEmpty) return;
+      final idUsuario = _idUsuario;
+      if (idUsuario == null || idUsuario.isEmpty) return;
       Logger.info('App reanudada: revalidando conexión/suscripción socket');
-      SocketService.instance.connect(idUsuarioRol);
+      SocketService.instance.connect(idUsuario);
       SocketService.instance.ensureSubscription();
       _recontarNoLeidas();
     }
@@ -115,23 +115,17 @@ class SocketProvider extends ChangeNotifier with WidgetsBindingObserver {
 
   bool _esEventoDelUsuarioActual(Map<String, dynamic> payload) {
     final notificacion = payload['notificacion'];
-    final idPersonalEvento =
-        payload['idPersonal']?.toString() ??
-        (notificacion is Map ? notificacion['idPersonal']?.toString() : null);
+    final idUsuarioEvento =
+        payload['idUsuario']?.toString() ??
+        (notificacion is Map ? notificacion['idUsuario']?.toString() : null);
 
-    final profile = Auth.instance.profile;
-    final candidatosUsuario = <String>{
-      if (profile.id != null && profile.id!.isNotEmpty) profile.id!,
-      if (profile.idUsuarioRol != null && profile.idUsuarioRol!.isNotEmpty)
-        profile.idUsuarioRol!,
-      if (profile.idRol != null && profile.idRol!.isNotEmpty) profile.idRol!,
-    };
-
-    if (idPersonalEvento == null || idPersonalEvento.isEmpty) {
+    if (idUsuarioEvento == null || idUsuarioEvento.isEmpty) {
       return true;
     }
 
-    return candidatosUsuario.contains(idPersonalEvento);
+    final idUsuarioActual = (Auth.instance.profile.id ?? '').trim();
+    if (idUsuarioActual.isEmpty) return false;
+    return idUsuarioEvento == idUsuarioActual;
   }
 
   Future<void> _recontarNoLeidas({int minimo = 0}) async {
