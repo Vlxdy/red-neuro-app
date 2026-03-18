@@ -270,7 +270,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     final medicoFiltro = (_medicoFiltro?.isNotEmpty ?? false)
         ? _medicoFiltro!
         : _usarSoloMisCitas
-        ? (Auth.instance.profile.idUsuarioRol ?? '')
+        ? Auth.instance.profile.idPersonalActivo
         : '';
 
     if (medicoFiltro.isNotEmpty) {
@@ -490,7 +490,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     final medicoFiltro = (_medicoFiltro?.isNotEmpty ?? false)
         ? _medicoFiltro!
         : _usarSoloMisCitas
-        ? (Auth.instance.profile.idUsuarioRol ?? '')
+        ? Auth.instance.profile.idPersonalActivo
         : '';
 
     final canIncludeRestrictedByOwnFilter = isRestrictedStatus &&
@@ -518,16 +518,16 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     final filtro = medicoFiltro.trim();
     if (filtro.isEmpty) return false;
 
-    final idUsuarioRol = (Auth.instance.profile.idUsuarioRol ?? '').trim();
-    return idUsuarioRol.isNotEmpty && filtro == idUsuarioRol;
+    final idPersonalActual = Auth.instance.profile.idPersonalActivo;
+    return idPersonalActual.isNotEmpty && filtro == idPersonalActual;
   }
 
   bool _canViewRestrictedDraftStatus(CitaMedica cita) {
     if (Auth.instance.profile.esSupervisor) return true;
-    final idUsuarioRol = (Auth.instance.profile.idUsuarioRol ?? '').trim();
-    if (idUsuarioRol.isEmpty) return false;
+    final idUsuario = (Auth.instance.profile.id ?? '').trim();
+    if (idUsuario.isEmpty) return false;
     final idCreador = (cita.idUsuarioProgramo ?? '').trim();
-    return idCreador.isNotEmpty && idCreador == idUsuarioRol;
+    return idCreador.isNotEmpty && idCreador == idUsuario;
   }
 
   bool _isInCalendarRange(CitaMedica cita) {

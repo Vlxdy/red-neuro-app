@@ -11,7 +11,6 @@ import 'package:red_neuro_app/src/constants/constants.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/extensions/colores_extension.dart';
 import 'package:red_neuro_app/src/models/personal_salud.dart';
-import 'package:red_neuro_app/src/models/rol.dart';
 import 'package:red_neuro_app/src/models/user.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
@@ -69,26 +68,6 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     _cargarUsuarioActual();
   }
 
-  String _resolverIdUsuarioRol(Usuario profile) {
-    final directo = (profile.idUsuarioRol ?? '').trim();
-    if (directo.isNotEmpty) return directo;
-
-    final roles = profile.roles;
-    final roleId = (profile.idRol ?? '').trim();
-    if (roles.isEmpty) return '';
-
-    Rol? activeRole;
-    if (roleId.isNotEmpty) {
-      try {
-        activeRole = roles.firstWhere((rol) => rol.idRol == roleId);
-      } catch (_) {
-        activeRole = null;
-      }
-    }
-    activeRole ??= roles.first;
-    return activeRole.idUsuarioRol.trim();
-  }
-
 
   Rol? _resolverRolActivo(Usuario profile) {
     final roles = profile.roles;
@@ -135,11 +114,11 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
 
   Future<void> _cargarUsuarioActual() async {
     var profile = Auth.instance.profile;
-    String id = _resolverIdUsuarioRol(profile);
+    String id = profile.idPersonalActivo;
 
     if (id.isEmpty) {
       profile = await Auth.instance.profileAsync();
-      id = _resolverIdUsuarioRol(profile);
+      id = profile.idPersonalActivo;
     }
 
     if (!mounted) return;

@@ -114,23 +114,17 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
 
   bool _esEventoDelUsuario(Map<String, dynamic> payload) {
     final notificacion = payload['notificacion'];
-    final idPersonalEvento =
-        payload['idPersonal']?.toString() ??
-        (notificacion is Map ? notificacion['idPersonal']?.toString() : null);
+    final idUsuarioEvento =
+        payload['idUsuario']?.toString() ??
+        (notificacion is Map ? notificacion['idUsuario']?.toString() : null);
 
-    final profile = Auth.instance.profile;
-    final candidatosUsuario = <String>{
-      if (profile.id != null && profile.id!.isNotEmpty) profile.id!,
-      if (profile.idUsuarioRol != null && profile.idUsuarioRol!.isNotEmpty)
-        profile.idUsuarioRol!,
-      if (profile.idRol != null && profile.idRol!.isNotEmpty) profile.idRol!,
-    };
-
-    if (idPersonalEvento == null || idPersonalEvento.isEmpty) {
+    if (idUsuarioEvento == null || idUsuarioEvento.isEmpty) {
       return true;
     }
 
-    return candidatosUsuario.contains(idPersonalEvento);
+    final idUsuarioActual = Auth.instance.profile.idUsuarioActivo;
+    if (idUsuarioActual.isEmpty) return false;
+    return idUsuarioEvento == idUsuarioActual;
   }
 
   void _actualizarBadgeNoLeidas() {
@@ -442,7 +436,7 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
   bool _esAsignadaAlUsuarioLogueado(CitaMedica cita) {
     return CitasUtils.esMedicoAsignado(
       cita,
-      Auth.instance.profile.idUsuarioRol ?? '',
+      Auth.instance.profile.idPersonalActivo,
     );
   }
 

@@ -123,15 +123,15 @@ class CitasUtils {
 
   static bool esAdministrador(dynamic perfil) => tieneRol('ADMINISTRADOR', perfil);
 
-  static bool esMedicoAsignado(CitaMedica cita, String idUsuarioRol) {
+  static bool esMedicoAsignado(CitaMedica cita, String idUsuario) {
     final medicoId = cita.medicoId.trim();
-    final usuarioRol = idUsuarioRol.trim();
-    if (medicoId.isEmpty || usuarioRol.isEmpty) return false;
-    return medicoId == usuarioRol;
+    final usuarioActual = idUsuario.trim();
+    if (medicoId.isEmpty || usuarioActual.isEmpty) return false;
+    return medicoId == usuarioActual;
   }
 
   static bool puedeGestionarSolicitada(CitaMedica cita, dynamic perfil) {
-    return esMedicoAsignado(cita, perfil.idUsuarioRol ?? '') ||
+    return esMedicoAsignado(cita, perfil.idPersonalActivo ?? '') ||
         esAdministrador(perfil);
   }
 
