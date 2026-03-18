@@ -11,6 +11,7 @@ import 'package:red_neuro_app/src/constants/constants.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/extensions/colores_extension.dart';
 import 'package:red_neuro_app/src/models/personal_salud.dart';
+import 'package:red_neuro_app/src/models/rol.dart';
 import 'package:red_neuro_app/src/models/user.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
@@ -68,7 +69,6 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     _cargarUsuarioActual();
   }
 
-
   Rol? _resolverRolActivo(Usuario profile) {
     final roles = profile.roles;
     if (roles.isEmpty) return null;
@@ -95,7 +95,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     }
   }
 
-  bool _esRolAdministrador(String rol) => _normalizarRol(rol) == 'ADMINISTRADOR';
+  bool _esRolAdministrador(String rol) =>
+      _normalizarRol(rol) == 'ADMINISTRADOR';
 
   bool _esRolPersonalAdministrador(String rol) =>
       _normalizarRol(rol) == 'PERSONAL_SALUD_ADMIN';
@@ -104,7 +105,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     final activeRole = _resolverRolActivo(profile);
     if (activeRole == null) {
       final fallbackRol = profile.rol ?? '';
-      return _esRolAdministrador(fallbackRol) || _esRolPersonalAdministrador(fallbackRol);
+      return _esRolAdministrador(fallbackRol) ||
+          _esRolPersonalAdministrador(fallbackRol);
     }
 
     if (_esRolAdministrador(activeRole.rol)) return true;
@@ -261,9 +263,6 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     });
     _cargarPersonalSalud(page: 1);
   }
-
-
-
 
   Widget _buildFilterSummary() {
     if (_filtro.isEmpty) return const SizedBox.shrink();
@@ -503,172 +502,179 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
         ].join(' · ');
         return StatefulBuilder(
           builder: (context, setStateSheet) => Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-          ),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Información del personal',
-                        style: Theme.of(context).textTheme.titleMedium,
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Información del personal',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
                       ),
-                    ),
-                    IconButton(
-                      onPressed: () => Navigator.pop(context),
-                      icon: const Icon(Icons.close),
-                      tooltip: 'Cerrar',
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  dense: true,
-                  leading: _buildAvatar(persona, radius: 28),
-                  title: Text(persona.nombreCompleto),
-                  subtitle: contacto.isEmpty ? null : Text(contacto),
-                  trailing: _buildEstadoChip(persona.estaActivo),
-                ),
-                const SizedBox(height: 8),
-                _buildTipoPersonalChip(persona.esSupervisor),
-                const SizedBox(height: 6),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    if ((persona.correoElectronico ?? '').trim().isNotEmpty)
-                      CopyableInfoPill(
-                        icon: Icons.alternate_email,
-                        label: 'Correo',
-                        value: persona.correoElectronico!.trim(),
-                        copied: copiedField == 'correo',
-                        onTap: () async {
-                          await _copiarDato(persona.correoElectronico!.trim());
-                          if (!mounted) return;
-                          setStateSheet(() => copiedField = 'correo');
-                        },
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close),
+                        tooltip: 'Cerrar',
                       ),
-                    if ((persona.telefono ?? '').trim().isNotEmpty)
-                      CopyableInfoPill(
-                        icon: Icons.phone_outlined,
-                        label: 'Celular',
-                        value: persona.telefono!.trim(),
-                        copied: copiedField == 'celular',
-                        onTap: () async {
-                          await _copiarDato(persona.telefono!.trim());
-                          if (!mounted) return;
-                          setStateSheet(() => copiedField = 'celular');
-                        },
-                      ),
-                    if ((persona.nroDocumento ?? '').trim().isNotEmpty)
-                      CopyableInfoPill(
-                        icon: Icons.badge_outlined,
-                        label: 'Documento',
-                        value: persona.nroDocumento!.trim(),
-                      ),
-                    if ((persona.genero ?? '').trim().isNotEmpty)
-                      CopyableInfoPill(
-                        icon: Icons.wc_outlined,
-                        label: 'Género',
-                        value: _textoGenero(persona.genero!.trim()),
-                      ),
-                    if (_formatearFechaInicial(persona.fechaNacimiento).trim().isNotEmpty)
-                      CopyableInfoPill(
-                        icon: Icons.cake_outlined,
-                        label: 'Nacimiento',
-                        value: _formatearFechaInicial(persona.fechaNacimiento),
-                      ),
-                    if (persona.esSupervisor)
-                      CopyableInfoPill(
-                        icon: Icons.admin_panel_settings_outlined,
-                        label: 'Rol',
-                        value: 'Administrador',
-                      ),
-                  ],
-                ),
-                if (ocupacion.isNotEmpty) ...[
-                  const SizedBox(height: 14),
-                  Text(
-                    'Ocupación',
-                    style: Theme.of(context).textTheme.titleSmall,
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    dense: true,
+                    leading: _buildAvatar(persona, radius: 28),
+                    title: Text(persona.nombreCompleto),
+                    subtitle: contacto.isEmpty ? null : Text(contacto),
+                    trailing: _buildEstadoChip(persona.estaActivo),
                   ),
                   const SizedBox(height: 8),
-                  _buildOcupacionesCell(persona),
-                ],
-                if (!esUsuarioActual) ...[
-                  const SizedBox(height: 18),
-                  SafeArea(
-                    top: false,
-                    child: Wrap(
-                      spacing: 10,
-                      runSpacing: 10,
-                      children: [
-                        FilledButton.tonalIcon(
-                          onPressed: _processingAction
-                              ? null
-                              : () {
-                                  Navigator.pop(context);
-                                  _abrirFormulario(personal: persona);
-                                },
-                          style: FilledButton.styleFrom(
-                            backgroundColor: _theme.primary,
-                            foregroundColor: _theme.white,
-                          ),
-                          icon: const Icon(Icons.edit_outlined),
-                          label: const Text('Editar'),
+                  _buildTipoPersonalChip(persona.esSupervisor),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      if ((persona.correoElectronico ?? '').trim().isNotEmpty)
+                        CopyableInfoPill(
+                          icon: Icons.alternate_email,
+                          label: 'Correo',
+                          value: persona.correoElectronico!.trim(),
+                          copied: copiedField == 'correo',
+                          onTap: () async {
+                            await _copiarDato(
+                              persona.correoElectronico!.trim(),
+                            );
+                            if (!mounted) return;
+                            setStateSheet(() => copiedField = 'correo');
+                          },
                         ),
-                        if (_canRestorePassword)
-                          FilledButton.icon(
+                      if ((persona.telefono ?? '').trim().isNotEmpty)
+                        CopyableInfoPill(
+                          icon: Icons.phone_outlined,
+                          label: 'Celular',
+                          value: persona.telefono!.trim(),
+                          copied: copiedField == 'celular',
+                          onTap: () async {
+                            await _copiarDato(persona.telefono!.trim());
+                            if (!mounted) return;
+                            setStateSheet(() => copiedField = 'celular');
+                          },
+                        ),
+                      if ((persona.nroDocumento ?? '').trim().isNotEmpty)
+                        CopyableInfoPill(
+                          icon: Icons.badge_outlined,
+                          label: 'Documento',
+                          value: persona.nroDocumento!.trim(),
+                        ),
+                      if ((persona.genero ?? '').trim().isNotEmpty)
+                        CopyableInfoPill(
+                          icon: Icons.wc_outlined,
+                          label: 'Género',
+                          value: _textoGenero(persona.genero!.trim()),
+                        ),
+                      if (_formatearFechaInicial(
+                        persona.fechaNacimiento,
+                      ).trim().isNotEmpty)
+                        CopyableInfoPill(
+                          icon: Icons.cake_outlined,
+                          label: 'Nacimiento',
+                          value: _formatearFechaInicial(
+                            persona.fechaNacimiento,
+                          ),
+                        ),
+                      if (persona.esSupervisor)
+                        CopyableInfoPill(
+                          icon: Icons.admin_panel_settings_outlined,
+                          label: 'Rol',
+                          value: 'Administrador',
+                        ),
+                    ],
+                  ),
+                  if (ocupacion.isNotEmpty) ...[
+                    const SizedBox(height: 14),
+                    Text(
+                      'Ocupación',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    _buildOcupacionesCell(persona),
+                  ],
+                  if (!esUsuarioActual) ...[
+                    const SizedBox(height: 18),
+                    SafeArea(
+                      top: false,
+                      child: Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: [
+                          FilledButton.tonalIcon(
                             onPressed: _processingAction
                                 ? null
                                 : () {
                                     Navigator.pop(context);
-                                    _restaurarContrasenaPersonal(persona);
+                                    _abrirFormulario(personal: persona);
                                   },
-                            icon: const Icon(Icons.lock_reset_outlined),
-                            label: const Text('Restaurar contraseña'),
+                            style: FilledButton.styleFrom(
+                              backgroundColor: _theme.primary,
+                              foregroundColor: _theme.white,
+                            ),
+                            icon: const Icon(Icons.edit_outlined),
+                            label: const Text('Editar'),
                           ),
-                        OutlinedButton.icon(
-                          onPressed: _processingAction
-                              ? null
-                              : () {
-                                  Navigator.pop(context);
-                                  _confirmarCambioEstado(persona);
-                                },
-                          style: OutlinedButton.styleFrom(
-                            side: BorderSide(
-                              color: persona.estaActivo
+                          if (_canRestorePassword)
+                            FilledButton.icon(
+                              onPressed: _processingAction
+                                  ? null
+                                  : () {
+                                      Navigator.pop(context);
+                                      _restaurarContrasenaPersonal(persona);
+                                    },
+                              icon: const Icon(Icons.lock_reset_outlined),
+                              label: const Text('Restaurar contraseña'),
+                            ),
+                          OutlinedButton.icon(
+                            onPressed: _processingAction
+                                ? null
+                                : () {
+                                    Navigator.pop(context);
+                                    _confirmarCambioEstado(persona);
+                                  },
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(
+                                color: persona.estaActivo
+                                    ? _theme.primary
+                                    : Colors.green.shade700,
+                              ),
+                              foregroundColor: persona.estaActivo
                                   ? _theme.primary
                                   : Colors.green.shade700,
                             ),
-                            foregroundColor: persona.estaActivo
-                                ? _theme.primary
-                                : Colors.green.shade700,
+                            icon: Icon(
+                              persona.estaActivo
+                                  ? Icons.person_off_outlined
+                                  : Icons.person_add_alt_1_outlined,
+                            ),
+                            label: Text(
+                              persona.estaActivo ? 'Desactivar' : 'Activar',
+                            ),
                           ),
-                          icon: Icon(
-                            persona.estaActivo
-                                ? Icons.person_off_outlined
-                                : Icons.person_add_alt_1_outlined,
-                          ),
-                          label: Text(
-                            persona.estaActivo ? 'Desactivar' : 'Activar',
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
-        ));
+        );
       },
     );
   }
@@ -805,7 +811,10 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                 segundoApellido: segundoApellido,
                               ),
                               onChange: (value) {
-                                _normalizarTextoMayusculas(primerApellido, value);
+                                _normalizarTextoMayusculas(
+                                  primerApellido,
+                                  value,
+                                );
                                 if (apellidoErrorText.isNotEmpty) {
                                   setStateDialog(() {
                                     apellidoErrorText = '';
@@ -823,8 +832,9 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                             title: 'Nombres',
                             controller: nombres,
                             requiredData: true,
-                            validate: (value, alias) =>
-                                (value?.isEmpty ?? true) ? 'Campo requerido' : '',
+                            validate: (value, alias) => (value?.isEmpty ?? true)
+                                ? 'Campo requerido'
+                                : '',
                             onChange: (value) {
                               _normalizarTextoMayusculas(nombres, value);
                             },
@@ -867,7 +877,10 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                 segundoApellido: segundoApellido,
                               ),
                               onChange: (value) {
-                                _normalizarTextoMayusculas(segundoApellido, value);
+                                _normalizarTextoMayusculas(
+                                  segundoApellido,
+                                  value,
+                                );
                                 if (apellidoErrorText.isNotEmpty) {
                                   setStateDialog(() {
                                     apellidoErrorText = '';
@@ -905,7 +918,10 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                               segundoApellido: segundoApellido,
                             ),
                             onChange: (value) {
-                              _normalizarTextoMayusculas(segundoApellido, value);
+                              _normalizarTextoMayusculas(
+                                segundoApellido,
+                                value,
+                              );
                               if (apellidoErrorText.isNotEmpty) {
                                 setStateDialog(() {
                                   apellidoErrorText = '';
@@ -919,8 +935,9 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                             controller: nroDocumento,
                             requiredData: true,
                             onlyNumbers: true,
-                            validate: (value, alias) =>
-                                (value?.isEmpty ?? true) ? 'Campo requerido' : '',
+                            validate: (value, alias) => (value?.isEmpty ?? true)
+                                ? 'Campo requerido'
+                                : '',
                           ),
                         ],
                       ),
@@ -1005,14 +1022,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                       ),
                       initialValue: generoSeleccionado,
                       items: const [
-                        DropdownMenuItem(
-                          value: 'F',
-                          child: Text('Femenino'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'M',
-                          child: Text('Masculino'),
-                        ),
+                        DropdownMenuItem(value: 'F', child: Text('Femenino')),
+                        DropdownMenuItem(value: 'M', child: Text('Masculino')),
                       ],
                       onChanged: (value) {
                         setStateDialog(() {
@@ -1074,7 +1085,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                             obscure: true,
                             requiredData: personal == null,
                             validate: (value, alias) {
-                              if (personal != null && (value?.isEmpty ?? true)) {
+                              if (personal != null &&
+                                  (value?.isEmpty ?? true)) {
                                 return '';
                               }
                               return (value?.isEmpty ?? true)
@@ -1091,7 +1103,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                             obscure: true,
                             requiredData: personal == null,
                             validate: (value, alias) {
-                              if (personal != null && (value?.isEmpty ?? true)) {
+                              if (personal != null &&
+                                  (value?.isEmpty ?? true)) {
                                 return '';
                               }
                               return (value?.isEmpty ?? true)
@@ -1270,7 +1283,10 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                               submitting = true;
                               submitErrorText = null;
                             });
-                            final error = await _guardarPersonal(body, personal);
+                            final error = await _guardarPersonal(
+                              body,
+                              personal,
+                            );
                             if (!mounted) return;
                             if (error == null) {
                               Navigator.pop(context);
@@ -1291,8 +1307,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
           },
         );
       },
-    ).whenComplete(() {
-    });
+    ).whenComplete(() {});
   }
 
   Future<String?> _guardarPersonal(
@@ -1391,7 +1406,6 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     setState(() => _processingAction = false);
   }
 
-
   Future<void> _restaurarContrasenaPersonal(PersonalSalud personal) async {
     if (_processingAction) return;
 
@@ -1462,8 +1476,12 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                   child: const Text('Cancelar'),
                 ),
                 FilledButton(
-                  onPressed: canAccept ? () => Navigator.pop(context, true) : null,
-                  child: Text(canAccept ? 'Aceptar' : 'Aceptar (${countdown}s)'),
+                  onPressed: canAccept
+                      ? () => Navigator.pop(context, true)
+                      : null,
+                  child: Text(
+                    canAccept ? 'Aceptar' : 'Aceptar (${countdown}s)',
+                  ),
                 ),
               ],
             );
@@ -1622,9 +1640,9 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
               texto,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -1693,7 +1711,9 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                         persona.nombreCompleto,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: Theme.of(context).textTheme.titleMedium,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.titleMedium,
                                       ),
                                     ),
                                     const SizedBox(width: 8),
@@ -1714,7 +1734,9 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                         datoPrincipal.value,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: Theme.of(context).textTheme.bodySmall,
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodySmall,
                                       ),
                                     ),
                                   ],
@@ -1757,172 +1779,183 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
         child: Scaffold(
           backgroundColor: _theme.transparent,
           appBar: TrayModuleHeader(
-          titulo: 'Personal de salud',
-          subtitulo:
-              'Administra perfiles, ocupación y permisos administrativos.',
-          isCompact: isNarrowHeader,
-          actions: [
-            IconButton(
-              onPressed: _processingAction ? null : _abrirFiltros,
-              icon: Icon(Icons.filter_list, color: _theme.white),
-              style: IconButton.styleFrom(
-                minimumSize: const Size(36, 36),
-                side: BorderSide(
-                  color: _theme.white.withValues(alpha: 0.35),
+            titulo: 'Personal de salud',
+            subtitulo:
+                'Administra perfiles, ocupación y permisos administrativos.',
+            isCompact: isNarrowHeader,
+            actions: [
+              IconButton(
+                onPressed: _processingAction ? null : _abrirFiltros,
+                icon: Icon(Icons.filter_list, color: _theme.white),
+                style: IconButton.styleFrom(
+                  minimumSize: const Size(36, 36),
+                  side: BorderSide(color: _theme.white.withValues(alpha: 0.35)),
                 ),
               ),
-            ),
-            IconButton(
-              onPressed: _processingAction ? null : () => _abrirFormulario(),
-              icon: Icon(Icons.add, color: _theme.white),
-              style: IconButton.styleFrom(
-                minimumSize: const Size(36, 36),
-                side: BorderSide(
-                  color: _theme.white.withValues(alpha: 0.35),
+              IconButton(
+                onPressed: _processingAction ? null : () => _abrirFormulario(),
+                icon: Icon(Icons.add, color: _theme.white),
+                style: IconButton.styleFrom(
+                  minimumSize: const Size(36, 36),
+                  side: BorderSide(color: _theme.white.withValues(alpha: 0.35)),
                 ),
               ),
-            ),
-          ],
-        ),
-        body: Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildFilterSummary(),
-                  const SizedBox(height: 12),
-                  if (!isCompact)
-                    CustomDesktopDataTable(
-                      titulo: 'Gestión de personal de salud',
-                      descripcion:
-                          'Consulta, filtra y administra el personal de salud.',
-                      acciones: [
-                        IconButton(
-                          onPressed:
-                              _processingAction ? null : _cargarPersonalSalud,
-                          icon: const Icon(Icons.refresh),
-                        ),
-                      ],
-                      columnas: [
-                        CriterioOrdenType(nombre: 'Nombre'),
-                        CriterioOrdenType(nombre: 'Documento'),
-                        CriterioOrdenType(nombre: 'Estado'),
-                        CriterioOrdenType(nombre: 'Ocupación'),
-                        CriterioOrdenType(nombre: 'Admin'),
-                        CriterioOrdenType(nombre: 'Acciones'),
-                      ],
-                      contenidoTabla: _personal
-                          .map(
-                            (persona) => [
-                              Row(
-                                children: [
-                                  _buildAvatar(persona, radius: 16),
-                                  const SizedBox(width: 8),
-                                  Expanded(child: Text(persona.nombreCompleto)),
-                                ],
-                              ),
-                              Text(persona.nroDocumento ?? '-'),
-                              Chip(
-                                label: Text(
-                                  persona.estaActivo ? 'Activo' : 'Inactivo',
+            ],
+          ),
+          body: Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildFilterSummary(),
+                    const SizedBox(height: 12),
+                    if (!isCompact)
+                      CustomDesktopDataTable(
+                        titulo: 'Gestión de personal de salud',
+                        descripcion:
+                            'Consulta, filtra y administra el personal de salud.',
+                        acciones: [
+                          IconButton(
+                            onPressed: _processingAction
+                                ? null
+                                : _cargarPersonalSalud,
+                            icon: const Icon(Icons.refresh),
+                          ),
+                        ],
+                        columnas: [
+                          CriterioOrdenType(nombre: 'Nombre'),
+                          CriterioOrdenType(nombre: 'Documento'),
+                          CriterioOrdenType(nombre: 'Estado'),
+                          CriterioOrdenType(nombre: 'Ocupación'),
+                          CriterioOrdenType(nombre: 'Admin'),
+                          CriterioOrdenType(nombre: 'Acciones'),
+                        ],
+                        contenidoTabla: _personal
+                            .map(
+                              (persona) => [
+                                Row(
+                                  children: [
+                                    _buildAvatar(persona, radius: 16),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(persona.nombreCompleto),
+                                    ),
+                                  ],
                                 ),
-                                backgroundColor: (persona.estaActivo
-                                        ? Colors.green
-                                        : Colors.grey)
-                                    .withValues(alpha: .15),
-                                labelStyle: TextStyle(
-                                  color: persona.estaActivo
-                                      ? Colors.green.shade700
-                                      : Colors.grey.shade700,
-                                  fontWeight: FontWeight.w600,
+                                Text(persona.nroDocumento ?? '-'),
+                                Chip(
+                                  label: Text(
+                                    persona.estaActivo ? 'Activo' : 'Inactivo',
+                                  ),
+                                  backgroundColor:
+                                      (persona.estaActivo
+                                              ? Colors.green
+                                              : Colors.grey)
+                                          .withValues(alpha: .15),
+                                  labelStyle: TextStyle(
+                                    color: persona.estaActivo
+                                        ? Colors.green.shade700
+                                        : Colors.grey.shade700,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                              ),
-                              _buildOcupacionesCell(persona),
-                              persona.esSupervisor
-                                  ? Chip(
-                                      label: const Text('Admin'),
-                                      backgroundColor: _theme.primary.withValues(
-                                        alpha: .15,
-                                      ),
-                                      labelStyle: TextStyle(
-                                        color: _theme.primary,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    )
-                                  : const Text('—'),
-                              Row(
-                                children: [
-                                  if (!_esUsuarioActual(persona))
-                                    IconButton(
-                                      tooltip: 'Editar',
-                                      icon: const Icon(Icons.edit_outlined),
-                                      onPressed: _processingAction
-                                          ? null
-                                          : () => _abrirFormulario(
+                                _buildOcupacionesCell(persona),
+                                persona.esSupervisor
+                                    ? Chip(
+                                        label: const Text('Admin'),
+                                        backgroundColor: _theme.primary
+                                            .withValues(alpha: .15),
+                                        labelStyle: TextStyle(
+                                          color: _theme.primary,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      )
+                                    : const Text('—'),
+                                Row(
+                                  children: [
+                                    if (!_esUsuarioActual(persona))
+                                      IconButton(
+                                        tooltip: 'Editar',
+                                        icon: const Icon(Icons.edit_outlined),
+                                        onPressed: _processingAction
+                                            ? null
+                                            : () => _abrirFormulario(
                                                 personal: persona,
                                               ),
-                                    ),
-                                  IconButton(
-                                    tooltip: 'Ver detalles',
-                                    icon: const Icon(Icons.visibility_outlined),
-                                    onPressed: () =>
-                                        _mostrarDetallesPersonal(persona),
-                                  ),
-                                  if (!_esUsuarioActual(persona) && _canRestorePassword)
-                                    IconButton(
-                                      tooltip: 'Restaurar contraseña',
-                                      icon: const Icon(Icons.lock_reset_outlined),
-                                      onPressed: _processingAction
-                                          ? null
-                                          : () => _restaurarContrasenaPersonal(persona),
-                                    ),
-                                  if (!_esUsuarioActual(persona))
-                                    IconButton(
-                                      tooltip: persona.estaActivo
-                                          ? 'Inactivar'
-                                          : 'Activar',
-                                      icon: Icon(
-                                        persona.estaActivo
-                                            ? Icons.person_off_outlined
-                                            : Icons.person_add_alt_1_outlined,
                                       ),
-                                      onPressed: _processingAction
-                                          ? null
-                                          : () =>
-                                                _confirmarCambioEstado(persona),
+                                    IconButton(
+                                      tooltip: 'Ver detalles',
+                                      icon: const Icon(
+                                        Icons.visibility_outlined,
+                                      ),
+                                      onPressed: () =>
+                                          _mostrarDetallesPersonal(persona),
                                     ),
-                                ],
-                              ),
-                            ],
-                          )
-                          .toList(),
-                      paginacion: _buildPagination(),
-                      cargando: _loading,
-                    )
-                  else ...[
-                    const SizedBox(height: 12),
-                    Expanded(
-                      child: Column(
-                        children: [
-                          Expanded(child: _buildCompactList()),
-                          _buildLoadingMoreIndicator(),
-                        ],
+                                    if (!_esUsuarioActual(persona) &&
+                                        _canRestorePassword)
+                                      IconButton(
+                                        tooltip: 'Restaurar contraseña',
+                                        icon: const Icon(
+                                          Icons.lock_reset_outlined,
+                                        ),
+                                        onPressed: _processingAction
+                                            ? null
+                                            : () =>
+                                                  _restaurarContrasenaPersonal(
+                                                    persona,
+                                                  ),
+                                      ),
+                                    if (!_esUsuarioActual(persona))
+                                      IconButton(
+                                        tooltip: persona.estaActivo
+                                            ? 'Inactivar'
+                                            : 'Activar',
+                                        icon: Icon(
+                                          persona.estaActivo
+                                              ? Icons.person_off_outlined
+                                              : Icons.person_add_alt_1_outlined,
+                                        ),
+                                        onPressed: _processingAction
+                                            ? null
+                                            : () => _confirmarCambioEstado(
+                                                persona,
+                                              ),
+                                      ),
+                                  ],
+                                ),
+                              ],
+                            )
+                            .toList(),
+                        paginacion: _buildPagination(),
+                        cargando: _loading,
+                      )
+                    else ...[
+                      const SizedBox(height: 12),
+                      Expanded(
+                        child: Column(
+                          children: [
+                            Expanded(child: _buildCompactList()),
+                            _buildLoadingMoreIndicator(),
+                          ],
+                        ),
                       ),
-                    ),
+                    ],
                   ],
-                ],
-              ),
-            ),
-            if (_processingAction)
-              const Positioned.fill(
-                child: ColoredBox(
-                  color: Colors.black26,
-                  child: Center(child: CircularProgressIndicator()),
                 ),
               ),
-          ],
+              if (_processingAction)
+                const Positioned.fill(
+                  child: ColoredBox(
+                    color: Colors.black26,
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                ),
+            ],
           ),
         ),
       ),
