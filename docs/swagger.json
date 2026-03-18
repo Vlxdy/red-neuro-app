@@ -3778,7 +3778,7 @@
             "name": "idEjecutor",
             "required": false,
             "in": "query",
-            "description": "Identificador del usuario ejecutor (usuario-rol)",
+            "description": "Identificador del usuario ejecutor",
             "schema": {
               "example": "42",
               "type": "string"
@@ -7085,7 +7085,7 @@
         "properties": {
           "id": {
             "type": "string",
-            "description": "Identificador único del personal de salud",
+            "description": "Identificador del usuario asociado al personal de salud",
             "example": "a8f4c1d2-32a1-4c2b-bff1-87fa92c1a223"
           },
           "estado": {
@@ -7496,7 +7496,7 @@
           },
           "usuarioProgramoId": {
             "type": "string",
-            "description": "UsuarioRol que programó inicialmente la cita",
+            "description": "Usuario que programó inicialmente la cita",
             "example": "88"
           },
           "usuarioProgramo": {
@@ -7509,7 +7509,7 @@
           },
           "usuarioEnvioId": {
             "type": "string",
-            "description": "UsuarioRol que envió la cita al flujo operativo",
+            "description": "Usuario que envió la cita al flujo operativo",
             "example": "91"
           },
           "usuarioEnvio": {
@@ -8121,7 +8121,7 @@
           },
           "idEjecutor": {
             "type": "string",
-            "description": "Identificador del usuario que ejecutó la acción (usuario-rol)"
+            "description": "Identificador del usuario que ejecutó la acción"
           },
           "comentario": {
             "type": "string",

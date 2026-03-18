@@ -7,15 +7,15 @@ class SocketService {
   static final SocketService instance = SocketService._();
 
   io.Socket? _socket;
-  String? _idUsuarioRol;
+  String? _idUsuario;
   final Map<String, Map<Function, dynamic Function(dynamic)>> _wrappedHandlers =
       {};
 
   bool get isConnected => _socket?.connected == true;
 
   /// Conecta el socket al namespace unificado de realtime.
-  void connect(String idUsuarioRol) {
-    _idUsuarioRol = idUsuarioRol;
+  void connect(String idUsuario) {
+    _idUsuario = idUsuario;
     if (_socket != null) {
       if (_socket!.connected == true) {
         debugPrint('♻️ Socket ya conectado, revalidando suscripción');
@@ -62,7 +62,6 @@ class SocketService {
       debugPrint('🔌 Socket error: $error');
     });
 
-    // Logs para corroborar todo el tráfico esperado en consola.
     const debugEvents = <String>[
       'notificaciones:nueva',
       'notificaciones:vista',
@@ -88,9 +87,9 @@ class SocketService {
   }
 
   void subscribeNotificaciones() {
-    if (_idUsuarioRol == null || _idUsuarioRol!.isEmpty) return;
-    emit('notificaciones:subscribe', {'idUsuarioRol': _idUsuarioRol});
-    debugPrint('✅ Suscripción notificaciones con idUsuarioRol=$_idUsuarioRol');
+    if (_idUsuario == null || _idUsuario!.isEmpty) return;
+    emit('notificaciones:subscribe', {'idUsuario': _idUsuario});
+    debugPrint('✅ Suscripción notificaciones con idUsuario=$_idUsuario');
   }
 
   void ensureSubscription() {
@@ -104,7 +103,6 @@ class SocketService {
     _socket!.connect();
   }
 
-  /// Suscribe un listener a un evento
   void on(String event, void Function(dynamic data) handler) {
     final wrapped = (dynamic data) {
       debugPrint('👂 listener event=$event payload=$data');
@@ -114,7 +112,6 @@ class SocketService {
     _socket?.on(event, wrapped);
   }
 
-  /// Elimina listeners de un evento
   void off(String event, [dynamic Function(dynamic)? handler]) {
     if (handler == null) {
       _socket?.off(event);
@@ -125,12 +122,11 @@ class SocketService {
     _socket?.off(event, wrapped ?? handler);
   }
 
-  /// Desconecta y destruye el socket
   void disconnect() {
     _socket?.disconnect();
     _socket?.dispose();
     _socket = null;
-    _idUsuarioRol = null;
+    _idUsuario = null;
     _wrappedHandlers.clear();
   }
 }
