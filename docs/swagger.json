@@ -2745,16 +2745,6 @@
             }
           }
         ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ConfirmarCitaDto"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "",
@@ -7073,6 +7063,25 @@
             "description": "Estado del personal de salud en su rol",
             "example": "ACTIVO"
           },
+          "roles": {
+            "type": "array",
+            "description": "Roles operativos asignados al personal de salud",
+            "example": [
+              "PERSONAL",
+              "COORDINADOR"
+            ],
+            "items": {
+              "type": "string",
+              "enum": [
+                "ADMINISTRADOR",
+                "JEFE",
+                "COORDINADOR",
+                "PERSONAL",
+                "PROFESIONAL_INVITADO",
+                "*"
+              ]
+            }
+          },
           "nroDocumento": {
             "type": "string",
             "description": "Número de documento de identidad",
@@ -7809,21 +7818,6 @@
             "type": "string",
             "description": "Personal de salud a asignar para enviar como solicitada",
             "example": "42"
-          }
-        }
-      },
-      "ConfirmarCitaDto": {
-        "type": "object",
-        "properties": {
-          "fechaInicio": {
-            "type": "string",
-            "description": "Nueva fecha/hora de inicio opcional para confirmar la cita solicitada",
-            "example": "2024-06-20T12:00:00Z"
-          },
-          "detalle": {
-            "type": "string",
-            "description": "Detalle opcional a ajustar antes de confirmar la cita solicitada",
-            "example": "Ajuste final coordinado en la confirmación"
           }
         }
       },
