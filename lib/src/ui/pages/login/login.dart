@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/pages/login/componentes/account_login.dart';
+import 'package:red_neuro_app/src/ui/pages/login/componentes/app_info.dart';
 import 'package:red_neuro_app/src/ui/pages/login/componentes/header.dart';
 import 'package:red_neuro_app/src/ui/pages/login/componentes/login_decor_background.dart';
 
@@ -32,6 +33,7 @@ class _LoginState extends State<Login> {
                   HeaderLogin(mensaje: 'Inicia sesión con tus credenciales'),
                   SizedBox(height: 16),
                   AccountLogin(),
+                  const AppInfo(),
                 ],
               ),
             ),

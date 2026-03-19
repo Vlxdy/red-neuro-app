@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/pages/login/componentes/credenciales.dart';
+import 'package:red_neuro_app/src/ui/pages/login/componentes/app_info.dart';
 import 'package:red_neuro_app/src/ui/pages/login/componentes/login_decor_background.dart';
 
 GlobalKey<ScaffoldMessengerState> loginAccountMessenger =
@@ -52,6 +53,8 @@ class _LoginState extends State<LoginAccount> {
                     ),
                     const SizedBox(height: 5),
                     const Credenciales(),
+                    const SizedBox(height: 8),
+                    const AppInfo(),
                     const SizedBox(height: 20),
                   ],
                 ),

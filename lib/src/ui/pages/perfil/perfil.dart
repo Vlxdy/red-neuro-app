@@ -1,4 +1,6 @@
 import 'dart:io';
+
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -432,6 +434,7 @@ class _PerfilState extends State<Perfil> {
         final Rol? activeRole = _resolveActiveRole();
         final String activeRoleLabel = _humanRoleLabel(activeRole);
         final String roleDescription = _humanRoleDescription(activeRole);
+        final PackageInfo appInfo = Auth.instance.appInfo;
 
         return TemplatePage(
           showEnvironmentBanner: false,
@@ -608,6 +611,19 @@ class _PerfilState extends State<Perfil> {
                           'clave': 'Correo electrónico',
                           'valor': _fallbackValue(profile.correoElectronico),
                           'copiable': true,
+                        },
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    PerfilInfoCard(
+                      bgColor: theme.bgCard,
+                      borderColor: theme.grey.withValues(alpha: .22),
+                      headerIcon: Icons.info_outline_rounded,
+                      headerTitle: 'Aplicación',
+                      items: <Map<String, dynamic>>[
+                        <String, dynamic>{
+                          'clave': 'Versión',
+                          'valor': appInfo.version,
                         },
                       ],
                     ),
