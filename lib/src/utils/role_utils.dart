@@ -107,6 +107,8 @@ class RoleUtils {
   static bool canManageStaff(dynamic profile) =>
       hasRole(profile, administrador) || hasRole(profile, jefe);
 
+  static bool canManageCatalogs(dynamic profile) => canManageStaff(profile);
+
   static bool canCoordinateOperation(dynamic profile) =>
       hasRole(profile, administrador) ||
       hasRole(profile, jefe) ||

@@ -85,6 +85,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
       RoleUtils.canManageStaff(profile);
 
   bool get _canCreateStaff => RoleUtils.canManageStaff(Auth.instance.profile);
+  bool get _canManageStaffActions =>
+      RoleUtils.canManageStaff(Auth.instance.profile);
 
   List<String> get _rolesCreables =>
       RoleUtils.creatableStaffRolesFor(Auth.instance.profile.rol);
@@ -592,20 +594,21 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                         spacing: 10,
                         runSpacing: 10,
                         children: [
-                          FilledButton.tonalIcon(
-                            onPressed: _processingAction
-                                ? null
-                                : () {
-                                    Navigator.pop(context);
-                                    _abrirFormulario(personal: persona);
-                                  },
-                            style: FilledButton.styleFrom(
-                              backgroundColor: _theme.primary,
-                              foregroundColor: _theme.white,
+                          if (_canManageStaffActions)
+                            FilledButton.tonalIcon(
+                              onPressed: _processingAction
+                                  ? null
+                                  : () {
+                                      Navigator.pop(context);
+                                      _abrirFormulario(personal: persona);
+                                    },
+                              style: FilledButton.styleFrom(
+                                backgroundColor: _theme.primary,
+                                foregroundColor: _theme.white,
+                              ),
+                              icon: const Icon(Icons.edit_outlined),
+                              label: const Text('Editar'),
                             ),
-                            icon: const Icon(Icons.edit_outlined),
-                            label: const Text('Editar'),
-                          ),
                           if (_canRestorePassword)
                             FilledButton.icon(
                               onPressed: _processingAction
@@ -617,32 +620,33 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                               icon: const Icon(Icons.lock_reset_outlined),
                               label: const Text('Restaurar contraseña'),
                             ),
-                          OutlinedButton.icon(
-                            onPressed: _processingAction
-                                ? null
-                                : () {
-                                    Navigator.pop(context);
-                                    _confirmarCambioEstado(persona);
-                                  },
-                            style: OutlinedButton.styleFrom(
-                              side: BorderSide(
-                                color: persona.estaActivo
+                          if (_canManageStaffActions)
+                            OutlinedButton.icon(
+                              onPressed: _processingAction
+                                  ? null
+                                  : () {
+                                      Navigator.pop(context);
+                                      _confirmarCambioEstado(persona);
+                                    },
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(
+                                  color: persona.estaActivo
+                                      ? _theme.primary
+                                      : Colors.green.shade700,
+                                ),
+                                foregroundColor: persona.estaActivo
                                     ? _theme.primary
                                     : Colors.green.shade700,
                               ),
-                              foregroundColor: persona.estaActivo
-                                  ? _theme.primary
-                                  : Colors.green.shade700,
+                              icon: Icon(
+                                persona.estaActivo
+                                    ? Icons.person_off_outlined
+                                    : Icons.person_add_alt_1_outlined,
+                              ),
+                              label: Text(
+                                persona.estaActivo ? 'Desactivar' : 'Activar',
+                              ),
                             ),
-                            icon: Icon(
-                              persona.estaActivo
-                                  ? Icons.person_off_outlined
-                                  : Icons.person_add_alt_1_outlined,
-                            ),
-                            label: Text(
-                              persona.estaActivo ? 'Desactivar' : 'Activar',
-                            ),
-                          ),
                         ],
                       ),
                     ),
@@ -2060,7 +2064,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                     : const Text('—'),
                                 Row(
                                   children: [
-                                    if (!_esUsuarioActual(persona))
+                                    if (_canManageStaffActions &&
+                                        !_esUsuarioActual(persona))
                                       IconButton(
                                         tooltip: 'Editar',
                                         icon: const Icon(Icons.edit_outlined),
@@ -2092,7 +2097,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                                     persona,
                                                   ),
                                       ),
-                                    if (!_esUsuarioActual(persona))
+                                    if (_canManageStaffActions &&
+                                        !_esUsuarioActual(persona))
                                       IconButton(
                                         tooltip: persona.estaActivo
                                             ? 'Inactivar'
