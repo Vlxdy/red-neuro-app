@@ -2,6 +2,7 @@ class PersonalSalud {
   final String id;
   final String estado;
   final String? rol;
+  final List<String> roles;
   final String nombres;
   final String? primerApellido;
   final String? segundoApellido;
@@ -17,6 +18,7 @@ class PersonalSalud {
     required this.id,
     required this.estado,
     required this.rol,
+    required this.roles,
     required this.nombres,
     required this.primerApellido,
     required this.segundoApellido,
@@ -54,10 +56,22 @@ class PersonalSalud {
     }
 
     final rol = resolveString('rol').trim();
+    final rolesRaw = json['roles'];
+    final roles = rolesRaw is List
+        ? rolesRaw
+            .map((item) => item.toString().trim())
+            .where((item) => item.isNotEmpty)
+            .toList()
+        : <String>[];
+    final rolesNormalizados = <String>{
+      ...roles,
+      if (rol.isNotEmpty) rol,
+    }.toList();
     return PersonalSalud(
       id: (json['id'] ?? '').toString(),
       estado: (json['estado'] ?? 'ACTIVO').toString(),
       rol: rol.isEmpty ? null : rol,
+      roles: rolesNormalizados,
       nroDocumento: resolveString('nroDocumento').trim().isEmpty
           ? null
           : resolveString('nroDocumento'),
