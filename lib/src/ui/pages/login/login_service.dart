@@ -1,5 +1,6 @@
 import 'package:red_neuro_app/src/config/routes.dart';
 import 'package:red_neuro_app/src/config/service_config.dart';
+import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:red_neuro_app/src/ui/global/loading_animation.dart';
