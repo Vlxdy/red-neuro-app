@@ -99,9 +99,20 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   int _listLimit = 10;
 
   late final _CitasSocketClient _socketClient;
+  String get _rolActivo =>
+      RoleUtils.normalizeRole(Auth.instance.profile.rol?.toString());
+  bool get _esProfesionalInvitado =>
+      _rolActivo == RoleUtils.profesionalInvitado;
+  bool get _puedeCrearCitas => !_esProfesionalInvitado;
   bool get _usarSoloMisCitas => widget.soloMisCitas || _soloCitasAsignadas;
+  bool get _puedeAlternarVistaCitas =>
+      _rolActivo == RoleUtils.administrador ||
+      _rolActivo == RoleUtils.jefe ||
+      _rolActivo == RoleUtils.coordinador;
+  bool get _puedeFiltrarPorPersonal =>
+      widget.mostrarFiltroMedico && _puedeAlternarVistaCitas;
   bool get _bloquearFiltroMedicoPorSoloMisCitas =>
-      _usarSoloMisCitas && widget.mostrarFiltroMedico;
+      _usarSoloMisCitas && _puedeFiltrarPorPersonal;
 
   String get _nombreMedicoActual {
     final perfil = Auth.instance.profile;
@@ -749,7 +760,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
           onBuscarChanged: (value) => setState(() => _buscarTexto = value),
           estadoController: _estadoFiltroController,
           onTapEstado: _abrirSelectorEstadoFiltro,
-          mostrarFiltroMedico: widget.mostrarFiltroMedico,
+          mostrarFiltroMedico: _puedeFiltrarPorPersonal,
           personalAsignadoController: _medicoFiltroController,
           personalAsignadoIdSeleccionado: _medicoFiltro,
           bloquearFiltroPersonalAsignado: _bloquearFiltroMedicoPorSoloMisCitas,
@@ -995,7 +1006,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
                 : 'Supervisa, crea y edita citas médicas en vivo',
             isCompact: isCompactHeader,
             actions: [
-              if (!widget.soloMisCitas)
+              if (!widget.soloMisCitas && _puedeAlternarVistaCitas)
                 IconButton(
                   onPressed: () async {
                     final nuevoValor = !_soloCitasAsignadas;
@@ -1109,15 +1120,17 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
                             nombreMedico: _nombreMedico,
                             iconoTipoCita: _iconoTipoCita,
                             onTapCita: (cita) => _abrirCitaSegunEstado(cita),
-                            onTapHora: (hour) {
-                              final fechaBase = DateTime(
-                                _agendaDay.year,
-                                _agendaDay.month,
-                                _agendaDay.day,
-                                hour,
-                              );
-                              _abrirFormulario(fechaBase: fechaBase);
-                            },
+                            onTapHora: _puedeCrearCitas
+                                ? (hour) {
+                                    final fechaBase = DateTime(
+                                      _agendaDay.year,
+                                      _agendaDay.month,
+                                      _agendaDay.day,
+                                      hour,
+                                    );
+                                    _abrirFormulario(fechaBase: fechaBase);
+                                  }
+                                : (_) {},
                             onRefresh: _refreshAgenda,
                           ),
                         ),
@@ -1149,14 +1162,15 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
                               ),
                             ),
                           ),
-                        FloatingActionButton(
-                          heroTag: 'citas_fab_nueva',
-                          mini: true,
-                          onPressed: () =>
-                              _abrirFormulario(fechaBase: _selectedDay),
-                          backgroundColor: _theme.primary,
-                          child: Icon(Icons.add, color: _theme.white),
-                        ),
+                        if (_puedeCrearCitas)
+                          FloatingActionButton(
+                            heroTag: 'citas_fab_nueva',
+                            mini: true,
+                            onPressed: () =>
+                                _abrirFormulario(fechaBase: _selectedDay),
+                            backgroundColor: _theme.primary,
+                            child: Icon(Icons.add, color: _theme.white),
+                          ),
                       ],
                     ),
                   ),

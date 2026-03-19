@@ -8,6 +8,7 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:red_neuro_app/src/config/form_controller.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
+import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/models/paciente.dart';
 import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
 import 'package:red_neuro_app/src/ui/common/customdatatable/custom_datatable.dart';
@@ -17,6 +18,7 @@ import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/pages/pacientes/pacientes_service.dart';
+import 'package:red_neuro_app/src/utils/role_utils.dart';
 
 final GlobalKey<ScaffoldMessengerState> pacientesMessenger =
     GlobalKey<ScaffoldMessengerState>();
@@ -45,6 +47,13 @@ class _PacientesPageState extends State<PacientesPage> with FormController {
 
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+
+  String get _rolActivo =>
+      RoleUtils.normalizeRole(Auth.instance.profile.rol?.toString());
+
+  bool get _puedeCrearPacientes =>
+      _rolActivo != RoleUtils.personal &&
+      _rolActivo != RoleUtils.profesionalInvitado;
 
   @override
   void initState() {
@@ -852,16 +861,17 @@ class _PacientesPageState extends State<PacientesPage> with FormController {
                   ),
                 ),
               ),
-              IconButton(
-                onPressed: () => _abrirFormulario(),
-                icon: Icon(Icons.add, color: _theme.white),
-                style: IconButton.styleFrom(
-                  minimumSize: const Size(36, 36),
-                  side: BorderSide(
-                    color: _theme.white.withValues(alpha: 0.35),
+              if (_puedeCrearPacientes)
+                IconButton(
+                  onPressed: () => _abrirFormulario(),
+                  icon: Icon(Icons.add, color: _theme.white),
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size(36, 36),
+                    side: BorderSide(
+                      color: _theme.white.withValues(alpha: 0.35),
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
           body: Padding(
