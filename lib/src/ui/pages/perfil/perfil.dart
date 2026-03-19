@@ -22,6 +22,7 @@ import 'package:red_neuro_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena
 import 'package:red_neuro_app/src/ui/pages/perfil/componentes/perfil_info_card.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/pages/perfil/perfil_service.dart';
+import 'package:red_neuro_app/src/plugins/seguridad/seguridad.dart';
 
 GlobalKey<ScaffoldMessengerState> perfilMessenger =
     GlobalKey<ScaffoldMessengerState>();
@@ -52,11 +53,15 @@ class _PerfilState extends State<Perfil> {
   final Map<String, Uint8List?> _avatarCache = <String, Uint8List?>{};
   bool _loading = true;
   bool _loggingOut = false;
+  bool? _biometricAvailable;
+  bool? _biometricLoginEnabled;
+  bool _updatingBiometricPreference = false;
 
   @override
   void initState() {
     super.initState();
     _loadProfile();
+    _loadSecurityPreferences();
   }
 
   Future<void> _loadProfile() async {
@@ -69,6 +74,76 @@ class _PerfilState extends State<Perfil> {
           profile.idRol ?? (_roles.isNotEmpty ? _roles.first.idRol : '');
       _loading = false;
     });
+  }
+
+  Future<void> _loadSecurityPreferences() async {
+    final bool hasBiometrics = await Seguridad.instance.hasBiometrics;
+    final bool fingerprintEnabled =
+        await Seguridad.instance.hasFingeprintEnabled;
+
+    if (!mounted) return;
+    setState(() {
+      _biometricAvailable = hasBiometrics;
+      _biometricLoginEnabled = hasBiometrics ? fingerprintEnabled : false;
+    });
+  }
+
+  Future<void> _updateBiometricLogin(bool enabled) async {
+    if (_updatingBiometricPreference) return;
+
+    final ThemeController theme = ThemeController.instance;
+    final bool hasBiometrics = await Seguridad.instance.hasBiometrics;
+
+    if (!mounted) return;
+
+    if (!hasBiometrics) {
+      setState(() {
+        _biometricAvailable = false;
+        _biometricLoginEnabled = false;
+      });
+      showSnackBar(
+        perfilMessenger,
+        'Este dispositivo no tiene biometría disponible.',
+        state: StatusSnackBar.error,
+        colorText: theme.white,
+      );
+      return;
+    }
+
+    setState(() {
+      _updatingBiometricPreference = true;
+    });
+
+    try {
+      await Seguridad.instance.updateFingeprint(enabled);
+      if (!mounted) return;
+      setState(() {
+        _biometricAvailable = true;
+        _biometricLoginEnabled = enabled;
+      });
+      showSnackBar(
+        perfilMessenger,
+        enabled
+            ? 'El acceso con huella quedó habilitado para esta cuenta.'
+            : 'El acceso con huella quedó como opcional y desactivado.',
+        state: StatusSnackBar.success,
+        colorText: theme.white,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      showSnackBar(
+        perfilMessenger,
+        'No se pudo actualizar la preferencia de huella: $e',
+        state: StatusSnackBar.error,
+        colorText: theme.white,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _updatingBiometricPreference = false;
+        });
+      }
+    }
   }
 
   Future<void> _changeRole(String idRol) async {
@@ -639,6 +714,10 @@ class _PerfilState extends State<Perfil> {
                     const _ThemePreference(),
                     const SizedBox(height: 20),
                     _SessionActions(
+                      biometricAvailable: _biometricAvailable,
+                      biometricLoginEnabled: _biometricLoginEnabled,
+                      updatingBiometricPreference: _updatingBiometricPreference,
+                      onToggleBiometricLogin: _updateBiometricLogin,
                       onChangePassword: () async {
                         final dynamic result = await Navigator.of(context).push(
                           MaterialPageRoute(
@@ -988,11 +1067,19 @@ class _ThemePreference extends StatelessWidget {
 
 class _SessionActions extends StatelessWidget {
   const _SessionActions({
+    required this.biometricAvailable,
+    required this.biometricLoginEnabled,
+    required this.updatingBiometricPreference,
+    required this.onToggleBiometricLogin,
     required this.onChangePassword,
     required this.onLogout,
     required this.loggingOut,
   });
 
+  final bool? biometricAvailable;
+  final bool? biometricLoginEnabled;
+  final bool updatingBiometricPreference;
+  final ValueChanged<bool> onToggleBiometricLogin;
   final VoidCallback onChangePassword;
   final VoidCallback onLogout;
   final bool loggingOut;
@@ -1013,6 +1100,82 @@ class _SessionActions extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: theme.bgCard2.withValues(
+                alpha: theme.isLight ? 0.55 : 0.22,
+              ),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: theme.primary.withValues(alpha: 0.12),
+              ),
+            ),
+            child: Row(
+              children: <Widget>[
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: theme.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(Icons.fingerprint, color: theme.primary),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Text(
+                        'Ingreso con huella',
+                        style: TextStyle(
+                          color: theme.fontColor,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        biometricAvailable == false
+                            ? 'Tu dispositivo no tiene biometría disponible, así que el inicio seguirá con contraseña.'
+                            : biometricLoginEnabled == true
+                                ? 'La huella está activa para desbloquear la app después del login.'
+                                : 'La huella es opcional y ahora mismo está desactivada para esta cuenta.',
+                        style: TextStyle(
+                          color: theme.fontColor.withValues(alpha: 0.68),
+                          fontSize: 13,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                if (biometricAvailable == null || biometricLoginEnabled == null)
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: theme.primary,
+                    ),
+                  )
+                else
+                  Switch.adaptive(
+                    value: biometricLoginEnabled!,
+                    activeThumbColor: theme.primary,
+                    activeTrackColor: theme.primary.withValues(alpha: 0.3),
+                    inactiveThumbColor: theme.grey,
+                    inactiveTrackColor: theme.grey.withValues(alpha: 0.3),
+                    onChanged: biometricAvailable == false ||
+                            updatingBiometricPreference
+                        ? null
+                        : onToggleBiometricLogin,
+                  ),
+              ],
+            ),
+          ),
+          Divider(color: theme.grey.withValues(alpha: 0.2)),
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: Icon(Icons.lock_outline, color: theme.primary),
