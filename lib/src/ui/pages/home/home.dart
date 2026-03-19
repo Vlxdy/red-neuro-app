@@ -803,7 +803,7 @@ ChildrenItem _submoduleToItem(
           : isCitasModule
           ? const CitasPage(
               soloMisCitas: false,
-              titulo: 'Citas',
+              titulo: 'Agenda',
               mostrarFiltroMedico: true,
             )
           : isPacientesModule
@@ -879,11 +879,11 @@ List<ChildrenItem> _adminMenu(ThemeController theme) => [
   ChildrenItem(
     iconoImagen: PhosphorIconsRegular.calendarCheck,
     iconoImagenSeleccionada: PhosphorIconsFill.calendarCheck,
-    titulo: 'Citas',
+    titulo: 'Agenda',
     children: const KeepAlivePage(
       child: CitasPage(
         soloMisCitas: false,
-        titulo: 'Citas',
+        titulo: 'Agenda',
         mostrarFiltroMedico: true,
       ),
     ),
@@ -918,11 +918,11 @@ List<ChildrenItem> _personalSaludAdminMenu(ThemeController theme) => [
   ChildrenItem(
     iconoImagen: PhosphorIconsRegular.calendarPlus,
     iconoImagenSeleccionada: PhosphorIconsFill.calendarPlus,
-    titulo: 'Citas',
+    titulo: 'Agenda',
     children: const KeepAlivePage(
       child: CitasPage(
         soloMisCitas: false,
-        titulo: 'Citas (Personal de salud - Admin)',
+        titulo: 'Agenda (Personal de salud - Admin)',
         mostrarFiltroMedico: true,
       ),
     ),
@@ -957,9 +957,9 @@ List<ChildrenItem> _personalSaludMenu(ThemeController theme) => [
   ChildrenItem(
     iconoImagen: SolarIconsOutline.calendarSearch,
     iconoImagenSeleccionada: SolarIconsBold.calendarSearch,
-    titulo: 'Citas',
+    titulo: 'Agenda',
     children: const KeepAlivePage(
-      child: CitasPage(soloMisCitas: true, titulo: 'Mis citas'),
+      child: CitasPage(soloMisCitas: true, titulo: 'Mi agenda'),
     ),
   ),
   ChildrenItem(
@@ -1224,7 +1224,7 @@ _TrayBlueprint _resolveTrayBlueprint(SubModulo subModule) {
       icon: _moduleIconData('notificaciones'),
     ),
     '/admin/citas': _TrayBlueprint(
-      title: 'Citas',
+      title: 'Agenda',
       description:
           'Agenda y administra las citas médicas disponibles en el sistema.',
       actions: const [

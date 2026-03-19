@@ -637,7 +637,7 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
                       onSelected: _cambiarScope,
                       initialValue: _scope,
                       itemBuilder: (_) => const [
-                        PopupMenuItem(value: 'mine', child: Text('Mis citas')),
+                        PopupMenuItem(value: 'mine', child: Text('Mi agenda')),
                         PopupMenuItem(value: 'personal', child: Text('Un personal')),
                         PopupMenuItem(value: 'all', child: Text('Todos')),
                       ],

@@ -142,55 +142,66 @@ class _HeaderActionButton extends StatelessWidget {
     final bool isEnabled = onPressed != null;
     return Tooltip(
       message: tooltip,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          IconButton(
-            onPressed: onPressed,
-            icon: Icon(
-              icon,
-              size: 20,
-              color: isEnabled
-                  ? theme.white
-                  : theme.white.withValues(alpha: 0.72),
-            ),
-            style: IconButton.styleFrom(
-              minimumSize: const Size(34, 34),
-              fixedSize: const Size(34, 34),
-              padding: EdgeInsets.zero,
-              backgroundColor: theme.white.withValues(
-                alpha: isEnabled ? 0.10 : 0.07,
-              ),
-              side: BorderSide(
-                color: theme.white.withValues(alpha: isEnabled ? 0.28 : 0.16),
-              ),
-            ),
-          ),
-          if (badgeCount > 0)
-            Positioned(
-              right: -4,
-              top: -4,
-              child: Container(
-                constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: theme.white, width: 1),
+      child: SizedBox(
+        width: 40,
+        height: 40,
+        child: Stack(
+          children: [
+            Align(
+              alignment: Alignment.center,
+              child: IconButton(
+                onPressed: onPressed,
+                icon: Icon(
+                  icon,
+                  size: 20,
+                  color: isEnabled
+                      ? theme.white
+                      : theme.white.withValues(alpha: 0.72),
                 ),
-                child: Center(
-                  child: Text(
-                    badgeCount > 99 ? '99+' : '$badgeCount',
-                    style: TextStyle(
-                      color: theme.white,
-                      fontSize: 9,
-                      fontWeight: FontWeight.w700,
+                style: IconButton.styleFrom(
+                  minimumSize: const Size(34, 34),
+                  fixedSize: const Size(34, 34),
+                  padding: EdgeInsets.zero,
+                  backgroundColor: theme.white.withValues(
+                    alpha: isEnabled ? 0.10 : 0.07,
+                  ),
+                  side: BorderSide(
+                    color: theme.white.withValues(
+                      alpha: isEnabled ? 0.28 : 0.16,
                     ),
                   ),
                 ),
               ),
             ),
-        ],
+            if (badgeCount > 0)
+              Positioned(
+                right: 2,
+                top: 2,
+                child: Container(
+                  constraints: const BoxConstraints(
+                    minWidth: 16,
+                    minHeight: 16,
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.red,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: theme.white, width: 1),
+                  ),
+                  child: Center(
+                    child: Text(
+                      badgeCount > 99 ? '99+' : '$badgeCount',
+                      style: TextStyle(
+                        color: theme.white,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }

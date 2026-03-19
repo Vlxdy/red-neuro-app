@@ -171,7 +171,7 @@ class InicioCitasUtils {
   }) {
     showSnackBar(
       messenger,
-      '$accion disponible en la bandeja de Citas.',
+      '$accion disponible en la bandeja de Agenda.',
       state: StatusSnackBar.info,
       colorText: theme.white,
     );
