@@ -3,12 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/models/lugar.dart';
+import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
 import 'package:red_neuro_app/src/ui/common/components/tray_ui_helpers.dart';
 import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/pages/lugares/lugares_service.dart';
+import 'package:red_neuro_app/src/utils/role_utils.dart';
 
 final GlobalKey<ScaffoldMessengerState> lugaresMessenger =
     GlobalKey<ScaffoldMessengerState>();
@@ -23,6 +25,8 @@ class LugaresPage extends StatefulWidget {
 class _LugaresPageState extends State<LugaresPage> {
   final _theme = ThemeController.instance;
   late final LugaresService _service;
+  bool get _canManagePlaces =>
+      RoleUtils.canManageCatalogs(Auth.instance.profile);
 
   final ScrollController _scrollController = ScrollController();
 
@@ -603,36 +607,38 @@ class _LugaresPageState extends State<LugaresPage> {
                   child: Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: [
-                      FilledButton.tonalIcon(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: _theme.primary,
-                          foregroundColor: _theme.white,
-                        ),
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _abrirFormulario(lugar: lugar);
-                        },
-                        icon: const Icon(Icons.edit_outlined),
-                        label: const Text('Editar'),
-                      ),
-                      OutlinedButton.icon(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _cambiarEstado(lugar);
-                        },
-                        icon: Icon(
-                          lugar.estado.toUpperCase() == 'ACTIVO'
-                              ? Icons.toggle_on
-                              : Icons.toggle_off,
-                        ),
-                        label: Text(
-                          lugar.estado.toUpperCase() == 'ACTIVO'
-                              ? 'Inactivar'
-                              : 'Activar',
-                        ),
-                      ),
-                    ],
+                    children: _canManagePlaces
+                        ? [
+                            FilledButton.tonalIcon(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: _theme.primary,
+                                foregroundColor: _theme.white,
+                              ),
+                              onPressed: () {
+                                Navigator.pop(context);
+                                _abrirFormulario(lugar: lugar);
+                              },
+                              icon: const Icon(Icons.edit_outlined),
+                              label: const Text('Editar'),
+                            ),
+                            OutlinedButton.icon(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                _cambiarEstado(lugar);
+                              },
+                              icon: Icon(
+                                lugar.estado.toUpperCase() == 'ACTIVO'
+                                    ? Icons.toggle_on
+                                    : Icons.toggle_off,
+                              ),
+                              label: Text(
+                                lugar.estado.toUpperCase() == 'ACTIVO'
+                                    ? 'Inactivar'
+                                    : 'Activar',
+                              ),
+                            ),
+                          ]
+                        : const <Widget>[],
                   ),
                 ),
               ],
@@ -665,15 +671,18 @@ class _LugaresPageState extends State<LugaresPage> {
                   side: BorderSide(color: _theme.white.withValues(alpha: 0.35)),
                 ),
               ),
-              IconButton(
-                tooltip: 'Nuevo lugar',
-                onPressed: () => _abrirFormulario(),
-                icon: Icon(Icons.add, color: _theme.white),
-                style: IconButton.styleFrom(
-                  minimumSize: const Size(36, 36),
-                  side: BorderSide(color: _theme.white.withValues(alpha: 0.35)),
+              if (_canManagePlaces)
+                IconButton(
+                  tooltip: 'Nuevo lugar',
+                  onPressed: () => _abrirFormulario(),
+                  icon: Icon(Icons.add, color: _theme.white),
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size(36, 36),
+                    side: BorderSide(
+                      color: _theme.white.withValues(alpha: 0.35),
+                    ),
+                  ),
                 ),
-              ),
             ],
           ),
           body: RefreshIndicator(

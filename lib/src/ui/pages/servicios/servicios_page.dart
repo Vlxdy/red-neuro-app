@@ -5,6 +5,7 @@ import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/extensions/colores_extension.dart';
 import 'package:red_neuro_app/src/models/categoria.dart';
 import 'package:red_neuro_app/src/models/servicio.dart';
+import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
 import 'package:red_neuro_app/src/ui/common/customdatatable/custom_datatable.dart';
 import 'package:red_neuro_app/src/ui/common/components/tray_ui_helpers.dart';
@@ -14,6 +15,7 @@ import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
 import 'package:red_neuro_app/src/ui/common/form_stepper/step_form_dialog_layout.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/pages/servicios/servicios_service.dart';
+import 'package:red_neuro_app/src/utils/role_utils.dart';
 
 final GlobalKey<ScaffoldMessengerState> estudiosMessenger =
     GlobalKey<ScaffoldMessengerState>();
@@ -28,6 +30,8 @@ class ServiciosPage extends StatefulWidget {
 class _ServiciosPageState extends State<ServiciosPage> with FormController {
   final _theme = ThemeController.instance;
   late final ServiciosService _service;
+  bool get _canManageCatalogs =>
+      RoleUtils.canManageCatalogs(Auth.instance.profile);
 
   List<Servicio> _servicios = [];
   List<Categoria> _ocupacionesDisponibles = [];
@@ -874,7 +878,7 @@ class _ServiciosPageState extends State<ServiciosPage> with FormController {
               CriterioOrdenType(nombre: 'Costo'),
               CriterioOrdenType(nombre: 'Categorías'),
               CriterioOrdenType(nombre: 'Estado'),
-              CriterioOrdenType(nombre: 'Acciones'),
+              if (_canManageCatalogs) CriterioOrdenType(nombre: 'Acciones'),
             ],
             contenidoTabla: _servicios
                 .map(
@@ -889,24 +893,29 @@ class _ServiciosPageState extends State<ServiciosPage> with FormController {
                       status: servicio.estado,
                       activeColor: _theme.success,
                     ),
-                    Wrap(
-                      spacing: 4,
-                      children: [
-                        IconButton(
-                          tooltip: 'Editar',
-                          icon: const Icon(Icons.edit_outlined),
-                          onPressed: () => _abrirFormulario(servicio: servicio),
-                        ),
-                        IconButton(
-                          tooltip: servicio.estado.toUpperCase() == 'ACTIVO' ? 'Desactivar' : 'Activar',
-                          icon: Icon(
-                            servicio.estado.toUpperCase() == 'ACTIVO' ? Icons.toggle_off : Icons.toggle_on,
-                            color: _theme.primary,
+                    if (_canManageCatalogs)
+                      Wrap(
+                        spacing: 4,
+                        children: [
+                          IconButton(
+                            tooltip: 'Editar',
+                            icon: const Icon(Icons.edit_outlined),
+                            onPressed: () => _abrirFormulario(servicio: servicio),
                           ),
-                          onPressed: () => _cambiarEstado(servicio),
-                        ),
-                      ],
-                    ),
+                          IconButton(
+                            tooltip: servicio.estado.toUpperCase() == 'ACTIVO'
+                                ? 'Desactivar'
+                                : 'Activar',
+                            icon: Icon(
+                              servicio.estado.toUpperCase() == 'ACTIVO'
+                                  ? Icons.toggle_off
+                                  : Icons.toggle_on,
+                              color: _theme.primary,
+                            ),
+                            onPressed: () => _cambiarEstado(servicio),
+                          ),
+                        ],
+                      ),
                   ],
                 )
                 .toList(),
@@ -1031,18 +1040,19 @@ class _ServiciosPageState extends State<ServiciosPage> with FormController {
                   ),
                 ),
               ),
-              IconButton(
-                onPressed: () => _tabIndex == 0
-                    ? _abrirFormulario()
-                    : _abrirFormularioCategoria(),
-                icon: Icon(Icons.add, color: _theme.white),
-                style: IconButton.styleFrom(
-                  minimumSize: const Size(36, 36),
-                  side: BorderSide(
-                    color: _theme.white.withValues(alpha: 0.35),
+              if (_canManageCatalogs)
+                IconButton(
+                  onPressed: () => _tabIndex == 0
+                      ? _abrirFormulario()
+                      : _abrirFormularioCategoria(),
+                  icon: Icon(Icons.add, color: _theme.white),
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size(36, 36),
+                    side: BorderSide(
+                      color: _theme.white.withValues(alpha: 0.35),
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
           body: Padding(
@@ -1290,36 +1300,38 @@ class _ServiciosPageState extends State<ServiciosPage> with FormController {
                   child: Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: [
-                      FilledButton.tonalIcon(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: _theme.primary,
-                          foregroundColor: _theme.white,
-                        ),
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _abrirFormularioCategoria(categoria: categoria);
-                        },
-                        icon: const Icon(Icons.edit_outlined),
-                        label: const Text('Editar'),
-                      ),
-                      OutlinedButton.icon(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _cambiarEstadoCategoria(categoria);
-                        },
-                        icon: Icon(
-                          categoria.estado.toUpperCase() == 'ACTIVO'
-                              ? Icons.toggle_off
-                              : Icons.toggle_on,
-                        ),
-                        label: Text(
-                          categoria.estado.toUpperCase() == 'ACTIVO'
-                              ? 'Desactivar'
-                              : 'Activar',
-                        ),
-                      ),
-                    ],
+                    children: _canManageCatalogs
+                        ? [
+                            FilledButton.tonalIcon(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: _theme.primary,
+                                foregroundColor: _theme.white,
+                              ),
+                              onPressed: () {
+                                Navigator.pop(context);
+                                _abrirFormularioCategoria(categoria: categoria);
+                              },
+                              icon: const Icon(Icons.edit_outlined),
+                              label: const Text('Editar'),
+                            ),
+                            OutlinedButton.icon(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                _cambiarEstadoCategoria(categoria);
+                              },
+                              icon: Icon(
+                                categoria.estado.toUpperCase() == 'ACTIVO'
+                                    ? Icons.toggle_off
+                                    : Icons.toggle_on,
+                              ),
+                              label: Text(
+                                categoria.estado.toUpperCase() == 'ACTIVO'
+                                    ? 'Desactivar'
+                                    : 'Activar',
+                              ),
+                            ),
+                          ]
+                        : const <Widget>[],
                   ),
                 ),
               ],
@@ -1396,36 +1408,38 @@ class _ServiciosPageState extends State<ServiciosPage> with FormController {
                   child: Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: [
-                      FilledButton.tonalIcon(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: _theme.primary,
-                          foregroundColor: _theme.white,
-                        ),
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _abrirFormulario(servicio: servicio);
-                        },
-                        icon: const Icon(Icons.edit_outlined),
-                        label: const Text('Editar'),
-                      ),
-                      OutlinedButton.icon(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _cambiarEstado(servicio);
-                        },
-                        icon: Icon(
-                          servicio.estado.toUpperCase() == 'ACTIVO'
-                              ? Icons.toggle_off
-                              : Icons.toggle_on,
-                        ),
-                        label: Text(
-                          servicio.estado.toUpperCase() == 'ACTIVO'
-                              ? 'Desactivar'
-                              : 'Activar',
-                        ),
-                      ),
-                    ],
+                    children: _canManageCatalogs
+                        ? [
+                            FilledButton.tonalIcon(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: _theme.primary,
+                                foregroundColor: _theme.white,
+                              ),
+                              onPressed: () {
+                                Navigator.pop(context);
+                                _abrirFormulario(servicio: servicio);
+                              },
+                              icon: const Icon(Icons.edit_outlined),
+                              label: const Text('Editar'),
+                            ),
+                            OutlinedButton.icon(
+                              onPressed: () {
+                                Navigator.pop(context);
+                                _cambiarEstado(servicio);
+                              },
+                              icon: Icon(
+                                servicio.estado.toUpperCase() == 'ACTIVO'
+                                    ? Icons.toggle_off
+                                    : Icons.toggle_on,
+                              ),
+                              label: Text(
+                                servicio.estado.toUpperCase() == 'ACTIVO'
+                                    ? 'Desactivar'
+                                    : 'Activar',
+                              ),
+                            ),
+                          ]
+                        : const <Widget>[],
                   ),
                 ),
               ],
