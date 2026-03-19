@@ -3,6 +3,7 @@ import 'package:red_neuro_app/src/config/service_config.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/models/user.dart';
 import 'package:red_neuro_app/src/utils/role_utils.dart';
+import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 
 class RolOption {
   final String id;
@@ -16,12 +17,12 @@ class RolOption {
   });
 
   factory RolOption.fromJson(Map<String, dynamic> json) => RolOption(
-        id: (json['id'] ?? json['idRol'] ?? '').toString(),
-        codigo: (json['rol'] ?? json['codigo'] ?? json['nombre'] ?? '')
-            .toString()
-            .toUpperCase(),
-        nombre: (json['nombre'] ?? json['rol'] ?? '').toString(),
-      );
+    id: (json['id'] ?? json['idRol'] ?? '').toString(),
+    codigo: (json['rol'] ?? json['codigo'] ?? json['nombre'] ?? '')
+        .toString()
+        .toUpperCase(),
+    nombre: (json['nombre'] ?? json['rol'] ?? '').toString(),
+  );
 }
 
 class UsuarioPageResult {
@@ -42,13 +43,13 @@ class UsuarioPageResult {
   });
 
   factory UsuarioPageResult.empty(String message) => UsuarioPageResult(
-        usuarios: const [],
-        total: 0,
-        page: 1,
-        limit: 10,
-        message: message,
-        status: StatusNetwork.noContent,
-      );
+    usuarios: const [],
+    total: 0,
+    page: 1,
+    limit: 10,
+    message: message,
+    status: StatusNetwork.noContent,
+  );
 }
 
 class UsuariosService extends ServiceConfig {
@@ -57,11 +58,8 @@ class UsuariosService extends ServiceConfig {
   Future<List<RolOption>> obtenerRoles() async {
     return RoleUtils.explicitStaffRoleOptions
         .map(
-          (rol) => RolOption(
-            id: rol.codigo,
-            codigo: rol.codigo,
-            nombre: rol.nombre,
-          ),
+          (rol) =>
+              RolOption(id: rol.codigo, codigo: rol.codigo, nombre: rol.nombre),
         )
         .toList();
   }
@@ -88,7 +86,8 @@ class UsuariosService extends ServiceConfig {
 
       final data = response.data;
       final datos = data['datos'] ?? data['data'] ?? data;
-      final meta = (datos is Map<String, dynamic>
+      final meta =
+          (datos is Map<String, dynamic>
               ? datos['meta'] ?? datos['paginacion']
               : null) ??
           data['meta'] ??
@@ -105,12 +104,13 @@ class UsuariosService extends ServiceConfig {
       final resolvedPage = meta['pagina'] ?? page;
       final resolvedLimit = meta['limite'] ?? limit;
 
-      final listRaw = (datos is Map<String, dynamic>
+      final listRaw =
+          (datos is Map<String, dynamic>
               ? datos['filas'] ??
-                  datos['items'] ??
-                  datos['usuarios'] ??
-                  datos['list'] ??
-                  datos['resultado']
+                    datos['items'] ??
+                    datos['usuarios'] ??
+                    datos['list'] ??
+                    datos['resultado']
               : null) ??
           data['list'] ??
           data['data'] ??
@@ -120,9 +120,9 @@ class UsuariosService extends ServiceConfig {
 
       final usuarios = (listRaw is List)
           ? listRaw
-              .whereType<Map<String, dynamic>>()
-              .map(Usuario.fromJson)
-              .toList()
+                .whereType<Map<String, dynamic>>()
+                .map(Usuario.fromJson)
+                .toList()
           : <Usuario>[];
 
       return UsuarioPageResult(
@@ -145,35 +145,21 @@ class UsuariosService extends ServiceConfig {
   }
 
   Future<ResponseApi> crearUsuario(Map<String, dynamic> body) async {
-    return fetch(
-      '/usuarios',
-      type: HttpProtocol.post,
-      body: body,
-    );
+    return fetch('/usuarios', type: HttpProtocol.post, body: body);
   }
 
   Future<ResponseApi> actualizarUsuario(
     String id,
     Map<String, dynamic> body,
   ) async {
-    return fetch(
-      '/usuarios/$id',
-      type: HttpProtocol.patch,
-      body: body,
-    );
+    return fetch('/usuarios/$id', type: HttpProtocol.patch, body: body);
   }
 
   Future<ResponseApi> activarUsuario(String id) async {
-    return fetch(
-      '/usuarios/$id/activacion',
-      type: HttpProtocol.patch,
-    );
+    return fetch('/usuarios/$id/activacion', type: HttpProtocol.patch);
   }
 
   Future<ResponseApi> inactivarUsuario(String id) async {
-    return fetch(
-      '/usuarios/$id/inactivacion',
-      type: HttpProtocol.patch,
-    );
+    return fetch('/usuarios/$id/inactivacion', type: HttpProtocol.patch);
   }
 }
