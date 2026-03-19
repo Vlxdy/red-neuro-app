@@ -55,7 +55,7 @@ class _CredencialesState extends State<Credenciales> {
     final bool hasFeedback = loginStore.hasFeedback;
     final bool isError = loginStore.feedbackType != LoginFeedbackType.info;
     final Color feedbackBackground = isError
-        ? const Color(0x66C62828)
+        ? const Color.fromARGB(26, 198, 40, 40)
         : const Color(0x3342A5F5);
     final Color feedbackBorder = isError
         ? const Color(0xFFE57373)
