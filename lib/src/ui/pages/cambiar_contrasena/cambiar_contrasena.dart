@@ -25,6 +25,8 @@ class _CambiarContrasenaState extends State<CambiarContrasena> {
 
   final GlobalKey<FormState> _formularioKey = GlobalKey<FormState>();
   late CambiarContrasenaService _service;
+  AutovalidateMode _autovalidateMode = AutovalidateMode.disabled;
+  String? _submitMessage;
 
   final Zxcvbnm zxcvbn = Zxcvbnm();
 
@@ -104,8 +106,11 @@ class _CambiarContrasenaState extends State<CambiarContrasena> {
                     controller: _contrasenaActualController,
                     title: 'Contraseña actual',
                     onChange: (String? value) => store.contrasena = value ?? '',
-                    validate: (String? value, String alias) =>
-                        _service.validateData(context, value, alias),
+                    validate: (_, __) =>
+                        _service.validarContrasenaActual(
+                          _contrasenaActualController.text,
+                        ),
+                    autovalidateMode: _autovalidateMode,
                   ),
                   const SizedBox(height: 8),
                   CustomTextInput(
@@ -119,10 +124,15 @@ class _CambiarContrasenaState extends State<CambiarContrasena> {
                         final Result result = zxcvbn(value);
                         // store.calificacion = result.score ?? 0.0;
                         store.calificacion = result.score.toDouble();
+                      } else {
+                        store.calificacion = 0;
                       }
                     },
-                    validate: (String? value, String alias) =>
-                        _service.validateData(context, value, alias),
+                    validate: (_, __) =>
+                        _service.validarNuevaContrasena(
+                          _nuevaContrasenaController.text,
+                        ),
+                    autovalidateMode: _autovalidateMode,
                   ),
                   _nuevaContrasenaController.text.length > 1
                       ? Padding(
@@ -152,21 +162,67 @@ class _CambiarContrasenaState extends State<CambiarContrasena> {
                     title: 'Repite la nueva contraseña',
                     onChange: (String? value) =>
                         store.repiteContrasena = value ?? '',
-                    validate: (String? value, String alias) =>
-                        _service.validateData(context, value, alias),
+                    validate: (_, __) =>
+                        _service.validarRepetirContrasena(
+                          _repiteContrasenaController.text,
+                        ),
+                    autovalidateMode: _autovalidateMode,
                   ),
                   const SizedBox(height: 16),
                   SimpleButton(
-                    title: 'Modificar',
-                    onTap: () {
-                      if (_service.validarForm(
-                        _formularioKey,
-                        'Las contraseñas no coinciden',
-                      )) {
-                        _service.cambiarContrasena();
+                    title: store.cargando ? 'Guardando...' : 'Modificar',
+                    disabled: store.cargando,
+                    onTap: () async {
+                      FocusScope.of(context).unfocus();
+                      setState(() {
+                        _autovalidateMode = AutovalidateMode.onUserInteraction;
+                        _submitMessage = null;
+                      });
+                      if (_service.validarForm(_formularioKey)) {
+                        final CambioContrasenaResult result =
+                            await _service.cambiarContrasena();
+                        if (result.success) {
+                          _contrasenaActualController.clear();
+                          _nuevaContrasenaController.clear();
+                          _repiteContrasenaController.clear();
+                          if (!mounted) return;
+                          Navigator.of(context).pop(<String, dynamic>{
+                            'success': true,
+                            'message': result.message,
+                          });
+                          return;
+                        }
+
+                        if (mounted) {
+                          setState(() {
+                            _submitMessage = result.message;
+                          });
+                        }
                       }
                     },
                   ),
+                  if (_submitMessage != null) ...<Widget>[
+                    const SizedBox(height: 12),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.error.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: theme.error),
+                      ),
+                      child: Text(
+                        _submitMessage!,
+                        style: TextStyle(
+                          color: theme.error,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
