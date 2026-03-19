@@ -57,21 +57,44 @@ class PersonalSalud {
 
     final rol = resolveString('rol').trim();
     final rolesRaw = json['roles'];
+
+    String? resolveRoleItem(dynamic item) {
+      if (item == null) return null;
+      if (item is String) {
+        final value = item.trim();
+        return value.isEmpty ? null : value;
+      }
+      if (item is Map<String, dynamic>) {
+        final candidates = <dynamic>[
+          item['rol'],
+          item['nombre'],
+          item['descripcion'],
+        ];
+        for (final candidate in candidates) {
+          final value = candidate?.toString().trim() ?? '';
+          if (value.isNotEmpty) return value;
+        }
+      }
+      final value = item.toString().trim();
+      return value.isEmpty ? null : value;
+    }
+
     final roles = rolesRaw is List
         ? rolesRaw
-            .map((item) => item.toString().trim())
-            .where((item) => item.isNotEmpty)
+            .map(resolveRoleItem)
+            .whereType<String>()
             .toList()
         : <String>[];
-    final rolesNormalizados = <String>{
+    final rolesNormalizados = <String>[
       ...roles,
       if (rol.isNotEmpty) rol,
-    }.toList();
+    ];
+    final rolPrincipal = roles.isNotEmpty ? roles.first : rol;
     return PersonalSalud(
       id: (json['id'] ?? '').toString(),
       estado: (json['estado'] ?? 'ACTIVO').toString(),
-      rol: rol.isEmpty ? null : rol,
-      roles: rolesNormalizados,
+      rol: rolPrincipal.isEmpty ? null : rolPrincipal,
+      roles: rolesNormalizados.toSet().toList(),
       nroDocumento: resolveString('nroDocumento').trim().isEmpty
           ? null
           : resolveString('nroDocumento'),
