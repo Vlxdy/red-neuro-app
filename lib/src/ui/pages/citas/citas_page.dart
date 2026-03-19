@@ -1025,8 +1025,8 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
                     _aplicarFiltros();
                   },
                   tooltip: _soloCitasAsignadas
-                      ? 'Mostrando citas asignadas a ti'
-                      : 'Mostrando todas las citas',
+                      ? 'Mostrando agenda asignada a ti'
+                      : 'Mostrando toda la agenda',
                   icon: Icon(
                     _soloCitasAsignadas
                         ? Icons.person_rounded
