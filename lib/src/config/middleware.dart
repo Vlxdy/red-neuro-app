@@ -12,7 +12,6 @@ mixin Middleware {
         return;
       case StatusNetwork.noContent:
         Logger.error('No content');
-        //TODO: make logic
         return;
       default:
         return;
@@ -23,20 +22,24 @@ mixin Middleware {
     Map<String, dynamic> json,
     BuildContext context, {
     StatusNetwork status = StatusNetwork.noContent,
+    int? statusCode,
   }) {
     try {
       final Map<String, dynamic> data = {};
       data['status'] = json.containsKey('finalizado') && json['finalizado']
           ? StatusNetwork.connected
-          : StatusNetwork.exception;
-      if (status == StatusNetwork.unprocessableEntity) {
-        data['status'] = StatusNetwork.unprocessableEntity;
+          : status;
+      if (status == StatusNetwork.connected &&
+          data['status'] != StatusNetwork.connected) {
+        data['status'] = StatusNetwork.exception;
       }
 
-      data['message'] =
-          json['mensaje'] ??
-          json['message'] ??
-          'Se realizó la tarea correctamente';
+      data['message'] = buildDetailedMessage(
+        json,
+        status: data['status'] as StatusNetwork,
+        statusCode: statusCode,
+      );
+      data['log'] = json;
 
       if (json.containsKey('datos') ||
           json.containsKey('resultado') ||
@@ -62,8 +65,9 @@ mixin Middleware {
       Logger.error('stacktrace $stacktrace');
       return {
         'status': StatusNetwork.exception,
-        'mensaje': 'Ocurrió un error inesperado',
-        'data': e.toString(),
+        'message':
+            'Ocurrió un problema al procesar la información. Inténtelo nuevamente o comuníquese con el administrador del sistema.',
+        'data': {'error': e.toString()},
       };
     }
   }
@@ -71,29 +75,135 @@ mixin Middleware {
   StatusNetwork decodeStatus(int status) {
     switch (status) {
       case 200:
-        return StatusNetwork.connected;
       case 201:
-        return StatusNetwork.connected;
       case 202:
-        return StatusNetwork.connected;
       case 304:
         return StatusNetwork.connected;
       case 401:
-        return StatusNetwork.unauthorized;
-      case 400:
-        return StatusNetwork.noValidate;
       case 403:
         return StatusNetwork.unauthorized;
-      case 404:
-        return StatusNetwork.noContent;
+      case 400:
       case 412:
         return StatusNetwork.noValidate;
+      case 404:
+        return StatusNetwork.noContent;
       case 422:
         return StatusNetwork.unprocessableEntity;
       case 500:
         return StatusNetwork.exception;
       default:
         return StatusNetwork.noValidate;
+    }
+  }
+
+  String buildDetailedMessage(
+    Map<String, dynamic> json, {
+    required StatusNetwork status,
+    int? statusCode,
+  }) {
+    final rawMessage = _extractMessage(json);
+    if (rawMessage.isNotEmpty) {
+      return _decorateMessage(rawMessage, status: status, statusCode: statusCode);
+    }
+    return buildHttpErrorMessage(status: status, statusCode: statusCode);
+  }
+
+  String buildHttpErrorMessage({
+    required StatusNetwork status,
+    int? statusCode,
+    Map<String, dynamic>? body,
+    String? rawBody,
+  }) {
+    switch (status) {
+      case StatusNetwork.noInternet:
+        return 'No fue posible comunicarse con el servidor. Por favor, comuníquese con el administrador del sistema.';
+      case StatusNetwork.timeout:
+        return 'La solicitud tardó demasiado en responder. Inténtelo nuevamente y, si el problema continúa, comuníquese con el administrador del sistema.';
+      case StatusNetwork.unauthorized:
+        return 'Su sesión ya no es válida. Inicie sesión nuevamente para continuar.';
+      case StatusNetwork.noValidate:
+      case StatusNetwork.unprocessableEntity:
+        return 'No fue posible completar la solicitud. Revise la información ingresada e inténtelo nuevamente.';
+      case StatusNetwork.noContent:
+        return 'No se encontró información disponible para esta consulta.';
+      case StatusNetwork.exception:
+        return 'Ocurrió un problema al procesar la solicitud. Inténtelo nuevamente o comuníquese con el administrador del sistema.';
+      case StatusNetwork.connected:
+        return 'Se realizó la tarea correctamente';
+    }
+  }
+
+  String _extractMessage(Map<String, dynamic> json) {
+    final candidates = [
+      json['mensaje'],
+      json['message'],
+      json['error'],
+      json['detalle'],
+      json['detail'],
+      json['descripcion'],
+      json['description'],
+    ];
+
+    for (final candidate in candidates) {
+      final normalized = _normalizeMessageValue(candidate);
+      if (normalized.isNotEmpty) return normalized;
+    }
+
+    final errors = json['errors'] ?? json['errores'];
+    final normalizedErrors = _normalizeMessageValue(errors);
+    if (normalizedErrors.isNotEmpty) return normalizedErrors;
+
+    return '';
+  }
+
+  String _normalizeMessageValue(dynamic value) {
+    if (value == null) return '';
+    if (value is String) return value.trim();
+    if (value is List) {
+      return value
+          .map(_normalizeMessageValue)
+          .where((item) => item.isNotEmpty)
+          .join('\n');
+    }
+    if (value is Map) {
+      return value.entries
+          .map((entry) {
+            final normalized = _normalizeMessageValue(entry.value);
+            if (normalized.isEmpty) return '';
+            return normalized;
+          })
+          .where((item) => item.isNotEmpty)
+          .join('\n');
+    }
+    return value.toString().trim();
+  }
+
+  String _decorateMessage(
+    String message, {
+    required StatusNetwork status,
+    int? statusCode,
+  }) {
+    final cleanMessage = message.trim();
+    if (cleanMessage.isEmpty) {
+      return buildHttpErrorMessage(status: status, statusCode: statusCode);
+    }
+
+    switch (status) {
+      case StatusNetwork.unauthorized:
+        return 'Su sesión ya no es válida. $cleanMessage';
+      case StatusNetwork.noValidate:
+      case StatusNetwork.unprocessableEntity:
+        return cleanMessage;
+      case StatusNetwork.noContent:
+        return cleanMessage;
+      case StatusNetwork.exception:
+        return cleanMessage;
+      case StatusNetwork.noInternet:
+        return 'No fue posible comunicarse con el servidor. Por favor, comuníquese con el administrador del sistema.';
+      case StatusNetwork.timeout:
+        return 'La solicitud tardó demasiado en responder. Inténtelo nuevamente y, si el problema continúa, comuníquese con el administrador del sistema.';
+      case StatusNetwork.connected:
+        return cleanMessage;
     }
   }
 }
