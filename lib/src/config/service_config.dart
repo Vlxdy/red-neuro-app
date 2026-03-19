@@ -134,7 +134,7 @@ class ServiceConfig with Middleware, FormController {
       final decode = utf8.decode(response.bodyBytes);
       final dynamic json = _tryDecodeJson(decode);
       status = decodeStatus(response.statusCode);
-      validateResponse(status);
+      validateResponse(status, requiresAuth: withAuthorization);
 
       if (!context.mounted) {
         throw Exception('Context not found');
@@ -146,6 +146,7 @@ class ServiceConfig with Middleware, FormController {
           context,
           status: status,
           statusCode: response.statusCode,
+          requiresAuth: withAuthorization,
         );
         return ResponseApi(
           responseParsed['status'],
@@ -160,6 +161,7 @@ class ServiceConfig with Middleware, FormController {
       final message = buildHttpErrorMessage(
         status: status,
         statusCode: response.statusCode,
+        requiresAuth: withAuthorization,
       );
       return ResponseApi(status, {
         'message': message,
@@ -256,7 +258,7 @@ class ServiceConfig with Middleware, FormController {
       final bodyResponse = await response.stream.bytesToString();
       final dynamic json = _tryDecodeJson(bodyResponse);
       status = decodeStatus(response.statusCode);
-      validateResponse(status);
+      validateResponse(status, requiresAuth: withAuthorization);
 
       if (!context.mounted) {
         throw Exception('Context not found');
@@ -268,6 +270,7 @@ class ServiceConfig with Middleware, FormController {
           context,
           status: status,
           statusCode: response.statusCode,
+          requiresAuth: withAuthorization,
         );
         return ResponseApi(
           responseParsed['status'],
@@ -282,6 +285,7 @@ class ServiceConfig with Middleware, FormController {
       final message = buildHttpErrorMessage(
         status: status,
         statusCode: response.statusCode,
+        requiresAuth: withAuthorization,
       );
       return ResponseApi(status, {
         'message': message,
@@ -360,7 +364,7 @@ class ServiceConfig with Middleware, FormController {
       final bodyResponse = await response.stream.bytesToString();
       final dynamic json = _tryDecodeJson(bodyResponse);
       final status = decodeStatus(response.statusCode);
-      validateResponse(status);
+      validateResponse(status, requiresAuth: withAuthorization);
 
       if (!context.mounted) {
         throw Exception('Context not found');
@@ -372,6 +376,7 @@ class ServiceConfig with Middleware, FormController {
           context,
           status: status,
           statusCode: response.statusCode,
+          requiresAuth: withAuthorization,
         );
         return ResponseApi(
           responseParsed['status'],
@@ -386,6 +391,7 @@ class ServiceConfig with Middleware, FormController {
       final message = buildHttpErrorMessage(
         status: status,
         statusCode: response.statusCode,
+        requiresAuth: withAuthorization,
       );
       return ResponseApi(status, {
         'message': message,

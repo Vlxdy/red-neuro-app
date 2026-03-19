@@ -17,23 +17,25 @@ mixin FormController {
     int? max,
     bool required = false,
   }) {
-    final existeValor = value != null || (value != null && value.isNotEmpty);
+    final String sanitizedValue = value?.trim() ?? '';
+    final bool existeValor = sanitizedValue.isNotEmpty;
+
     if (required && !existeValor) {
       return '$alias es requerido';
     }
     if (!required && !existeValor) return '';
     if (regExp != null) {
-      if (!RegExp(regExp).hasMatch(value!)) {
+      if (!RegExp(regExp).hasMatch(sanitizedValue)) {
         return '$alias no válido';
       }
     }
     if (min != null) {
-      if (value!.length < min) {
+      if (sanitizedValue.length < min) {
         return 'Mínimo $min caracteres';
       }
     }
     if (max != null) {
-      if (value!.length > max) {
+      if (sanitizedValue.length > max) {
         return 'Máximo $max caracteres';
       }
     }
