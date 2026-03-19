@@ -4,11 +4,13 @@ import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 
 mixin Middleware {
-  void validateResponse(StatusNetwork status) {
+  void validateResponse(StatusNetwork status, {bool requiresAuth = true}) {
     switch (status) {
       case StatusNetwork.unauthorized:
         Logger.error('401 - no authorizado');
-        Auth.instance.logout();
+        if (requiresAuth) {
+          Auth.instance.logout();
+        }
         return;
       case StatusNetwork.noContent:
         Logger.error('No content');
@@ -23,6 +25,7 @@ mixin Middleware {
     BuildContext context, {
     StatusNetwork status = StatusNetwork.noContent,
     int? statusCode,
+    bool requiresAuth = true,
   }) {
     try {
       final Map<String, dynamic> data = {};
@@ -38,6 +41,7 @@ mixin Middleware {
         json,
         status: data['status'] as StatusNetwork,
         statusCode: statusCode,
+        requiresAuth: requiresAuth,
       );
       data['log'] = json;
 
@@ -100,12 +104,22 @@ mixin Middleware {
     Map<String, dynamic> json, {
     required StatusNetwork status,
     int? statusCode,
+    bool requiresAuth = true,
   }) {
     final rawMessage = _extractMessage(json);
     if (rawMessage.isNotEmpty) {
-      return _decorateMessage(rawMessage, status: status, statusCode: statusCode);
+      return _decorateMessage(
+        rawMessage,
+        status: status,
+        statusCode: statusCode,
+        requiresAuth: requiresAuth,
+      );
     }
-    return buildHttpErrorMessage(status: status, statusCode: statusCode);
+    return buildHttpErrorMessage(
+      status: status,
+      statusCode: statusCode,
+      requiresAuth: requiresAuth,
+    );
   }
 
   String buildHttpErrorMessage({
@@ -113,6 +127,7 @@ mixin Middleware {
     int? statusCode,
     Map<String, dynamic>? body,
     String? rawBody,
+    bool requiresAuth = true,
   }) {
     switch (status) {
       case StatusNetwork.noInternet:
@@ -120,7 +135,9 @@ mixin Middleware {
       case StatusNetwork.timeout:
         return 'La solicitud tardó demasiado en responder. Inténtelo nuevamente y, si el problema continúa, comuníquese con el administrador del sistema.';
       case StatusNetwork.unauthorized:
-        return 'Su sesión ya no es válida. Inicie sesión nuevamente para continuar.';
+        return requiresAuth
+            ? 'Su sesión ya no es válida. Inicie sesión nuevamente para continuar.'
+            : 'No fue posible iniciar sesión con la información ingresada.';
       case StatusNetwork.noValidate:
       case StatusNetwork.unprocessableEntity:
         return 'No fue posible completar la solicitud. Revise la información ingresada e inténtelo nuevamente.';
@@ -182,28 +199,17 @@ mixin Middleware {
     String message, {
     required StatusNetwork status,
     int? statusCode,
+    bool requiresAuth = true,
   }) {
     final cleanMessage = message.trim();
     if (cleanMessage.isEmpty) {
-      return buildHttpErrorMessage(status: status, statusCode: statusCode);
+      return buildHttpErrorMessage(
+        status: status,
+        statusCode: statusCode,
+        requiresAuth: requiresAuth,
+      );
     }
 
-    switch (status) {
-      case StatusNetwork.unauthorized:
-        return 'Su sesión ya no es válida. $cleanMessage';
-      case StatusNetwork.noValidate:
-      case StatusNetwork.unprocessableEntity:
-        return cleanMessage;
-      case StatusNetwork.noContent:
-        return cleanMessage;
-      case StatusNetwork.exception:
-        return cleanMessage;
-      case StatusNetwork.noInternet:
-        return 'No fue posible comunicarse con el servidor. Por favor, comuníquese con el administrador del sistema.';
-      case StatusNetwork.timeout:
-        return 'La solicitud tardó demasiado en responder. Inténtelo nuevamente y, si el problema continúa, comuníquese con el administrador del sistema.';
-      case StatusNetwork.connected:
-        return cleanMessage;
-    }
+    return cleanMessage;
   }
 }
