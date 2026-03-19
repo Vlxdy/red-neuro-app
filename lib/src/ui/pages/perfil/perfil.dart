@@ -623,12 +623,28 @@ class _PerfilState extends State<Perfil> {
                     const _ThemePreference(),
                     const SizedBox(height: 20),
                     _SessionActions(
-                      onChangePassword: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (BuildContext context) =>
-                              const CambiarContrasena(),
-                        ),
-                      ),
+                      onChangePassword: () async {
+                        final dynamic result = await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (BuildContext context) =>
+                                const CambiarContrasena(),
+                          ),
+                        );
+
+                        if (!mounted || result is! Map<String, dynamic>) return;
+
+                        final bool success = result['success'] == true;
+                        final String message =
+                            (result['message'] as String? ?? '').trim();
+                        if (!success || message.isEmpty) return;
+
+                        showSnackBar(
+                          perfilMessenger,
+                          message,
+                          state: StatusSnackBar.success,
+                          colorText: theme.white,
+                        );
+                      },
                       onLogout: _logout,
                       loggingOut: _loggingOut,
                     ),
