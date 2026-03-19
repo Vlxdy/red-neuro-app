@@ -796,15 +796,23 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     final repetirContrasena = TextEditingController(
       text: personal?.nroDocumento ?? '',
     );
+    final String? rolPersonal = personal != null
+        ? personal.roles
+              .map((rol) => RoleUtils.normalizeRole(rol))
+              .firstWhere(
+                (rol) => rol.isNotEmpty,
+                orElse: () => RoleUtils.normalizeRole(personal.rol),
+              )
+        : null;
     final rolesDisponibles = <String>[
       ..._rolesCreables,
-      if (personal != null &&
-          (personal.rol ?? '').trim().isNotEmpty &&
-          !_rolesCreables.contains(RoleUtils.normalizeRole(personal.rol)))
-        RoleUtils.normalizeRole(personal.rol),
+      if (rolPersonal != null &&
+          rolPersonal.trim().isNotEmpty &&
+          !_rolesCreables.contains(rolPersonal))
+        rolPersonal,
     ];
     String? rolSeleccionado = personal != null
-        ? RoleUtils.normalizeRole(personal.rol)
+        ? rolPersonal
         : (rolesDisponibles.length == 1 ? rolesDisponibles.first : null);
     String? generoSeleccionado = personal?.genero;
     String apellidoErrorText = '';
