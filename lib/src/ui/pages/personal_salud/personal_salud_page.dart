@@ -84,6 +84,8 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
   bool _puedeRestaurarContrasena(Usuario profile) =>
       RoleUtils.canManageStaff(profile);
 
+  bool get _canCreateStaff => RoleUtils.canManageStaff(Auth.instance.profile);
+
   List<String> get _rolesCreables =>
       RoleUtils.creatableStaffRolesFor(Auth.instance.profile.rol);
 
@@ -1974,14 +1976,17 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                   side: BorderSide(color: _theme.white.withValues(alpha: 0.35)),
                 ),
               ),
-              IconButton(
-                onPressed: _processingAction ? null : () => _abrirFormulario(),
-                icon: Icon(Icons.add, color: _theme.white),
-                style: IconButton.styleFrom(
-                  minimumSize: const Size(36, 36),
-                  side: BorderSide(color: _theme.white.withValues(alpha: 0.35)),
+              if (_canCreateStaff)
+                IconButton(
+                  onPressed: _processingAction ? null : () => _abrirFormulario(),
+                  icon: Icon(Icons.add, color: _theme.white),
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size(36, 36),
+                    side: BorderSide(
+                      color: _theme.white.withValues(alpha: 0.35),
+                    ),
+                  ),
                 ),
-              ),
             ],
           ),
           body: Stack(
