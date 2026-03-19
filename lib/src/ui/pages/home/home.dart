@@ -23,6 +23,7 @@ import 'package:solar_icons/solar_icons.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:red_neuro_app/src/ui/pages/placeholder/placeholder.dart';
 import 'package:red_neuro_app/src/ui/pages/placeholder/role_tray_placeholder.dart';
+import 'package:red_neuro_app/src/utils/role_utils.dart';
 
 final GlobalKey<ScaffoldMessengerState> homeMessenger =
     GlobalKey<ScaffoldMessengerState>();
@@ -69,13 +70,8 @@ class _HomePageState extends State<HomePage> {
     final List<Rol> roles = profile.roles;
     final roleId = profile.idRol ?? (roles.isNotEmpty ? roles.first.idRol : '');
     final selectedRole = _findRole(roles, roleId, profile.rol);
-    final roleName = (selectedRole?.rol ?? profile.rol ?? '');
-    final esSupervisorActivo =
-        selectedRole?.esSupervisor ?? profile.esSupervisor;
-    final roleLabel = _formatearRolActivo(
-      roleName,
-      esSupervisor: esSupervisorActivo,
-    );
+    final roleName = RoleUtils.normalizeRole(selectedRole?.rol ?? profile.rol ?? '');
+    final roleLabel = RoleUtils.roleLabel(roleName);
 
     if (!mounted) return;
 
@@ -84,7 +80,6 @@ class _HomePageState extends State<HomePage> {
       _itemsMenu = _itemsByRole(
         user: profile,
         selectedRole: selectedRole,
-        esSupervisor: esSupervisorActivo,
         screenWidth: _currentScreenWidth(),
       );
       _selectedIndex = 0;
@@ -522,11 +517,10 @@ class _HomePageState extends State<HomePage> {
 List<ChildrenItem> _itemsByRole({
   required Usuario user,
   required Rol? selectedRole,
-  required bool esSupervisor,
   required double screenWidth,
 }) {
   final theme = ThemeController.instance;
-  final resolvedRole = _normalizarRol(selectedRole?.rol ?? user.rol ?? '');
+  final resolvedRole = RoleUtils.normalizeRole(selectedRole?.rol ?? user.rol ?? '');
 
   final perfilNav = ChildrenItem(
     iconoImagen: SolarIconsOutline.user,
@@ -539,7 +533,6 @@ List<ChildrenItem> _itemsByRole({
   final subModuleItems = _submodulesFromRole(
     selectedRole: selectedRole,
     resolvedRole: resolvedRole,
-    esSupervisor: esSupervisor,
     theme: theme,
   );
 
@@ -645,32 +638,9 @@ List<ChildrenItem> _ensureHomeFirst(
   return [_homeMenuItem(theme), ...items];
 }
 
-String _normalizarRol(String rol) {
-  final normalized = rol.toUpperCase();
-  switch (normalized) {
-    case 'ADMIN':
-      return 'ADMINISTRADOR';
-    case 'MEDICO':
-    case 'PERSONAL_MEDICO':
-    case 'SUPERVISOR':
-      return 'PERSONAL_SALUD';
-    default:
-      return normalized;
-  }
-}
-
-String _formatearRolActivo(String rol, {required bool esSupervisor}) {
-  final normalized = _normalizarRol(rol);
-  if (normalized == 'PERSONAL_SALUD' && esSupervisor) {
-    return 'PERSONAL_SALUD (ADMIN)';
-  }
-  return normalized;
-}
-
 List<ChildrenItem> _submodulesFromRole({
   required Rol? selectedRole,
   required String resolvedRole,
-  required bool esSupervisor,
   required ThemeController theme,
 }) {
   const supportedRoutesOrder = [
@@ -743,10 +713,12 @@ List<ChildrenItem> _submodulesFromRole({
   switch (resolvedRole) {
     case 'ADMINISTRADOR':
       return _adminMenu(theme);
-    case 'PERSONAL_SALUD':
-      return esSupervisor
-          ? _personalSaludAdminMenu(theme)
-          : _personalSaludMenu(theme);
+    case 'JEFE':
+      return _personalSaludAdminMenu(theme);
+    case 'COORDINADOR':
+    case 'PERSONAL':
+    case 'PROFESIONAL_INVITADO':
+      return _personalSaludMenu(theme);
     default:
       return [_noModulesPlaceholder(theme)];
   }
@@ -831,7 +803,7 @@ ChildrenItem _submoduleToItem(
           : isCitasModule
           ? const CitasPage(
               soloMisCitas: false,
-              titulo: 'Citas',
+              titulo: 'Agenda',
               mostrarFiltroMedico: true,
             )
           : isPacientesModule
@@ -907,11 +879,11 @@ List<ChildrenItem> _adminMenu(ThemeController theme) => [
   ChildrenItem(
     iconoImagen: PhosphorIconsRegular.calendarCheck,
     iconoImagenSeleccionada: PhosphorIconsFill.calendarCheck,
-    titulo: 'Citas',
+    titulo: 'Agenda',
     children: const KeepAlivePage(
       child: CitasPage(
         soloMisCitas: false,
-        titulo: 'Citas',
+        titulo: 'Agenda',
         mostrarFiltroMedico: true,
       ),
     ),
@@ -946,11 +918,11 @@ List<ChildrenItem> _personalSaludAdminMenu(ThemeController theme) => [
   ChildrenItem(
     iconoImagen: PhosphorIconsRegular.calendarPlus,
     iconoImagenSeleccionada: PhosphorIconsFill.calendarPlus,
-    titulo: 'Citas',
+    titulo: 'Agenda',
     children: const KeepAlivePage(
       child: CitasPage(
         soloMisCitas: false,
-        titulo: 'Citas (Personal de salud - Admin)',
+        titulo: 'Agenda (Personal de salud - Admin)',
         mostrarFiltroMedico: true,
       ),
     ),
@@ -985,9 +957,9 @@ List<ChildrenItem> _personalSaludMenu(ThemeController theme) => [
   ChildrenItem(
     iconoImagen: SolarIconsOutline.calendarSearch,
     iconoImagenSeleccionada: SolarIconsBold.calendarSearch,
-    titulo: 'Citas',
+    titulo: 'Agenda',
     children: const KeepAlivePage(
-      child: CitasPage(soloMisCitas: true, titulo: 'Mis citas'),
+      child: CitasPage(soloMisCitas: true, titulo: 'Mi agenda'),
     ),
   ),
   ChildrenItem(
@@ -1252,7 +1224,7 @@ _TrayBlueprint _resolveTrayBlueprint(SubModulo subModule) {
       icon: _moduleIconData('notificaciones'),
     ),
     '/admin/citas': _TrayBlueprint(
-      title: 'Citas',
+      title: 'Agenda',
       description:
           'Agenda y administra las citas médicas disponibles en el sistema.',
       actions: const [

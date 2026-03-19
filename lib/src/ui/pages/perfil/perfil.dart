@@ -15,6 +15,7 @@ import 'package:red_neuro_app/src/plugins/auth/auth_service.dart';
 import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
 import 'package:red_neuro_app/src/ui/common/components/tray_ui_helpers.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
+import 'package:red_neuro_app/src/utils/role_utils.dart';
 import 'package:red_neuro_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
 import 'package:red_neuro_app/src/ui/pages/perfil/componentes/perfil_info_card.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
@@ -94,7 +95,6 @@ class _PerfilState extends State<Perfil> {
             rol: '',
             nombre: '',
             descripcion: '',
-            esSupervisor: false,
             modulos: const <Modulo>[],
           ),
         );
@@ -623,12 +623,28 @@ class _PerfilState extends State<Perfil> {
                     const _ThemePreference(),
                     const SizedBox(height: 20),
                     _SessionActions(
-                      onChangePassword: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (BuildContext context) =>
-                              const CambiarContrasena(),
-                        ),
-                      ),
+                      onChangePassword: () async {
+                        final dynamic result = await Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (BuildContext context) =>
+                                const CambiarContrasena(),
+                          ),
+                        );
+
+                        if (!mounted || result is! Map<String, dynamic>) return;
+
+                        final bool success = result['success'] == true;
+                        final String message =
+                            (result['message'] as String? ?? '').trim();
+                        if (!success || message.isEmpty) return;
+
+                        showSnackBar(
+                          perfilMessenger,
+                          message,
+                          state: StatusSnackBar.success,
+                          colorText: theme.white,
+                        );
+                      },
                       onLogout: _logout,
                       loggingOut: _loggingOut,
                     ),
@@ -1039,7 +1055,6 @@ class _RoleCard extends StatelessWidget {
               rol: '',
               nombre: '',
               descripcion: '',
-              esSupervisor: false,
               modulos: const <Modulo>[],
             ),
     );
@@ -1284,13 +1299,11 @@ String _humanRoleLabel(Rol? rol) {
   switch (normalized) {
     case 'ADMIN':
     case 'ADMINISTRADOR':
-      return 'Administrador';
-    case 'SUPERVISOR':
-      return 'Supervisor clínico';
-    case 'MEDICO':
-    case 'PERSONAL_MEDICO':
-    case 'PERSONAL_SALUD':
-      return rol.esSupervisor ? 'Supervisor clínico' : 'Personal de salud';
+    case 'JEFE':
+    case 'COORDINADOR':
+    case 'PERSONAL':
+    case 'PROFESIONAL_INVITADO':
+      return RoleUtils.roleLabel(normalized);
     case 'PACIENTE':
       return 'Paciente';
     case 'RECEPCION':
@@ -1318,14 +1331,14 @@ String _humanRoleDescription(Rol? rol) {
     case 'ADMIN':
     case 'ADMINISTRADOR':
       return 'Gestiona configuraciones, usuarios y módulos con acceso administrativo.';
-    case 'SUPERVISOR':
-      return 'Supervisa la operación clínica y puede revisar bandejas del equipo.';
-    case 'MEDICO':
-    case 'PERSONAL_MEDICO':
-    case 'PERSONAL_SALUD':
-      return rol.esSupervisor
-          ? 'Cuenta con permisos ampliados para coordinar y supervisar la operación clínica.'
-          : 'Accede a las herramientas clínicas y a la gestión diaria de atención.';
+    case 'JEFE':
+      return 'Opera de forma global, incluyendo la gestión de personal.';
+    case 'COORDINADOR':
+      return 'Opera citas y pacientes, y puede consultar personal.';
+    case 'PERSONAL':
+      return 'Trabaja sobre sus asignaciones, pacientes y perfil.';
+    case 'PROFESIONAL_INVITADO':
+      return 'Trabaja sobre sus citas y pacientes asignados.';
     case 'PACIENTE':
       return 'Consulta tu información personal y el seguimiento de tus servicios.';
     case 'RECEPCION':

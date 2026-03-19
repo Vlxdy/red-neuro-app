@@ -11,6 +11,7 @@ import 'package:red_neuro_app/src/plugins/utils/connection.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
+import 'package:http_parser/http_parser.dart';
 
 class ResponseApi {
   late StatusNetwork status;
@@ -73,7 +74,6 @@ class ServiceConfig with Middleware, FormController {
     StatusNetwork status = StatusNetwork.noContent;
     final Response response;
 
-    // Construimos la URI incluyendo los parámetros
     final uri = Uri.parse(
       '${Constantes.apiUrl}$urlRecipe',
     ).replace(queryParameters: params);
@@ -132,31 +132,69 @@ class ServiceConfig with Middleware, FormController {
       }
 
       final decode = utf8.decode(response.bodyBytes);
-      final json = jsonDecode(decode);
+      final dynamic json = _tryDecodeJson(decode);
       status = decodeStatus(response.statusCode);
-      validateResponse(status);
+      validateResponse(status, requiresAuth: withAuthorization);
 
-      if (context.mounted) {
-        final responseParsed = parseResponse(json, context);
+      if (!context.mounted) {
+        throw Exception('Context not found');
+      }
+
+      if (json is Map<String, dynamic>) {
+        final responseParsed = parseResponse(
+          json,
+          context,
+          status: status,
+          statusCode: response.statusCode,
+          requiresAuth: withAuthorization,
+        );
         return ResponseApi(
           responseParsed['status'],
           responseParsed['data'],
           responseParsed['message'],
-          log: json,
+          log: responseParsed['log'] is Map<String, dynamic>
+              ? responseParsed['log'] as Map<String, dynamic>
+              : json,
         );
-      } else {
-        throw Exception('Context not found');
       }
+
+      final message = buildHttpErrorMessage(
+        status: status,
+        statusCode: response.statusCode,
+        requiresAuth: withAuthorization,
+      );
+      return ResponseApi(status, {
+        'message': message,
+        'rawBody': decode,
+      }, message);
     } on TimeoutException catch (_) {
-      return ResponseApi(StatusNetwork.timeout, {
-        'message': 'Tiempo de espera excedido',
-      }, 'Tiempo de espera excedido');
+      const message =
+          'La solicitud tardó demasiado en responder. Inténtelo nuevamente y, si el problema continúa, comuníquese con el administrador del sistema.';
+      return ResponseApi(StatusNetwork.timeout, {'message': message}, message);
+    } on SocketException catch (e) {
+      const message =
+          'No fue posible comunicarse con el servidor. Por favor, comuníquese con el administrador del sistema.';
+      return ResponseApi(StatusNetwork.noInternet, {
+        'message': message,
+        'log': e.toString(),
+      }, message);
     } catch (e) {
       Logger.error('exception fetch >>>> ${e.toString()}');
+      const message =
+          'Ocurrió un problema al procesar la solicitud. Inténtelo nuevamente o comuníquese con el administrador del sistema.';
       return ResponseApi(StatusNetwork.exception, {
-        'message': 'Ocurrió un error inesperado',
+        'message': message,
         'log': e.toString(),
-      }, 'Ocurrió un error inesperado');
+      }, message);
+    }
+  }
+
+  dynamic _tryDecodeJson(String body) {
+    if (body.trim().isEmpty) return null;
+    try {
+      return jsonDecode(body);
+    } catch (_) {
+      return null;
     }
   }
 
@@ -193,7 +231,6 @@ class ServiceConfig with Middleware, FormController {
         });
       }
       if (files != null && files.isNotEmpty && nameFiles != null) {
-        // files.length == nameFiles.length) {
         for (int i = 0; i < files.length; i++) {
           MultipartFile multiPartFile;
           if (image) {
@@ -218,34 +255,64 @@ class ServiceConfig with Middleware, FormController {
       }
       Logger.info('Ejecutando>>>> $uri, body: $body, method: $type ');
       final response = await request.send().timeout(Duration(seconds: timeout));
-      final decode = await response.stream.transform(utf8.decoder).join();
-      final json = jsonDecode(decode);
+      final bodyResponse = await response.stream.bytesToString();
+      final dynamic json = _tryDecodeJson(bodyResponse);
       status = decodeStatus(response.statusCode);
-      validateResponse(status);
-      if (context.mounted) {
-        final responseParsed = parseResponse(json, context, status: status);
+      validateResponse(status, requiresAuth: withAuthorization);
+
+      if (!context.mounted) {
+        throw Exception('Context not found');
+      }
+
+      if (json is Map<String, dynamic>) {
+        final responseParsed = parseResponse(
+          json,
+          context,
+          status: status,
+          statusCode: response.statusCode,
+          requiresAuth: withAuthorization,
+        );
         return ResponseApi(
           responseParsed['status'],
           responseParsed['data'],
           responseParsed['message'],
-          log: json,
+          log: responseParsed['log'] is Map<String, dynamic>
+              ? responseParsed['log'] as Map<String, dynamic>
+              : json,
         );
-      } else {
-        throw Exception('Context not found');
       }
+
+      final message = buildHttpErrorMessage(
+        status: status,
+        statusCode: response.statusCode,
+        requiresAuth: withAuthorization,
+      );
+      return ResponseApi(status, {
+        'message': message,
+        'rawBody': bodyResponse,
+      }, message);
     } on TimeoutException catch (_) {
-      return ResponseApi(StatusNetwork.timeout, {
-        'message': 'Tiempo de espera excedido',
-      }, 'Tiempo de espera excedido');
-    } catch (e, stacktrace) {
-      Logger.error('exception fetch >>>> ${e.toString()}');
-      Logger.error('stacktrace $stacktrace');
-      return ResponseApi(StatusNetwork.exception, {
-        'message': 'Ocurrió un error inesperado',
+      const message =
+          'La solicitud tardó demasiado en responder. Inténtelo nuevamente y, si el problema continúa, comuníquese con el administrador del sistema.';
+      return ResponseApi(StatusNetwork.timeout, {'message': message}, message);
+    } on SocketException catch (e) {
+      const message =
+          'No fue posible comunicarse con el servidor. Por favor, comuníquese con el administrador del sistema.';
+      return ResponseApi(StatusNetwork.noInternet, {
+        'message': message,
         'log': e.toString(),
-      }, 'Ocurrió un error inesperado');
+      }, message);
+    } catch (e) {
+      Logger.error('exception multipart >>>> ${e.toString()}');
+      const message =
+          'Ocurrió un problema al procesar la solicitud. Inténtelo nuevamente o comuníquese con el administrador del sistema.';
+      return ResponseApi(StatusNetwork.exception, {
+        'message': message,
+        'log': e.toString(),
+      }, message);
     }
   }
+
 
   Future<ResponseApi> multipartRequestFilesKeys(
     String urlRecipe, {
@@ -271,12 +338,10 @@ class ServiceConfig with Middleware, FormController {
     var request = MultipartRequest(type, uri)..headers.addAll(headers);
 
     try {
-      // Agregar los campos del body si existen
       body?.forEach((key, value) {
         request.fields[key] = jsonEncode(value).toString();
       });
 
-      // Añadir los archivos por tanque organizados
       if (files != null && files.isNotEmpty) {
         for (var key in files.keys) {
           for (var file in files[key]!) {
@@ -296,35 +361,61 @@ class ServiceConfig with Middleware, FormController {
       Logger.info('Ejecutando>>>> $uri, body: $body, method: $type');
 
       final response = await request.send().timeout(Duration(seconds: timeout));
-      final decode = await response.stream.transform(utf8.decoder).join();
-      final json = jsonDecode(decode);
-
+      final bodyResponse = await response.stream.bytesToString();
+      final dynamic json = _tryDecodeJson(bodyResponse);
       final status = decodeStatus(response.statusCode);
-      validateResponse(status);
+      validateResponse(status, requiresAuth: withAuthorization);
 
-      if (context.mounted) {
-        final responseParsed = parseResponse(json, context, status: status);
+      if (!context.mounted) {
+        throw Exception('Context not found');
+      }
+
+      if (json is Map<String, dynamic>) {
+        final responseParsed = parseResponse(
+          json,
+          context,
+          status: status,
+          statusCode: response.statusCode,
+          requiresAuth: withAuthorization,
+        );
         return ResponseApi(
           responseParsed['status'],
           responseParsed['data'],
           responseParsed['message'],
-          log: json,
+          log: responseParsed['log'] is Map<String, dynamic>
+              ? responseParsed['log'] as Map<String, dynamic>
+              : json,
         );
-      } else {
-        throw Exception('Context not found');
       }
-    } on TimeoutException {
-      return ResponseApi(StatusNetwork.timeout, {
-        'message': 'Tiempo de espera excedido',
-      }, 'Tiempo de espera excedido');
-    } catch (e, stacktrace) {
-      Logger.error('Exception fetch >>>> ${e.toString()}');
-      Logger.error('Stacktrace: $stacktrace');
 
-      return ResponseApi(StatusNetwork.exception, {
-        'message': 'Ocurrió un error inesperado',
+      final message = buildHttpErrorMessage(
+        status: status,
+        statusCode: response.statusCode,
+        requiresAuth: withAuthorization,
+      );
+      return ResponseApi(status, {
+        'message': message,
+        'rawBody': bodyResponse,
+      }, message);
+    } on TimeoutException catch (_) {
+      const message =
+          'La solicitud tardó demasiado en responder. Inténtelo nuevamente y, si el problema continúa, comuníquese con el administrador del sistema.';
+      return ResponseApi(StatusNetwork.timeout, {'message': message}, message);
+    } on SocketException catch (e) {
+      const message =
+          'No fue posible comunicarse con el servidor. Por favor, comuníquese con el administrador del sistema.';
+      return ResponseApi(StatusNetwork.noInternet, {
+        'message': message,
         'log': e.toString(),
-      }, 'Ocurrió un error inesperado');
+      }, message);
+    } catch (e) {
+      Logger.error('Exception fetch >>>> ${e.toString()}');
+      const message =
+          'Ocurrió un problema al procesar la solicitud. Inténtelo nuevamente o comuníquese con el administrador del sistema.';
+      return ResponseApi(StatusNetwork.exception, {
+        'message': message,
+        'log': e.toString(),
+      }, message);
     }
   }
 
