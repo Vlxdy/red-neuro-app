@@ -4,7 +4,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:red_neuro_app/src/config/form_controller.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/constants.dart';
@@ -19,7 +18,6 @@ import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
 import 'package:red_neuro_app/src/ui/common/customdatatable/custom_datatable.dart';
 import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
-import 'package:red_neuro_app/src/ui/common/form_stepper/step_form_dialog_layout.dart';
 import 'package:red_neuro_app/src/ui/common/components/tray_ui_helpers.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
@@ -511,7 +509,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                     trailing: _buildEstadoChip(persona.estaActivo),
                   ),
                   const SizedBox(height: 8),
-                  _buildTipoPersonalChip(persona.rol),
+                  _buildRolesWrap(_rolesPersonal(persona), compact: true),
                   const SizedBox(height: 6),
                   Wrap(
                     spacing: 8,
@@ -565,11 +563,13 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                             persona.fechaNacimiento,
                           ),
                         ),
-                      if ((persona.rol ?? '').trim().isNotEmpty)
+                      if (_rolesPersonal(persona).isNotEmpty)
                         CopyableInfoPill(
                           icon: Icons.badge_outlined,
-                          label: 'Rol',
-                          value: RoleUtils.roleLabel(persona.rol),
+                          label: 'Roles',
+                          value: _rolesPersonal(
+                            persona,
+                          ).map(RoleUtils.roleLabel).join(', '),
                         ),
                     ],
                   ),
@@ -714,6 +714,59 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     );
   }
 
+  List<String> _rolesPersonal(PersonalSalud personal) {
+    final roles = personal.roles
+        .map(RoleUtils.normalizeRole)
+        .where((rol) => rol.isNotEmpty)
+        .toSet()
+        .toList();
+    if (roles.isNotEmpty) {
+      return roles;
+    }
+
+    final rolPrincipal = RoleUtils.normalizeRole(personal.rol);
+    if (rolPrincipal.isEmpty) {
+      return const <String>[];
+    }
+    return <String>[rolPrincipal];
+  }
+
+  Widget _buildRolesWrap(
+    List<String> roles, {
+    bool compact = false,
+    WrapAlignment alignment = WrapAlignment.start,
+  }) {
+    if (roles.isEmpty) {
+      return Text(
+        'Sin roles asignados',
+        style: Theme.of(context).textTheme.bodySmall,
+      );
+    }
+
+    return Wrap(
+      alignment: alignment,
+      spacing: 8,
+      runSpacing: 8,
+      children: roles
+          .map(
+            (rol) => compact
+                ? _buildTipoPersonalChip(rol)
+                : Chip(
+                    label: Text(RoleUtils.roleLabel(rol)),
+                    backgroundColor: _theme.primary20,
+                    labelStyle: TextStyle(
+                      color: _theme.primary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    side: BorderSide.none,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    visualDensity: VisualDensity.compact,
+                  ),
+          )
+          .toList(),
+    );
+  }
+
   void _abrirFormulario({PersonalSalud? personal}) {
     final formKey = GlobalKey<FormState>();
     final nombres = TextEditingController(text: personal?.nombres ?? '');
@@ -733,8 +786,10 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
     final fechaNacimiento = TextEditingController(
       text: _formatearFechaInicial(personal?.fechaNacimiento),
     );
-    final contrasena = TextEditingController();
-    final repetirContrasena = TextEditingController();
+    final contrasena = TextEditingController(text: personal?.nroDocumento ?? '');
+    final repetirContrasena = TextEditingController(
+      text: personal?.nroDocumento ?? '',
+    );
     final rolesDisponibles = <String>[
       ..._rolesCreables,
       if (personal != null &&
@@ -747,12 +802,11 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
         : (rolesDisponibles.length == 1 ? rolesDisponibles.first : null);
     String? generoSeleccionado = personal?.genero;
     String apellidoErrorText = '';
-    String? modalErrorText;
     String? submitErrorText;
     bool submitting = false;
-    int currentStep = 0;
     final bool isEditing = personal != null;
-    final int lastStepIndex = isEditing ? 2 : 3;
+    bool passwordEdited = false;
+    bool repeatPasswordEdited = false;
 
     final ocupacion = TextEditingController(text: personal?.ocupacion ?? '');
 
@@ -777,399 +831,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setStateDialog) {
-            Widget stepContent() {
-              final isWide = MediaQuery.of(context).size.width >= 720;
-
-              if (currentStep == 0) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Datos personales',
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    const SizedBox(height: 12),
-                    if (isWide)
-                      Row(
-                        children: [
-                          Expanded(
-                            child: CustomTextInput(
-                              title: 'Nombres',
-                              controller: nombres,
-                              requiredData: true,
-                              validate: (value, alias) =>
-                                  (value?.isEmpty ?? true)
-                                  ? 'Campo requerido'
-                                  : '',
-                              onChange: (value) {
-                                _normalizarTextoMayusculas(nombres, value);
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: CustomTextInput(
-                              title: 'Primer apellido',
-                              controller: primerApellido,
-                              requiredData: true,
-                              validate: (value, alias) => _validarApellidos(
-                                value,
-                                alias,
-                                primerApellido: primerApellido,
-                                segundoApellido: segundoApellido,
-                              ),
-                              onChange: (value) {
-                                _normalizarTextoMayusculas(
-                                  primerApellido,
-                                  value,
-                                );
-                                if (apellidoErrorText.isNotEmpty) {
-                                  setStateDialog(() {
-                                    apellidoErrorText = '';
-                                  });
-                                }
-                              },
-                            ),
-                          ),
-                        ],
-                      )
-                    else
-                      Column(
-                        children: [
-                          CustomTextInput(
-                            title: 'Nombres',
-                            controller: nombres,
-                            requiredData: true,
-                            validate: (value, alias) => (value?.isEmpty ?? true)
-                                ? 'Campo requerido'
-                                : '',
-                            onChange: (value) {
-                              _normalizarTextoMayusculas(nombres, value);
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          CustomTextInput(
-                            title: 'Primer apellido',
-                            controller: primerApellido,
-                            requiredData: true,
-                            validate: (value, alias) => _validarApellidos(
-                              value,
-                              alias,
-                              primerApellido: primerApellido,
-                              segundoApellido: segundoApellido,
-                            ),
-                            onChange: (value) {
-                              _normalizarTextoMayusculas(primerApellido, value);
-                              if (apellidoErrorText.isNotEmpty) {
-                                setStateDialog(() {
-                                  apellidoErrorText = '';
-                                });
-                              }
-                            },
-                          ),
-                        ],
-                      ),
-                    const SizedBox(height: 12),
-                    if (isWide)
-                      Row(
-                        children: [
-                          Expanded(
-                            child: CustomTextInput(
-                              title: 'Segundo apellido',
-                              controller: segundoApellido,
-                              requiredData: true,
-                              validate: (value, alias) => _validarApellidos(
-                                value,
-                                alias,
-                                primerApellido: primerApellido,
-                                segundoApellido: segundoApellido,
-                              ),
-                              onChange: (value) {
-                                _normalizarTextoMayusculas(
-                                  segundoApellido,
-                                  value,
-                                );
-                                if (apellidoErrorText.isNotEmpty) {
-                                  setStateDialog(() {
-                                    apellidoErrorText = '';
-                                  });
-                                }
-                              },
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: CustomTextInput(
-                              title: 'Número de documento',
-                              controller: nroDocumento,
-                              requiredData: true,
-                              onlyNumbers: true,
-                              validate: (value, alias) =>
-                                  (value?.isEmpty ?? true)
-                                  ? 'Campo requerido'
-                                  : '',
-                            ),
-                          ),
-                        ],
-                      )
-                    else
-                      Column(
-                        children: [
-                          CustomTextInput(
-                            title: 'Segundo apellido',
-                            controller: segundoApellido,
-                            requiredData: true,
-                            validate: (value, alias) => _validarApellidos(
-                              value,
-                              alias,
-                              primerApellido: primerApellido,
-                              segundoApellido: segundoApellido,
-                            ),
-                            onChange: (value) {
-                              _normalizarTextoMayusculas(
-                                segundoApellido,
-                                value,
-                              );
-                              if (apellidoErrorText.isNotEmpty) {
-                                setStateDialog(() {
-                                  apellidoErrorText = '';
-                                });
-                              }
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          CustomTextInput(
-                            title: 'Número de documento',
-                            controller: nroDocumento,
-                            requiredData: true,
-                            onlyNumbers: true,
-                            validate: (value, alias) => (value?.isEmpty ?? true)
-                                ? 'Campo requerido'
-                                : '',
-                          ),
-                        ],
-                      ),
-                    const SizedBox(height: 4),
-                    if (apellidoErrorText.isNotEmpty)
-                      Text(
-                        apellidoErrorText,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                          fontSize: 12,
-                        ),
-                      ),
-                    const SizedBox(height: 12),
-                    CustomTextInput(
-                      title: 'Fecha de nacimiento',
-                      controller: fechaNacimiento,
-                      requiredData: true,
-                      onTap: () async {
-                        FocusScope.of(context).unfocus();
-                        await _seleccionarFecha(fechaNacimiento);
-                      },
-                      validate: (value, alias) =>
-                          _validarFechaNacimiento(value, alias),
-                    ),
-                  ],
-                );
-              }
-
-              if (currentStep == 1) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Contacto y género',
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    const SizedBox(height: 12),
-                    if (isWide)
-                      Row(
-                        children: [
-                          Expanded(
-                            child: CustomTextInput(
-                              title: 'Celular (opcional)',
-                              controller: telefono,
-                              onlyNumbers: true,
-                              validate: _validarCelular,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: CustomTextInput(
-                              title: 'Correo electrónico',
-                              controller: correo,
-                              requiredData: true,
-                              validate: _validarCorreo,
-                            ),
-                          ),
-                        ],
-                      )
-                    else
-                      Column(
-                        children: [
-                          CustomTextInput(
-                            title: 'Celular (opcional)',
-                            controller: telefono,
-                            onlyNumbers: true,
-                            validate: _validarCelular,
-                          ),
-                          const SizedBox(height: 12),
-                          CustomTextInput(
-                            title: 'Correo electrónico',
-                            controller: correo,
-                            requiredData: true,
-                            validate: _validarCorreo,
-                          ),
-                        ],
-                      ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      decoration: CustomTextInputStyles.decoration(
-                        label: 'Género (opcional)',
-                      ),
-                      initialValue: generoSeleccionado,
-                      items: const [
-                        DropdownMenuItem(value: 'F', child: Text('Femenino')),
-                        DropdownMenuItem(value: 'M', child: Text('Masculino')),
-                      ],
-                      onChanged: (value) {
-                        setStateDialog(() {
-                          generoSeleccionado = value;
-                        });
-                      },
-                    ),
-                  ],
-                );
-              }
-
-              if (currentStep == 2) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Rol y ocupación',
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      decoration: CustomTextInputStyles.decoration(
-                        label: 'Rol',
-                      ),
-                      initialValue: rolesDisponibles.contains(rolSeleccionado)
-                          ? rolSeleccionado
-                          : null,
-                      items: rolesDisponibles
-                          .map(
-                            (rol) => DropdownMenuItem<String>(
-                              value: rol,
-                              child: Text(RoleUtils.roleLabel(rol)),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) {
-                        setStateDialog(() {
-                          rolSeleccionado = value;
-                        });
-                      },
-                      validator: (value) =>
-                          (value == null || value.isEmpty) ? 'Campo requerido' : null,
-                    ),
-                    const SizedBox(height: 12),
-                    CustomTextInput(
-                      title: 'Ocupación',
-                      controller: ocupacion,
-                      placeholder: 'Ej: Cardiología',
-                    ),
-                  ],
-                );
-              }
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Credenciales',
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  const SizedBox(height: 12),
-                  if (isWide)
-                    Row(
-                      children: [
-                        Expanded(
-                          child: CustomTextInput(
-                            title: 'Contraseña',
-                            controller: contrasena,
-                            obscure: true,
-                            requiredData: personal == null,
-                            validate: (value, alias) {
-                              if (personal != null &&
-                                  (value?.isEmpty ?? true)) {
-                                return '';
-                              }
-                              return (value?.isEmpty ?? true)
-                                  ? 'Campo requerido'
-                                  : '';
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: CustomTextInput(
-                            title: 'Repetir contraseña',
-                            controller: repetirContrasena,
-                            obscure: true,
-                            requiredData: personal == null,
-                            validate: (value, alias) {
-                              if (personal != null &&
-                                  (value?.isEmpty ?? true)) {
-                                return '';
-                              }
-                              return (value?.isEmpty ?? true)
-                                  ? 'Campo requerido'
-                                  : '';
-                            },
-                          ),
-                        ),
-                      ],
-                    )
-                  else
-                    Column(
-                      children: [
-                        CustomTextInput(
-                          title: 'Contraseña',
-                          controller: contrasena,
-                          obscure: true,
-                          requiredData: personal == null,
-                          validate: (value, alias) {
-                            if (personal != null && (value?.isEmpty ?? true)) {
-                              return '';
-                            }
-                            return (value?.isEmpty ?? true)
-                                ? 'Campo requerido'
-                                : '';
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        CustomTextInput(
-                          title: 'Repetir contraseña',
-                          controller: repetirContrasena,
-                          obscure: true,
-                          requiredData: personal == null,
-                          validate: (value, alias) {
-                            if (personal != null && (value?.isEmpty ?? true)) {
-                              return '';
-                            }
-                            return (value?.isEmpty ?? true)
-                                ? 'Campo requerido'
-                                : '';
-                          },
-                        ),
-                      ],
-                    ),
-                ],
-              );
-            }
+            final isWide = MediaQuery.of(context).size.width >= 720;
 
             return WillPopScope(
               onWillPop: () async => !submitting,
@@ -1192,129 +854,628 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                       key: formKey,
                       child: AbsorbPointer(
                         absorbing: submitting,
-                        child: StepFormDialogLayout(
-                          title: personal == null
-                              ? 'Registrar personal de salud'
-                              : 'Editar personal de salud',
-                          totalSteps: lastStepIndex + 1,
-                          currentStep: currentStep,
-                          stepErrorText: modalErrorText,
-                          submitErrorText: submitErrorText,
-                          isSubmitting: submitting,
-                          onClose: submitting
-                              ? null
-                              : () => Navigator.pop(context),
-                          onBack: currentStep > 0
-                              ? () {
-                                  setStateDialog(() {
-                                    currentStep -= 1;
-                                    modalErrorText = null;
-                                    submitErrorText = null;
-                                  });
-                                }
-                              : null,
-                          nextLabel: currentStep == lastStepIndex
-                              ? (personal == null ? 'Crear' : 'Guardar')
-                              : 'Siguiente',
-                          nextIcon: currentStep == lastStepIndex
-                              ? (personal == null
-                                    ? PhosphorIconsFill.userPlus
-                                    : PhosphorIconsFill.floppyDisk)
-                              : null,
-                          stepContent: stepContent(),
-                          onNext: () async {
-                            if (currentStep < lastStepIndex) {
-                              final isValid = validateForm(formKey);
-                              if (!isValid) return;
-                              final apellidoError = _validarApellidos(
-                                null,
-                                '',
-                                primerApellido: primerApellido,
-                                segundoApellido: segundoApellido,
-                              );
-                              if (apellidoError.isNotEmpty) {
-                                setStateDialog(() {
-                                  apellidoErrorText = apellidoError;
-                                  modalErrorText = apellidoError;
-                                });
-                                return;
-                              }
-                              setStateDialog(() {
-                                currentStep += 1;
-                                modalErrorText = null;
-                                submitErrorText = null;
-                              });
-                              return;
-                            }
-
-                            final isValid = validateForm(formKey);
-                            if (!isValid) return;
-                            setStateDialog(() {
-                              modalErrorText = null;
-                            });
-                            if (!isEditing &&
-                                (contrasena.text.isNotEmpty ||
-                                    repetirContrasena.text.isNotEmpty) &&
-                                contrasena.text != repetirContrasena.text) {
-                              setStateDialog(() {
-                                modalErrorText = 'Las contraseñas no coinciden';
-                              });
-                              return;
-                            }
-
-                            final persona = {
-                              'nombres': nombres.text.trim(),
-                              'primerApellido': primerApellido.text.trim(),
-                              if (segundoApellido.text.trim().isNotEmpty)
-                                'segundoApellido': segundoApellido.text.trim(),
-                              'fechaNacimiento': _formatearFechaBackend(
-                                fechaNacimiento.text,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    personal == null
+                                        ? 'Registrar personal de salud'
+                                        : 'Editar personal de salud',
+                                    style:
+                                        Theme.of(context).textTheme.titleLarge,
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: submitting
+                                      ? null
+                                      : () => Navigator.pop(context),
+                                  icon: const Icon(Icons.close),
+                                  tooltip: 'Cerrar',
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Completa el formulario en una sola vista para registrar o actualizar el personal.',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                            const SizedBox(height: 20),
+                            Text(
+                              'Datos personales',
+                              style: Theme.of(context).textTheme.titleSmall,
+                            ),
+                            const SizedBox(height: 12),
+                            if (isWide)
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: CustomTextInput(
+                                      title: 'Nombres',
+                                      controller: nombres,
+                                      requiredData: true,
+                                      validate: (value, alias) =>
+                                          (value?.isEmpty ?? true)
+                                          ? 'Campo requerido'
+                                          : '',
+                                      onChange: (value) {
+                                        _normalizarTextoMayusculas(
+                                          nombres,
+                                          value,
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: CustomTextInput(
+                                      title: 'Primer apellido',
+                                      controller: primerApellido,
+                                      requiredData: true,
+                                      validate: (value, alias) =>
+                                          _validarApellidos(
+                                            value,
+                                            alias,
+                                            primerApellido: primerApellido,
+                                            segundoApellido: segundoApellido,
+                                          ),
+                                      onChange: (value) {
+                                        _normalizarTextoMayusculas(
+                                          primerApellido,
+                                          value,
+                                        );
+                                        if (apellidoErrorText.isNotEmpty) {
+                                          setStateDialog(() {
+                                            apellidoErrorText = '';
+                                          });
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              )
+                            else
+                              Column(
+                                children: [
+                                  CustomTextInput(
+                                    title: 'Nombres',
+                                    controller: nombres,
+                                    requiredData: true,
+                                    validate: (value, alias) =>
+                                        (value?.isEmpty ?? true)
+                                        ? 'Campo requerido'
+                                        : '',
+                                    onChange: (value) {
+                                      _normalizarTextoMayusculas(
+                                        nombres,
+                                        value,
+                                      );
+                                    },
+                                  ),
+                                  const SizedBox(height: 12),
+                                  CustomTextInput(
+                                    title: 'Primer apellido',
+                                    controller: primerApellido,
+                                    requiredData: true,
+                                    validate: (value, alias) => _validarApellidos(
+                                      value,
+                                      alias,
+                                      primerApellido: primerApellido,
+                                      segundoApellido: segundoApellido,
+                                    ),
+                                    onChange: (value) {
+                                      _normalizarTextoMayusculas(
+                                        primerApellido,
+                                        value,
+                                      );
+                                      if (apellidoErrorText.isNotEmpty) {
+                                        setStateDialog(() {
+                                          apellidoErrorText = '';
+                                        });
+                                      }
+                                    },
+                                  ),
+                                ],
                               ),
-                              'nroDocumento': nroDocumento.text.trim(),
-                              if (telefono.text.trim().isNotEmpty)
-                                'telefono': telefono.text.trim(),
-                              if ((generoSeleccionado ?? '').trim().isNotEmpty)
-                                'genero': generoSeleccionado,
-                            };
-                            Map<String, dynamic> body;
-                            if (personal == null) {
-                              body = {
-                                'persona': persona,
-                                'correoElectronico': correo.text.trim(),
-                                'contrasena': contrasena.text,
-                                'repetirContrasena': repetirContrasena.text,
-                                'rol': rolSeleccionado,
-                                if (ocupacion.text.trim().isNotEmpty)
-                                  'ocupacion': ocupacion.text.trim(),
-                              };
-                            } else {
-                              body = {
-                                'persona': persona,
-                                'correoElectronico': correo.text.trim(),
-                                'rol': rolSeleccionado,
-                                if (ocupacion.text.trim().isNotEmpty)
-                                  'ocupacion': ocupacion.text.trim(),
-                              };
-                            }
+                            const SizedBox(height: 12),
+                            if (isWide)
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: CustomTextInput(
+                                      title: 'Segundo apellido',
+                                      controller: segundoApellido,
+                                      requiredData: true,
+                                      validate: (value, alias) =>
+                                          _validarApellidos(
+                                            value,
+                                            alias,
+                                            primerApellido: primerApellido,
+                                            segundoApellido: segundoApellido,
+                                          ),
+                                      onChange: (value) {
+                                        _normalizarTextoMayusculas(
+                                          segundoApellido,
+                                          value,
+                                        );
+                                        if (apellidoErrorText.isNotEmpty) {
+                                          setStateDialog(() {
+                                            apellidoErrorText = '';
+                                          });
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: CustomTextInput(
+                                      title: 'Número de documento',
+                                      controller: nroDocumento,
+                                      requiredData: true,
+                                      onlyNumbers: true,
+                                      validate: (value, alias) =>
+                                          (value?.isEmpty ?? true)
+                                          ? 'Campo requerido'
+                                          : '',
+                                      onChange: (_) {
+                                        if (isEditing) return;
+                                        if (!passwordEdited) {
+                                          contrasena.text =
+                                              nroDocumento.text.trim();
+                                        }
+                                        if (!repeatPasswordEdited) {
+                                          repetirContrasena.text =
+                                              nroDocumento.text.trim();
+                                        }
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              )
+                            else
+                              Column(
+                                children: [
+                                  CustomTextInput(
+                                    title: 'Segundo apellido',
+                                    controller: segundoApellido,
+                                    requiredData: true,
+                                    validate: (value, alias) => _validarApellidos(
+                                      value,
+                                      alias,
+                                      primerApellido: primerApellido,
+                                      segundoApellido: segundoApellido,
+                                    ),
+                                    onChange: (value) {
+                                      _normalizarTextoMayusculas(
+                                        segundoApellido,
+                                        value,
+                                      );
+                                      if (apellidoErrorText.isNotEmpty) {
+                                        setStateDialog(() {
+                                          apellidoErrorText = '';
+                                        });
+                                      }
+                                    },
+                                  ),
+                                  const SizedBox(height: 12),
+                                  CustomTextInput(
+                                    title: 'Número de documento',
+                                    controller: nroDocumento,
+                                    requiredData: true,
+                                    onlyNumbers: true,
+                                    validate: (value, alias) =>
+                                        (value?.isEmpty ?? true)
+                                        ? 'Campo requerido'
+                                        : '',
+                                    onChange: (_) {
+                                      if (isEditing) return;
+                                      if (!passwordEdited) {
+                                        contrasena.text =
+                                            nroDocumento.text.trim();
+                                      }
+                                      if (!repeatPasswordEdited) {
+                                        repetirContrasena.text =
+                                            nroDocumento.text.trim();
+                                      }
+                                    },
+                                  ),
+                                ],
+                              ),
+                            const SizedBox(height: 4),
+                            if (apellidoErrorText.isNotEmpty)
+                              Text(
+                                apellidoErrorText,
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.error,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            const SizedBox(height: 12),
+                            CustomTextInput(
+                              title: 'Fecha de nacimiento',
+                              controller: fechaNacimiento,
+                              requiredData: true,
+                              onTap: () async {
+                                FocusScope.of(context).unfocus();
+                                await _seleccionarFecha(fechaNacimiento);
+                              },
+                              validate: (value, alias) =>
+                                  _validarFechaNacimiento(value, alias),
+                            ),
+                            const SizedBox(height: 20),
+                            Text(
+                              'Contacto y rol',
+                              style: Theme.of(context).textTheme.titleSmall,
+                            ),
+                            const SizedBox(height: 12),
+                            if (isWide)
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: CustomTextInput(
+                                      title: 'Celular (opcional)',
+                                      controller: telefono,
+                                      onlyNumbers: true,
+                                      validate: _validarCelular,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: CustomTextInput(
+                                      title: 'Correo electrónico',
+                                      controller: correo,
+                                      requiredData: true,
+                                      validate: _validarCorreo,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            else
+                              Column(
+                                children: [
+                                  CustomTextInput(
+                                    title: 'Celular (opcional)',
+                                    controller: telefono,
+                                    onlyNumbers: true,
+                                    validate: _validarCelular,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  CustomTextInput(
+                                    title: 'Correo electrónico',
+                                    controller: correo,
+                                    requiredData: true,
+                                    validate: _validarCorreo,
+                                  ),
+                                ],
+                              ),
+                            const SizedBox(height: 12),
+                            if (isWide)
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: DropdownButtonFormField<String>(
+                                      decoration:
+                                          CustomTextInputStyles.decoration(
+                                            label: 'Género (opcional)',
+                                          ),
+                                      initialValue: generoSeleccionado,
+                                      items: const [
+                                        DropdownMenuItem(
+                                          value: 'F',
+                                          child: Text('Femenino'),
+                                        ),
+                                        DropdownMenuItem(
+                                          value: 'M',
+                                          child: Text('Masculino'),
+                                        ),
+                                      ],
+                                      onChanged: (value) {
+                                        setStateDialog(() {
+                                          generoSeleccionado = value;
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: DropdownButtonFormField<String>(
+                                      decoration:
+                                          CustomTextInputStyles.decoration(
+                                            label: 'Rol',
+                                            requiredData: true,
+                                          ),
+                                      initialValue:
+                                          rolesDisponibles.contains(
+                                            rolSeleccionado,
+                                          )
+                                          ? rolSeleccionado
+                                          : null,
+                                      items: rolesDisponibles
+                                          .map(
+                                            (rol) => DropdownMenuItem<String>(
+                                              value: rol,
+                                              child: Text(
+                                                RoleUtils.roleLabel(rol),
+                                              ),
+                                            ),
+                                          )
+                                          .toList(),
+                                      onChanged: (value) {
+                                        setStateDialog(() {
+                                          rolSeleccionado = value;
+                                        });
+                                      },
+                                      validator: (value) =>
+                                          (value == null || value.isEmpty)
+                                          ? 'Campo requerido'
+                                          : null,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            else
+                              Column(
+                                children: [
+                                  DropdownButtonFormField<String>(
+                                    decoration:
+                                        CustomTextInputStyles.decoration(
+                                          label: 'Género (opcional)',
+                                        ),
+                                    initialValue: generoSeleccionado,
+                                    items: const [
+                                      DropdownMenuItem(
+                                        value: 'F',
+                                        child: Text('Femenino'),
+                                      ),
+                                      DropdownMenuItem(
+                                        value: 'M',
+                                        child: Text('Masculino'),
+                                      ),
+                                    ],
+                                    onChanged: (value) {
+                                      setStateDialog(() {
+                                        generoSeleccionado = value;
+                                      });
+                                    },
+                                  ),
+                                  const SizedBox(height: 12),
+                                  DropdownButtonFormField<String>(
+                                    decoration:
+                                        CustomTextInputStyles.decoration(
+                                          label: 'Rol',
+                                          requiredData: true,
+                                        ),
+                                    initialValue:
+                                        rolesDisponibles.contains(rolSeleccionado)
+                                        ? rolSeleccionado
+                                        : null,
+                                    items: rolesDisponibles
+                                        .map(
+                                          (rol) => DropdownMenuItem<String>(
+                                            value: rol,
+                                            child: Text(
+                                              RoleUtils.roleLabel(rol),
+                                            ),
+                                          ),
+                                        )
+                                        .toList(),
+                                    onChanged: (value) {
+                                      setStateDialog(() {
+                                        rolSeleccionado = value;
+                                      });
+                                    },
+                                    validator: (value) =>
+                                        (value == null || value.isEmpty)
+                                        ? 'Campo requerido'
+                                        : null,
+                                  ),
+                                ],
+                              ),
+                            const SizedBox(height: 12),
+                            CustomTextInput(
+                              title: 'Ocupación',
+                              controller: ocupacion,
+                              placeholder: 'Ej: Cardiología',
+                            ),
+                            if (!isEditing) ...[
+                              const SizedBox(height: 20),
+                              Text(
+                                'Credenciales',
+                                style: Theme.of(context).textTheme.titleSmall,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'La contraseña se sugiere automáticamente con el número de documento, pero puedes cambiarla.',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                              const SizedBox(height: 12),
+                              if (isWide)
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: CustomTextInput(
+                                        title: 'Contraseña',
+                                        controller: contrasena,
+                                        obscure: true,
+                                        requiredData: true,
+                                        validate: (value, alias) =>
+                                            (value?.isEmpty ?? true)
+                                            ? 'Campo requerido'
+                                            : '',
+                                        onChange: (_) {
+                                          passwordEdited = true;
+                                        },
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: CustomTextInput(
+                                        title: 'Repetir contraseña',
+                                        controller: repetirContrasena,
+                                        obscure: true,
+                                        requiredData: true,
+                                        validate: (value, alias) =>
+                                            (value?.isEmpty ?? true)
+                                            ? 'Campo requerido'
+                                            : '',
+                                        onChange: (_) {
+                                          repeatPasswordEdited = true;
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              else
+                                Column(
+                                  children: [
+                                    CustomTextInput(
+                                      title: 'Contraseña',
+                                      controller: contrasena,
+                                      obscure: true,
+                                      requiredData: true,
+                                      validate: (value, alias) =>
+                                          (value?.isEmpty ?? true)
+                                          ? 'Campo requerido'
+                                          : '',
+                                      onChange: (_) {
+                                        passwordEdited = true;
+                                      },
+                                    ),
+                                    const SizedBox(height: 12),
+                                    CustomTextInput(
+                                      title: 'Repetir contraseña',
+                                      controller: repetirContrasena,
+                                      obscure: true,
+                                      requiredData: true,
+                                      validate: (value, alias) =>
+                                          (value?.isEmpty ?? true)
+                                          ? 'Campo requerido'
+                                          : '',
+                                      onChange: (_) {
+                                        repeatPasswordEdited = true;
+                                      },
+                                    ),
+                                  ],
+                                ),
+                            ],
+                            if (submitErrorText != null) ...[
+                              const SizedBox(height: 12),
+                              Text(
+                                submitErrorText!,
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.error,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                            const SizedBox(height: 24),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: SimpleButton(
+                                    title: 'Cancelar',
+                                    outlined: true,
+                                    background: _theme.primary,
+                                    onTap: submitting
+                                        ? null
+                                        : () => Navigator.pop(context),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: SimpleButton(
+                                    title: personal == null
+                                        ? 'Crear personal'
+                                        : 'Guardar cambios',
+                                    disabled: submitting,
+                                    onTap: () async {
+                                      final isValid = validateForm(formKey);
+                                      if (!isValid) return;
+                                      final apellidoError = _validarApellidos(
+                                        null,
+                                        '',
+                                        primerApellido: primerApellido,
+                                        segundoApellido: segundoApellido,
+                                      );
+                                      if (apellidoError.isNotEmpty) {
+                                        setStateDialog(() {
+                                          apellidoErrorText = apellidoError;
+                                          submitErrorText = apellidoError;
+                                        });
+                                        return;
+                                      }
 
-                            setStateDialog(() {
-                              submitting = true;
-                              submitErrorText = null;
-                            });
-                            final error = await _guardarPersonal(
-                              body,
-                              personal,
-                            );
-                            if (!mounted) return;
-                            if (error == null) {
-                              Navigator.pop(context);
-                              return;
-                            }
-                            setStateDialog(() {
-                              submitting = false;
-                              submitErrorText = error;
-                            });
-                          },
+                                      if (!isEditing &&
+                                          contrasena.text !=
+                                              repetirContrasena.text) {
+                                        setStateDialog(() {
+                                          submitErrorText =
+                                              'Las contraseñas no coinciden';
+                                        });
+                                        return;
+                                      }
+
+                                      final personaBody = {
+                                        'nombres': nombres.text.trim(),
+                                        'primerApellido':
+                                            primerApellido.text.trim(),
+                                        if (segundoApellido.text
+                                            .trim()
+                                            .isNotEmpty)
+                                          'segundoApellido':
+                                              segundoApellido.text.trim(),
+                                        'fechaNacimiento':
+                                            _formatearFechaBackend(
+                                              fechaNacimiento.text,
+                                            ),
+                                        'nroDocumento':
+                                            nroDocumento.text.trim(),
+                                        if (telefono.text.trim().isNotEmpty)
+                                          'telefono': telefono.text.trim(),
+                                        if ((generoSeleccionado ?? '')
+                                            .trim()
+                                            .isNotEmpty)
+                                          'genero': generoSeleccionado,
+                                      };
+                                      final body = <String, dynamic>{
+                                        'persona': personaBody,
+                                        'correoElectronico':
+                                            correo.text.trim(),
+                                        'rol': rolSeleccionado,
+                                        if (ocupacion.text.trim().isNotEmpty)
+                                          'ocupacion': ocupacion.text.trim(),
+                                        if (!isEditing) ...{
+                                          'contrasena': contrasena.text,
+                                          'repetirContrasena':
+                                              repetirContrasena.text,
+                                        },
+                                      };
+
+                                      setStateDialog(() {
+                                        submitting = true;
+                                        submitErrorText = null;
+                                      });
+                                      final error = await _guardarPersonal(
+                                        body,
+                                        personal,
+                                      );
+                                      if (!mounted) return;
+                                      if (error == null) {
+                                        Navigator.pop(context);
+                                        return;
+                                      }
+                                      setStateDialog(() {
+                                        submitting = false;
+                                        submitErrorText = error;
+                                      });
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -1760,8 +1921,11 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                   ],
                                 ),
                                 const SizedBox(height: 8),
-                                if ((persona.rol ?? '').trim().isNotEmpty) ...[
-                                  _buildTipoPersonalChip(persona.rol),
+                                if (_rolesPersonal(persona).isNotEmpty) ...[
+                                  _buildRolesWrap(
+                                    _rolesPersonal(persona),
+                                    compact: true,
+                                  ),
                                   const SizedBox(height: 8),
                                 ],
                                 _buildOcupacionesResumen(persona),
@@ -1850,7 +2014,7 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                           CriterioOrdenType(nombre: 'Documento'),
                           CriterioOrdenType(nombre: 'Estado'),
                           CriterioOrdenType(nombre: 'Ocupación'),
-                          CriterioOrdenType(nombre: 'Rol'),
+                          CriterioOrdenType(nombre: 'Roles'),
                           CriterioOrdenType(nombre: 'Acciones'),
                         ],
                         contenidoTabla: _personal
@@ -1883,8 +2047,11 @@ class _PersonalSaludPageState extends State<PersonalSaludPage>
                                   ),
                                 ),
                                 _buildOcupacionesCell(persona),
-                                (persona.rol ?? '').trim().isNotEmpty
-                                    ? _buildTipoPersonalChip(persona.rol)
+                                _rolesPersonal(persona).isNotEmpty
+                                    ? _buildRolesWrap(
+                                        _rolesPersonal(persona),
+                                        compact: true,
+                                      )
                                     : const Text('—'),
                                 Row(
                                   children: [
