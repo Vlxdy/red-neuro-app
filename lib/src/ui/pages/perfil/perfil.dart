@@ -1046,12 +1046,8 @@ class _ThemePreference extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    Switch.adaptive(
+                    _ProfileSwitch(
                       value: isDark,
-                      activeThumbColor: theme.primary,
-                      activeTrackColor: theme.primary.withValues(alpha: 0.3),
-                      inactiveThumbColor: theme.grey,
-                      inactiveTrackColor: theme.grey.withValues(alpha: 0.3),
                       onChanged: (_) => theme.changeTheme(),
                     ),
                   ],
@@ -1061,6 +1057,69 @@ class _ThemePreference extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ProfileSwitch extends StatelessWidget {
+  const _ProfileSwitch({required this.value, required this.onChanged});
+
+  final bool value;
+  final ValueChanged<bool>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeController theme = ThemeController.instance;
+    final bool isDisabled = onChanged == null;
+
+    final Color activeThumb = theme.white;
+    final Color activeTrack = theme.primary.withValues(
+      alpha: isDisabled ? 0.4 : 0.9,
+    );
+    final Color inactiveThumb = theme.isLight
+        ? theme.white
+        : theme.monochromatic200.withValues(alpha: isDisabled ? 0.62 : 0.92);
+    final Color inactiveTrackBase = theme.isLight
+        ? theme.monochromatic200
+        : theme.monochromatic700;
+    final Color inactiveTrack = inactiveTrackBase.withValues(
+      alpha: isDisabled ? 0.3 : (theme.isLight ? 0.85 : 0.72),
+    );
+    final Color outlineColor = value
+        ? theme.primary.withValues(alpha: isDisabled ? 0.24 : 0.3)
+        : inactiveTrackBase.withValues(alpha: isDisabled ? 0.2 : 0.45);
+    final Color iconColor = value
+        ? theme.primary
+        : theme.fontColor.withValues(alpha: isDisabled ? 0.35 : 0.5);
+
+    return Switch(
+      value: value,
+      onChanged: onChanged,
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      activeThumbColor: activeThumb,
+      activeTrackColor: activeTrack,
+      inactiveThumbColor: inactiveThumb,
+      inactiveTrackColor: inactiveTrack,
+      trackOutlineColor: WidgetStateProperty.resolveWith((states) {
+        final bool selected = states.contains(WidgetState.selected);
+        final bool disabled = states.contains(WidgetState.disabled);
+        if (selected) {
+          return theme.primary.withValues(alpha: disabled ? 0.22 : 0.28);
+        }
+        return outlineColor;
+      }),
+      thumbIcon: WidgetStateProperty.resolveWith((states) {
+        final bool selected = states.contains(WidgetState.selected);
+        return Icon(
+          selected ? Icons.check_rounded : Icons.remove_rounded,
+          size: 12,
+          color: selected
+              ? theme.primary.withValues(
+                  alpha: states.contains(WidgetState.disabled) ? 0.7 : 1,
+                )
+              : iconColor,
+        );
+      }),
     );
   }
 }
@@ -1161,12 +1220,8 @@ class _SessionActions extends StatelessWidget {
                     ),
                   )
                 else
-                  Switch.adaptive(
+                  _ProfileSwitch(
                     value: biometricLoginEnabled!,
-                    activeThumbColor: theme.primary,
-                    activeTrackColor: theme.primary.withValues(alpha: 0.3),
-                    inactiveThumbColor: theme.grey,
-                    inactiveTrackColor: theme.grey.withValues(alpha: 0.3),
                     onChanged: biometricAvailable == false ||
                             updatingBiometricPreference
                         ? null
