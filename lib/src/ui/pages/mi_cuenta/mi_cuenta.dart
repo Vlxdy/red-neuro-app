@@ -54,7 +54,7 @@ class _MicuentaState extends State<Micuenta> {
   }
 
   void inicializar() async {
-    hasFingerprint = await seguridad.hasBiometrics;
+    hasFingerprint = await seguridad.hasDeviceSecurity;
     fingerprintEnabled = await seguridad.hasFingeprintEnabled;
     setState(() {});
   }
@@ -132,16 +132,16 @@ class _MicuentaState extends State<Micuenta> {
                           ),
                           child: ListTile(
                             onTap: () async {
-                              if (!await seguridad.hasBiometrics) {
+                              if (!await seguridad.hasDeviceSecurity) {
                                 showSnackBar(
                                   miCuentaMessenger,
-                                  'No tienes un sensor de huella disponible',
+                                  'No tienes seguridad de bloqueo disponible en el dispositivo',
                                   state: StatusSnackBar.error,
                                   colorText: theme.white,
                                 );
                                 return;
                               }
-                              Logger.info('modificar fingerprint');
+                              Logger.info('modificar seguridad del dispositivo');
                               if (fingerprintEnabled != null &&
                                   hasFingerprint != null &&
                                   hasFingerprint!) {
@@ -154,7 +154,7 @@ class _MicuentaState extends State<Micuenta> {
                               }
                             },
                             leading: const Icon(Icons.fingerprint_rounded),
-                            title: const Text('Usar el sensor de huella'),
+                            title: const Text('Usar seguridad del dispositivo'),
                             trailing: Transform.scale(
                               scale: fingerprintEnabled != null ? 0.7 : 0.5,
                               child:
@@ -173,7 +173,7 @@ class _MicuentaState extends State<Micuenta> {
                                           ? null
                                           : (bool value) {
                                               Logger.info(
-                                                'usar el sensor de huella ? > $value',
+                                                'usar seguridad del dispositivo ? > $value',
                                               );
                                               seguridad.updateFingeprint(value);
                                               setState(() {

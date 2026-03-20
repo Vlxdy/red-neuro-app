@@ -77,14 +77,14 @@ class _PerfilState extends State<Perfil> {
   }
 
   Future<void> _loadSecurityPreferences() async {
-    final bool hasBiometrics = await Seguridad.instance.hasBiometrics;
+    final bool hasDeviceSecurity = await Seguridad.instance.hasDeviceSecurity;
     final bool fingerprintEnabled =
         await Seguridad.instance.hasFingeprintEnabled;
 
     if (!mounted) return;
     setState(() {
-      _biometricAvailable = hasBiometrics;
-      _biometricLoginEnabled = hasBiometrics ? fingerprintEnabled : false;
+      _biometricAvailable = hasDeviceSecurity;
+      _biometricLoginEnabled = hasDeviceSecurity ? fingerprintEnabled : false;
     });
   }
 
@@ -92,18 +92,18 @@ class _PerfilState extends State<Perfil> {
     if (_updatingBiometricPreference) return;
 
     final ThemeController theme = ThemeController.instance;
-    final bool hasBiometrics = await Seguridad.instance.hasBiometrics;
+    final bool hasDeviceSecurity = await Seguridad.instance.hasDeviceSecurity;
 
     if (!mounted) return;
 
-    if (!hasBiometrics) {
+    if (!hasDeviceSecurity) {
       setState(() {
         _biometricAvailable = false;
         _biometricLoginEnabled = false;
       });
       showSnackBar(
         perfilMessenger,
-        'Este dispositivo no tiene biometría disponible.',
+        'Este dispositivo no tiene seguridad de bloqueo disponible.',
         state: StatusSnackBar.error,
         colorText: theme.white,
       );
@@ -124,8 +124,8 @@ class _PerfilState extends State<Perfil> {
       showSnackBar(
         perfilMessenger,
         enabled
-            ? 'El acceso con huella quedó habilitado para esta cuenta.'
-            : 'El acceso con huella quedó como opcional y desactivado.',
+            ? 'El desbloqueo con seguridad del dispositivo quedó habilitado para esta cuenta.'
+            : 'El desbloqueo con seguridad del dispositivo quedó como opcional y desactivado.',
         state: StatusSnackBar.success,
         colorText: theme.white,
       );
@@ -133,7 +133,7 @@ class _PerfilState extends State<Perfil> {
       if (!mounted) return;
       showSnackBar(
         perfilMessenger,
-        'No se pudo actualizar la preferencia de huella: $e',
+        'No se pudo actualizar la preferencia de desbloqueo: $e',
         state: StatusSnackBar.error,
         colorText: theme.white,
       );
@@ -1128,7 +1128,7 @@ class _SessionActions extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
-                        'Ingreso con huella',
+                        'Desbloqueo con seguridad del dispositivo',
                         style: TextStyle(
                           color: theme.fontColor,
                           fontWeight: FontWeight.w700,
@@ -1137,10 +1137,10 @@ class _SessionActions extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         biometricAvailable == false
-                            ? 'Tu dispositivo no tiene biometría disponible, así que el inicio seguirá con contraseña.'
+                            ? 'Tu dispositivo no tiene bloqueo del sistema disponible, así que el inicio seguirá con contraseña.'
                             : biometricLoginEnabled == true
-                                ? 'La huella está activa para desbloquear la app después del login.'
-                                : 'La huella es opcional y ahora mismo está desactivada para esta cuenta.',
+                                ? 'La app pedirá el método de verificación configurado en tu dispositivo para desbloquearse.'
+                                : 'Este desbloqueo es opcional y ahora mismo está desactivado para esta cuenta.',
                         style: TextStyle(
                           color: theme.fontColor.withValues(alpha: 0.68),
                           fontSize: 13,
