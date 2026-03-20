@@ -1250,11 +1250,9 @@ Future<void> abrirCitasFormularioModal({
           }
 
           bool validarFormulario() {
-            final servicioValido =
-                servicioFieldKey.currentState?.validate() ??
-                servicioSeleccionado != null;
+            final camposValidos = formKey.currentState?.validate() ?? false;
             final fechaValida = fechaInicio != null;
-            return servicioValido && fechaValida;
+            return camposValidos && fechaValida;
           }
 
           Widget buildFormularioCompleto() {
@@ -1639,10 +1637,21 @@ Future<void> abrirCitasFormularioModal({
                 ),
                 const SizedBox(height: 12),
                 FormField<Lugar>(
+                  validator: (_) {
+                    final requiereAsignacionYLugar =
+                        cita == null ||
+                        cita.estado == CitasEstado.borrador.value ||
+                        cita.estado == CitasEstado.rechazada.value;
+                    if (!requiereAsignacionYLugar || lugarSeleccionado != null) {
+                      return null;
+                    }
+                    return 'Selecciona un lugar';
+                  },
                   builder: (state) {
                     return CitasAutocompleteSelectorField(
                       controller: lugarController,
                       labelText: 'Lugar',
+                      requiredData: true,
                       hintText: 'Selecciona un lugar',
                       errorText: state.errorText,
                       onClear: lugarSeleccionado == null
@@ -1670,10 +1679,21 @@ Future<void> abrirCitasFormularioModal({
                 ),
                 const SizedBox(height: 12),
                 FormField<PersonalMedico>(
+                  validator: (_) {
+                    final requiereAsignacionYLugar =
+                        cita == null ||
+                        cita.estado == CitasEstado.borrador.value ||
+                        cita.estado == CitasEstado.rechazada.value;
+                    if (!requiereAsignacionYLugar || medicoSeleccionado != null) {
+                      return null;
+                    }
+                    return 'Selecciona personal asignado';
+                  },
                   builder: (state) {
                     return CitasAutocompleteSelectorField(
                       controller: medicoController,
                       labelText: 'Personal asignado',
+                      requiredData: true,
                       hintText: 'Selecciona personal asignado',
                       errorText: state.errorText,
                       onClear: medicoIdSeleccionado == null
