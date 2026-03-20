@@ -22,7 +22,7 @@ class ConfiguracionDesbloqueo extends StatefulWidget {
 }
 
 class _ConfiguracionDesbloqueoState extends State<ConfiguracionDesbloqueo> {
-  bool usarSensor = true;
+  bool usarSeguridadDispositivo = true;
 
   @override
   void initState() {
@@ -59,7 +59,6 @@ class _ConfiguracionDesbloqueoState extends State<ConfiguracionDesbloqueo> {
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
     final ThemeController theme = ThemeController.instance;
     return ScaffoldMessenger(
@@ -79,7 +78,7 @@ class _ConfiguracionDesbloqueoState extends State<ConfiguracionDesbloqueo> {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 40),
                     child: Icon(
-                      Icons.fingerprint,
+                      Icons.shield_outlined,
                       color: theme.secondary,
                       size: 90,
                     ),
@@ -91,7 +90,7 @@ class _ConfiguracionDesbloqueoState extends State<ConfiguracionDesbloqueo> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: <Widget>[
-                        const Text('Usar el sensor de huella'),
+                        const Text('Usar seguridad del dispositivo'),
                         Transform.scale(
                           scale: 0.7,
                           child: Switch.adaptive(
@@ -103,13 +102,13 @@ class _ConfiguracionDesbloqueoState extends State<ConfiguracionDesbloqueo> {
                             inactiveTrackColor: theme.grey.withValues(
                               alpha: 0.3,
                             ),
-                            value: usarSensor,
+                            value: usarSeguridadDispositivo,
                             onChanged: (bool value) {
                               Logger.info(
-                                'usar el sensor de huella ? > $value',
+                                'usar seguridad del dispositivo ? > $value',
                               );
                               setState(() {
-                                usarSensor = value;
+                                usarSeguridadDispositivo = value;
                               });
                             },
                           ),
@@ -133,7 +132,7 @@ class _ConfiguracionDesbloqueoState extends State<ConfiguracionDesbloqueo> {
                         ),
                         title: const Text(
                           style: TextStyle(fontSize: 12, height: 1.4),
-                          'La seguridad biométrica es administrada por tu dispositivo.',
+                          'Puedes desbloquear con el método de verificación que tengas configurado en tu dispositivo.',
                         ),
                       ),
                     ),
@@ -150,7 +149,7 @@ class _ConfiguracionDesbloqueoState extends State<ConfiguracionDesbloqueo> {
                           onTap: () {
                             Logger.info('empezar');
                             Seguridad.instance.loginLocalSecurity(
-                              fingerprint: usarSensor,
+                              fingerprint: usarSeguridadDispositivo,
                             );
                             Auth.instance.isLocked = false;
                             GoRouter.of(context).goNamed(RouteNames.home);

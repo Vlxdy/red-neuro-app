@@ -35,7 +35,7 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
   }
 
   void inicializar() async {
-    Logger.info('Verificar sesión (solo huella)');
+    Logger.info('Verificar sesión con seguridad del dispositivo');
 
     BuildContext? ctx = navigatorKey.currentContext;
     if (ctx == null || !ctx.mounted) return;
@@ -46,27 +46,27 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
       ctx = navigatorKey.currentContext;
       if (ctx == null || !ctx.mounted) return;
 
-      final bool hasBiometrics = await seguridad.hasBiometrics;
+      final bool hasDeviceSecurity = await seguridad.hasDeviceSecurity;
 
       ctx = navigatorKey.currentContext;
       if (ctx == null || !ctx.mounted) return;
 
-      // Si NO hay biometría, entra directo
-      if (!hasBiometrics) {
+      // Si NO hay seguridad del dispositivo, entra directo
+      if (!hasDeviceSecurity) {
         Auth.instance.isLocked = false;
         GoRouter.of(ctx).goNamed(RouteNames.home);
         return;
       }
 
-      // Si hay biometría, pero NO está habilitada en app, entra directo
+      // Si existe seguridad del dispositivo, pero NO está habilitada en app, entra directo
       if (!hasFingerprintEnabled) {
         Auth.instance.isLocked = false;
         GoRouter.of(ctx).goNamed(RouteNames.home);
         return;
       }
 
-      // Hay biometría y está habilitada -> pedir huella
-      final bool autenticado = await verificarHuella(ctx);
+      // Hay seguridad del dispositivo y está habilitada -> pedir autenticación
+      final bool autenticado = await verificarSeguridadDelDispositivo(ctx);
 
       ctx = navigatorKey.currentContext;
       if (ctx == null || !ctx.mounted) return;
@@ -85,20 +85,21 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
         if (ctx == null || !ctx.mounted) return;
       }
 
-      Logger.info('Autenticación por huella exitosa');
+      Logger.info('Autenticación del dispositivo exitosa');
       Auth.instance.isLocked = false;
       GoRouter.of(ctx).goNamed(RouteNames.home);
     } catch (e, st) {
-      Logger.error('Error en autenticación biométrica: $e\n$st');
+      Logger.error('Error en autenticación del dispositivo: $e\n$st');
     }
   }
 
-  Future<bool> verificarHuella(BuildContext context) async {
+  Future<bool> verificarSeguridadDelDispositivo(BuildContext context) async {
     final bool autenticado = await LocalSecure.autenticar(
       titulo: 'Control de ubicaciones',
-      message: 'Escanea tu huella dactilar para continuar',
+      message: 'Desbloquea con el método de verificación configurado en tu dispositivo',
+      biometricOnly: false,
     );
-    Logger.info('Biométrico autenticado: $autenticado');
+    Logger.info('Seguridad del dispositivo autenticada: $autenticado');
     return autenticado;
   }
 
