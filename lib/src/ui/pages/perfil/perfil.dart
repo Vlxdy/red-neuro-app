@@ -989,73 +989,122 @@ class _ThemePreference extends StatelessWidget {
             builder: (BuildContext context, bool isLight, Widget? child) {
               final bool isDark = !isLight;
 
-              return Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
+              return _ProfileSettingTile(
+                icon: Icon(
+                  isDark ? Icons.dark_mode : Icons.light_mode,
+                  color: theme.primary,
                 ),
-                decoration: BoxDecoration(
-                  color: theme.bgCard2.withValues(
-                    alpha: theme.isLight ? 0.55 : 0.22,
-                  ),
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(
-                    color: theme.primary.withValues(
-                      alpha: theme.isLight ? 0.12 : 0.2,
-                    ),
-                  ),
-                ),
-                child: Row(
-                  children: <Widget>[
-                    Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: theme.primary.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Icon(
-                        isDark ? Icons.dark_mode : Icons.light_mode,
-                        color: theme.primary,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            'Tema oscuro',
-                            style: TextStyle(
-                              color: theme.fontColor,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            isDark
-                                ? 'Activo para una visualización más cómoda en ambientes con poca luz.'
-                                : 'Activo el tema claro con colores alineados al estilo principal de la app.',
-                            style: TextStyle(
-                              color: theme.fontColor.withValues(alpha: 0.68),
-                              fontSize: 13,
-                              height: 1.35,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    _ProfileSwitch(
-                      value: isDark,
-                      onChanged: (_) => theme.changeTheme(),
-                    ),
-                  ],
+                title: 'Tema oscuro',
+                description: isDark
+                    ? 'Activo para una visualización más cómoda en ambientes con poca luz.'
+                    : 'Activo el tema claro con colores alineados al estilo principal de la app.',
+                trailing: _ProfileSwitch(
+                  value: isDark,
+                  onChanged: (_) => theme.changeTheme(),
                 ),
               );
             },
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ProfileSettingTile extends StatelessWidget {
+  const _ProfileSettingTile({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.trailing,
+  });
+
+  final Widget icon;
+  final String title;
+  final String description;
+  final Widget trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeController theme = ThemeController.instance;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: theme.bgCard2.withValues(alpha: theme.isLight ? 0.55 : 0.22),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: theme.primary.withValues(alpha: theme.isLight ? 0.12 : 0.2),
+        ),
+      ),
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          final bool stackTrailing = constraints.maxWidth < 360;
+          final Widget leading = Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: theme.primary.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: icon,
+          );
+
+          final Widget textBlock = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Text(
+                title,
+                style: TextStyle(
+                  color: theme.fontColor,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                description,
+                style: TextStyle(
+                  color: theme.fontColor.withValues(alpha: 0.68),
+                  fontSize: 13,
+                  height: 1.35,
+                ),
+              ),
+            ],
+          );
+
+          if (stackTrailing) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    leading,
+                    const SizedBox(width: 12),
+                    Expanded(child: textBlock),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Align(alignment: Alignment.centerRight, child: trailing),
+              ],
+            );
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              leading,
+              const SizedBox(width: 12),
+              Expanded(child: textBlock),
+              const SizedBox(width: 16),
+              Padding(
+                padding: const EdgeInsets.only(top: 2),
+                child: trailing,
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -1159,59 +1208,16 @@ class _SessionActions extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              color: theme.bgCard2.withValues(
-                alpha: theme.isLight ? 0.55 : 0.22,
-              ),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: theme.primary.withValues(alpha: 0.12),
-              ),
-            ),
-            child: Row(
-              children: <Widget>[
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: theme.primary.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(Icons.fingerprint, color: theme.primary),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Text(
-                        'Desbloqueo con seguridad del dispositivo',
-                        style: TextStyle(
-                          color: theme.fontColor,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        biometricAvailable == false
-                            ? 'Tu dispositivo no tiene bloqueo del sistema disponible, así que el inicio seguirá con contraseña.'
-                            : biometricLoginEnabled == true
-                                ? 'La app pedirá el método de verificación configurado en tu dispositivo para desbloquearse.'
-                                : 'Este desbloqueo es opcional y ahora mismo está desactivado para esta cuenta.',
-                        style: TextStyle(
-                          color: theme.fontColor.withValues(alpha: 0.68),
-                          fontSize: 13,
-                          height: 1.35,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                if (biometricAvailable == null || biometricLoginEnabled == null)
-                  SizedBox(
+          _ProfileSettingTile(
+            icon: Icon(Icons.fingerprint, color: theme.primary),
+            title: 'Desbloqueo con seguridad del dispositivo',
+            description: biometricAvailable == false
+                ? 'Tu dispositivo no tiene bloqueo del sistema disponible, así que el inicio seguirá con contraseña.'
+                : biometricLoginEnabled == true
+                    ? 'La app pedirá el método de verificación configurado en tu dispositivo para desbloquearse.'
+                    : 'Este desbloqueo es opcional y ahora mismo está desactivado para esta cuenta.',
+            trailing: biometricAvailable == null || biometricLoginEnabled == null
+                ? SizedBox(
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
@@ -1219,16 +1225,13 @@ class _SessionActions extends StatelessWidget {
                       color: theme.primary,
                     ),
                   )
-                else
-                  _ProfileSwitch(
+                : _ProfileSwitch(
                     value: biometricLoginEnabled!,
                     onChanged: biometricAvailable == false ||
                             updatingBiometricPreference
                         ? null
                         : onToggleBiometricLogin,
                   ),
-              ],
-            ),
           ),
           Divider(color: theme.grey.withValues(alpha: 0.2)),
           ListTile(
