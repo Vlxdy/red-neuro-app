@@ -5204,7 +5204,7 @@
             "name": "incluirInactivos",
             "required": false,
             "in": "query",
-            "description": "Si es true, incluye personal de salud activo e inactivo. Requiere permisos administrativos.",
+            "description": "Si es true, incluye personal de salud activo e inactivo. Para otros roles este filtro se ignora y se procesa como false.",
             "schema": {
               "default": false,
               "type": "boolean"
@@ -6721,12 +6721,12 @@
           "usuario": {
             "type": "string",
             "example": "ADMINISTRADOR",
-            "description": "Usuario"
+            "description": "Nombre de usuario registrado en el sistema."
           },
           "contrasena": {
             "type": "string",
             "example": "MTIz",
-            "description": "Contraseña"
+            "description": "Contraseña codificada en Base64."
           }
         },
         "required": [
@@ -7749,6 +7749,7 @@
           "detalle",
           "fechaInicio",
           "idPersonal",
+          "idLugar",
           "tipoCita",
           "idServicio"
         ]
