@@ -13,10 +13,12 @@ typedef CatalogoLoader<T> = Future<CatalogoPageResult<T>> Function({
 
 class CitasMedicoSelectorModalWidget extends StatelessWidget {
   final CatalogoLoader<PersonalMedico> cargarMedicos;
+  final double maxHeightFactor;
 
   const CitasMedicoSelectorModalWidget({
     super.key,
     required this.cargarMedicos,
+    this.maxHeightFactor = .9,
   });
 
   @override
@@ -30,16 +32,19 @@ class CitasMedicoSelectorModalWidget extends StatelessWidget {
           (item.nroDocumento?.isNotEmpty ?? false)
           ? 'Documento: ${item.nroDocumento}'
           : null,
+      maxHeightFactor: maxHeightFactor,
     );
   }
 }
 
 class CitasLugarSelectorModalWidget extends StatelessWidget {
   final CatalogoLoader<Lugar> cargarLugares;
+  final double maxHeightFactor;
 
   const CitasLugarSelectorModalWidget({
     super.key,
     required this.cargarLugares,
+    this.maxHeightFactor = .85,
   });
 
   @override
@@ -53,6 +58,7 @@ class CitasLugarSelectorModalWidget extends StatelessWidget {
         if (item.direccion.trim().isEmpty) return null;
         return item.direccion;
       },
+      maxHeightFactor: maxHeightFactor,
     );
   }
 }
@@ -63,6 +69,7 @@ class _CitasCatalogoSelectorModal<T> extends StatefulWidget {
   final CatalogoLoader<T> cargarCatalogo;
   final String Function(T item) itemTitleBuilder;
   final String? Function(T item) itemSubtitleBuilder;
+  final double maxHeightFactor;
 
   const _CitasCatalogoSelectorModal({
     required this.titulo,
@@ -70,6 +77,7 @@ class _CitasCatalogoSelectorModal<T> extends StatefulWidget {
     required this.cargarCatalogo,
     required this.itemTitleBuilder,
     required this.itemSubtitleBuilder,
+    required this.maxHeightFactor,
   });
 
   @override
@@ -138,35 +146,42 @@ class _CitasCatalogoSelectorModalState<T>
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(bottom: mediaQuery.viewInsets.bottom),
       child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
-              child: Text(
-                widget.titulo,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  labelText: widget.buscarLabel,
-                  border: const OutlineInputBorder(),
+        top: false,
+        child: FractionallySizedBox(
+          heightFactor: widget.maxHeightFactor,
+          alignment: Alignment.bottomCenter,
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+                child: Text(
+                  widget.titulo,
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
-                onChanged: _onSearchChanged,
               ),
-            ),
-            const SizedBox(height: 12),
-            Flexible(child: _buildList(context)),
-            const SizedBox(height: 12),
-          ],
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: TextField(
+                  controller: _searchController,
+                  decoration: InputDecoration(
+                    labelText: widget.buscarLabel,
+                    border: const OutlineInputBorder(),
+                  ),
+                  onChanged: _onSearchChanged,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Expanded(child: _buildList(context)),
+              const SizedBox(height: 12),
+            ],
+          ),
         ),
       ),
     );
