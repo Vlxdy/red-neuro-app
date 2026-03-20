@@ -8,10 +8,25 @@ class SocketService {
 
   io.Socket? _socket;
   String? _idUsuario;
+  DateTime? _lastConnectAt;
+  DateTime? _lastDisconnectAt;
+  DateTime? _lastErrorAt;
+  String? _lastDisconnectReason;
+  String? _lastErrorMessage;
   final Map<String, Map<Function, dynamic Function(dynamic)>> _wrappedHandlers =
       {};
 
   bool get isConnected => _socket?.connected == true;
+  bool get hasSocketInstance => _socket != null;
+  bool get hasUsuarioSuscrito => (_idUsuario ?? '').trim().isNotEmpty;
+  bool get isNotificacionesReady => isConnected && hasUsuarioSuscrito;
+  bool get isCitasReady => isConnected;
+  String? get socketId => _socket?.id;
+  DateTime? get lastConnectAt => _lastConnectAt;
+  DateTime? get lastDisconnectAt => _lastDisconnectAt;
+  DateTime? get lastErrorAt => _lastErrorAt;
+  String? get lastDisconnectReason => _lastDisconnectReason;
+  String? get lastErrorMessage => _lastErrorMessage;
 
   /// Conecta el socket al namespace unificado de realtime.
   void connect(String idUsuario) {
@@ -41,6 +56,9 @@ class SocketService {
     );
 
     _socket!.onConnect((_) {
+      _lastConnectAt = DateTime.now();
+      _lastDisconnectReason = null;
+      _lastErrorMessage = null;
       debugPrint('🔌 Socket connected: ${_socket!.id}');
       subscribeNotificaciones();
     });
@@ -51,14 +69,20 @@ class SocketService {
     });
 
     _socket!.onDisconnect((reason) {
+      _lastDisconnectAt = DateTime.now();
+      _lastDisconnectReason = reason?.toString();
       debugPrint('🔌 Socket disconnected: $reason');
     });
 
     _socket!.onConnectError((error) {
+      _lastErrorAt = DateTime.now();
+      _lastErrorMessage = error?.toString();
       debugPrint('🔌 Socket connect_error: $error');
     });
 
     _socket!.onError((error) {
+      _lastErrorAt = DateTime.now();
+      _lastErrorMessage = error?.toString();
       debugPrint('🔌 Socket error: $error');
     });
 
@@ -123,6 +147,7 @@ class SocketService {
   }
 
   void disconnect() {
+    _lastDisconnectAt = DateTime.now();
     _socket?.disconnect();
     _socket?.dispose();
     _socket = null;

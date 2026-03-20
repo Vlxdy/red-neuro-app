@@ -20,6 +20,7 @@ import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/utils/role_utils.dart';
 import 'package:red_neuro_app/src/ui/pages/cambiar_contrasena/cambiar_contrasena.dart';
 import 'package:red_neuro_app/src/ui/pages/perfil/componentes/perfil_info_card.dart';
+import 'package:red_neuro_app/src/ui/pages/perfil/componentes/perfil_opciones_desarrollador_page.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
 import 'package:red_neuro_app/src/ui/pages/perfil/perfil_service.dart';
 import 'package:red_neuro_app/src/plugins/seguridad/seguridad.dart';
@@ -481,6 +482,14 @@ class _PerfilState extends State<Perfil> {
     if (mounted) setState(() => _loggingOut = false);
   }
 
+  bool _isActiveAdminProfile(Usuario profile) {
+    final Rol? activeRole = _resolveActiveRole();
+    final String normalizedActiveRole = RoleUtils.normalizeRole(
+      activeRole?.rol.isNotEmpty == true ? activeRole!.rol : profile.rol,
+    );
+    return normalizedActiveRole == RoleUtils.administrador;
+  }
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<bool>(
@@ -510,6 +519,7 @@ class _PerfilState extends State<Perfil> {
         final String activeRoleLabel = _humanRoleLabel(activeRole);
         final String roleDescription = _humanRoleDescription(activeRole);
         final PackageInfo appInfo = Auth.instance.appInfo;
+        final bool isAdmin = _isActiveAdminProfile(profile);
 
         return TemplatePage(
           showEnvironmentBanner: false,
@@ -702,7 +712,20 @@ class _PerfilState extends State<Perfil> {
                         },
                       ],
                     ),
-                    const SizedBox(height: 20),
+                    if (isAdmin) ...<Widget>[
+                      const SizedBox(height: 20),
+                      _DeveloperOptionsEntryCard(
+                        onTap: () async {
+                          await Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) =>
+                                  const PerfilOpcionesDesarrolladorPage(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                    ],
                     _RoleCard(
                       theme: theme,
                       roles: _roles,
@@ -792,6 +815,7 @@ class _ProfileHeroCard extends StatelessWidget {
   final Widget avatar;
   final Widget actions;
   final List<_ProfileSummaryItemData> summaryItems;
+
 
   @override
   Widget build(BuildContext context) {
@@ -968,6 +992,7 @@ class _ProfileSummaryItemCard extends StatelessWidget {
 class _ThemePreference extends StatelessWidget {
   const _ThemePreference();
 
+
   @override
   Widget build(BuildContext context) {
     final ThemeController theme = ThemeController.instance;
@@ -1023,6 +1048,7 @@ class _ProfileSettingTile extends StatelessWidget {
   final String title;
   final String description;
   final Widget trailing;
+
 
   @override
   Widget build(BuildContext context) {
@@ -1116,6 +1142,7 @@ class _ProfileSwitch extends StatelessWidget {
   final bool value;
   final ValueChanged<bool>? onChanged;
 
+
   @override
   Widget build(BuildContext context) {
     final ThemeController theme = ThemeController.instance;
@@ -1192,6 +1219,7 @@ class _SessionActions extends StatelessWidget {
   final VoidCallback onLogout;
   final bool loggingOut;
 
+
   @override
   Widget build(BuildContext context) {
     final ThemeController theme = ThemeController.instance;
@@ -1265,6 +1293,83 @@ class _SessionActions extends StatelessWidget {
   }
 }
 
+class _DeveloperOptionsEntryCard extends StatelessWidget {
+  const _DeveloperOptionsEntryCard({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeController theme = ThemeController.instance;
+
+    return _ProfileSectionCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: theme.primary.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  Icons.developer_mode_rounded,
+                  color: theme.primary,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      'Opciones de desarrollador',
+                      style: TextStyle(
+                        color: theme.secondary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Abre una vista separada con herramientas internas y el diagnóstico del realtime.',
+                      style: TextStyle(
+                        color: theme.fontColor.withValues(alpha: 0.72),
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: FilledButton.icon(
+              onPressed: onTap,
+              icon: const Icon(Icons.arrow_forward_rounded),
+              label: const Text('Abrir opciones'),
+              style: FilledButton.styleFrom(
+                backgroundColor: theme.primary,
+                foregroundColor: theme.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 14,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
 class _RoleCard extends StatelessWidget {
   const _RoleCard({
     required this.theme,
@@ -1279,6 +1384,7 @@ class _RoleCard extends StatelessWidget {
   final String? activeRoleId;
   final bool changing;
   final ValueChanged<String>? onRoleSelected;
+
 
   @override
   Widget build(BuildContext context) {
@@ -1437,6 +1543,7 @@ class _ProfileSectionCard extends StatelessWidget {
   const _ProfileSectionCard({required this.child});
 
   final Widget child;
+
 
   @override
   Widget build(BuildContext context) {
