@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:package_info_plus/package_info_plus.dart';
@@ -6,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:red_neuro_app/src/config/service_config.dart';
+import 'package:red_neuro_app/src/config/socket_service.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/constants.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
@@ -56,12 +58,26 @@ class _PerfilState extends State<Perfil> {
   bool? _biometricAvailable;
   bool? _biometricLoginEnabled;
   bool _updatingBiometricPreference = false;
+  Timer? _socketStatusTimer;
 
   @override
   void initState() {
     super.initState();
     _loadProfile();
     _loadSecurityPreferences();
+    _startSocketStatusPolling();
+  }
+
+  void _startSocketStatusPolling() {
+    _socketStatusTimer?.cancel();
+    _socketStatusTimer = Timer.periodic(const Duration(seconds: 2), (_) {
+      if (!mounted) return;
+      final Usuario? profile = _profile;
+      if (profile == null || !RoleUtils.hasRole(profile, RoleUtils.administrador)) {
+        return;
+      }
+      setState(() {});
+    });
   }
 
   Future<void> _loadProfile() async {
@@ -482,6 +498,12 @@ class _PerfilState extends State<Perfil> {
   }
 
   @override
+  void dispose() {
+    _socketStatusTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<bool>(
       valueListenable: ThemeController.instance.brightness,
@@ -510,6 +532,7 @@ class _PerfilState extends State<Perfil> {
         final String activeRoleLabel = _humanRoleLabel(activeRole);
         final String roleDescription = _humanRoleDescription(activeRole);
         final PackageInfo appInfo = Auth.instance.appInfo;
+        final bool isAdmin = RoleUtils.hasRole(profile, RoleUtils.administrador);
 
         return TemplatePage(
           showEnvironmentBanner: false,
@@ -702,7 +725,10 @@ class _PerfilState extends State<Perfil> {
                         },
                       ],
                     ),
-                    const SizedBox(height: 20),
+                    if (isAdmin) ...<Widget>[
+                      _SocketStatusCard(theme: theme),
+                      const SizedBox(height: 20),
+                    ],
                     _RoleCard(
                       theme: theme,
                       roles: _roles,
@@ -792,6 +818,7 @@ class _ProfileHeroCard extends StatelessWidget {
   final Widget avatar;
   final Widget actions;
   final List<_ProfileSummaryItemData> summaryItems;
+
 
   @override
   Widget build(BuildContext context) {
@@ -968,6 +995,7 @@ class _ProfileSummaryItemCard extends StatelessWidget {
 class _ThemePreference extends StatelessWidget {
   const _ThemePreference();
 
+
   @override
   Widget build(BuildContext context) {
     final ThemeController theme = ThemeController.instance;
@@ -1023,6 +1051,7 @@ class _ProfileSettingTile extends StatelessWidget {
   final String title;
   final String description;
   final Widget trailing;
+
 
   @override
   Widget build(BuildContext context) {
@@ -1116,6 +1145,7 @@ class _ProfileSwitch extends StatelessWidget {
   final bool value;
   final ValueChanged<bool>? onChanged;
 
+
   @override
   Widget build(BuildContext context) {
     final ThemeController theme = ThemeController.instance;
@@ -1192,6 +1222,7 @@ class _SessionActions extends StatelessWidget {
   final VoidCallback onLogout;
   final bool loggingOut;
 
+
   @override
   Widget build(BuildContext context) {
     final ThemeController theme = ThemeController.instance;
@@ -1265,6 +1296,244 @@ class _SessionActions extends StatelessWidget {
   }
 }
 
+
+class _SocketStatusCard extends StatelessWidget {
+  const _SocketStatusCard({required this.theme});
+
+  final ThemeController theme;
+
+  @override
+  Widget build(BuildContext context) {
+    final SocketService socketService = SocketService.instance;
+    final bool realtimeConnected = socketService.isConnected;
+    final bool notificationsReady = socketService.isNotificacionesReady;
+    final bool citasReady = socketService.isCitasReady;
+
+    return _ProfileSectionCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Icon(Icons.hub_outlined, color: theme.primary),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      'Estado de sockets',
+                      style: TextStyle(
+                        color: theme.secondary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Diagnóstico rápido para administración. Citas y notificaciones usan el mismo socket realtime.',
+                      style: TextStyle(
+                        color: theme.fontColor.withValues(alpha: 0.72),
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: <Widget>[
+              _SocketStatusTile(
+                theme: theme,
+                title: 'Realtime',
+                description: realtimeConnected
+                    ? 'Conexión activa con el backend.'
+                    : 'Sin conexión activa al socket.',
+                connected: realtimeConnected,
+                icon: Icons.power_settings_new_rounded,
+              ),
+              _SocketStatusTile(
+                theme: theme,
+                title: 'Notificaciones',
+                description: notificationsReady
+                    ? 'Suscripción lista para recibir eventos del usuario.'
+                    : socketService.hasUsuarioSuscrito
+                        ? 'Esperando que el socket termine de conectar.'
+                        : 'No hay un id de usuario listo para suscribirse.',
+                connected: notificationsReady,
+                icon: Icons.notifications_active_outlined,
+              ),
+              _SocketStatusTile(
+                theme: theme,
+                title: 'Citas',
+                description: citasReady
+                    ? 'Canal listo para escuchar actualizaciones de citas.'
+                    : 'Las actualizaciones de citas dependen del socket realtime.',
+                connected: citasReady,
+                icon: Icons.calendar_month_outlined,
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _SocketDebugDetail(
+            theme: theme,
+            label: 'Socket ID',
+            value: socketService.socketId ?? 'Sin asignar',
+          ),
+          _SocketDebugDetail(
+            theme: theme,
+            label: 'Última conexión exitosa',
+            value: _formatSocketDate(socketService.lastConnectAt),
+          ),
+          _SocketDebugDetail(
+            theme: theme,
+            label: 'Última desconexión',
+            value:
+                '${_formatSocketDate(socketService.lastDisconnectAt)}${_withPrefix(socketService.lastDisconnectReason)}',
+          ),
+          _SocketDebugDetail(
+            theme: theme,
+            label: 'Último error',
+            value:
+                '${_formatSocketDate(socketService.lastErrorAt)}${_withPrefix(socketService.lastErrorMessage)}',
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _formatSocketDate(DateTime? value) {
+    if (value == null) return 'Sin registro';
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    return '${value.year}-${twoDigits(value.month)}-${twoDigits(value.day)} ${twoDigits(value.hour)}:${twoDigits(value.minute)}:${twoDigits(value.second)} UTC';
+  }
+
+  static String _withPrefix(String? value) {
+    final String normalized = (value ?? '').trim();
+    if (normalized.isEmpty) return '';
+    return ' · $normalized';
+  }
+}
+
+class _SocketStatusTile extends StatelessWidget {
+  const _SocketStatusTile({
+    required this.theme,
+    required this.title,
+    required this.description,
+    required this.connected,
+    required this.icon,
+  });
+
+  final ThemeController theme;
+  final String title;
+  final String description;
+  final bool connected;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color statusColor = connected ? Colors.green : theme.error;
+
+    return Container(
+      constraints: const BoxConstraints(minWidth: 220, maxWidth: 320),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: theme.bgCard2.withValues(alpha: theme.isLight ? 0.56 : 0.32),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: statusColor.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: statusColor, size: 20),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    color: theme.fontColor,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: statusColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  connected ? 'Conectado' : 'Desconectado',
+                  style: TextStyle(
+                    color: statusColor,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            description,
+            style: TextStyle(
+              color: theme.fontColor.withValues(alpha: 0.72),
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SocketDebugDetail extends StatelessWidget {
+  const _SocketDebugDetail({
+    required this.theme,
+    required this.label,
+    required this.value,
+  });
+
+  final ThemeController theme;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: RichText(
+        text: TextSpan(
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: theme.fontColor.withValues(alpha: 0.82),
+            height: 1.4,
+          ),
+          children: <InlineSpan>[
+            TextSpan(
+              text: '$label: ',
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+            TextSpan(text: value),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _RoleCard extends StatelessWidget {
   const _RoleCard({
     required this.theme,
@@ -1279,6 +1548,7 @@ class _RoleCard extends StatelessWidget {
   final String? activeRoleId;
   final bool changing;
   final ValueChanged<String>? onRoleSelected;
+
 
   @override
   Widget build(BuildContext context) {
@@ -1437,6 +1707,7 @@ class _ProfileSectionCard extends StatelessWidget {
   const _ProfileSectionCard({required this.child});
 
   final Widget child;
+
 
   @override
   Widget build(BuildContext context) {
