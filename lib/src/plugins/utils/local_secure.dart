@@ -36,6 +36,18 @@ class LocalSecure {
     return canCheckBiometrics;
   }
 
+  static Future<bool> isDeviceSecurityAvailable() async {
+    bool isSupported = false;
+    try {
+      isSupported = await auth.isDeviceSupported();
+      Logger.info("isDeviceSupported 🛡: $isSupported");
+    } on PlatformException catch (e) {
+      Logger.error(e.toString());
+    }
+
+    return isSupported;
+  }
+
   /// Verifica si el reconocimiento facial está disponible
   static Future<bool> isFaceRecognitionAvailable() async {
     try {
@@ -69,7 +81,7 @@ class LocalSecure {
       // Establece que la autenticación está en progreso
       _authInProgress = true;
       return await auth.authenticate(
-        localizedReason: message ?? 'Escanea tu huella dactilar para continuar',
+        localizedReason: message ?? 'Confirma tu identidad para continuar',
         biometricOnly: biometricOnly, // reemplaza options.biometricOnly
         persistAcrossBackgrounding: true, // reemplaza stickyAuth
         sensitiveTransaction: true, // reemplaza useErrorDialogs

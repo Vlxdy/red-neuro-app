@@ -184,9 +184,9 @@ class _ConfiguracionPinSeguridadState extends State<ConfiguracionPinSeguridad>
                     onTap: () async {
                       if (validateForm(_scaffoldingFormKey)) {
                         // service.login();
-                        Logger.info('continuar para configurar huella');
+                        Logger.info('continuar para configurar seguridad del dispositivo');
                         Logger.info('valor de pin > ${security.store.pin}');
-                        if (await security.hasBiometrics && context.mounted) {
+                        if (await security.hasDeviceSecurity && context.mounted) {
                           GoRouter.of(
                             context,
                           ).goNamed(RouteNames.configurarDesbloqueo);

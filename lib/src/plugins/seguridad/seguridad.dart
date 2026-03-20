@@ -87,4 +87,8 @@ class Seguridad {
     final biometricoDisponible = await LocalSecure.getAvailableBiometrics();
     return biometricoDisponible.isNotEmpty;
   }
+
+  Future<bool> get hasDeviceSecurity async {
+    return await LocalSecure.isDeviceSecurityAvailable();
+  }
 }
