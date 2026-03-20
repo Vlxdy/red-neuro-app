@@ -285,7 +285,6 @@ class _ServiciosPageState extends State<ServiciosPage> with FormController {
         servicio?.ocupaciones.map((item) => item.id).toSet() ?? <String>{};
     const mostrarPasoCategorias = true;
     var currentStep = 0;
-    String? modalError;
 
     final result = await showModalBottomSheet<bool>(
       context: context,
@@ -453,7 +452,6 @@ class _ServiciosPageState extends State<ServiciosPage> with FormController {
                             : 'Editar servicio',
                         totalSteps: totalSteps,
                         currentStep: currentStep,
-                        stepErrorText: modalError,
                         isSubmitting: false,
                         stepContent: buildStepContent(),
                         onClose: () => Navigator.of(context).pop(false),
@@ -461,22 +459,11 @@ class _ServiciosPageState extends State<ServiciosPage> with FormController {
                             ? null
                             : () => setDialogState(() {
                                 currentStep -= 1;
-                                modalError = null;
                               }),
                         nextLabel: isLastStep
                             ? (servicio == null ? 'Crear' : 'Guardar')
                             : 'Siguiente',
                         onNext: () async {
-                          if ((!mostrarPasoCategorias ||
-                                  currentStep == 0) &&
-                              (nombreController.text.trim().isEmpty ||
-                                  descripcionController.text.trim().isEmpty)) {
-                            setDialogState(() {
-                              modalError =
-                                  'Completa nombre y descripción para continuar.';
-                            });
-                            return;
-                          }
                           final valid = validateForm(formKey);
                           if (!valid) return;
                           if (!isLastStep) {
@@ -486,7 +473,6 @@ class _ServiciosPageState extends State<ServiciosPage> with FormController {
                             }
                             setDialogState(() {
                               currentStep += 1;
-                              modalError = null;
                             });
                             return;
                           }
