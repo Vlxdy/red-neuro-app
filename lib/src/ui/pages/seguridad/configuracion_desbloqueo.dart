@@ -132,7 +132,7 @@ class _ConfiguracionDesbloqueoState extends State<ConfiguracionDesbloqueo> {
                         ),
                         title: const Text(
                           style: TextStyle(fontSize: 12, height: 1.4),
-                          'Puedes desbloquear con el método que tenga configurado tu celular: huella, patrón, PIN o la seguridad del sistema disponible.',
+                          'Puedes desbloquear con el método que tenga configurado tu celular: reconocimiento facial, huella, patrón, PIN o la seguridad del sistema disponible.',
                         ),
                       ),
                     ),

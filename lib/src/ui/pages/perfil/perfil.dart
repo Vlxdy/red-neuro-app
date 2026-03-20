@@ -1139,7 +1139,7 @@ class _SessionActions extends StatelessWidget {
                         biometricAvailable == false
                             ? 'Tu dispositivo no tiene bloqueo del sistema disponible, así que el inicio seguirá con contraseña.'
                             : biometricLoginEnabled == true
-                                ? 'La app pedirá la seguridad del sistema para desbloquearse, ya sea huella, patrón, PIN o el método disponible.'
+                                ? 'La app pedirá la seguridad del sistema para desbloquearse, ya sea reconocimiento facial, huella, patrón, PIN o el método disponible.'
                                 : 'Este desbloqueo es opcional y ahora mismo está desactivado para esta cuenta.',
                         style: TextStyle(
                           color: theme.fontColor.withValues(alpha: 0.68),

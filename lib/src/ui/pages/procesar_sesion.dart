@@ -96,7 +96,7 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
   Future<bool> verificarSeguridadDelDispositivo(BuildContext context) async {
     final bool autenticado = await LocalSecure.autenticar(
       titulo: 'Control de ubicaciones',
-      message: 'Desbloquea con tu huella, patrón, PIN o seguridad del sistema',
+      message: 'Desbloquea con tu rostro, huella, patrón, PIN o la seguridad disponible del sistema',
       biometricOnly: false,
     );
     Logger.info('Seguridad del dispositivo autenticada: $autenticado');
