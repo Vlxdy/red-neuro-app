@@ -213,6 +213,17 @@ Future<void> abrirCitasFormularioModal({
       ? cita?.medicoId
       : null;
   PersonalMedico? medicoSeleccionado;
+  if ((cita?.medicoId ?? '').trim().isNotEmpty) {
+    medicoSeleccionado = PersonalMedico(
+      id: cita!.medicoId.trim(),
+      nombres: (cita.medicoNombre ?? '').trim().isNotEmpty
+          ? cita.medicoNombre!.trim()
+          : cita.medicoId.trim(),
+      primerApellido: null,
+      segundoApellido: null,
+      nroDocumento: cita.personalNroDocumento,
+    );
+  }
   Paciente? pacienteSeleccionado;
   Lugar? lugarSeleccionado;
   final pacienteFieldKey = GlobalKey<FormFieldState<Paciente>>();
