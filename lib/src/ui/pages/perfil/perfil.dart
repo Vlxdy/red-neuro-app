@@ -65,15 +65,26 @@ class _PerfilState extends State<Perfil> {
     super.initState();
     _loadProfile();
     _loadSecurityPreferences();
-    _startSocketStatusPolling();
   }
 
-  void _startSocketStatusPolling() {
-    _socketStatusTimer?.cancel();
+  void _syncSocketStatusPolling() {
+    final Usuario? profile = _profile;
+    final bool shouldPoll = profile != null && _isActiveAdminProfile(profile);
+
+    if (!shouldPoll) {
+      _socketStatusTimer?.cancel();
+      _socketStatusTimer = null;
+      return;
+    }
+
+    if (_socketStatusTimer != null) return;
+
     _socketStatusTimer = Timer.periodic(const Duration(seconds: 2), (_) {
       if (!mounted) return;
-      final Usuario? profile = _profile;
-      if (profile == null || !RoleUtils.hasRole(profile, RoleUtils.administrador)) {
+      final Usuario? currentProfile = _profile;
+      if (currentProfile == null || !_isActiveAdminProfile(currentProfile)) {
+        _socketStatusTimer?.cancel();
+        _socketStatusTimer = null;
         return;
       }
       setState(() {});
@@ -90,6 +101,7 @@ class _PerfilState extends State<Perfil> {
           profile.idRol ?? (_roles.isNotEmpty ? _roles.first.idRol : '');
       _loading = false;
     });
+    _syncSocketStatusPolling();
   }
 
   Future<void> _loadSecurityPreferences() async {
@@ -497,6 +509,14 @@ class _PerfilState extends State<Perfil> {
     if (mounted) setState(() => _loggingOut = false);
   }
 
+  bool _isActiveAdminProfile(Usuario profile) {
+    final Rol? activeRole = _resolveActiveRole();
+    final String normalizedActiveRole = RoleUtils.normalizeRole(
+      activeRole?.rol.isNotEmpty == true ? activeRole!.rol : profile.rol,
+    );
+    return normalizedActiveRole == RoleUtils.administrador;
+  }
+
   @override
   void dispose() {
     _socketStatusTimer?.cancel();
@@ -532,7 +552,7 @@ class _PerfilState extends State<Perfil> {
         final String activeRoleLabel = _humanRoleLabel(activeRole);
         final String roleDescription = _humanRoleDescription(activeRole);
         final PackageInfo appInfo = Auth.instance.appInfo;
-        final bool isAdmin = RoleUtils.hasRole(profile, RoleUtils.administrador);
+        final bool isAdmin = _isActiveAdminProfile(profile);
 
         return TemplatePage(
           showEnvironmentBanner: false,
@@ -726,6 +746,7 @@ class _PerfilState extends State<Perfil> {
                       ],
                     ),
                     if (isAdmin) ...<Widget>[
+                      const SizedBox(height: 20),
                       _SocketStatusCard(theme: theme),
                       const SizedBox(height: 20),
                     ],
