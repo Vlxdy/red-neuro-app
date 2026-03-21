@@ -1404,22 +1404,26 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     return !DateTime.now().isBefore(fechaInicio);
   }
 
-  Future<void> _completarCitaConConfirmacion(CitaMedica cita) async {
+  Future<void> _darAltaCitaConConfirmacion(CitaMedica cita) async {
     final confirmar = await _confirmarAccionSimple(
-      titulo: 'Completar cita',
-      mensaje: '¿Confirmas marcar esta cita como completada?',
-      accion: 'Sí, completar',
+      titulo: 'Dar alta',
+      mensaje: '¿Confirmas cerrar la atención y dar de alta esta cita?',
+      accion: 'Sí, dar alta',
     );
     if (!confirmar) return;
     final ok = await _handleResponseError(
-      await _service.completarCita(cita.id),
-      'No se pudo completar la cita.',
+      await _service.darAltaCita(cita.id),
+      'No se pudo dar de alta la cita.',
     );
     if (!ok) return;
     if (mounted) {
       await _cargarCitasCalendario();
       if (_currentTabIndex == 2) await _cargarCitasListado();
     }
+  }
+
+  Future<void> _programarControl(CitaMedica cita) async {
+    await _abrirFormulario(cita: cita, programarControl: true);
   }
 
   Future<void> _marcarNoAsistioCitaConConfirmacion(CitaMedica cita) async {
@@ -1567,7 +1571,8 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
       citaYaIniciada: _citaYaIniciada,
       confirmarCitaSolicitada: _confirmarCitaSolicitadaConOpciones,
       rechazarCitaSolicitada: _rechazarCitaSolicitadaConConfirmacion,
-      completarCita: _completarCitaConConfirmacion,
+      completarCita: _darAltaCitaConConfirmacion,
+      programarControl: _programarControl,
       marcarNoAsistioCita: _marcarNoAsistioCitaConConfirmacion,
       reprogramarCita: _reprogramarCitaConConfirmacion,
       cancelarCita: _cancelarCitaConConfirmacion,
@@ -1595,7 +1600,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
 }
 
 extension _CitasPageFormularioModalPart on _CitasPageState {
-  Future<void> _abrirFormulario({CitaMedica? cita, DateTime? fechaBase}) async {
+  Future<void> _abrirFormulario({CitaMedica? cita, DateTime? fechaBase, bool programarControl = false}) async {
     await abrirCitasFormularioModal(
       context: context,
       theme: _theme,
@@ -1625,6 +1630,7 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
       eliminarCitaEditable: _eliminarBorradorEditable,
       cita: cita,
       fechaBase: fechaBase,
+      programarControl: programarControl,
     );
   }
 }

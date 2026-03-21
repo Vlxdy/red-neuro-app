@@ -301,8 +301,15 @@ class CitasService extends ServiceConfig {
     return fetch('/citas/$id/cancelar', type: HttpProtocol.post, body: const {});
   }
 
-  Future<ResponseApi> completarCita(String id) async {
-    return fetch('/citas/$id/completar', type: HttpProtocol.post, body: const {});
+  Future<ResponseApi> darAltaCita(String id) async {
+    return fetch('/citas/$id/dar-alta', type: HttpProtocol.post, body: const {});
+  }
+
+  Future<ResponseApi> programarControlCita(
+    String id,
+    Map<String, dynamic> body,
+  ) async {
+    return fetch('/citas/$id/programar-control', type: HttpProtocol.post, body: body);
   }
 
   Future<ResponseApi> marcarNoAsistioCita(String id) async {
