@@ -176,6 +176,7 @@ Future<void> abrirCitasFormularioModal({
   required Future<bool> Function(CitaMedica cita) eliminarCitaEditable,
   CitaMedica? cita,
   DateTime? fechaBase,
+  bool programarControl = false,
 }) async {
   PersonalMedico? resolverPersonalActual(Usuario profile) {
     final id = profile.idPersonalActivo;
@@ -1368,6 +1369,8 @@ Future<void> abrirCitasFormularioModal({
                       final detallesVisibles = detallesPrioritarios
                           .take(3)
                           .toList();
+                      final pacienteBloqueado =
+                          programarControl && pacienteSeleccionado != null;
 
                       return Stack(
                         children: [
@@ -1515,23 +1518,24 @@ Future<void> abrirCitasFormularioModal({
                                       );
                                     },
                                   ),
-                                IconButton(
-                                  tooltip: 'Cambiar paciente',
-                                  visualDensity: VisualDensity.compact,
-                                  constraints: const BoxConstraints(
-                                    minWidth: 32,
-                                    minHeight: 32,
+                                if (!pacienteBloqueado)
+                                  IconButton(
+                                    tooltip: 'Cambiar paciente',
+                                    visualDensity: VisualDensity.compact,
+                                    constraints: const BoxConstraints(
+                                      minWidth: 32,
+                                      minHeight: 32,
+                                    ),
+                                    padding: EdgeInsets.zero,
+                                    icon: const Icon(Icons.swap_horiz),
+                                    onPressed: () {
+                                      setStateDialog(() {
+                                        pacienteSeleccionado = null;
+                                        mostrarMasDatosPaciente = false;
+                                        pacienteAutocompleteController.clear();
+                                      });
+                                    },
                                   ),
-                                  padding: EdgeInsets.zero,
-                                  icon: const Icon(Icons.swap_horiz),
-                                  onPressed: () {
-                                    setStateDialog(() {
-                                      pacienteSeleccionado = null;
-                                      mostrarMasDatosPaciente = false;
-                                      pacienteAutocompleteController.clear();
-                                    });
-                                  },
-                                ),
                               ],
                             ),
                           ),
@@ -1650,6 +1654,7 @@ Future<void> abrirCitasFormularioModal({
                 FormField<Lugar>(
                   validator: (_) {
                     final requiereAsignacionYLugar =
+                        programarControl ||
                         cita == null ||
                         cita.estado == CitasEstado.borrador.value ||
                         cita.estado == CitasEstado.rechazada.value;
@@ -1692,6 +1697,7 @@ Future<void> abrirCitasFormularioModal({
                 FormField<PersonalMedico>(
                   validator: (_) {
                     final requiereAsignacionYLugar =
+                        programarControl ||
                         cita == null ||
                         cita.estado == CitasEstado.borrador.value ||
                         cita.estado == CitasEstado.rechazada.value;
@@ -1760,11 +1766,13 @@ Future<void> abrirCitasFormularioModal({
                       ),
                     ),
                   ),
-                if (cita != null &&
+                if (!programarControl &&
+                    cita != null &&
                     (cita.estado == CitasEstado.solicitada.value ||
                         cita.estado == CitasEstado.programada.value))
                   const SizedBox(height: 12),
-                if (cita != null &&
+                if (!programarControl &&
+                    cita != null &&
                     (cita.estado == CitasEstado.solicitada.value ||
                         cita.estado == CitasEstado.programada.value))
                   DropdownButtonFormField<String?>(
@@ -1804,7 +1812,11 @@ Future<void> abrirCitasFormularioModal({
 
           return CitasFormularioModalWidget(
             backgroundColor: theme.background,
-            title: cita == null ? 'Registro de cita' : 'Actualizar cita',
+            title: programarControl
+                ? 'Programar control'
+                : cita == null
+                ? 'Registro de cita'
+                : 'Actualizar cita',
             formKey: formKey,
             autovalidateMode: intentoEnvio
                 ? AutovalidateMode.always
@@ -1831,7 +1843,9 @@ Future<void> abrirCitasFormularioModal({
             ],
             onClose: () => Navigator.pop(modalContext, false),
             onCancel: () => Navigator.pop(modalContext, false),
-            submitLabel: cita == null
+            submitLabel: programarControl
+                ? 'Programar control'
+                : cita == null
                 ? 'Crear cita'
                 : (cita.estado == CitasEstado.borrador.value
                       ? 'Guardar'
@@ -1862,6 +1876,14 @@ Future<void> abrirCitasFormularioModal({
                 );
                 if (accion == null) return;
                 accionFormulario = accion;
+              } else if (programarControl) {
+                final confirmar = await confirmarAccionSimple(
+                  titulo: 'Programar control',
+                  mensaje:
+                      'La cita actual se completará y se creará una nueva cita de control.',
+                  accion: 'Programar',
+                );
+                if (!confirmar) return;
               } else if (cita.estado == CitasEstado.rechazada.value) {
                 final confirmar = await confirmarAccionSimple(
                   titulo: 'Confirmar envío',
@@ -1924,6 +1946,35 @@ Future<void> abrirCitasFormularioModal({
   }
 
   final estadoActual = cita.estado;
+
+  if (programarControl) {
+    final payload = <String, dynamic>{
+      'detalle': detalle,
+      'fechaInicio': fechaInicio!.toUtc().toIso8601String(),
+      'idPersonal': medicoId,
+      if (lugarId.isNotEmpty) 'idLugar': lugarId,
+      'tipoCita': tipoCita,
+      if (servicioSeleccionado != null) 'idServicio': servicioSeleccionado!.id,
+    };
+
+    final ok = await handleResponseError(
+      await service.programarControlCita(cita.id, payload),
+      'No se pudo programar el control.',
+    );
+    if (!ok) return;
+
+    showSnackBar(
+      messengerKey,
+      'Control programado correctamente.',
+      state: StatusSnackBar.success,
+      colorText: theme.white,
+    );
+    await cargarCitasCalendario();
+    if (currentTabIndex == 2) {
+      await cargarCitasListado(page: 1);
+    }
+    return;
+  }
   final estadoSeleccionado = estado;
   final cambioDetalle = detalle != cita.detalle;
   final cambioFecha = fechaInicio != cita.fechaInicio;

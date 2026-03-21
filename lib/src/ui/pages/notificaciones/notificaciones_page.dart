@@ -332,11 +332,11 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
         ),
       if (estado == CitasEstado.programada && esAsignadaAlUsuario && citaYaIniciada)
         CitaDetalleAccion(
-          label: 'Completar',
+          label: 'Dar alta',
           icon: Icons.task_alt_outlined,
           isPrimary: true,
           onTap: () async {
-            await _completarCita(cita);
+            await _darAltaCita(cita);
             return true;
           },
         ),
@@ -441,13 +441,13 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
     );
   }
 
-  Future<void> _completarCita(CitaMedica cita) async {
+  Future<void> _darAltaCita(CitaMedica cita) async {
     final ok = await InicioCitasUtils.confirmarYEnviar(
       context: context,
-      titulo: 'Completar cita',
-      mensaje: '¿Deseas marcar la cita como completada?',
-      request: () => _citasService.completarCita(cita.id),
-      fallback: 'No se pudo completar la cita.',
+      titulo: 'Dar alta',
+      mensaje: '¿Deseas cerrar la atención y dar de alta esta cita?',
+      request: () => _citasService.darAltaCita(cita.id),
+      fallback: 'No se pudo dar de alta la cita.',
       mounted: mounted,
       onError: _showError,
     );

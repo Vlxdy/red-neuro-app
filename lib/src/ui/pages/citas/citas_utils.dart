@@ -222,6 +222,7 @@ class CitasUtils {
     required Future<bool> Function(CitaMedica cita) confirmarCitaSolicitada,
     required Future<bool> Function(CitaMedica cita) rechazarCitaSolicitada,
     required Future<void> Function(CitaMedica cita) completarCita,
+    required Future<void> Function(CitaMedica cita) programarControl,
     required Future<void> Function(CitaMedica cita) marcarNoAsistioCita,
     required Future<void> Function(CitaMedica cita) reprogramarCita,
     required Future<void> Function(CitaMedica cita) cancelarCita,
@@ -254,11 +255,20 @@ class CitasUtils {
         ),
       if (cita.estado == CitasEstado.programada.value && citaYaIniciada(cita))
         CitaDetalleAccion(
-          label: 'Completar',
+          label: 'Dar alta',
           icon: Icons.task_alt_outlined,
           isPrimary: true,
           onTap: () async {
             await completarCita(cita);
+            return true;
+          },
+        ),
+      if (cita.estado == CitasEstado.programada.value && citaYaIniciada(cita))
+        CitaDetalleAccion(
+          label: 'Programar control',
+          icon: Icons.event_repeat_outlined,
+          onTap: () async {
+            await programarControl(cita);
             return true;
           },
         ),

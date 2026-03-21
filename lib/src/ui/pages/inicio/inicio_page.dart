@@ -274,7 +274,8 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
       citaYaIniciada: InicioCitasUtils.citaYaIniciada,
       confirmarCitaSolicitada: _confirmarCitaSolicitada,
       rechazarCitaSolicitada: _rechazarCitaSolicitada,
-      completarCita: _completarCita,
+      completarCita: _darAltaCita,
+      programarControl: _programarControl,
       marcarNoAsistioCita: _marcarNoAsistio,
       reprogramarCita: _reprogramarCita,
       cancelarCita: _cancelarCita,
@@ -384,7 +385,7 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
   Future<String?> _solicitarMotivoRechazo() =>
       InicioCitasUtils.solicitarMotivoRechazo(context);
 
-  Future<void> _abrirFormulario({CitaMedica? cita, DateTime? fechaBase}) async {
+  Future<void> _abrirFormulario({CitaMedica? cita, DateTime? fechaBase, bool programarControl = false}) async {
     await abrirCitasFormularioModal(
       context: context,
       theme: _theme,
@@ -427,6 +428,7 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
       eliminarCitaEditable: _eliminarCitaEditable,
       cita: cita,
       fechaBase: fechaBase,
+      programarControl: programarControl,
     );
   }
 
@@ -478,13 +480,13 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
     return ok;
   }
 
-  Future<void> _completarCita(CitaMedica cita) async {
+  Future<void> _darAltaCita(CitaMedica cita) async {
     final ok = await InicioCitasUtils.confirmarYEnviar(
       context: context,
-      titulo: 'Completar cita',
-      mensaje: '¿Deseas marcar la cita como completada?',
-      request: () => _citasService.completarCita(cita.id),
-      fallback: 'No se pudo completar la cita.',
+      titulo: 'Dar alta',
+      mensaje: '¿Deseas cerrar la atención y dar de alta esta cita?',
+      request: () => _citasService.darAltaCita(cita.id),
+      fallback: 'No se pudo dar de alta la cita.',
       mounted: mounted,
       onError: _showError,
     );
@@ -492,6 +494,10 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
       await _loadBandeja();
       _notificarRefreshBandejas();
     }
+  }
+
+  Future<void> _programarControl(CitaMedica cita) async {
+    await _abrirFormulario(cita: cita, programarControl: true);
   }
 
   Future<void> _marcarNoAsistio(CitaMedica cita) async {
