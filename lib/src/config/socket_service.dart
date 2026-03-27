@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:red_neuro_app/src/constants/constants.dart';
+import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
 class SocketService {
@@ -29,7 +30,7 @@ class SocketService {
   String? get lastErrorMessage => _lastErrorMessage;
 
   /// Conecta el socket al namespace unificado de realtime.
-  void connect(String idUsuario) {
+  Future<void> connect(String idUsuario) async {
     _idUsuario = idUsuario;
     if (_socket != null) {
       if (_socket!.connected == true) {
@@ -42,10 +43,13 @@ class SocketService {
       return;
     }
 
+    final token = (await Auth.instance.apiToken).replaceAll('"', '');
+
     _socket = io.io(
       '${Constantes.sockets}/realtime',
       io.OptionBuilder()
           .setTransports(['websocket'])
+          .setAuth(<String, dynamic>{'token': token})
           .setPath(Constantes.socketPath)
           .setReconnectionAttempts(20)
           .setReconnectionDelay(1000)
