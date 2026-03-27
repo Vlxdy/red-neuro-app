@@ -1,4 +1,6 @@
 // lib/src/providers/socket_provider.dart
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:red_neuro_app/main.dart';
 import 'package:red_neuro_app/src/config/routes.dart';
@@ -25,7 +27,7 @@ class SocketProvider extends ChangeNotifier with WidgetsBindingObserver {
   /// Llamar tras el login, cuando tengas el idUsuario
   Future<void> init(String idUsuario) async {
     _idUsuario = idUsuario;
-    SocketService.instance.connect(idUsuario);
+    await SocketService.instance.connect(idUsuario);
 
     if (!_initialized) {
       WidgetsBinding.instance.addObserver(this);
@@ -107,7 +109,7 @@ class SocketProvider extends ChangeNotifier with WidgetsBindingObserver {
       final idUsuario = _idUsuario;
       if (idUsuario == null || idUsuario.isEmpty) return;
       Logger.info('App reanudada: revalidando conexión/suscripción socket');
-      SocketService.instance.connect(idUsuario);
+      unawaited(SocketService.instance.connect(idUsuario));
       SocketService.instance.ensureSubscription();
       _recontarNoLeidas();
     }

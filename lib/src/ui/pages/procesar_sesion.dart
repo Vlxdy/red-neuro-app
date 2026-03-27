@@ -53,6 +53,7 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
 
       // Si NO hay seguridad del dispositivo, entra directo
       if (!hasDeviceSecurity) {
+        await _inicializarSocketUsuario();
         Auth.instance.isLocked = false;
         GoRouter.of(ctx).goNamed(RouteNames.home);
         return;
@@ -60,6 +61,7 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
 
       // Si existe seguridad del dispositivo, pero NO está habilitada en app, entra directo
       if (!hasFingerprintEnabled) {
+        await _inicializarSocketUsuario();
         Auth.instance.isLocked = false;
         GoRouter.of(ctx).goNamed(RouteNames.home);
         return;
@@ -73,17 +75,10 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
 
       if (!autenticado) return;
 
-      final String? idUsuario = Auth.instance.profile.id;
+      await _inicializarSocketUsuario();
 
       ctx = navigatorKey.currentContext;
       if (ctx == null || !ctx.mounted) return;
-
-      if (idUsuario != null && idUsuario.isNotEmpty) {
-        await socketProvider.init(idUsuario);
-
-        ctx = navigatorKey.currentContext;
-        if (ctx == null || !ctx.mounted) return;
-      }
 
       Logger.info('Autenticación del dispositivo exitosa');
       Auth.instance.isLocked = false;
@@ -91,6 +86,12 @@ class _ProcesarSesionState extends State<ProcesarSesion> with FormController {
     } catch (e, st) {
       Logger.error('Error en autenticación del dispositivo: $e\n$st');
     }
+  }
+
+  Future<void> _inicializarSocketUsuario() async {
+    final String? idUsuario = Auth.instance.profile.id;
+    if (idUsuario == null || idUsuario.isEmpty) return;
+    await socketProvider.init(idUsuario);
   }
 
   Future<bool> verificarSeguridadDelDispositivo(BuildContext context) async {
