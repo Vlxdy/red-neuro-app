@@ -4,7 +4,41 @@
     "/estado": {
       "get": {
         "operationId": "AppController_verificarEstado",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "platform",
+            "required": false,
+            "in": "query",
+            "description": "Plataforma de la aplicación móvil",
+            "schema": {
+              "enum": [
+                "android",
+                "ios"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "version",
+            "required": false,
+            "in": "query",
+            "description": "Versión semántica de la app móvil (major.minor.patch)",
+            "schema": {
+              "example": "1.8.0",
+              "type": "string"
+            }
+          },
+          {
+            "name": "build",
+            "required": false,
+            "in": "query",
+            "description": "Número de build de la app móvil",
+            "schema": {
+              "example": "104",
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "",
@@ -2673,6 +2707,64 @@
         ]
       }
     },
+    "/citas/{id}/editar-programada": {
+      "patch": {
+        "operationId": "CitasController_editarProgramada",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditarProgramadaCitaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/CitaResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Edita una cita en estado programada",
+        "tags": [
+          "Gestión de Citas"
+        ]
+      }
+    },
     "/citas/{id}/enviar": {
       "post": {
         "operationId": "CitasController_enviar",
@@ -2837,9 +2929,9 @@
         ]
       }
     },
-    "/citas/{id}/completar": {
+    "/citas/{id}/dar-alta": {
       "post": {
-        "operationId": "CitasController_completar",
+        "operationId": "CitasController_darAlta",
         "parameters": [
           {
             "name": "id",
@@ -2879,7 +2971,65 @@
             "bearer": []
           }
         ],
-        "summary": "Completa una cita programada",
+        "summary": "Da de alta una cita programada",
+        "tags": [
+          "Gestión de Citas"
+        ]
+      }
+    },
+    "/citas/{id}/programar-control": {
+      "post": {
+        "operationId": "CitasController_programarControl",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProgramarControlCitaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/CitaResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Programa una cita de control y completa la cita actual manteniendo el historial",
         "tags": [
           "Gestión de Citas"
         ]
@@ -2995,7 +3145,7 @@
             "bearer": []
           }
         ],
-        "summary": "Reprograma la fecha y hora de la cita",
+        "summary": "Reprograma citas en estado NO_ASISTIO o CANCELADA, creando una nueva con los datos enviados (excepto paciente)",
         "tags": [
           "Gestión de Citas"
         ]
@@ -6219,6 +6369,82 @@
           "datos"
         ]
       },
+      "EstadoMobileDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "example": true
+          },
+          "platform": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "android",
+              "ios"
+            ],
+            "example": "android"
+          },
+          "currentVersion": {
+            "type": "object",
+            "nullable": true,
+            "example": "1.8.0"
+          },
+          "currentBuild": {
+            "type": "object",
+            "nullable": true,
+            "example": "104"
+          },
+          "minVersion": {
+            "type": "object",
+            "nullable": true,
+            "example": "1.8.0"
+          },
+          "stableVersion": {
+            "type": "object",
+            "nullable": true,
+            "example": "1.9.3"
+          },
+          "status": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "required",
+              "recommended",
+              "ok"
+            ],
+            "example": "recommended"
+          },
+          "forceUpdate": {
+            "type": "boolean",
+            "nullable": true,
+            "example": false
+          },
+          "shouldUpdate": {
+            "type": "boolean",
+            "nullable": true,
+            "example": true
+          },
+          "storeUrl": {
+            "type": "object",
+            "nullable": true,
+            "example": "https://play.google.com/store/apps/details?id=bo.redneuro.app"
+          },
+          "title": {
+            "type": "object",
+            "nullable": true,
+            "example": "Nueva versión disponible"
+          },
+          "message": {
+            "type": "object",
+            "nullable": true,
+            "example": "Te recomendamos actualizar a la versión más estable."
+          }
+        },
+        "required": [
+          "enabled"
+        ]
+      },
       "EstadoDto": {
         "type": "object",
         "properties": {
@@ -6260,6 +6486,14 @@
           "hora": {
             "type": "number",
             "example": 1711826427027
+          },
+          "mobile": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EstadoMobileDto"
+              }
+            ]
           }
         },
         "required": [
@@ -7812,6 +8046,50 @@
           }
         }
       },
+      "EditarProgramadaCitaDto": {
+        "type": "object",
+        "properties": {
+          "detalle": {
+            "type": "string",
+            "description": "Detalle o motivo de la cita",
+            "example": "Control nutricional mensual"
+          },
+          "fechaInicio": {
+            "type": "string",
+            "description": "Fecha de inicio (ISO)",
+            "example": "2024-06-15T10:00:00Z"
+          },
+          "idPersonal": {
+            "type": "string",
+            "description": "Identificador del personal responsable",
+            "example": "42"
+          },
+          "idConsultorio": {
+            "type": "string",
+            "description": "Identificador del consultorio asignado",
+            "example": "8"
+          },
+          "idLugar": {
+            "type": "string",
+            "description": "Identificador de la institución asociada",
+            "example": "2"
+          },
+          "tipoCita": {
+            "type": "string",
+            "enum": [
+              "CONSULTA",
+              "ESTUDIO"
+            ],
+            "description": "Tipo de cita: CONSULTA o ESTUDIO",
+            "example": "CONSULTA"
+          },
+          "idServicio": {
+            "type": "string",
+            "description": "Identificador del servicio a realizar",
+            "example": "5"
+          }
+        }
+      },
       "EnviarCitaDto": {
         "type": "object",
         "properties": {
@@ -7832,22 +8110,33 @@
           }
         }
       },
-      "MarcarNoAsistioCitaDto": {
+      "ProgramarControlCitaDto": {
         "type": "object",
         "properties": {
-          "comentario": {
+          "detalle": {
             "type": "string",
-            "description": "Comentario asociado al marcado de no asistencia (se guarda en historial)"
-          }
-        }
-      },
-      "ReprogramarCitaDto": {
-        "type": "object",
-        "properties": {
+            "description": "Detalle o motivo de la cita",
+            "example": "Control nutricional mensual"
+          },
           "fechaInicio": {
             "type": "string",
-            "description": "Nueva fecha de inicio",
-            "example": "2024-06-20T12:00:00Z"
+            "description": "Fecha de inicio (ISO)",
+            "example": "2024-06-15T10:00:00Z"
+          },
+          "idPersonal": {
+            "type": "string",
+            "description": "Identificador del personal responsable",
+            "example": "42"
+          },
+          "idConsultorio": {
+            "type": "string",
+            "description": "Identificador del consultorio asignado",
+            "example": "8"
+          },
+          "idLugar": {
+            "type": "string",
+            "description": "Identificador de la institución asociada",
+            "example": "2"
           },
           "tipoCita": {
             "type": "string",
@@ -7865,7 +8154,71 @@
           }
         },
         "required": [
+          "detalle",
           "fechaInicio",
+          "idPersonal",
+          "idLugar",
+          "tipoCita",
+          "idServicio"
+        ]
+      },
+      "MarcarNoAsistioCitaDto": {
+        "type": "object",
+        "properties": {
+          "comentario": {
+            "type": "string",
+            "description": "Comentario asociado al marcado de no asistencia (se guarda en historial)"
+          }
+        }
+      },
+      "ReprogramarCitaDto": {
+        "type": "object",
+        "properties": {
+          "detalle": {
+            "type": "string",
+            "description": "Detalle o motivo de la cita",
+            "example": "Control nutricional mensual"
+          },
+          "fechaInicio": {
+            "type": "string",
+            "description": "Fecha de inicio (ISO)",
+            "example": "2024-06-15T10:00:00Z"
+          },
+          "idPersonal": {
+            "type": "string",
+            "description": "Identificador del personal responsable",
+            "example": "42"
+          },
+          "idConsultorio": {
+            "type": "string",
+            "description": "Identificador del consultorio asignado",
+            "example": "8"
+          },
+          "idLugar": {
+            "type": "string",
+            "description": "Identificador de la institución asociada",
+            "example": "2"
+          },
+          "tipoCita": {
+            "type": "string",
+            "enum": [
+              "CONSULTA",
+              "ESTUDIO"
+            ],
+            "description": "Tipo de cita: CONSULTA o ESTUDIO",
+            "example": "CONSULTA"
+          },
+          "idServicio": {
+            "type": "string",
+            "description": "Identificador del servicio a realizar",
+            "example": "5"
+          }
+        },
+        "required": [
+          "detalle",
+          "fechaInicio",
+          "idPersonal",
+          "idLugar",
           "tipoCita",
           "idServicio"
         ]
