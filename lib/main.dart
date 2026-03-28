@@ -1,39 +1,46 @@
-import 'dart:io';
-import 'package:device_info_plus/device_info_plus.dart';
-import 'package:red_neuro_app/src/constants/keys.dart';
 import 'dart:convert';
-import 'package:red_neuro_app/src/constants/constants.dart';
-import 'package:red_neuro_app/src/plugins/utils/preferences.dart';
-import 'package:red_neuro_app/src/plugins/utils/utils.dart';
-import 'package:flutter/material.dart';
+import 'dart:io';
+
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:red_neuro_app/src/config/app_theme.dart';
-import 'package:red_neuro_app/src/config/init_app.dart';
-import 'package:red_neuro_app/src/config/providers.dart';
-import 'package:red_neuro_app/src/config/routes.dart';
-import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:provider/provider.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:provider/provider.dart';
+
 import 'package:red_neuro_app/firebase_options.dart';
+import 'package:red_neuro_app/src/config/app_theme.dart';
+import 'package:red_neuro_app/src/config/env_validator.dart';
+import 'package:red_neuro_app/src/config/init_app.dart';
+import 'package:red_neuro_app/src/config/providers.dart';
+import 'package:red_neuro_app/src/config/routes.dart';
+import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/constants/constants.dart';
+import 'package:red_neuro_app/src/constants/keys.dart';
+import 'package:red_neuro_app/src/plugins/auth/auth.dart';
+import 'package:red_neuro_app/src/plugins/utils/preferences.dart';
+import 'package:red_neuro_app/src/plugins/utils/utils.dart';
 
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
 
 Future<void> initHiveStorage() async {
   await Hive.initFlutter();
+
   const FlutterSecureStorage secureStorage = FlutterSecureStorage();
-  bool existsKey = await secureStorage.containsKey(
+
+  final bool existsKey = await secureStorage.containsKey(
     key: Constantes.secureHiveKey,
   );
+
   if (!existsKey) {
-    List<int> key = Hive.generateSecureKey();
+    final List<int> key = Hive.generateSecureKey();
+
     await secureStorage.write(
       key: Constantes.secureHiveKey,
       value: base64UrlEncode(key),
@@ -41,16 +48,21 @@ Future<void> initHiveStorage() async {
   }
 }
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
-  SystemChrome.setPreferredOrientations(<DeviceOrientation>[
+
+  const String flavor = String.fromEnvironment('FLAVOR', defaultValue: 'dev');
+
+  await dotenv.load(fileName: '.env.$flavor');
+  EnvValidator.validate();
+
+  await SystemChrome.setPreferredOrientations(<DeviceOrientation>[
     DeviceOrientation.portraitUp,
   ]);
+
   await initHiveStorage();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   await initializeDateFormatting('es', null);
 
@@ -58,13 +70,15 @@ void main() async {
 
   /// Para teléfonos Android con versión menor a Android 7.1
   if (deviceInfo != null && deviceInfo.version.sdkInt < 25) {
-    ByteData data = await PlatformAssetBundle().load(
+    final ByteData data = await PlatformAssetBundle().load(
       'assets/raw/lets-encrypt-r3.pem',
     );
+
     SecurityContext.defaultContext.setTrustedCertificatesBytes(
       data.buffer.asUint8List(),
     );
   }
+
   runApp(const MyApp());
 }
 
@@ -100,36 +114,30 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         future: InitAppController.instance.initTheme(),
         builder: (BuildContext context, AsyncSnapshot<void> snapshot) {
           final AuthStore appState = AuthStore.instance;
+
           final GoRouter router = GoRouter(
             navigatorKey: navigatorKey,
             observers: <NavigatorObserver>[MyRouteObserver.instance],
             initialLocation: '/${RouteNames.splashScreen}',
             routes: routes,
             redirect: redirectRoutes,
-            refreshListenable:
-                Listenable.merge(<Listenable>[appState, ThemeController.instance]),
+            refreshListenable: Listenable.merge(<Listenable>[
+              appState,
+              ThemeController.instance,
+            ]),
           );
 
           return ValueListenableBuilder<bool>(
             valueListenable: ThemeController.instance.brightness,
             builder: (BuildContext context, bool isLight, Widget? child) {
               return MaterialApp.router(
-                // ✅ idioma por defecto español
                 locale: const Locale('es'),
-
-                // ✅ soporta solo español (puedes agregar más si deseas)
-                supportedLocales: const <Locale>[
-                  Locale('es', ''), // Español
-                ],
-
-                // ✅ agrega las delegaciones necesarias
-                localizationsDelegates:
-                    const <LocalizationsDelegate<dynamic>>[
+                supportedLocales: const <Locale>[Locale('es', '')],
+                localizationsDelegates: const <LocalizationsDelegate<dynamic>>[
                   GlobalMaterialLocalizations.delegate,
                   GlobalWidgetsLocalizations.delegate,
                   GlobalCupertinoLocalizations.delegate,
                 ],
-
                 debugShowCheckedModeBanner: false,
                 title: 'Red Neuro',
                 scaffoldMessengerKey: rootScaffoldMessengerKey,

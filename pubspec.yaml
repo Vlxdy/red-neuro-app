@@ -100,7 +100,8 @@ flutter:
   #   - images/a_dot_ham.jpeg
   assets:
     - assets/imgs/
-    - .env
+    - .env.dev
+    - .env.prod
     - assets/raw/
     - assets/fonts/
   # An image asset can refer to one or more resolution-specific "variants", see

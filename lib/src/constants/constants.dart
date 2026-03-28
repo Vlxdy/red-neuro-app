@@ -1,36 +1,40 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class Constantes {
-  static final apiUrl = dotenv.get('URL_BASE');
-  static final entorno = dotenv.get('ENVIRONMENT');
-  static const secureHiveKey = 'llave_encriptacion_hive';
-  static const timeout = 30;
-  // static final imageCompressionQuality =
-  // dotenv.get('IMAGE_COMPRESSION_QUALITY');
-  static const gpsTimeout = 20;
-  static const appId = 'bo.gob.agetic.lince2';
-  // static final mapsApiUrl = dotenv.get('MAPS_API_URL');
-  // static final mapsApiKey = dotenv.get('MAPS_API_KEY');
-  static final String sockets = dotenv.get('SOCKETS');
+  Constantes._();
 
-  static final String socketPath = dotenv.get('SOCKET_PATH');
+  // =========================
+  // Variables obligatorias
+  // =========================
+  static String get apiUrl => dotenv.get('URL_BASE');
 
-  static int get chatMaxFiles {
-    final raw = dotenv.maybeGet('CHAT_MAX_FILES');
-    return int.tryParse(raw ?? '') ?? 5;
-  }
+  static String get entorno => dotenv.get('ENVIRONMENT');
 
-  static double get chatMaxFileMb {
-    final raw = dotenv.maybeGet('CHAT_MAX_FILE_MB');
-    return double.tryParse(raw ?? '') ?? 25;
-  }
+  static String get sockets => dotenv.get('SOCKETS');
 
-  static int get chatMaxFileBytes => (chatMaxFileMb * 1024 * 1024).round();
+  // =========================
+  // Variables opcionales
+  // =========================
+  static String get socketPath =>
+      dotenv.maybeGet('SOCKET_PATH') ?? '/socket.io';
 
   static int get citasDuracionDefectoMinutos {
     final raw = dotenv.maybeGet('CITAS_DURACION_DEFECTO_MINUTOS');
     return int.tryParse(raw ?? '') ?? 60;
   }
+
+  // =========================
+  // Constantes internas
+  // =========================
+  static const String secureHiveKey = 'llave_encriptacion_hive';
+  static const int timeout = 30;
+
+  // =========================
+  // Helpers de entorno
+  // =========================
+  static bool get isDev => entorno.toLowerCase() == 'dev';
+  static bool get isProd => entorno.toLowerCase() == 'prod';
+  static bool get isStaging => entorno.toLowerCase() == 'staging';
 }
 
 class PatternRegexp {
