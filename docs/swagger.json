@@ -5965,6 +5965,175 @@
         ]
       }
     },
+    "/pacientes/{id}/citas": {
+      "get": {
+        "operationId": "PacienteController_listarCitasPaciente",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limite",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 10,
+              "maximum": 50,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pagina",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "filtro",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ordenRaw",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "fechaInicioDesde",
+            "required": false,
+            "in": "query",
+            "description": "Fecha/hora mínima de inicio de la cita (ISO)",
+            "schema": {
+              "example": "2026-01-01T00:00:00Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "fechaInicioHasta",
+            "required": false,
+            "in": "query",
+            "description": "Fecha/hora máxima de inicio de la cita (ISO)",
+            "schema": {
+              "example": "2026-12-31T23:59:59Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "estado",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por estado de la cita",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "INACTIVO",
+                "BORRADOR",
+                "SOLICITADA",
+                "PROGRAMADA",
+                "COMPLETADA",
+                "NO_ASISTIO",
+                "REPROGRAMADA",
+                "CANCELADA",
+                "RECHAZADA"
+              ]
+            }
+          },
+          {
+            "name": "tipoCita",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por tipo de cita",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CONSULTA",
+                "ESTUDIO"
+              ]
+            }
+          },
+          {
+            "name": "idPersonal",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por personal de salud asignado",
+            "schema": {
+              "example": "42",
+              "type": "string"
+            }
+          },
+          {
+            "name": "idLugar",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por lugar de atención",
+            "schema": {
+              "example": "3",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "number"
+                            },
+                            "filas": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/CitaResponseDto"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lista las citas de un paciente (más reciente a más antiguo)",
+        "tags": [
+          "Pacientes"
+        ]
+      }
+    },
     "/pacientes/{id}/cambiar-estado": {
       "patch": {
         "operationId": "PacienteController_cambiarEstado",
