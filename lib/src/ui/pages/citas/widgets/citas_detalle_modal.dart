@@ -431,48 +431,112 @@ class _CitasDetalleModalState extends State<CitasDetalleModal> {
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 10),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: widget.acciones.map((accion) {
-                          final style = accion.isDestructive
-                              ? OutlinedButton.styleFrom(
-                                  foregroundColor:
-                                      Theme.of(context).colorScheme.error,
-                                  visualDensity: VisualDensity.compact,
-                                )
-                              : OutlinedButton.styleFrom(
-                                  visualDensity: VisualDensity.compact,
-                                );
-                          return accion.isPrimary
-                              ? FilledButton.icon(
-                                  style: FilledButton.styleFrom(
+                      Builder(
+                        builder: (context) {
+                          final accionesAtencion = widget.acciones
+                              .where(
+                                (accion) =>
+                                    accion.label == 'Dar alta' ||
+                                    accion.label == 'Programar control' ||
+                                    accion.label == 'No asistió',
+                              )
+                              .toList();
+                          final accionesDirectas = widget.acciones
+                              .where(
+                                (accion) =>
+                                    accion.label != 'Dar alta' &&
+                                    accion.label != 'Programar control' &&
+                                    accion.label != 'No asistió',
+                              )
+                              .toList();
+
+                          return Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              ...accionesDirectas.map((accion) {
+                                final style = accion.isDestructive
+                                    ? OutlinedButton.styleFrom(
+                                        foregroundColor:
+                                            Theme.of(context).colorScheme.error,
+                                        visualDensity: VisualDensity.compact,
+                                      )
+                                    : OutlinedButton.styleFrom(
+                                        visualDensity: VisualDensity.compact,
+                                      );
+                                return accion.isPrimary
+                                    ? FilledButton.icon(
+                                        style: FilledButton.styleFrom(
+                                          visualDensity: VisualDensity.compact,
+                                        ),
+                                        onPressed: () async {
+                                          Navigator.of(context).pop();
+                                          await accion.onTap();
+                                        },
+                                        icon: Icon(accion.icon, size: 18),
+                                        label: Text(accion.label),
+                                      )
+                                    : OutlinedButton.icon(
+                                        style: style,
+                                        onPressed: () async {
+                                          if (accion.cierraModal) {
+                                            Navigator.of(context).pop();
+                                          }
+                                          final ok = await accion.onTap();
+                                          if (!accion.cierraModal &&
+                                              ok &&
+                                              context.mounted) {
+                                            Navigator.of(context).pop();
+                                          }
+                                        },
+                                        icon: Icon(accion.icon, size: 18),
+                                        label: Text(accion.label),
+                                      );
+                              }),
+                              if (accionesAtencion.isNotEmpty)
+                                OutlinedButton.icon(
+                                  style: OutlinedButton.styleFrom(
                                     visualDensity: VisualDensity.compact,
                                   ),
                                   onPressed: () async {
-                                    Navigator.of(context).pop();
-                                    await accion.onTap();
-                                  },
-                                  icon: Icon(accion.icon, size: 18),
-                                  label: Text(accion.label),
-                                )
-                              : OutlinedButton.icon(
-                                  style: style,
-                                  onPressed: () async {
-                                    if (accion.cierraModal) {
+                                    final selected = await showModalBottomSheet<
+                                      CitaDetalleAccion
+                                    >(
+                                      context: context,
+                                      builder: (sheetContext) => SafeArea(
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: accionesAtencion
+                                              .map(
+                                                (accion) => ListTile(
+                                                  leading: Icon(accion.icon),
+                                                  title: Text(accion.label),
+                                                  onTap: () => Navigator.of(
+                                                    sheetContext,
+                                                  ).pop(accion),
+                                                ),
+                                              )
+                                              .toList(),
+                                        ),
+                                      ),
+                                    );
+                                    if (selected == null) return;
+                                    if (selected.cierraModal) {
                                       Navigator.of(context).pop();
                                     }
-                                    final ok = await accion.onTap();
-                                    if (!accion.cierraModal &&
+                                    final ok = await selected.onTap();
+                                    if (!selected.cierraModal &&
                                         ok &&
                                         context.mounted) {
                                       Navigator.of(context).pop();
                                     }
                                   },
-                                  icon: Icon(accion.icon, size: 18),
-                                  label: Text(accion.label),
-                                );
-                        }).toList(),
+                                  icon: const Icon(Icons.medical_information),
+                                  label: const Text('Atención'),
+                                ),
+                            ],
+                          );
+                        },
                       ),
                     ],
                   ],

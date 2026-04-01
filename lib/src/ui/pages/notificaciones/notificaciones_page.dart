@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:red_neuro_app/src/config/socket_service.dart';
+import 'package:red_neuro_app/src/config/service_config.dart';
 import 'package:red_neuro_app/src/constants/citas_estado.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/models/notificacion.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
+import 'package:red_neuro_app/src/ui/common/dialogs/dialogos.dart';
 import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
@@ -15,6 +17,8 @@ import 'package:red_neuro_app/src/ui/pages/citas/citas_service.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_utils.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_detalle_modal.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_confirmar_solicitada_dialog.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_confirmacion_dialog.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_formulario_modal_widget.dart';
 import 'package:red_neuro_app/src/ui/pages/inicio/inicio_citas_utils.dart';
 import 'package:red_neuro_app/src/ui/pages/notificaciones/notificaciones_service.dart';
 
@@ -312,7 +316,10 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
       cita,
       Auth.instance.profile,
     );
-    final esAsignadaAlUsuario = _esAsignadaAlUsuarioLogueado(cita);
+    final puedeModificarProgramada = CitasUtils.puedeEditarCita(
+      cita,
+      perfil: Auth.instance.profile,
+    );
     final citaYaIniciada = InicioCitasUtils.citaYaIniciada(cita);
 
     final acciones = <CitaDetalleAccion>[
@@ -330,7 +337,7 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
           isDestructive: true,
           onTap: () => _rechazarCitaSolicitada(cita),
         ),
-      if (estado == CitasEstado.programada && esAsignadaAlUsuario && citaYaIniciada)
+      if (estado == CitasEstado.programada && citaYaIniciada)
         CitaDetalleAccion(
           label: 'Dar alta',
           icon: Icons.task_alt_outlined,
@@ -340,7 +347,16 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
             return true;
           },
         ),
-      if (estado == CitasEstado.programada && esAsignadaAlUsuario && citaYaIniciada)
+      if (estado == CitasEstado.programada && citaYaIniciada)
+        CitaDetalleAccion(
+          label: 'Programar control',
+          icon: Icons.event_repeat_outlined,
+          onTap: () async {
+            await _abrirFormulario(cita: cita, programarControl: true);
+            return true;
+          },
+        ),
+      if (estado == CitasEstado.programada && citaYaIniciada)
         CitaDetalleAccion(
           label: 'No asistió',
           icon: Icons.person_off_outlined,
@@ -349,22 +365,31 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
             return true;
           },
         ),
-      if (estado == CitasEstado.programada && esAsignadaAlUsuario)
+      if (estado == CitasEstado.programada && puedeModificarProgramada)
         CitaDetalleAccion(
-          label: 'Reprogramar',
-          icon: Icons.schedule_outlined,
+          label: 'Modificar cita',
+          icon: Icons.edit_outlined,
           onTap: () async {
-            await _reprogramarCita(cita);
+            await _abrirFormulario(cita: cita);
             return true;
           },
         ),
-      if (estado == CitasEstado.programada && esAsignadaAlUsuario)
+      if (estado == CitasEstado.programada)
         CitaDetalleAccion(
           label: 'Cancelar',
           icon: Icons.cancel_outlined,
           isDestructive: true,
           onTap: () async {
             await _cancelarCita(cita);
+            return true;
+          },
+        ),
+      if (estado == CitasEstado.cancelada || estado == CitasEstado.noAsistio)
+        CitaDetalleAccion(
+          label: 'Reprogramar',
+          icon: Icons.schedule_outlined,
+          onTap: () async {
+            await _reprogramarCita(cita);
             return true;
           },
         ),
@@ -430,14 +455,6 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
       message,
       state: StatusSnackBar.error,
       colorText: _theme.white,
-    );
-  }
-
-
-  bool _esAsignadaAlUsuarioLogueado(CitaMedica cita) {
-    return CitasUtils.esMedicoAsignado(
-      cita,
-      Auth.instance.profile.idPersonalActivo,
     );
   }
 
@@ -568,6 +585,130 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
       await _cargarInicial();
     }
     return ok;
+  }
+
+  Future<bool> _handleResponseError(ResponseApi response, String fallback) async {
+    if (response.status == StatusNetwork.connected) return true;
+    final message = response.message.isNotEmpty ? response.message : fallback;
+    await showErrorDialog(context, message);
+    return false;
+  }
+
+  String _validarRequerido(String? value, String alias) {
+    if (value == null || value.trim().isEmpty) return 'Campo requerido';
+    return '';
+  }
+
+  DateTime _resolveDefaultStartTime(DateTime baseDay) {
+    return DateTime(baseDay.year, baseDay.month, baseDay.day, 8);
+  }
+
+  Future<String?> _confirmarAccionCita({
+    required bool esNueva,
+    required String tipoCita,
+    required String servicioNombre,
+    required DateTime fechaInicio,
+    int? duracionMinutos,
+    String? pacienteNombre,
+    String? ocupacionNombre,
+    String? medicoNombre,
+    String? pacienteDocumento,
+    String? pacienteTelefono,
+    String? pacienteGenero,
+    String? lugarNombre,
+    String? lugarDireccion,
+    String? detalle,
+  }) {
+    return showCitaConfirmacionDialog(
+      context: context,
+      data: CitaAccionConfirmacionData(
+        esNueva: esNueva,
+        tipoCita: tipoCita,
+        servicioNombre: servicioNombre,
+        fechaInicio: fechaInicio,
+        duracionMinutos: duracionMinutos,
+        pacienteNombre: pacienteNombre,
+        ocupacionNombre: ocupacionNombre,
+        medicoNombre: medicoNombre,
+        pacienteDocumento: pacienteDocumento,
+        pacienteTelefono: pacienteTelefono,
+        pacienteGenero: pacienteGenero,
+        lugarNombre: lugarNombre,
+        lugarDireccion: lugarDireccion,
+        detalle: detalle,
+      ),
+      dateTimeFormat: _dateTimeFormat,
+      formatearGenero: InicioCitasUtils.formatearGenero,
+    );
+  }
+
+  Future<bool> _confirmarAccionSimple({
+    required String titulo,
+    required String mensaje,
+    required String accion,
+  }) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(titulo),
+        content: Text(mensaje),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(accion),
+          ),
+        ],
+      ),
+    );
+    return confirmar == true;
+  }
+
+  Future<void> _abrirFormulario({
+    CitaMedica? cita,
+    DateTime? fechaBase,
+    bool programarControl = false,
+  }) async {
+    await abrirCitasFormularioModal(
+      context: context,
+      theme: _theme,
+      service: _citasService,
+      dateFormat: _dateFormat,
+      timeFormat: DateFormat('HH:mm'),
+      messengerKey: notificacionesMessenger,
+      selectedDay: null,
+      currentTabIndex: 0,
+      resolveDefaultStartTime: _resolveDefaultStartTime,
+      validarRequerido: _validarRequerido,
+      calcularEdadPaciente: InicioCitasUtils.calcularEdadPaciente,
+      formatearFechaPaciente: InicioCitasUtils.formatearFechaPaciente,
+      formatearGenero: InicioCitasUtils.formatearGenero,
+      puedeGestionarSolicitada: (citaItem) =>
+          CitasUtils.puedeGestionarSolicitada(citaItem, Auth.instance.profile),
+      colorEstado: (estado) => CitasUtils.colorEstado(estado, _theme),
+      formatearTipoCita: CitasUtils.formatearTipoCita,
+      confirmarAccionCita: _confirmarAccionCita,
+      confirmarAccionSimple: _confirmarAccionSimple,
+      handleResponseError: (response, fallback) =>
+          _handleResponseError(response, fallback),
+      cargarCitasCalendario: _cargarInicial,
+      cargarCitasListado: ({int? page}) => _cargarInicial(),
+      mostrarHistorialCita: (citaItem) => InicioCitasUtils.mostrarHistorialCita(
+        context: context,
+        cita: citaItem,
+        service: _citasService,
+        theme: _theme,
+        dateFormat: _dateFormat,
+        dateTimeFormat: _dateTimeFormat,
+      ),
+      eliminarCitaEditable: (_) async => false,
+      cita: cita,
+      fechaBase: fechaBase,
+      programarControl: programarControl,
+    );
   }
   @override
   Widget build(BuildContext context) {

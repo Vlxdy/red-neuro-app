@@ -18,6 +18,7 @@ import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/citas_service.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_autocomplete_selector_field.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/fecha_selector.dart';
+import 'package:red_neuro_app/src/utils/role_utils.dart';
 
 class CitasFormularioModalWidget extends StatelessWidget {
   const CitasFormularioModalWidget({
@@ -167,7 +168,6 @@ Future<void> abrirCitasFormularioModal({
     required String accion,
   })
   confirmarAccionSimple,
-  required Future<String?> Function() solicitarMotivoRechazo,
   required Future<bool> Function(dynamic response, String fallback)
   handleResponseError,
   required Future<void> Function() cargarCitasCalendario,
@@ -249,7 +249,6 @@ Future<void> abrirCitasFormularioModal({
       fechaInicio ??= resolveDefaultStartTime(baseSeleccionada);
     }
   }
-  String? estado = cita?.estado;
   String tipoCita = (cita?.tipoCita?.isNotEmpty ?? false)
       ? cita!.tipoCita!
       : 'CONSULTA';
@@ -1271,7 +1270,8 @@ Future<void> abrirCitasFormularioModal({
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (pacienteSeleccionado == null) ...[
+                if (pacienteSeleccionado == null &&
+                    cita?.estado != CitasEstado.programada.value) ...[
                   FormField<Paciente>(
                     key: pacienteFieldKey,
                     builder: (state) {
@@ -1300,6 +1300,15 @@ Future<void> abrirCitasFormularioModal({
                     },
                     icon: const Icon(Icons.person_add),
                     label: const Text('Registrar paciente'),
+                  ),
+                ] else if (pacienteSeleccionado == null &&
+                    cita?.estado == CitasEstado.programada.value) ...[
+                  CitasAutocompleteSelectorField(
+                    controller: pacienteAutocompleteController,
+                    labelText: 'Paciente',
+                    hintText: 'Paciente no editable en PROGRAMADA',
+                    enabled: false,
+                    onTap: () {},
                   ),
                 ] else ...[
                   Builder(
@@ -1370,7 +1379,8 @@ Future<void> abrirCitasFormularioModal({
                           .take(3)
                           .toList();
                       final pacienteBloqueado =
-                          programarControl && pacienteSeleccionado != null;
+                          (programarControl && pacienteSeleccionado != null) ||
+                          (cita?.estado == CitasEstado.programada.value);
 
                       return Stack(
                         children: [
@@ -1766,46 +1776,6 @@ Future<void> abrirCitasFormularioModal({
                       ),
                     ),
                   ),
-                if (!programarControl &&
-                    cita != null &&
-                    (cita.estado == CitasEstado.solicitada.value ||
-                        cita.estado == CitasEstado.programada.value))
-                  const SizedBox(height: 12),
-                if (!programarControl &&
-                    cita != null &&
-                    (cita.estado == CitasEstado.solicitada.value ||
-                        cita.estado == CitasEstado.programada.value))
-                  DropdownButtonFormField<String?>(
-                    initialValue: estado,
-                    decoration: CustomTextInputStyles.decoration(
-                      label: 'Estado',
-                    ),
-                    items:
-                        {
-                          cita.estado,
-                          if (cita.estado == CitasEstado.solicitada.value) ...[
-                            CitasEstado.programada.value,
-                            CitasEstado.rechazada.value,
-                          ],
-                          if (cita.estado == CitasEstado.programada.value) CitasEstado.cancelada.value,
-                        }.map((estadoItem) {
-                          final requierePermiso =
-                              estadoItem == CitasEstado.programada.value ||
-                              estadoItem == CitasEstado.rechazada.value;
-                          final habilitado =
-                              !requierePermiso ||
-                              puedeGestionarSolicitada(cita) ||
-                              estadoItem == cita.estado;
-                          return DropdownMenuItem(
-                            value: estadoItem,
-                            enabled: habilitado,
-                            child: Text(estadoItem),
-                          );
-                        }).toList(),
-                    onChanged: (value) {
-                      setStateDialog(() => estado = value);
-                    },
-                  ),
               ],
             );
           }
@@ -1946,6 +1916,10 @@ Future<void> abrirCitasFormularioModal({
   }
 
   final estadoActual = cita.estado;
+  final perfil = Auth.instance.profile;
+  final puedeEditarProgramada =
+      RoleUtils.hasRole(perfil, RoleUtils.jefe) ||
+      RoleUtils.hasRole(perfil, RoleUtils.coordinador);
 
   if (programarControl) {
     final payload = <String, dynamic>{
@@ -1975,7 +1949,6 @@ Future<void> abrirCitasFormularioModal({
     }
     return;
   }
-  final estadoSeleccionado = estado;
   final cambioDetalle = detalle != cita.detalle;
   final cambioFecha = fechaInicio != cita.fechaInicio;
   final cambioMedico = medicoId != cita.medicoId;
@@ -2064,106 +2037,62 @@ Future<void> abrirCitasFormularioModal({
       return;
     }
 
-    final ajuste = <String, dynamic>{};
-    if (cambioDetalle) ajuste['detalle'] = detalle;
-    if (cambioFecha) {
-      ajuste['fechaInicio'] = fechaInicio!.toUtc().toIso8601String();
-    }
-
-    if (estadoSeleccionado == null || estadoSeleccionado == estadoActual) {
-      if (ajuste.isNotEmpty) {
-        showSnackBar(
-          messengerKey,
-          'En SOLICITADA debes confirmar o rechazar para aplicar cambios.',
-          state: StatusSnackBar.error,
-          colorText: theme.white,
-        );
-      }
-      return;
-    }
-
-    if (estadoSeleccionado == CitasEstado.cancelada.value) {
-      showSnackBar(
-        messengerKey,
-        'Una cita solicitada no puede cancelarse directamente.',
-        state: StatusSnackBar.error,
-        colorText: theme.white,
-      );
-      return;
-    }
-
-    if (estadoSeleccionado == CitasEstado.programada.value) {
-      final ok = await handleResponseError(
-        await service.confirmarCita(cita.id, body: ajuste),
-        'No se pudo confirmar la cita.',
-      );
-      if (!ok) return;
-    } else if (estadoSeleccionado == CitasEstado.rechazada.value) {
-      final motivo = await solicitarMotivoRechazo();
-      if (motivo == null) return;
-      final ok = await handleResponseError(
-        await service.rechazarCita(cita.id, motivoRechazo: motivo),
-        'No se pudo rechazar la cita.',
-      );
-      if (!ok) return;
-    } else {
-      showSnackBar(
-        messengerKey,
-        'En SOLICITADA solo puedes confirmar o rechazar.',
-        state: StatusSnackBar.error,
-        colorText: theme.white,
-      );
-      return;
-    }
+    showSnackBar(
+      messengerKey,
+      'El estado se gestiona con acciones. Para SOLICITADA usa Confirmar/Rechazar.',
+      state: StatusSnackBar.error,
+      colorText: theme.white,
+    );
+    return;
   } else if (estadoActual == CitasEstado.programada.value) {
-    if (cambioDetalle ||
-        cambioMedico ||
-        cambioPaciente ||
-        cambioTipoCita ||
-        cambioServicio ||
-        cambioLugar) {
+    if (!puedeEditarProgramada) {
       showSnackBar(
         messengerKey,
-        'La cita programada no es editable.',
+        'Solo jefes y coordinadores pueden editar citas programadas.',
         state: StatusSnackBar.error,
         colorText: theme.white,
       );
       return;
     }
-    if (estadoSeleccionado == CitasEstado.cancelada.value) {
-      final ok = await handleResponseError(
-        await service.cancelarCita(cita.id),
-        'No se pudo cancelar la cita.',
-      );
-      if (!ok) return;
-    } else if (cambioFecha) {
-      final ok = await handleResponseError(
-        await service.reprogramarCita(cita.id, {
-          'fechaInicio': fechaInicio!.toUtc().toIso8601String(),
-          'tipoCita': tipoCita,
-          if (servicioSeleccionado != null)
-            'idServicio': servicioSeleccionado!.id,
-        }),
-        'No se pudo reprogramar la cita.',
-      );
-      if (!ok) return;
-    } else if (estadoSeleccionado != null &&
-        estadoSeleccionado != estadoActual) {
+
+    if (cambioPaciente) {
       showSnackBar(
         messengerKey,
-        'En PROGRAMADA solo puedes cancelar o reprogramar.',
+        'En PROGRAMADA no se permite modificar paciente.',
         state: StatusSnackBar.error,
         colorText: theme.white,
       );
       return;
     }
+
+    final updates = <String, dynamic>{};
+    if (cambioDetalle) updates['detalle'] = detalle;
+    if (cambioMedico) updates['idPersonal'] = medicoId;
+    if (cambioTipoCita) updates['tipoCita'] = tipoCita;
+    if (cambioLugar) {
+      updates['idLugar'] = lugarId.isEmpty ? null : lugarId;
+    }
+    if (cambioServicio) {
+      updates['idServicio'] = servicioSeleccionado?.id;
+    }
+    if (cambioFecha) {
+      updates['fechaInicio'] = fechaInicio!.toUtc().toIso8601String();
+    }
+
+    if (updates.isNotEmpty) {
+      final ok = await handleResponseError(
+        await service.editarProgramadaCita(cita.id, updates),
+        'No se pudo actualizar la cita programada.',
+      );
+      if (!ok) return;
+    }
+
   } else if (estadoActual == CitasEstado.cancelada.value || estadoActual == CitasEstado.noAsistio.value) {
     if (cambioDetalle ||
         cambioMedico ||
         cambioPaciente ||
         cambioTipoCita ||
-        cambioServicio ||
-        (estadoSeleccionado != null && estadoSeleccionado != estadoActual)) {
+        cambioServicio) {
       showSnackBar(
         messengerKey,
         'En este estado solo está permitida la reprogramación.',
@@ -2173,13 +2102,16 @@ Future<void> abrirCitasFormularioModal({
       return;
     }
     if (cambioFecha) {
+      final payload = <String, dynamic>{
+        'detalle': detalle,
+        'fechaInicio': fechaInicio!.toUtc().toIso8601String(),
+        'idPersonal': medicoId,
+        if (lugarId.isNotEmpty) 'idLugar': lugarId,
+        'tipoCita': tipoCita,
+        if (servicioSeleccionado != null) 'idServicio': servicioSeleccionado!.id,
+      };
       final ok = await handleResponseError(
-        await service.reprogramarCita(cita.id, {
-          'fechaInicio': fechaInicio!.toUtc().toIso8601String(),
-          'tipoCita': tipoCita,
-          if (servicioSeleccionado != null)
-            'idServicio': servicioSeleccionado!.id,
-        }),
+        await service.reprogramarCita(cita.id, payload),
         'No se pudo reprogramar la cita.',
       );
       if (!ok) return;
