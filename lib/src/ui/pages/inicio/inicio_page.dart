@@ -270,7 +270,8 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
       cita: cita,
       puedeGestionarSolicitada: (item) =>
           CitasUtils.puedeGestionarSolicitada(item, Auth.instance.profile),
-      puedeEditarCita: (_) => false,
+      puedeEditarCita: (item) =>
+          CitasUtils.puedeEditarCita(item, perfil: Auth.instance.profile),
       citaYaIniciada: InicioCitasUtils.citaYaIniciada,
       confirmarCitaSolicitada: _confirmarCitaSolicitada,
       rechazarCitaSolicitada: _rechazarCitaSolicitada,
@@ -280,7 +281,7 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
       reprogramarCita: _reprogramarCita,
       cancelarCita: _cancelarCita,
       eliminarBorrador: _eliminarBorrador,
-      abrirFormulario: _abrirFormularioNoDisponible,
+      abrirFormulario: (item) => _abrirFormulario(cita: item),
     );
 
     await showModalBottomSheet<void>(
@@ -382,9 +383,6 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
     return confirmar == true;
   }
 
-  Future<String?> _solicitarMotivoRechazo() =>
-      InicioCitasUtils.solicitarMotivoRechazo(context);
-
   Future<void> _abrirFormulario({CitaMedica? cita, DateTime? fechaBase, bool programarControl = false}) async {
     await abrirCitasFormularioModal(
       context: context,
@@ -406,7 +404,6 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
       formatearTipoCita: CitasUtils.formatearTipoCita,
       confirmarAccionCita: _confirmarAccionCita,
       confirmarAccionSimple: _confirmarAccionSimple,
-      solicitarMotivoRechazo: _solicitarMotivoRechazo,
       handleResponseError: (response, fallback) =>
           _handleResponseError(response, fallback),
       cargarCitasCalendario: () async {
@@ -429,14 +426,6 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
       cita: cita,
       fechaBase: fechaBase,
       programarControl: programarControl,
-    );
-  }
-
-  Future<void> _abrirFormularioNoDisponible(CitaMedica cita) async {
-    InicioCitasUtils.mostrarNoDisponible(
-      messenger: misCitasHomeMessenger,
-      theme: _theme,
-      accion: 'Edición de cita',
     );
   }
 

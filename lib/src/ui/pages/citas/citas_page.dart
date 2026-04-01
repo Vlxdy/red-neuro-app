@@ -1301,7 +1301,8 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     return PhosphorIconsRegular.calendarCheck;
   }
 
-  bool _puedeEditarCita(CitaMedica cita) => CitasUtils.puedeEditarCita(cita);
+  bool _puedeEditarCita(CitaMedica cita) =>
+      CitasUtils.puedeEditarCita(cita, perfil: Auth.instance.profile);
 
   Future<bool> _confirmarAccionSimple({
     required String titulo,
@@ -1382,13 +1383,21 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
       accion: 'Sí, reprogramar',
     );
     if (!confirmar) return;
+    final payload = <String, dynamic>{
+      'detalle': cita.detalle,
+      'fechaInicio': nuevaFecha.toUtc().toIso8601String(),
+      'idPersonal': cita.idPersonal,
+      if ((cita.lugarId ?? '').trim().isNotEmpty) 'idLugar': cita.lugarId,
+      if ((cita.tipoCita ?? '').trim().isNotEmpty) 'tipoCita': cita.tipoCita,
+      if ((cita.servicioId ?? '').trim().isNotEmpty) 'idServicio': cita.servicioId,
+    };
+    final reprogramarDesdeProgramada =
+        cita.estado == CitasEstado.programada.value;
+    final response = reprogramarDesdeProgramada
+        ? await _service.editarProgramadaCita(cita.id, payload)
+        : await _service.reprogramarCita(cita.id, payload);
     final ok = await _handleResponseError(
-      await _service.reprogramarCita(cita.id, {
-        'fechaInicio': nuevaFecha.toUtc().toIso8601String(),
-        'tipoCita': cita.tipoCita,
-        if ((cita.servicioId ?? '').trim().isNotEmpty)
-          'idServicio': cita.servicioId,
-      }),
+      response,
       'No se pudo reprogramar la cita.',
     );
     if (!ok) return;
@@ -1621,7 +1630,6 @@ extension _CitasPageFormularioModalPart on _CitasPageState {
       formatearTipoCita: CitasUtils.formatearTipoCita,
       confirmarAccionCita: _confirmarAccionCita,
       confirmarAccionSimple: _confirmarAccionSimple,
-      solicitarMotivoRechazo: _solicitarMotivoRechazo,
       handleResponseError: (response, fallback) =>
           _handleResponseError(response, fallback),
       cargarCitasCalendario: _cargarCitasCalendario,

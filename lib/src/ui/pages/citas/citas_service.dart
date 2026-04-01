@@ -265,6 +265,13 @@ class CitasService extends ServiceConfig {
     return fetch('/citas/$id/editar-borrador', type: HttpProtocol.patch, body: body);
   }
 
+  Future<ResponseApi> editarProgramadaCita(
+    String id,
+    Map<String, dynamic> body,
+  ) async {
+    return fetch('/citas/$id/editar-programada', type: HttpProtocol.patch, body: body);
+  }
+
   Future<ResponseApi> enviarCita(
     String id, {
     String? idPersonal,

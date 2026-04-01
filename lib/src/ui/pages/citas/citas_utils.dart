@@ -97,9 +97,17 @@ class CitasUtils {
         esAdministrador(perfil);
   }
 
-  static bool puedeEditarCita(CitaMedica cita) {
+  static bool puedeEditarCita(CitaMedica cita, {dynamic perfil}) {
     final estado = cita.estado.trim().toUpperCase();
-    return estado == CitasEstado.borrador.value || estado == CitasEstado.rechazada.value;
+    if (estado == CitasEstado.borrador.value ||
+        estado == CitasEstado.rechazada.value) {
+      return true;
+    }
+    if (estado == CitasEstado.programada.value) {
+      return RoleUtils.hasRole(perfil, RoleUtils.jefe) ||
+          RoleUtils.hasRole(perfil, RoleUtils.coordinador);
+    }
+    return false;
   }
 
   static String? valorDetalle(String? value) {
@@ -239,7 +247,9 @@ class CitasUtils {
         ),
       if (puedeEditarCita(cita))
         CitaDetalleAccion(
-          label: 'Editar',
+          label: cita.estado == CitasEstado.programada.value
+              ? 'Modificar cita'
+              : 'Editar',
           icon: Icons.edit_outlined,
           onTap: () async {
             await abrirFormulario(cita);
@@ -281,8 +291,7 @@ class CitasUtils {
             return true;
           },
         ),
-      if (cita.estado == CitasEstado.programada.value ||
-          cita.estado == CitasEstado.cancelada.value ||
+      if (cita.estado == CitasEstado.cancelada.value ||
           cita.estado == CitasEstado.noAsistio.value)
         CitaDetalleAccion(
           label: 'Reprogramar',
@@ -327,7 +336,13 @@ class CitasUtils {
       return CitasModalDestino.detalle;
     }
 
-    if (puedeEditarCita(cita)) {
+    if (estado == CitasEstado.programada.value) {
+      // En PROGRAMADA siempre abrir detalle para mostrar acción explícita
+      // "Modificar cita" y el resto de acciones de gestión.
+      return CitasModalDestino.detalle;
+    }
+
+    if (puedeEditarCita(cita, perfil: perfil)) {
       return CitasModalDestino.formulario;
     }
 
