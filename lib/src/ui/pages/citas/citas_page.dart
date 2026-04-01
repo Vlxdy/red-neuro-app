@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:red_neuro_app/src/config/service_config.dart';
+import 'package:red_neuro_app/src/config/socket_service.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/constants.dart';
 import 'package:red_neuro_app/src/constants/citas_estado.dart';
@@ -32,9 +33,6 @@ import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_confirmar_solicit
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_historial_modal_widget.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_modo_mis_citas_banner.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_motivo_rechazo_dialog.dart';
-import 'package:socket_io_client/socket_io_client.dart' as io;
-
-
 final GlobalKey<ScaffoldMessengerState> citasMessenger =
     GlobalKey<ScaffoldMessengerState>();
 
@@ -98,7 +96,12 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   int _listPage = 1;
   int _listLimit = 10;
 
-  late final _CitasSocketClient _socketClient;
+  void Function(dynamic)? _onSocketCreatedHandler;
+  void Function(dynamic)? _onSocketActualizadaHandler;
+  void Function(dynamic)? _onSocketEstadoActualizadoHandler;
+  void Function(dynamic)? _onSocketReprogramadaHandler;
+  void Function(dynamic)? _onSocketCanceladaHandler;
+  DateTime? _lastResumeSocketSyncAt;
   String get _rolActivo =>
       RoleUtils.normalizeRole(Auth.instance.profile.rol?.toString());
   bool get _esProfesionalInvitado =>
@@ -140,13 +143,7 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     );
     _lugarFiltroController = TextEditingController();
     _service = CitasService(context);
-    _socketClient = _CitasSocketClient(
-      onCreated: _onSocketCreated,
-      onActualizada: _onSocketActualizada,
-      onEstadoActualizado: _onSocketEstadoActualizado,
-      onReprogramada: _onSocketReprogramada,
-      onCancelada: _onSocketCancelada,
-    );
+    _bindSocketEvents();
     _cargarInicial();
   }
 
@@ -160,19 +157,26 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
     _filtersScrollController.dispose();
     _listScrollController.dispose();
     _agendaScrollController.dispose();
-    _socketClient.dispose();
+    _unbindSocketEvents();
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      final now = DateTime.now();
+      final lastSync = _lastResumeSocketSyncAt;
+      if (lastSync != null &&
+          now.difference(lastSync) < const Duration(seconds: 2)) {
+        return;
+      }
+      _lastResumeSocketSyncAt = now;
       unawaited(_restaurarConexionSocketYRecargar());
     }
   }
 
   Future<void> _restaurarConexionSocketYRecargar() async {
-    await _socketClient.ensureConnected();
+    SocketService.instance.ensureSubscription();
     if (!mounted) return;
     await _cargarCitasAgendaSemana();
     if (!mounted) return;
@@ -192,9 +196,47 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
       _soloCitasAsignadas = true;
     }
 
-    await _socketClient.connect();
+    SocketService.instance.ensureSubscription();
     await _cargarCitasAgendaSemana();
     await _cargarCitasAgendaDay(day: _agendaDay);
+  }
+
+  void _bindSocketEvents() {
+    _onSocketCreatedHandler ??= _onSocketCreated;
+    _onSocketActualizadaHandler ??= _onSocketActualizada;
+    _onSocketEstadoActualizadoHandler ??= _onSocketEstadoActualizado;
+    _onSocketReprogramadaHandler ??= _onSocketReprogramada;
+    _onSocketCanceladaHandler ??= _onSocketCancelada;
+
+    SocketService.instance.on('citas:created', _onSocketCreatedHandler!);
+    SocketService.instance.on('citas:actualizada', _onSocketActualizadaHandler!);
+    SocketService.instance.on(
+      'citas:estado-actualizado',
+      _onSocketEstadoActualizadoHandler!,
+    );
+    SocketService.instance.on('citas:reprogramada', _onSocketReprogramadaHandler!);
+    SocketService.instance.on('citas:cancelada', _onSocketCanceladaHandler!);
+  }
+
+  void _unbindSocketEvents() {
+    if (_onSocketCreatedHandler != null) {
+      SocketService.instance.off('citas:created', _onSocketCreatedHandler);
+    }
+    if (_onSocketActualizadaHandler != null) {
+      SocketService.instance.off('citas:actualizada', _onSocketActualizadaHandler);
+    }
+    if (_onSocketEstadoActualizadoHandler != null) {
+      SocketService.instance.off(
+        'citas:estado-actualizado',
+        _onSocketEstadoActualizadoHandler,
+      );
+    }
+    if (_onSocketReprogramadaHandler != null) {
+      SocketService.instance.off('citas:reprogramada', _onSocketReprogramadaHandler);
+    }
+    if (_onSocketCanceladaHandler != null) {
+      SocketService.instance.off('citas:cancelada', _onSocketCanceladaHandler);
+    }
   }
 
   Future<void> _cargarCitasCalendario() async {
@@ -1663,92 +1705,6 @@ extension _CitasPageHistorialModalPart on _CitasPageState {
         );
       },
     );
-  }
-}
-
-class _CitasSocketClient {
-  io.Socket? _socket;
-  final ValueNotifier<bool> connectionNotifier = ValueNotifier(false);
-
-  final void Function(dynamic data) onCreated;
-  final void Function(dynamic data) onActualizada;
-  final void Function(dynamic data) onEstadoActualizado;
-  final void Function(dynamic data) onReprogramada;
-  final void Function(dynamic data) onCancelada;
-
-  _CitasSocketClient({
-    required this.onCreated,
-    required this.onActualizada,
-    required this.onEstadoActualizado,
-    required this.onReprogramada,
-    required this.onCancelada,
-  });
-
-  Future<void> connect() async {
-    if (_socket != null) {
-      if (_socket!.connected != true) {
-        _socket!.connect();
-      }
-      return;
-    }
-    final token = await Auth.instance.apiToken;
-    _socket = io.io(
-      '${Constantes.sockets}/realtime',
-      io.OptionBuilder()
-          .setTransports(['websocket'])
-          .setAuth({'token': token})
-          .setReconnectionAttempts(20)
-          .setReconnectionDelay(1000)
-          .setReconnectionDelayMax(5000)
-          .setTimeout(5000)
-          .disableAutoConnect()
-          .build(),
-    );
-
-    _socket!.on('connect', (_) {
-      connectionNotifier.value = true;
-    });
-    _socket!.on('disconnect', (reason) {
-      connectionNotifier.value = false;
-      Logger.warning('Citas socket disconnected: $reason');
-    });
-    _socket!.on('connect_error', (error) {
-      connectionNotifier.value = false;
-      Logger.warning('Citas socket connect_error: $error');
-    });
-    _socket!.on('error', (error) {
-      connectionNotifier.value = false;
-      Logger.warning('Citas socket error: $error');
-    });
-
-    _socket!.on('citas:created', onCreated);
-    _socket!.on('citas:actualizada', onActualizada);
-    _socket!.on('citas:estado-actualizado', onEstadoActualizado);
-    _socket!.on('citas:reprogramada', onReprogramada);
-    _socket!.on('citas:cancelada', onCancelada);
-
-    _socket!.connect();
-  }
-
-  Future<void> ensureConnected() async {
-    if (_socket == null || _socket!.connected != true) {
-      await connect();
-    }
-  }
-
-  void dispose() {
-    if (_socket == null) return;
-    _socket?.off('citas:created');
-    _socket?.off('citas:actualizada');
-    _socket?.off('citas:estado-actualizado');
-    _socket?.off('citas:reprogramada');
-    _socket?.off('citas:cancelada');
-    _socket?.off('connect');
-    _socket?.off('disconnect');
-    _socket?.off('connect_error');
-    _socket?.off('error');
-    _socket?.disconnect();
-    _socket = null;
   }
 }
 
