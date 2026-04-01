@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/config/service_config.dart';
+import 'package:red_neuro_app/src/config/socket_service.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/constants/citas_estado.dart';
 import 'package:red_neuro_app/src/constants/constants.dart';
@@ -29,7 +30,6 @@ import 'package:red_neuro_app/src/ui/pages/inicio/inicio_service.dart';
 import 'package:red_neuro_app/src/ui/pages/inicio/widgets/inicio_bandeja_counter_card.dart';
 import 'package:red_neuro_app/src/ui/pages/inicio/widgets/inicio_bandeja_section_card.dart';
 import 'package:red_neuro_app/src/ui/pages/inicio/widgets/inicio_cita_compact_tile.dart';
-import 'package:socket_io_client/socket_io_client.dart' as io;
 
 final GlobalKey<ScaffoldMessengerState> misCitasHomeMessenger =
     GlobalKey<ScaffoldMessengerState>();
@@ -68,27 +68,52 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
   bool _borradoresCollapsed = false;
   bool _programadasCollapsed = false;
 
-  late final _InicioCitasSocketClient _socketClient;
   Timer? _socketReloadDebouncer;
   final ValueNotifier<int> _bandejasRefreshNotifier = ValueNotifier<int>(0);
+  void Function(dynamic)? _onSocketEventHandler;
+  static const _socketEvents = <String>[
+    'cita.creada',
+    'cita.actualizada',
+    'cita.estado_cambiado',
+    'cita.eliminada',
+    'citas:home-actualizada',
+    'citas:created',
+    'citas:actualizada',
+    'citas:estado-actualizado',
+    'citas:cancelada',
+  ];
 
   @override
   void initState() {
     super.initState();
     _service = MisCitasHomeService(context);
     _citasService = CitasService(context);
-    _socketClient = _InicioCitasSocketClient(onEvent: _onSocketEvent);
+    _bindSocketEvents();
     _loadCollapsedPreferences();
     _loadBandeja();
-    unawaited(_socketClient.connect());
   }
 
   @override
   void dispose() {
     _socketReloadDebouncer?.cancel();
-    _socketClient.dispose();
+    _unbindSocketEvents();
     _bandejasRefreshNotifier.dispose();
     super.dispose();
+  }
+
+  void _bindSocketEvents() {
+    _onSocketEventHandler ??= _onSocketEvent;
+    for (final event in _socketEvents) {
+      SocketService.instance.on(event, _onSocketEventHandler!);
+    }
+    SocketService.instance.ensureSubscription();
+  }
+
+  void _unbindSocketEvents() {
+    if (_onSocketEventHandler == null) return;
+    for (final event in _socketEvents) {
+      SocketService.instance.off(event, _onSocketEventHandler);
+    }
   }
 
   void _onSocketEvent(dynamic payload) {
@@ -822,79 +847,6 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
   }
 }
 
-
-class _InicioCitasSocketClient {
-  _InicioCitasSocketClient({required this.onEvent});
-
-  final void Function(dynamic payload) onEvent;
-  io.Socket? _socket;
-
-  static const _events = <String>[
-    'cita.creada',
-    'cita.actualizada',
-    'cita.estado_cambiado',
-    'cita.eliminada',
-    'citas:home-actualizada',
-    // compatibilidad con eventos existentes
-    'citas:created',
-    'citas:actualizada',
-    'citas:estado-actualizado',
-    'citas:cancelada',
-  ];
-
-  Future<void> connect() async {
-    if (_socket != null) {
-      if (_socket!.connected != true) _socket!.connect();
-      return;
-    }
-
-    final token = await Auth.instance.apiToken;
-    _socket = io.io(
-      '${Constantes.sockets}/realtime',
-      io.OptionBuilder()
-          .setTransports(['websocket'])
-          .setAuth({'token': token})
-          .setReconnectionAttempts(20)
-          .setReconnectionDelay(1000)
-          .setReconnectionDelayMax(5000)
-          .setTimeout(5000)
-          .disableAutoConnect()
-          .build(),
-    );
-
-    _socket!.on('connect', (_) {
-      Logger.info('Inicio citas socket conectado: ${_socket?.id}');
-    });
-    _socket!.on('disconnect', (reason) {
-      Logger.warning('Inicio citas socket desconectado: $reason');
-    });
-    _socket!.on('connect_error', (error) {
-      Logger.warning('Inicio citas socket connect_error: $error');
-    });
-    _socket!.on('error', (error) {
-      Logger.warning('Inicio citas socket error: $error');
-    });
-
-    for (final event in _events) {
-      _socket!.on(event, onEvent);
-    }
-
-    _socket!.connect();
-  }
-
-  void dispose() {
-    if (_socket == null) return;
-    for (final event in _events) {
-      _socket?.off(event);
-    }
-    _socket?.off('connect');
-    _socket?.off('disconnect');
-    _socket?.off('connect_error');
-    _socket?.off('error');
-    _socket?.disconnect();
-    _socket = null;
-  }
-}
 
 class _BandejaDetallePage extends StatefulWidget {
   const _BandejaDetallePage({
