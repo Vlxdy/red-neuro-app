@@ -22,6 +22,7 @@ class CitasListadoTab extends StatelessWidget {
   final VoidCallback Function(CitaMedica cita) onVerDetalle;
   final VoidCallback Function(CitaMedica cita) onEditar;
   final bool Function(CitaMedica cita) puedeEditar;
+  final bool showActionIcons;
 
   const CitasListadoTab({
     super.key,
@@ -41,6 +42,7 @@ class CitasListadoTab extends StatelessWidget {
     required this.onVerDetalle,
     required this.onEditar,
     required this.puedeEditar,
+    this.showActionIcons = true,
   });
 
   @override
@@ -64,6 +66,7 @@ class CitasListadoTab extends StatelessWidget {
             onVerDetalle: onVerDetalle,
             onEditar: onEditar,
             puedeEditar: puedeEditar,
+            showActionIcons: showActionIcons,
           ),
         ),
         if (isLoadingMore) const SizedBox(height: 12),
@@ -97,6 +100,7 @@ class CitasListado extends StatelessWidget {
   final VoidCallback Function(CitaMedica cita) onVerDetalle;
   final VoidCallback Function(CitaMedica cita) onEditar;
   final bool Function(CitaMedica cita) puedeEditar;
+  final bool showActionIcons;
 
   const CitasListado({
     super.key,
@@ -116,6 +120,7 @@ class CitasListado extends StatelessWidget {
     required this.onVerDetalle,
     required this.onEditar,
     required this.puedeEditar,
+    this.showActionIcons = true,
   });
 
   @override
@@ -181,128 +186,127 @@ class CitasListado extends StatelessWidget {
         final titulo = tituloCita(cita);
         final tipoIcono = iconoTipoCita(cita);
 
-        return Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: theme.bgCard,
+        return Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+          child: InkWell(
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: estadoColor.withValues(alpha: 0.22),
-              width: 1.2,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: estadoColor.withValues(
-                  alpha: theme.isLight ? 0.12 : 0.2,
+            onTap: onVerDetalle(cita),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: theme.bgCard,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: estadoColor.withValues(alpha: 0.22),
+                  width: 1.2,
                 ),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 3,
-                  margin: const EdgeInsets.only(right: 8, top: 2),
-                  decoration: BoxDecoration(
-                    color: ocupacionColor,
-                    borderRadius: BorderRadius.circular(8),
+                boxShadow: [
+                  BoxShadow(
+                    color: estadoColor.withValues(
+                      alpha: theme.isLight ? 0.12 : 0.2,
+                    ),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
                   ),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                ],
+              ),
+              child: IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 3,
+                      margin: const EdgeInsets.only(right: 8, top: 2),
+                      decoration: BoxDecoration(
+                        color: ocupacionColor,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Row(
-                              children: [
-                                Icon(tipoIcono, size: 18, color: theme.primary),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Text(
-                                    titulo,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleMedium
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 15,
-                                        ),
-                                  ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Row(
+                                  children: [
+                                    Icon(tipoIcono, size: 18, color: theme.primary),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        titulo,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 15,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
+                              ),
+                              CitasEstadoBadge(
+                                estado: cita.estado,
+                                color: estadoColor,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 6,
+                            children: [
+                              InfoPill(
+                                icon: PhosphorIconsRegular.calendar,
+                                label: resumenFecha,
+                              ),
+                              InfoPill(
+                                icon: PhosphorIconsRegular.clock,
+                                label: resumenHorario,
+                              ),
+                              if (pacienteNombre.isNotEmpty)
+                                InfoPill(
+                                  icon: PhosphorIconsRegular.userCircle,
+                                  label: pacienteNombre,
+                                  color: theme.primary,
+                                ),
+                              if (medicoNombre.isNotEmpty)
+                                InfoPill(
+                                  icon: PhosphorIconsRegular.stethoscope,
+                                  label: medicoNombre,
+                                  color: theme.secondary,
+                                ),
+                            ],
+                          ),
+                          if (showActionIcons) ...[
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                if (puedeEditar(cita))
+                                  IconButton(
+                                    onPressed: onEditar(cita),
+                                    icon: const Icon(Icons.edit, size: 20),
+                                    visualDensity: VisualDensity.compact,
+                                    constraints: const BoxConstraints.tightFor(
+                                      width: 36,
+                                      height: 36,
+                                    ),
+                                    tooltip: 'Editar',
+                                  ),
                               ],
                             ),
-                          ),
-                          CitasEstadoBadge(
-                            estado: cita.estado,
-                            color: estadoColor,
-                          ),
+                          ],
                         ],
                       ),
-                      const SizedBox(height: 6),
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 6,
-                        children: [
-                          InfoPill(
-                            icon: PhosphorIconsRegular.calendar,
-                            label: resumenFecha,
-                          ),
-                          InfoPill(
-                            icon: PhosphorIconsRegular.clock,
-                            label: resumenHorario,
-                          ),
-                          if (pacienteNombre.isNotEmpty)
-                            InfoPill(
-                              icon: PhosphorIconsRegular.userCircle,
-                              label: pacienteNombre,
-                              color: theme.primary,
-                            ),
-                          if (medicoNombre.isNotEmpty)
-                            InfoPill(
-                              icon: PhosphorIconsRegular.stethoscope,
-                              label: medicoNombre,
-                              color: theme.secondary,
-                            ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          const Spacer(),
-                          IconButton(
-                            onPressed: onVerDetalle(cita),
-                            icon: const Icon(Icons.info_outline, size: 20),
-                            visualDensity: VisualDensity.compact,
-                            constraints: const BoxConstraints.tightFor(
-                              width: 36,
-                              height: 36,
-                            ),
-                            tooltip: 'Ver detalles',
-                          ),
-                          if (puedeEditar(cita))
-                            IconButton(
-                              onPressed: onEditar(cita),
-                              icon: const Icon(Icons.edit, size: 20),
-                              visualDensity: VisualDensity.compact,
-                              constraints: const BoxConstraints.tightFor(
-                                width: 36,
-                                height: 36,
-                              ),
-                              tooltip: 'Editar',
-                            ),
-                        ],
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         );

@@ -6,8 +6,11 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 import 'package:red_neuro_app/src/config/form_controller.dart';
+import 'package:red_neuro_app/src/config/service_config.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
+import 'package:red_neuro_app/src/constants/citas_estado.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
+import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/models/paciente.dart';
 import 'package:red_neuro_app/src/ui/common/buttons/simple_button.dart';
@@ -17,7 +20,16 @@ import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/common/text_inputs/text_input.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/citas_service.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/citas_utils.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_confirmacion_dialog.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_confirmar_solicitada_dialog.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_detalle_modal.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_formulario_modal_widget.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_listado.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_catalogo_selector_modal_widget.dart';
 import 'package:red_neuro_app/src/ui/pages/pacientes/pacientes_service.dart';
+import 'package:red_neuro_app/src/ui/pages/inicio/inicio_citas_utils.dart';
 import 'package:red_neuro_app/src/utils/role_utils.dart';
 
 final GlobalKey<ScaffoldMessengerState> pacientesMessenger =
@@ -33,8 +45,10 @@ class PacientesPage extends StatefulWidget {
 class _PacientesPageState extends State<PacientesPage> with FormController {
   final _theme = ThemeController.instance;
   final DateFormat _dateFormatter = DateFormat('dd/MM/yyyy');
+  final DateFormat _dateTimeFormatter = DateFormat('dd/MM/yyyy HH:mm');
 
   late final PacientesService _service;
+  late final CitasService _citasService;
 
   List<Paciente> _pacientes = [];
   bool _loading = false;
@@ -59,6 +73,7 @@ class _PacientesPageState extends State<PacientesPage> with FormController {
   void initState() {
     super.initState();
     _service = PacientesService(context);
+    _citasService = CitasService(context);
     _cargarPacientes();
     _scrollController.addListener(_handleScroll);
   }
@@ -803,6 +818,14 @@ class _PacientesPageState extends State<PacientesPage> with FormController {
                             icon: const Icon(Icons.edit_outlined),
                             label: const Text('Editar'),
                           ),
+                          FilledButton.icon(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _verCitasPaciente(paciente);
+                            },
+                            icon: const Icon(Icons.calendar_month_outlined),
+                            label: const Text('Ver citas'),
+                          ),
                           OutlinedButton.icon(
                             onPressed: () {
                               Navigator.pop(context);
@@ -834,6 +857,820 @@ class _PacientesPageState extends State<PacientesPage> with FormController {
 
   Future<void> _copiarDatoPaciente(String valor) async {
     await Clipboard.setData(ClipboardData(text: valor));
+  }
+
+  Future<bool> _handleResponseErrorCita(
+    dynamic response,
+    String fallback,
+  ) async {
+    if (response is! ResponseApi) {
+      await showErrorDialog(context, fallback);
+      return false;
+    }
+    if (response.status == StatusNetwork.connected) return true;
+    final message = response.message.isNotEmpty ? response.message : fallback;
+    await showErrorDialog(context, message);
+    return false;
+  }
+
+  Future<bool> _confirmarAccionSimpleCita({
+    required String titulo,
+    required String mensaje,
+    required String accion,
+  }) async {
+    final confirmar = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(titulo),
+        content: Text(mensaje),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(accion),
+          ),
+        ],
+      ),
+    );
+    return confirmar == true;
+  }
+
+  Future<String?> _confirmarAccionCita({
+    required bool esNueva,
+    required String tipoCita,
+    required String servicioNombre,
+    required DateTime fechaInicio,
+    int? duracionMinutos,
+    String? pacienteNombre,
+    String? ocupacionNombre,
+    String? medicoNombre,
+    String? pacienteDocumento,
+    String? pacienteTelefono,
+    String? pacienteGenero,
+    String? lugarNombre,
+    String? lugarDireccion,
+    String? detalle,
+  }) {
+    return showCitaConfirmacionDialog(
+      context: context,
+      data: CitaAccionConfirmacionData(
+        esNueva: esNueva,
+        tipoCita: tipoCita,
+        servicioNombre: servicioNombre,
+        fechaInicio: fechaInicio,
+        duracionMinutos: duracionMinutos,
+        pacienteNombre: pacienteNombre,
+        ocupacionNombre: ocupacionNombre,
+        medicoNombre: medicoNombre,
+        pacienteDocumento: pacienteDocumento,
+        pacienteTelefono: pacienteTelefono,
+        pacienteGenero: pacienteGenero,
+        lugarNombre: lugarNombre,
+        lugarDireccion: lugarDireccion,
+        detalle: detalle,
+      ),
+      dateTimeFormat: _dateTimeFormatter,
+      formatearGenero: InicioCitasUtils.formatearGenero,
+    );
+  }
+
+  DateTime _resolveDefaultStartTimePaciente(DateTime baseDay) {
+    return DateTime(baseDay.year, baseDay.month, baseDay.day, 8);
+  }
+
+  IconData _iconoTipoCitaPaciente(CitaMedica cita) {
+    final tipo = (cita.tipoCita ?? '').trim().toUpperCase();
+    if (tipo == 'ESTUDIO') return Icons.science_outlined;
+    return Icons.medical_services_outlined;
+  }
+
+  Future<void> _mostrarHistorialCitaPaciente(CitaMedica cita) async {
+    await InicioCitasUtils.mostrarHistorialCita(
+      context: context,
+      cita: cita,
+      service: _citasService,
+      theme: _theme,
+      dateFormat: _dateFormatter,
+      dateTimeFormat: _dateTimeFormatter,
+    );
+  }
+
+  Future<void> _abrirFormularioCitaPaciente({
+    CitaMedica? cita,
+    bool programarControl = false,
+    Future<void> Function()? onUpdated,
+  }) async {
+    await abrirCitasFormularioModal(
+      context: context,
+      theme: _theme,
+      service: _citasService,
+      dateFormat: _dateFormatter,
+      timeFormat: DateFormat('HH:mm'),
+      messengerKey: pacientesMessenger,
+      selectedDay: null,
+      currentTabIndex: 2,
+      resolveDefaultStartTime: _resolveDefaultStartTimePaciente,
+      validarRequerido: _validarRequerido,
+      calcularEdadPaciente: InicioCitasUtils.calcularEdadPaciente,
+      formatearFechaPaciente: InicioCitasUtils.formatearFechaPaciente,
+      formatearGenero: InicioCitasUtils.formatearGenero,
+      puedeGestionarSolicitada: (citaItem) =>
+          CitasUtils.puedeGestionarSolicitada(citaItem, Auth.instance.profile),
+      colorEstado: (estado) => CitasUtils.colorEstado(estado, _theme),
+      formatearTipoCita: CitasUtils.formatearTipoCita,
+      confirmarAccionCita: _confirmarAccionCita,
+      confirmarAccionSimple: _confirmarAccionSimpleCita,
+      handleResponseError: _handleResponseErrorCita,
+      cargarCitasCalendario: () async => onUpdated?.call(),
+      cargarCitasListado: ({int? page}) async => onUpdated?.call(),
+      mostrarHistorialCita: _mostrarHistorialCitaPaciente,
+      eliminarCitaEditable: (citaItem) async {
+        final confirmar = await _confirmarAccionSimpleCita(
+          titulo: 'Eliminar borrador',
+          mensaje: '¿Confirmas eliminar este borrador de cita?',
+          accion: 'Sí, eliminar',
+        );
+        if (!confirmar) return false;
+        final ok = await _handleResponseErrorCita(
+          await _citasService.eliminarCitaBorrador(citaItem.id),
+          'No se pudo eliminar el borrador.',
+        );
+        if (ok) await onUpdated?.call();
+        return ok;
+      },
+      cita: cita,
+      programarControl: programarControl,
+    );
+  }
+
+  Future<void> _mostrarDetalleCitaPaciente(
+    CitaMedica cita,
+    Future<void> Function() onUpdated,
+  ) async {
+    final payload = CitasUtils.construirDetalleModalPayload(
+      cita: cita,
+      theme: _theme,
+      titulo: 'Detalle de cita',
+      nombrePaciente: InicioCitasUtils.nombrePaciente,
+      formatearGenero: InicioCitasUtils.formatearGenero,
+      formatearFechaPaciente: InicioCitasUtils.formatearFechaPaciente,
+      calcularEdadPaciente: InicioCitasUtils.calcularEdadPaciente,
+      etiquetaPrestacion: InicioCitasUtils.etiquetaPrestacion,
+      nombreMedico: InicioCitasUtils.nombreMedico,
+      resolveAvatarUrl: (url) => (url ?? '').trim(),
+      inicialesPersonal: InicioCitasUtils.inicialesPersonal,
+      formatoFechaCita: InicioCitasUtils.formatoFechaCita,
+      formatoHorarioCita: InicioCitasUtils.formatoHorarioCita,
+    );
+
+    final acciones = CitasUtils.construirAccionesDetalleCita(
+      cita: cita,
+      puedeGestionarSolicitada: (item) =>
+          CitasUtils.puedeGestionarSolicitada(item, Auth.instance.profile),
+      puedeEditarCita: (item) =>
+          CitasUtils.puedeEditarCita(item, perfil: Auth.instance.profile),
+      citaYaIniciada: InicioCitasUtils.citaYaIniciada,
+      confirmarCitaSolicitada: (item) async {
+        final result = await showCitasConfirmarSolicitadaDialog(
+          context: context,
+          cita: item,
+          dateTimeFormat: _dateTimeFormatter,
+        );
+        if (result == null) return false;
+        final ok = await _handleResponseErrorCita(
+          await _citasService.confirmarCita(
+            item.id,
+            body: result.toRequestBody(item),
+          ),
+          'No se pudo confirmar la cita.',
+        );
+        if (ok) await onUpdated();
+        return ok;
+      },
+      rechazarCitaSolicitada: (item) async {
+        final motivo = await InicioCitasUtils.solicitarMotivoRechazo(context);
+        if (motivo == null) return false;
+        final ok = await _handleResponseErrorCita(
+          await _citasService.rechazarCita(item.id, motivoRechazo: motivo),
+          'No se pudo rechazar la cita.',
+        );
+        if (ok) await onUpdated();
+        return ok;
+      },
+      completarCita: (item) async {
+        final ok = await InicioCitasUtils.confirmarYEnviar(
+          context: context,
+          titulo: 'Dar alta',
+          mensaje: '¿Deseas cerrar la atención y dar de alta esta cita?',
+          request: () => _citasService.darAltaCita(item.id),
+          fallback: 'No se pudo dar de alta la cita.',
+          mounted: mounted,
+          onError: (msg) => showSnackBar(
+            pacientesMessenger,
+            msg,
+            state: StatusSnackBar.error,
+            colorText: _theme.white,
+          ),
+        );
+        if (ok) await onUpdated();
+      },
+      programarControl: (item) async {
+        await _abrirFormularioCitaPaciente(
+          cita: item,
+          programarControl: true,
+          onUpdated: onUpdated,
+        );
+      },
+      marcarNoAsistioCita: (item) async {
+        final ok = await InicioCitasUtils.confirmarYEnviar(
+          context: context,
+          titulo: 'Marcar no asistió',
+          mensaje: '¿Deseas marcar la cita como no asistió?',
+          request: () => _citasService.marcarNoAsistioCita(item.id),
+          fallback: 'No se pudo actualizar la cita.',
+          mounted: mounted,
+          onError: (msg) => showSnackBar(
+            pacientesMessenger,
+            msg,
+            state: StatusSnackBar.error,
+            colorText: _theme.white,
+          ),
+        );
+        if (ok) await onUpdated();
+      },
+      reprogramarCita: (item) async {
+        await _abrirFormularioCitaPaciente(cita: item, onUpdated: onUpdated);
+      },
+      cancelarCita: (item) async {
+        final confirmar = await _confirmarAccionSimpleCita(
+          titulo: 'Cancelar cita',
+          mensaje: '¿Confirmas cancelar esta cita?',
+          accion: 'Cancelar cita',
+        );
+        if (!confirmar) return;
+        final ok = await _handleResponseErrorCita(
+          await _citasService.cancelarCita(item.id),
+          'No se pudo cancelar la cita.',
+        );
+        if (ok) await onUpdated();
+      },
+      eliminarBorrador: (item) async {
+        final confirmar = await _confirmarAccionSimpleCita(
+          titulo: 'Eliminar borrador',
+          mensaje: '¿Confirmas eliminar este borrador?',
+          accion: 'Eliminar',
+        );
+        if (!confirmar) return;
+        final ok = await _handleResponseErrorCita(
+          await _citasService.eliminarCitaBorrador(item.id),
+          'No se pudo eliminar el borrador.',
+        );
+        if (ok) await onUpdated();
+      },
+      abrirFormulario: (item) =>
+          _abrirFormularioCitaPaciente(cita: item, onUpdated: onUpdated),
+    );
+
+    if (!mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return CitasDetalleModal.fromPayload(
+          cita: cita,
+          theme: _theme,
+          payload: payload,
+          acciones: acciones,
+          onClose: () => Navigator.of(sheetContext).pop(),
+          onVerHistorial: () => _mostrarHistorialCitaPaciente(cita),
+          onCopiarDato: _copiarDatoPaciente,
+        );
+      },
+    );
+  }
+
+  Future<void> _verCitasPaciente(Paciente paciente) async {
+    final estadoController = TextEditingController(text: 'Todos');
+    final personalController = TextEditingController();
+    final lugarController = TextEditingController();
+    final fechaInicioController = TextEditingController();
+    final fechaFinController = TextEditingController();
+    final tipoCitaController = TextEditingController(text: 'Todos');
+
+    DateTime? fechaInicio;
+    DateTime? fechaFin;
+    String? estadoSeleccionado;
+    String? tipoCitaSeleccionado;
+    String? personalIdSeleccionado;
+    String? lugarIdSeleccionado;
+    int page = 1;
+    const limit = 10;
+    int total = 0;
+    bool loading = true;
+    bool loadingMore = false;
+    bool dialogOpen = true;
+    bool initialLoadRequested = false;
+    List<CitaMedica> citas = [];
+
+    Future<void> pickDate(
+      BuildContext context, {
+      required bool isStart,
+      required VoidCallback refresh,
+    }) async {
+      final now = DateTime.now();
+      final picked = await showDatePicker(
+        context: context,
+        initialDate: (isStart ? fechaInicio : fechaFin) ?? now,
+        firstDate: DateTime(2000),
+        lastDate: DateTime(now.year + 10),
+      );
+      if (picked == null) return;
+      if (isStart) {
+        fechaInicio = DateTime(picked.year, picked.month, picked.day);
+        fechaInicioController.text = _dateFormatter.format(fechaInicio!);
+      } else {
+        fechaFin = DateTime(picked.year, picked.month, picked.day, 23, 59, 59);
+        fechaFinController.text = _dateFormatter.format(fechaFin!);
+      }
+      refresh();
+    }
+
+    Future<void> cargarCitas(
+      StateSetter setStateSheet, {
+      bool reset = false,
+      bool force = false,
+    }) async {
+      if ((loading || loadingMore) && !force) return;
+
+      if (reset) {
+        page = 1;
+        total = 0;
+        citas = [];
+      }
+
+      if (!dialogOpen) return;
+      setStateSheet(() {
+        if (page == 1) {
+          loading = true;
+        } else {
+          loadingMore = true;
+        }
+      });
+
+      final filtros = <String, String>{
+        if ((estadoSeleccionado ?? '').trim().isNotEmpty)
+          'estado': estadoSeleccionado!.trim(),
+        if ((tipoCitaSeleccionado ?? '').trim().isNotEmpty)
+          'tipoCita': tipoCitaSeleccionado!.trim(),
+        if ((personalIdSeleccionado ?? '').trim().isNotEmpty)
+          'idPersonal': personalIdSeleccionado!.trim(),
+        if ((lugarIdSeleccionado ?? '').trim().isNotEmpty)
+          'idLugar': lugarIdSeleccionado!.trim(),
+        if (fechaInicio != null) 'fechaInicioDesde': fechaInicio!.toUtc().toIso8601String(),
+        if (fechaFin != null) 'fechaInicioHasta': fechaFin!.toUtc().toIso8601String(),
+      };
+
+      final result = await _service.obtenerCitasPaciente(
+        pacienteId: paciente.id,
+        page: page,
+        limit: limit,
+        filtros: filtros,
+      );
+
+      if (!mounted || !dialogOpen) return;
+
+      setStateSheet(() {
+        if (page == 1) {
+          citas = result.citas;
+        } else {
+          citas = [...citas, ...result.citas];
+        }
+        total = result.total;
+        if (citas.length < total && result.citas.isNotEmpty) {
+          page += 1;
+        }
+        loading = false;
+        loadingMore = false;
+      });
+    }
+
+    Future<void> abrirFiltros(StateSetter setStateSheet) async {
+      await showModalBottomSheet<void>(
+        context: context,
+        isScrollControlled: true,
+        builder: (sheetContext) {
+          return StatefulBuilder(
+            builder: (context, setStateFilters) {
+              Future<void> seleccionarEstado() async {
+                final seleccionado = await showModalBottomSheet<String?>(
+                  context: sheetContext,
+                  builder: (context) => SafeArea(
+                    child: ListView(
+                      shrinkWrap: true,
+                      children: [
+                        ListTile(
+                          title: const Text('Todos'),
+                          onTap: () => Navigator.pop(context, ''),
+                        ),
+                        ...CitasEstado.values.map(
+                          (estado) => ListTile(
+                            title: Text(estado.label),
+                            onTap: () => Navigator.pop(context, estado.value),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+
+                if ((seleccionado ?? '').isEmpty) {
+                  estadoSeleccionado = null;
+                  estadoController.text = 'Todos';
+                } else {
+                  estadoSeleccionado = seleccionado;
+                  estadoController.text = CitasEstado.labelFromValue(seleccionado);
+                }
+                setStateFilters(() {});
+              }
+
+              Future<void> seleccionarTipo() async {
+                final seleccionado = await showModalBottomSheet<String?>(
+                  context: sheetContext,
+                  builder: (context) => SafeArea(
+                    child: ListView(
+                      shrinkWrap: true,
+                      children: [
+                        ListTile(
+                          title: const Text('Todos'),
+                          onTap: () => Navigator.pop(context, ''),
+                        ),
+                        ListTile(
+                          title: const Text('Consulta'),
+                          onTap: () => Navigator.pop(context, 'CONSULTA'),
+                        ),
+                        ListTile(
+                          title: const Text('Estudio'),
+                          onTap: () => Navigator.pop(context, 'ESTUDIO'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+                tipoCitaSeleccionado = (seleccionado ?? '').isEmpty
+                    ? null
+                    : seleccionado;
+                tipoCitaController.text = tipoCitaSeleccionado == null
+                    ? 'Todos'
+                    : (tipoCitaSeleccionado == 'CONSULTA'
+                        ? 'Consulta'
+                        : 'Estudio');
+                setStateFilters(() {});
+              }
+
+              Future<void> seleccionarPersonal() async {
+                final seleccionado = await showModalBottomSheet<dynamic>(
+                  context: sheetContext,
+                  isScrollControlled: true,
+                  builder: (_) => CitasMedicoSelectorModalWidget(
+                    cargarMedicos: _citasService.obtenerPersonalMedico,
+                  ),
+                );
+                if (seleccionado == null) return;
+                personalIdSeleccionado = seleccionado.id;
+                personalController.text = seleccionado.nombreCompleto;
+                setStateFilters(() {});
+              }
+
+              Future<void> seleccionarLugar() async {
+                final seleccionado = await showModalBottomSheet<dynamic>(
+                  context: sheetContext,
+                  isScrollControlled: true,
+                  builder: (_) => CitasLugarSelectorModalWidget(
+                    cargarLugares: _citasService.obtenerLugares,
+                  ),
+                );
+                if (seleccionado == null) return;
+                lugarIdSeleccionado = seleccionado.id;
+                lugarController.text = seleccionado.nombre;
+                setStateFilters(() {});
+              }
+
+              return SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextFormField(
+                        controller: estadoController,
+                        readOnly: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Estado',
+                          border: OutlineInputBorder(),
+                          suffixIcon: Icon(Icons.expand_more),
+                        ),
+                        onTap: seleccionarEstado,
+                      ),
+                      const SizedBox(height: 10),
+                      TextFormField(
+                        controller: tipoCitaController,
+                        readOnly: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Tipo de cita',
+                          border: OutlineInputBorder(),
+                          suffixIcon: Icon(Icons.expand_more),
+                        ),
+                        onTap: seleccionarTipo,
+                      ),
+                      const SizedBox(height: 10),
+                      TextFormField(
+                        controller: personalController,
+                        readOnly: true,
+                        decoration: InputDecoration(
+                          labelText: 'Personal asignado',
+                          border: const OutlineInputBorder(),
+                          suffixIcon: personalIdSeleccionado == null
+                              ? const Icon(Icons.expand_more)
+                              : IconButton(
+                                  icon: const Icon(Icons.close),
+                                  onPressed: () {
+                                    personalIdSeleccionado = null;
+                                    personalController.clear();
+                                    setStateFilters(() {});
+                                  },
+                                ),
+                        ),
+                        onTap: seleccionarPersonal,
+                      ),
+                      const SizedBox(height: 10),
+                      TextFormField(
+                        controller: lugarController,
+                        readOnly: true,
+                        decoration: InputDecoration(
+                          labelText: 'Lugar',
+                          border: const OutlineInputBorder(),
+                          suffixIcon: lugarIdSeleccionado == null
+                              ? const Icon(Icons.expand_more)
+                              : IconButton(
+                                  icon: const Icon(Icons.close),
+                                  onPressed: () {
+                                    lugarIdSeleccionado = null;
+                                    lugarController.clear();
+                                    setStateFilters(() {});
+                                  },
+                                ),
+                        ),
+                        onTap: seleccionarLugar,
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: fechaInicioController,
+                              readOnly: true,
+                              decoration: const InputDecoration(
+                                labelText: 'Desde',
+                                border: OutlineInputBorder(),
+                              ),
+                              onTap: () => pickDate(
+                                sheetContext,
+                                isStart: true,
+                                refresh: () => setStateFilters(() {}),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: TextFormField(
+                              controller: fechaFinController,
+                              readOnly: true,
+                              decoration: const InputDecoration(
+                                labelText: 'Hasta',
+                                border: OutlineInputBorder(),
+                              ),
+                              onTap: () => pickDate(
+                                sheetContext,
+                                isStart: false,
+                                refresh: () => setStateFilters(() {}),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () {
+                              estadoSeleccionado = null;
+                              tipoCitaSeleccionado = null;
+                              personalIdSeleccionado = null;
+                              lugarIdSeleccionado = null;
+                              estadoController.text = 'Todos';
+                              tipoCitaController.text = 'Todos';
+                              personalController.clear();
+                              lugarController.clear();
+                              fechaInicio = null;
+                              fechaFin = null;
+                              fechaInicioController.clear();
+                              fechaFinController.clear();
+                              setStateFilters(() {});
+                            },
+                            child: const Text('Limpiar'),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            onPressed: () async {
+                              Navigator.pop(sheetContext);
+                              await cargarCitas(setStateSheet, reset: true);
+                            },
+                            child: const Text('Aplicar'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      );
+    }
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setStateSheet) {
+            if (loading && citas.isEmpty && page == 1) {
+              if (!initialLoadRequested) {
+                initialLoadRequested = true;
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) {
+                    cargarCitas(setStateSheet, force: true);
+                  }
+                });
+              }
+            }
+            final hasMore = citas.length < total;
+
+            return Dialog.fullscreen(
+              child: Scaffold(
+                appBar: AppBar(
+                  title: Text('Citas de ${paciente.nombreCompleto}'),
+                  actions: [
+                    IconButton(
+                      onPressed: () => abrirFiltros(setStateSheet),
+                      icon: const Icon(Icons.filter_list),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                body: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (estadoSeleccionado != null ||
+                        tipoCitaSeleccionado != null ||
+                        personalIdSeleccionado != null ||
+                        lugarIdSeleccionado != null ||
+                        fechaInicio != null ||
+                        fechaFin != null)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                if (estadoSeleccionado != null)
+                                  Chip(
+                                    label: Text(
+                                      'Estado: ${CitasEstado.labelFromValue(estadoSeleccionado)}',
+                                    ),
+                                  ),
+                                if (tipoCitaSeleccionado != null)
+                                  Chip(label: Text('Tipo: ${tipoCitaController.text}')),
+                                if (personalIdSeleccionado != null)
+                                  Chip(label: Text('Personal: ${personalController.text}')),
+                                if (lugarIdSeleccionado != null)
+                                  Chip(label: Text('Lugar: ${lugarController.text}')),
+                                if (fechaInicio != null)
+                                  Chip(
+                                    label: Text(
+                                      'Desde: ${_dateFormatter.format(fechaInicio!)}',
+                                    ),
+                                  ),
+                                if (fechaFin != null)
+                                  Chip(
+                                    label: Text(
+                                      'Hasta: ${_dateFormatter.format(fechaFin!)}',
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton(
+                                onPressed: () async {
+                                  estadoSeleccionado = null;
+                                  tipoCitaSeleccionado = null;
+                                  personalIdSeleccionado = null;
+                                  lugarIdSeleccionado = null;
+                                  estadoController.text = 'Todos';
+                                  tipoCitaController.text = 'Todos';
+                                  personalController.clear();
+                                  lugarController.clear();
+                                  fechaInicio = null;
+                                  fechaFin = null;
+                                  fechaInicioController.clear();
+                                  fechaFinController.clear();
+                                  await cargarCitas(setStateSheet, reset: true);
+                                },
+                                child: const Text('Limpiar filtros'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    if (loading && citas.isEmpty)
+                      const Expanded(child: Center(child: CircularProgressIndicator()))
+                    else if (citas.isEmpty)
+                      const Expanded(child: Center(child: Text('No hay citas para este paciente.')))
+                    else
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: CitasListado(
+                            citas: citas,
+                            theme: _theme,
+                            controller: null,
+                            onRefresh: () => cargarCitas(setStateSheet, reset: true),
+                            colorEstado: (estado) => CitasUtils.colorEstado(estado, _theme),
+                            colorOcupacion: (cita) =>
+                                CitasUtils.colorEstado(cita.estado, _theme),
+                            formatoFecha: InicioCitasUtils.formatoFechaCita,
+                            formatoHorario: InicioCitasUtils.formatoHorarioCita,
+                            tituloCita: (cita) =>
+                                (cita.detalle.trim().isNotEmpty ? cita.detalle : 'Cita'),
+                            iconoTipoCita: _iconoTipoCitaPaciente,
+                            nombreMedico: InicioCitasUtils.nombreMedico,
+                            nombrePaciente: InicioCitasUtils.nombrePaciente,
+                            onVerDetalle: (cita) => () => _mostrarDetalleCitaPaciente(
+                              cita,
+                              () => cargarCitas(setStateSheet, reset: true),
+                            ),
+                            onEditar: (cita) => () => _abrirFormularioCitaPaciente(
+                              cita: cita,
+                              onUpdated: () => cargarCitas(setStateSheet, reset: true),
+                            ),
+                            puedeEditar: (cita) =>
+                                CitasUtils.puedeEditarCita(cita, perfil: Auth.instance.profile),
+                            showActionIcons: false,
+                          ),
+                        ),
+                      ),
+                    if (hasMore)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Center(
+                          child: loadingMore
+                              ? const CircularProgressIndicator()
+                              : TextButton(
+                                  onPressed: () => cargarCitas(setStateSheet),
+                                  child: const Text('Cargar más'),
+                                ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    ).whenComplete(() {
+      dialogOpen = false;
+    });
+
+    estadoController.dispose();
+    personalController.dispose();
+    lugarController.dispose();
+    fechaInicioController.dispose();
+    fechaFinController.dispose();
+    tipoCitaController.dispose();
   }
 
   @override
@@ -924,6 +1761,11 @@ class _PacientesPageState extends State<PacientesPage> with FormController {
                                   onPressed: () => _abrirFormulario(
                                     paciente: paciente,
                                   ),
+                                ),
+                                IconButton(
+                                  tooltip: 'Ver citas',
+                                  icon: const Icon(Icons.calendar_month_outlined),
+                                  onPressed: () => _verCitasPaciente(paciente),
                                 ),
                                 IconButton(
                                   tooltip: paciente.estado.toUpperCase() ==

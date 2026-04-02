@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:red_neuro_app/src/config/service_config.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
+import 'package:red_neuro_app/src/models/cita.dart';
 import 'package:red_neuro_app/src/models/paciente.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 
@@ -33,6 +34,61 @@ class PacientesPageResult {
 
 class PacientesService extends ServiceConfig {
   PacientesService(BuildContext context) : super('', context);
+
+  Future<CitasPacientePageResult> obtenerCitasPaciente({
+    required String pacienteId,
+    int page = 1,
+    int limit = 10,
+    Map<String, String>? filtros,
+  }) async {
+    try {
+      final response = await fetch(
+        '/pacientes/$pacienteId/citas',
+        params: {
+          'pagina': '$page',
+          'limite': '$limit',
+          if (filtros != null) ...filtros,
+        },
+      );
+
+      if (response.status != StatusNetwork.connected) {
+        return CitasPacientePageResult.empty(response.message);
+      }
+
+      final data = response.data;
+      final datos = data['datos'] ?? data['data'] ?? data;
+      final totalRaw = (datos is Map ? datos['total'] : null) ?? data['total'];
+      final filasRaw = (datos is Map ? datos['filas'] : null) ??
+          data['list'] ??
+          data['data'] ??
+          data['items'] ??
+          [];
+
+      final citas = (filasRaw is List)
+          ? filasRaw
+              .whereType<Map<String, dynamic>>()
+              .map(CitaMedica.fromJson)
+              .toList()
+          : <CitaMedica>[];
+
+      return CitasPacientePageResult(
+        citas: citas,
+        total: totalRaw is int
+            ? totalRaw
+            : int.tryParse('$totalRaw') ?? citas.length,
+        page: page,
+        limit: limit,
+        message: response.message,
+        status: response.status,
+      );
+    } catch (e, stacktrace) {
+      Logger.error('Error al listar citas del paciente $e');
+      Logger.error('stacktrace $stacktrace');
+      return CitasPacientePageResult.empty(
+        'No se pudieron cargar las citas del paciente',
+      );
+    }
+  }
 
   Future<PacientesPageResult> obtenerPacientes({
     int page = 1,
@@ -124,4 +180,32 @@ class PacientesService extends ServiceConfig {
       body: const {},
     );
   }
+}
+
+class CitasPacientePageResult {
+  final List<CitaMedica> citas;
+  final int total;
+  final int page;
+  final int limit;
+  final String message;
+  final StatusNetwork status;
+
+  const CitasPacientePageResult({
+    required this.citas,
+    required this.total,
+    required this.page,
+    required this.limit,
+    required this.message,
+    required this.status,
+  });
+
+  factory CitasPacientePageResult.empty(String message) =>
+      CitasPacientePageResult(
+        citas: const [],
+        total: 0,
+        page: 1,
+        limit: 10,
+        message: message,
+        status: StatusNetwork.noContent,
+      );
 }
