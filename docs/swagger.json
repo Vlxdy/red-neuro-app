@@ -2414,6 +2414,113 @@
         ]
       }
     },
+    "/citas/{id}/pagos": {
+      "post": {
+        "operationId": "CitasController_registrarPago",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CrearCitaPagoDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/CitaPagoResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Registra un pago asociado a una cita",
+        "tags": [
+          "Gestión de Citas"
+        ]
+      },
+      "get": {
+        "operationId": "CitasController_listarPagosPorCita",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/CitaPagoResponseDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lista los pagos registrados de una cita",
+        "tags": [
+          "Gestión de Citas"
+        ]
+      }
+    },
     "/citas/mis-citas": {
       "get": {
         "deprecated": true,
@@ -2929,9 +3036,9 @@
         ]
       }
     },
-    "/citas/{id}/dar-alta": {
+    "/citas/{id}/completar-atencion": {
       "post": {
-        "operationId": "CitasController_darAlta",
+        "operationId": "CitasController_completarAtencion",
         "parameters": [
           {
             "name": "id",
@@ -2943,6 +3050,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CompletarAtencionConPagoDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "",
@@ -2971,7 +3088,7 @@
             "bearer": []
           }
         ],
-        "summary": "Da de alta una cita programada",
+        "summary": "Completa una atención y registra su pago atómico",
         "tags": [
           "Gestión de Citas"
         ]
@@ -3701,6 +3818,138 @@
         ]
       }
     },
+    "/citas/home/pagos-pendientes": {
+      "get": {
+        "operationId": "HomeCitasController_homePagosPendientes",
+        "parameters": [
+          {
+            "name": "limite",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 10,
+              "maximum": 50,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pagina",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "filtro",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ordenRaw",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scope",
+            "required": false,
+            "in": "query",
+            "description": "Alcance de consulta",
+            "schema": {
+              "example": "mine",
+              "type": "string",
+              "enum": [
+                "mine",
+                "personal",
+                "all"
+              ]
+            }
+          },
+          {
+            "name": "idPersonal",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por personal cuando scope=personal",
+            "schema": {
+              "example": "42",
+              "type": "string"
+            }
+          },
+          {
+            "name": "idLugar",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por lugar/institución",
+            "schema": {
+              "example": "2",
+              "type": "string"
+            }
+          },
+          {
+            "name": "fechaBase",
+            "required": false,
+            "in": "query",
+            "description": "Fecha base de referencia para la bandeja",
+            "schema": {
+              "example": "2026-03-16",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "number"
+                            },
+                            "filas": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/CitaResponseDto"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lista incremental de citas con pago pendiente",
+        "tags": [
+          "Gestión de Citas Home"
+        ]
+      }
+    },
     "/citas/home/programadas-asignadas": {
       "get": {
         "operationId": "HomeCitasController_homeProgramadasAsignadas",
@@ -4327,6 +4576,414 @@
         "summary": "Inactiva token push de dispositivo",
         "tags": [
           "Dispositivos Push"
+        ]
+      }
+    },
+    "/pagos/pendientes": {
+      "get": {
+        "operationId": "PagosCitasController_listarPendientes",
+        "parameters": [
+          {
+            "name": "limite",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 10,
+              "maximum": 50,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pagina",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "filtro",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ordenRaw",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "scope",
+            "required": false,
+            "in": "query",
+            "description": "Alcance de consulta",
+            "schema": {
+              "example": "mine",
+              "type": "string",
+              "enum": [
+                "mine",
+                "personal",
+                "all"
+              ]
+            }
+          },
+          {
+            "name": "idPersonal",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por personal cuando scope=personal",
+            "schema": {
+              "example": "42",
+              "type": "string"
+            }
+          },
+          {
+            "name": "idLugar",
+            "required": false,
+            "in": "query",
+            "description": "Filtra por lugar/institución",
+            "schema": {
+              "example": "2",
+              "type": "string"
+            }
+          },
+          {
+            "name": "fechaBase",
+            "required": false,
+            "in": "query",
+            "description": "Fecha base de referencia para la bandeja",
+            "schema": {
+              "example": "2026-03-16",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/CitaPagoResponseDto"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lista la bandeja de pagos pendientes por regularizar",
+        "tags": [
+          "Gestión de Pagos de Citas"
+        ]
+      }
+    },
+    "/pagos/{id}/anular": {
+      "post": {
+        "operationId": "PagosCitasController_anularPago",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnularCitaPagoDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/CitaPagoResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Anula un pago de cita registrado previamente",
+        "tags": [
+          "Gestión de Pagos de Citas"
+        ]
+      }
+    },
+    "/reportes/pagos": {
+      "get": {
+        "operationId": "ReportesCitasController_reportePagos",
+        "parameters": [
+          {
+            "name": "fechaDesde",
+            "required": true,
+            "in": "query",
+            "description": "Fecha de inicio del reporte",
+            "schema": {
+              "example": "2026-04-01T00:00:00Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "fechaHasta",
+            "required": true,
+            "in": "query",
+            "description": "Fecha de fin del reporte",
+            "schema": {
+              "example": "2026-04-30T23:59:59Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "idPersonal",
+            "required": false,
+            "in": "query",
+            "description": "Filtro por personal",
+            "schema": {
+              "example": "42",
+              "type": "string"
+            }
+          },
+          {
+            "name": "idServicio",
+            "required": false,
+            "in": "query",
+            "description": "Filtro por servicio",
+            "schema": {
+              "example": "5",
+              "type": "string"
+            }
+          },
+          {
+            "name": "tipoCita",
+            "required": false,
+            "in": "query",
+            "description": "Filtro por tipo de servicio/cita",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CONSULTA",
+                "ESTUDIO"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/ReportePagosResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reporte de pagos por rango de fechas (agregado por personal, servicio y tipo)",
+        "tags": [
+          "Reportes de Citas"
+        ]
+      }
+    },
+    "/caja/actual": {
+      "get": {
+        "operationId": "CajaCitasController_cajaActual",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/CajaSesionResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Obtiene la caja actualmente abierta",
+        "tags": [
+          "Caja de Citas"
+        ]
+      }
+    },
+    "/caja/apertura": {
+      "post": {
+        "operationId": "CajaCitasController_abrirCaja",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AperturaCajaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/CajaSesionResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Abre una nueva caja manualmente (solo jefe)",
+        "tags": [
+          "Caja de Citas"
+        ]
+      }
+    },
+    "/caja/cierre": {
+      "post": {
+        "operationId": "CajaCitasController_cerrarCaja",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CierreCajaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/CajaSesionResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cierra caja manualmente (solo jefe)",
+        "tags": [
+          "Caja de Citas"
         ]
       }
     },
@@ -8086,6 +8743,123 @@
           "cantidad"
         ]
       },
+      "CitaPagoResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "1"
+          },
+          "idCita": {
+            "type": "string",
+            "example": "10"
+          },
+          "monto": {
+            "type": "number",
+            "example": 100.5
+          },
+          "fechaPago": {
+            "type": "string",
+            "example": "2026-04-02T18:00:00Z"
+          },
+          "metodoPago": {
+            "type": "string",
+            "enum": [
+              "EFECTIVO",
+              "QR",
+              "TRANSFERENCIA",
+              "TARJETA",
+              "OTRO"
+            ]
+          },
+          "tipoMovimiento": {
+            "type": "string",
+            "enum": [
+              "PAGO",
+              "AJUSTE",
+              "DEVOLUCION"
+            ]
+          },
+          "estado": {
+            "type": "string",
+            "example": "ACTIVO"
+          },
+          "estadoPago": {
+            "type": "string",
+            "enum": [
+              "PENDIENTE",
+              "PAGADO",
+              "ANULADO"
+            ],
+            "example": "PENDIENTE"
+          },
+          "observacion": {
+            "type": "string",
+            "example": "Primer pago"
+          },
+          "idUsuarioRegistro": {
+            "type": "string",
+            "example": "8"
+          }
+        },
+        "required": [
+          "id",
+          "idCita",
+          "monto",
+          "tipoMovimiento",
+          "estado",
+          "estadoPago",
+          "idUsuarioRegistro"
+        ]
+      },
+      "CrearCitaPagoDto": {
+        "type": "object",
+        "properties": {
+          "monto": {
+            "type": "number",
+            "description": "Monto del pago a registrar",
+            "example": 100.5,
+            "minimum": 0
+          },
+          "fechaPago": {
+            "type": "string",
+            "description": "Fecha del pago en formato ISO. Si no se envía, usa ahora.",
+            "example": "2026-04-02T18:00:00Z"
+          },
+          "metodoPago": {
+            "type": "string",
+            "enum": [
+              "EFECTIVO",
+              "QR",
+              "TRANSFERENCIA",
+              "TARJETA",
+              "OTRO"
+            ],
+            "description": "Método de pago utilizado",
+            "example": "EFECTIVO"
+          },
+          "tipoMovimiento": {
+            "type": "string",
+            "enum": [
+              "PAGO",
+              "AJUSTE",
+              "DEVOLUCION"
+            ],
+            "description": "Tipo de movimiento financiero",
+            "example": "PAGO",
+            "default": "PAGO"
+          },
+          "observacion": {
+            "type": "string",
+            "description": "Observación opcional del pago",
+            "example": "Primer pago de tratamiento"
+          }
+        },
+        "required": [
+          "monto",
+          "metodoPago"
+        ]
+      },
       "Number": {
         "type": "object",
         "properties": {}
@@ -8279,6 +9053,42 @@
           }
         }
       },
+      "CompletarAtencionConPagoDto": {
+        "type": "object",
+        "properties": {
+          "monto": {
+            "type": "number",
+            "description": "Monto del pago o deuda pendiente al completar la atención",
+            "example": 120.5,
+            "minimum": 0
+          },
+          "metodoPago": {
+            "type": "string",
+            "enum": [
+              "EFECTIVO",
+              "QR",
+              "TRANSFERENCIA",
+              "TARJETA",
+              "OTRO"
+            ],
+            "description": "Método de pago usado cuando se registra pago inmediato. Opcional para pendientes",
+            "example": "QR"
+          },
+          "registrarPago": {
+            "type": "boolean",
+            "description": "Si es true intenta registrar pago inmediato; si es false crea pago pendiente",
+            "default": true
+          },
+          "observacion": {
+            "type": "string",
+            "description": "Observación opcional del pago",
+            "example": "Pendiente por regularizar por coordinación"
+          }
+        },
+        "required": [
+          "monto"
+        ]
+      },
       "ProgramarControlCitaDto": {
         "type": "object",
         "properties": {
@@ -8419,13 +9229,18 @@
           "programadasAsignadas": {
             "type": "number",
             "example": 34
+          },
+          "pagosPendientes": {
+            "type": "number",
+            "example": 3
           }
         },
         "required": [
           "pendientesAprobacionAsignadas",
           "rechazadasSolicitadasPorMi",
           "borradores",
-          "programadasAsignadas"
+          "programadasAsignadas",
+          "pagosPendientes"
         ]
       },
       "HomePreviewBloqueResponseDto": {
@@ -8505,13 +9320,17 @@
           },
           "programadasAsignadas": {
             "$ref": "#/components/schemas/HomePreviewProgramadasResponseDto"
+          },
+          "pagosPendientes": {
+            "$ref": "#/components/schemas/HomePreviewBloqueResponseDto"
           }
         },
         "required": [
           "pendientesAprobacionAsignadas",
           "rechazadasSolicitadasPorMi",
           "borradores",
-          "programadasAsignadas"
+          "programadasAsignadas",
+          "pagosPendientes"
         ]
       },
       "HomeBandejaResponseDto": {
@@ -8706,6 +9525,151 @@
           "plataforma",
           "token"
         ]
+      },
+      "AnularCitaPagoDto": {
+        "type": "object",
+        "properties": {
+          "motivo": {
+            "type": "string",
+            "description": "Motivo de anulación del pago",
+            "example": "Pago registrado por error"
+          }
+        },
+        "required": [
+          "motivo"
+        ]
+      },
+      "ReportePagosResumenDto": {
+        "type": "object",
+        "properties": {
+          "totalMovimientos": {
+            "type": "number",
+            "example": 12
+          },
+          "totalRecaudado": {
+            "type": "number",
+            "example": 1050.4
+          }
+        },
+        "required": [
+          "totalMovimientos",
+          "totalRecaudado"
+        ]
+      },
+      "ReportePagosAgrupadoDto": {
+        "type": "object",
+        "properties": {
+          "etiqueta": {
+            "type": "string",
+            "example": "Control nutricional"
+          },
+          "totalMovimientos": {
+            "type": "number",
+            "example": 6
+          },
+          "totalRecaudado": {
+            "type": "number",
+            "example": 430.5
+          }
+        },
+        "required": [
+          "etiqueta",
+          "totalMovimientos",
+          "totalRecaudado"
+        ]
+      },
+      "ReportePagosResponseDto": {
+        "type": "object",
+        "properties": {
+          "resumen": {
+            "$ref": "#/components/schemas/ReportePagosResumenDto"
+          },
+          "porPersonal": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReportePagosAgrupadoDto"
+            }
+          },
+          "porServicio": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReportePagosAgrupadoDto"
+            }
+          },
+          "porTipoServicio": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReportePagosAgrupadoDto"
+            }
+          }
+        },
+        "required": [
+          "resumen",
+          "porPersonal",
+          "porServicio",
+          "porTipoServicio"
+        ]
+      },
+      "CajaSesionResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "10"
+          },
+          "estado": {
+            "type": "string",
+            "example": "ABIERTA"
+          },
+          "fechaApertura": {
+            "type": "string",
+            "example": "2026-04-02T08:00:00Z"
+          },
+          "fechaCierre": {
+            "type": "string",
+            "example": "2026-04-02T18:00:00Z"
+          },
+          "montoApertura": {
+            "type": "number",
+            "example": 50
+          },
+          "montoCierreDeclarado": {
+            "type": "number",
+            "example": 640.5
+          },
+          "montoRecaudado": {
+            "type": "number",
+            "example": 620.5
+          }
+        },
+        "required": [
+          "id",
+          "estado",
+          "fechaApertura",
+          "montoRecaudado"
+        ]
+      },
+      "AperturaCajaDto": {
+        "type": "object",
+        "properties": {
+          "montoApertura": {
+            "type": "number",
+            "description": "Monto inicial de caja (opcional)",
+            "example": 0,
+            "minimum": 0
+          }
+        }
+      },
+      "CierreCajaDto": {
+        "type": "object",
+        "properties": {
+          "montoCierreDeclarado": {
+            "type": "number",
+            "description": "Monto declarado al cierre de caja (opcional)",
+            "example": 540.5,
+            "minimum": 0
+          }
+        }
       },
       "CrearConsultorioDto": {
         "type": "object",
