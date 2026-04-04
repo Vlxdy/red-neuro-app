@@ -55,6 +55,9 @@ class CitasDetalleModalData {
 enum CitasModalDestino { detalle, formulario }
 
 class CitasUtils {
+  static bool tieneCitaNuevaProgramada(CitaMedica cita) =>
+      (cita.citaNuevaId ?? '').trim().isNotEmpty;
+
   static const Map<String, String> _historialLabels = {
     'fechaInicio': 'Fecha inicio',
     'fechaFin': 'Fecha fin',
@@ -265,7 +268,7 @@ class CitasUtils {
         ),
       if (cita.estado == CitasEstado.programada.value && citaYaIniciada(cita))
         CitaDetalleAccion(
-          label: 'Dar alta',
+          label: 'Completar atención',
           icon: Icons.task_alt_outlined,
           isPrimary: true,
           onTap: () async {
@@ -273,7 +276,8 @@ class CitasUtils {
             return true;
           },
         ),
-      if (cita.estado == CitasEstado.programada.value && citaYaIniciada(cita))
+      if (cita.estado == CitasEstado.completada.value &&
+          !tieneCitaNuevaProgramada(cita))
         CitaDetalleAccion(
           label: 'Programar control',
           icon: Icons.event_repeat_outlined,

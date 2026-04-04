@@ -495,23 +495,36 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
   }
 
   Future<void> _darAltaCita(CitaMedica cita) async {
-    final ok = await InicioCitasUtils.confirmarYEnviar(
-      context: context,
-      titulo: 'Dar alta',
-      mensaje: '¿Deseas cerrar la atención y dar de alta esta cita?',
-      request: () => _citasService.darAltaCita(cita.id),
-      fallback: 'No se pudo dar de alta la cita.',
+    final payload = await InicioCitasUtils.solicitarCompletarAtencion(
+      context,
+      montoInicial: InicioCitasUtils.montoSugeridoCita(cita),
+    );
+    if (payload == null) return;
+    final ok = InicioCitasUtils.handleResponse(
+      response: await _citasService.completarAtencionCita(
+        cita.id,
+        payload.toJson(),
+      ),
+      fallback: 'No se pudo completar la atención.',
       mounted: mounted,
       onError: _showError,
     );
     if (ok) {
       await _loadBandeja();
       _notificarRefreshBandejas();
+      final programarControl = await InicioCitasUtils.confirmarProgramarControl(
+        context,
+      );
+      if (!mounted || !programarControl) return;
+      await _programarControl(cita);
     }
   }
 
   Future<void> _programarControl(CitaMedica cita) async {
     await _abrirFormulario(cita: cita, programarControl: true);
+    if (!mounted) return;
+    await _loadBandeja();
+    _notificarRefreshBandejas();
   }
 
   Future<void> _marcarNoAsistio(CitaMedica cita) async {

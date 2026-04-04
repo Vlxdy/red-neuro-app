@@ -33,6 +33,7 @@ import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_confirmar_solicit
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_historial_modal_widget.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_modo_mis_citas_banner.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_motivo_rechazo_dialog.dart';
+import 'package:red_neuro_app/src/ui/pages/inicio/inicio_citas_utils.dart';
 final GlobalKey<ScaffoldMessengerState> citasMessenger =
     GlobalKey<ScaffoldMessengerState>();
 
@@ -1456,25 +1457,34 @@ class _CitasPageState extends State<CitasPage> with WidgetsBindingObserver {
   }
 
   Future<void> _darAltaCitaConConfirmacion(CitaMedica cita) async {
-    final confirmar = await _confirmarAccionSimple(
-      titulo: 'Dar alta',
-      mensaje: '¿Confirmas cerrar la atención y dar de alta esta cita?',
-      accion: 'Sí, dar alta',
+    final payload = await InicioCitasUtils.solicitarCompletarAtencion(
+      context,
+      montoInicial: InicioCitasUtils.montoSugeridoCita(cita),
     );
-    if (!confirmar) return;
+    if (payload == null) return;
     final ok = await _handleResponseError(
-      await _service.darAltaCita(cita.id),
-      'No se pudo dar de alta la cita.',
+      await _service.completarAtencionCita(cita.id, payload.toJson()),
+      'No se pudo completar la atención.',
     );
     if (!ok) return;
     if (mounted) {
+      await _cargarCitasAgendaDay(day: _agendaDay);
       await _cargarCitasCalendario();
-      if (_currentTabIndex == 2) await _cargarCitasListado();
+      await _cargarCitasListado();
+      final programarControl = await InicioCitasUtils.confirmarProgramarControl(
+        context,
+      );
+      if (!mounted || !programarControl) return;
+      await _programarControl(cita);
     }
   }
 
   Future<void> _programarControl(CitaMedica cita) async {
     await _abrirFormulario(cita: cita, programarControl: true);
+    if (!mounted) return;
+    await _cargarCitasAgendaDay(day: _agendaDay);
+    await _cargarCitasCalendario();
+    await _cargarCitasListado();
   }
 
   Future<void> _marcarNoAsistioCitaConConfirmacion(CitaMedica cita) async {

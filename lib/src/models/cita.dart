@@ -20,6 +20,7 @@ class CitaMedica {
   final String? pacienteCorreoElectronico;
   final String? pacienteGenero;
   final String? pacienteFechaNacimiento;
+  final String? citaNuevaId;
   final String? lugarId;
   final String? lugarNombre;
   final String? lugarDireccion;
@@ -31,6 +32,7 @@ class CitaMedica {
   final String? servicioDescripcion;
   final String? servicioTipo;
   final int? servicioDuracionMinutos;
+  final double? montoServicio;
   final String? idUsuarioProgramo;
 
   String get medicoId => idPersonal;
@@ -58,6 +60,7 @@ class CitaMedica {
     required this.pacienteCorreoElectronico,
     required this.pacienteGenero,
     required this.pacienteFechaNacimiento,
+    required this.citaNuevaId,
     required this.lugarId,
     required this.lugarNombre,
     required this.lugarDireccion,
@@ -69,6 +72,7 @@ class CitaMedica {
     required this.servicioDescripcion,
     required this.servicioTipo,
     required this.servicioDuracionMinutos,
+    required this.montoServicio,
     required this.idUsuarioProgramo,
   });
 
@@ -169,6 +173,7 @@ class CitaMedica {
       pacienteFechaNacimiento: pacienteRaw is Map<String, dynamic>
           ? pacienteRaw['fechaNacimiento']?.toString()
           : json['pacienteFechaNacimiento']?.toString(),
+      citaNuevaId: (json['citaNuevaId'] ?? json['idCitaNueva'])?.toString(),
       lugarId: (json['lugarId'] ?? json['idLugar'] ?? '').toString().isNotEmpty
           ? (json['lugarId'] ?? json['idLugar']).toString()
           : (lugarRaw is Map<String, dynamic>
@@ -205,6 +210,16 @@ class CitaMedica {
       servicioDuracionMinutos: servicioRaw is Map<String, dynamic>
           ? _parseInt(servicioRaw['duracionMinutos'] ?? servicioRaw['duracion'])
           : _parseInt(json['servicioDuracionMinutos'] ?? json['duracionMinutos']),
+      montoServicio: _parseDouble(
+        json['monto'] ??
+            json['montoServicio'] ??
+            json['precioServicio'] ??
+            (servicioRaw is Map<String, dynamic>
+                ? (servicioRaw['precio'] ??
+                    servicioRaw['monto'] ??
+                    servicioRaw['costo'])
+                : null),
+      ),
       idUsuarioProgramo:
           (json['idUsuarioProgramo'] ?? json['usuarioProgramoId'] ?? json['creadoPor'] ?? json['createdBy'])?.toString(),
     );
@@ -232,6 +247,7 @@ class CitaMedica {
     String? pacienteCorreoElectronico,
     String? pacienteGenero,
     String? pacienteFechaNacimiento,
+    String? citaNuevaId,
     String? lugarId,
     String? lugarNombre,
     String? lugarDireccion,
@@ -243,6 +259,7 @@ class CitaMedica {
     String? servicioDescripcion,
     String? servicioTipo,
     int? servicioDuracionMinutos,
+    double? montoServicio,
     String? idUsuarioProgramo,
   }) {
     return CitaMedica(
@@ -271,6 +288,7 @@ class CitaMedica {
       pacienteGenero: pacienteGenero ?? this.pacienteGenero,
       pacienteFechaNacimiento:
           pacienteFechaNacimiento ?? this.pacienteFechaNacimiento,
+      citaNuevaId: citaNuevaId ?? this.citaNuevaId,
       lugarId: lugarId ?? this.lugarId,
       lugarNombre: lugarNombre ?? this.lugarNombre,
       lugarDireccion: lugarDireccion ?? this.lugarDireccion,
@@ -283,6 +301,7 @@ class CitaMedica {
       servicioTipo: servicioTipo ?? this.servicioTipo,
       servicioDuracionMinutos:
           servicioDuracionMinutos ?? this.servicioDuracionMinutos,
+      montoServicio: montoServicio ?? this.montoServicio,
       idUsuarioProgramo: idUsuarioProgramo ?? this.idUsuarioProgramo,
     );
   }
@@ -304,5 +323,11 @@ class CitaMedica {
       return null;
     }
   }
-}
 
+  static double? _parseDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    if (value is String) return double.tryParse(value.trim());
+    return null;
+  }
+}

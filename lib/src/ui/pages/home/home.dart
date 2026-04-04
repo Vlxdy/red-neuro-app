@@ -17,6 +17,7 @@ import 'package:red_neuro_app/src/ui/pages/lugares/lugares_page.dart';
 import 'package:red_neuro_app/src/ui/pages/pacientes/pacientes_page.dart';
 import 'package:red_neuro_app/src/ui/pages/personal_salud/personal_salud_page.dart';
 import 'package:red_neuro_app/src/ui/pages/notificaciones/notificaciones_page.dart';
+import 'package:red_neuro_app/src/ui/pages/cajas/cajas_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:solar_icons/solar_icons.dart';
@@ -646,6 +647,8 @@ List<ChildrenItem> _submodulesFromRole({
   const supportedRoutesOrder = [
     '/admin/home',
     '/admin/citas',
+    '/admin/pagos',
+    '/admin/cajas',
     '/admin/pacientes',
     '/admin/personal_medico',
     '/admin/servicios',
@@ -749,6 +752,12 @@ ChildrenItem _submoduleToItem(
       normalizedUrl.contains('lugares') || normalizedName == 'lugares';
   final isCitasModule =
       normalizedUrl == '/admin/citas' || normalizedName == 'citas';
+  final isPagosModule =
+      normalizedUrl == '/admin/pagos' || normalizedName == 'pagos';
+  final isCajasModule =
+      normalizedUrl == '/admin/cajas' ||
+      normalizedName == 'cajas' ||
+      normalizedName == 'caja';
   final isNotificacionesModule =
       normalizedUrl.contains('notificaciones') ||
       normalizedName == 'notificaciones';
@@ -764,6 +773,10 @@ ChildrenItem _submoduleToItem(
       ? 'home'
       : isCitasModule
       ? 'citas'
+      : isPagosModule
+      ? 'pagos'
+      : isCajasModule
+      ? 'cajas'
       : isCategoriasModule
       ? 'categorias'
       : isPacientesModule
@@ -785,6 +798,10 @@ ChildrenItem _submoduleToItem(
         ? 'Categorías'
         : isServiciosModule
         ? 'Servicios'
+        : isPagosModule
+        ? 'Pagos'
+        : isCajasModule
+        ? 'Cajas'
         : (subModule.label.isNotEmpty ? subModule.label : subModule.nombre),
     color: theme.primary,
     children: KeepAlivePage(
@@ -810,6 +827,8 @@ ChildrenItem _submoduleToItem(
           ? const PacientesPage()
           : isPersonalMedicoModule
           ? const PersonalSaludPage()
+          : isCajasModule
+          ? const CajasPage()
           : RoleTrayPlaceholder(
               title: blueprint.title,
               description: blueprint.description,
@@ -867,6 +886,13 @@ IconData _moduleIconData(String? iconName, {bool filled = false}) {
     case 'notifications':
     case 'notificaciones':
       return filled ? Icons.notifications : Icons.notifications_none_rounded;
+    case 'pagos':
+    case 'payments':
+      return filled ? Icons.payments : Icons.payments_outlined;
+    case 'cajas':
+    case 'caja':
+    case 'cash-register':
+      return filled ? Icons.point_of_sale : Icons.point_of_sale_outlined;
     default:
       return filled
           ? PhosphorIconsFill.gridFour
@@ -1233,6 +1259,28 @@ _TrayBlueprint _resolveTrayBlueprint(SubModulo subModule) {
         'Aplicar filtros por médico o estado',
       ],
       icon: _moduleIconData('calendar'),
+    ),
+    '/admin/pagos': _TrayBlueprint(
+      title: 'Pagos pendientes',
+      description:
+          'Regulariza pagos pendientes de citas completadas y administra anulaciones.',
+      actions: const [
+        'Listar pendientes con estado PENDIENTE para regularización',
+        'Cobrar pendientes con método de pago y caja abierta',
+        'Anular pagos cuando corresponda',
+      ],
+      icon: _moduleIconData('pagos'),
+    ),
+    '/admin/cajas': _TrayBlueprint(
+      title: 'Cajas',
+      description:
+          'Gestiona la caja actual para habilitar cobros y cierres operativos.',
+      actions: const [
+        'Consultar el estado de la caja actual',
+        'Abrir caja para habilitar regularizaciones de pagos',
+        'Cerrar caja y consolidar movimientos',
+      ],
+      icon: _moduleIconData('cajas'),
     ),
     '/admin/pacientes': _TrayBlueprint(
       title: 'Pacientes',
