@@ -1061,12 +1061,17 @@ class _PacientesPageState extends State<PacientesPage> with FormController {
         return ok;
       },
       completarCita: (item) async {
-        final ok = await InicioCitasUtils.confirmarYEnviar(
-          context: context,
-          titulo: 'Dar alta',
-          mensaje: '¿Deseas cerrar la atención y dar de alta esta cita?',
-          request: () => _citasService.darAltaCita(item.id),
-          fallback: 'No se pudo dar de alta la cita.',
+        final payload = await InicioCitasUtils.solicitarCompletarAtencion(
+          context,
+          montoInicial: InicioCitasUtils.montoSugeridoCita(item),
+        );
+        if (payload == null) return;
+        final ok = InicioCitasUtils.handleResponse(
+          response: await _citasService.completarAtencionCita(
+            item.id,
+            payload.toJson(),
+          ),
+          fallback: 'No se pudo completar la atención.',
           mounted: mounted,
           onError: (msg) => showSnackBar(
             pacientesMessenger,
@@ -1075,7 +1080,17 @@ class _PacientesPageState extends State<PacientesPage> with FormController {
             colorText: _theme.white,
           ),
         );
-        if (ok) await onUpdated();
+        if (!ok) return;
+        await onUpdated();
+        final programarControl = await InicioCitasUtils.confirmarProgramarControl(
+          context,
+        );
+        if (!mounted || !programarControl) return;
+        await _abrirFormularioCitaPaciente(
+          cita: item,
+          programarControl: true,
+          onUpdated: onUpdated,
+        );
       },
       programarControl: (item) async {
         await _abrirFormularioCitaPaciente(
@@ -1083,6 +1098,7 @@ class _PacientesPageState extends State<PacientesPage> with FormController {
           programarControl: true,
           onUpdated: onUpdated,
         );
+        await onUpdated();
       },
       marcarNoAsistioCita: (item) async {
         final ok = await InicioCitasUtils.confirmarYEnviar(

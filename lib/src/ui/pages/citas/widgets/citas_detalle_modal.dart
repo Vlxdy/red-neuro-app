@@ -436,7 +436,7 @@ class _CitasDetalleModalState extends State<CitasDetalleModal> {
                           final accionesAtencion = widget.acciones
                               .where(
                                 (accion) =>
-                                    accion.label == 'Dar alta' ||
+                                    accion.label == 'Completar atención' ||
                                     accion.label == 'Programar control' ||
                                     accion.label == 'No asistió',
                               )
@@ -444,7 +444,7 @@ class _CitasDetalleModalState extends State<CitasDetalleModal> {
                           final accionesDirectas = widget.acciones
                               .where(
                                 (accion) =>
-                                    accion.label != 'Dar alta' &&
+                                    accion.label != 'Completar atención' &&
                                     accion.label != 'Programar control' &&
                                     accion.label != 'No asistió',
                               )

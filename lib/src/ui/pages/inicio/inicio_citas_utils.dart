@@ -10,7 +10,38 @@ import 'package:red_neuro_app/src/ui/pages/citas/citas_utils.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_historial_modal_widget.dart';
 import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_motivo_rechazo_dialog.dart';
 
+class CompletarAtencionPayload {
+  final double monto;
+  final bool registrarPago;
+  final String? metodoPago;
+  final String? observacion;
+
+  const CompletarAtencionPayload({
+    required this.monto,
+    required this.registrarPago,
+    this.metodoPago,
+    this.observacion,
+  });
+
+  Map<String, dynamic> toJson() => {
+    'monto': monto,
+    'registrarPago': registrarPago,
+    if (metodoPago != null && metodoPago!.trim().isNotEmpty)
+      'metodoPago': metodoPago!.trim(),
+    if (observacion != null && observacion!.trim().isNotEmpty)
+      'observacion': observacion!.trim(),
+  };
+}
+
 class InicioCitasUtils {
+  static const List<String> metodosPago = [
+    'EFECTIVO',
+    'QR',
+    'TRANSFERENCIA',
+    'TARJETA',
+    'OTRO',
+  ];
+
   static bool citaYaIniciada(CitaMedica cita) {
     final inicio = cita.fechaInicio;
     if (inicio == null) return false;
@@ -84,6 +115,11 @@ class InicioCitasUtils {
     return '$inicioText - $finText';
   }
 
+  static double montoSugeridoCita(CitaMedica cita) {
+    final monto = cita.montoServicio ?? 0;
+    return monto < 0 ? 0 : monto;
+  }
+
   static Future<bool> confirmarYEnviar({
     required BuildContext context,
     required String titulo,
@@ -117,6 +153,163 @@ class InicioCitasUtils {
       mounted: mounted,
       onError: onError,
     );
+  }
+
+  static Future<CompletarAtencionPayload?> solicitarCompletarAtencion(
+    BuildContext context, {
+    double montoInicial = 0,
+  }) async {
+    final montoController = TextEditingController(
+      text: montoInicial.toStringAsFixed(2),
+    );
+    final observacionController = TextEditingController();
+    var registrarPago = true;
+    String? metodoPago = metodosPago.first;
+    String? errorMonto;
+
+    return showModalBottomSheet<CompletarAtencionPayload>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      showDragHandle: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, setStateDialog) {
+          final insets = MediaQuery.of(sheetContext).viewInsets;
+          return Padding(
+            padding: EdgeInsets.only(bottom: insets.bottom),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Completar atención',
+                    style: Theme.of(sheetContext).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: montoController,
+                    readOnly: !registrarPago,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: InputDecoration(
+                      labelText: 'Monto *',
+                      hintText: '0.00',
+                      prefixText: 'Bs ',
+                      errorText: errorMonto,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  SwitchListTile.adaptive(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('Registrar pago'),
+                    value: registrarPago,
+                    onChanged: (value) {
+                      setStateDialog(() {
+                        registrarPago = value;
+                        if (!registrarPago) metodoPago = null;
+                        if (registrarPago && metodoPago == null) {
+                          metodoPago = metodosPago.first;
+                        }
+                      });
+                    },
+                  ),
+                  if (registrarPago) ...[
+                    const SizedBox(height: 6),
+                    DropdownButtonFormField<String>(
+                      value: metodoPago ?? metodosPago.first,
+                      items: metodosPago
+                          .map(
+                            (item) => DropdownMenuItem<String>(
+                              value: item,
+                              child: Text(item),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) => setStateDialog(
+                        () => metodoPago = value ?? metodosPago.first,
+                      ),
+                      decoration: const InputDecoration(
+                        labelText: 'Método de pago',
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: observacionController,
+                    maxLines: 2,
+                    decoration: const InputDecoration(
+                      labelText: 'Observación (opcional)',
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () => Navigator.of(sheetContext).pop(),
+                          child: const Text('Cancelar'),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: FilledButton(
+                          onPressed: () {
+                            final montoValue = montoController.text
+                                .trim()
+                                .replaceAll(',', '.');
+                            final monto = double.tryParse(montoValue);
+                            if (monto == null || monto < 0) {
+                              setStateDialog(
+                                () =>
+                                    errorMonto = 'Ingresa un monto válido (>= 0)',
+                              );
+                              return;
+                            }
+                            Navigator.of(sheetContext).pop(
+                              CompletarAtencionPayload(
+                                monto: monto,
+                                registrarPago: registrarPago,
+                                metodoPago: registrarPago ? metodoPago : null,
+                                observacion: observacionController.text,
+                              ),
+                            );
+                          },
+                          child: const Text('Completar'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  static Future<bool> confirmarProgramarControl(BuildContext context) async {
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Atención completada'),
+        content: const Text('¿Deseas programar una cita de control ahora?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Ahora no'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Sí, programar'),
+          ),
+        ],
+      ),
+    );
+    return result == true;
   }
 
   static bool handleResponse({

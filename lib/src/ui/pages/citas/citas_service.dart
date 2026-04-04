@@ -312,6 +312,17 @@ class CitasService extends ServiceConfig {
     return fetch('/citas/$id/dar-alta', type: HttpProtocol.post, body: const {});
   }
 
+  Future<ResponseApi> completarAtencionCita(
+    String id,
+    Map<String, dynamic> body,
+  ) async {
+    return fetch(
+      '/citas/$id/completar-atencion',
+      type: HttpProtocol.post,
+      body: body,
+    );
+  }
+
   Future<ResponseApi> programarControlCita(
     String id,
     Map<String, dynamic> body,

@@ -339,7 +339,7 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
         ),
       if (estado == CitasEstado.programada && citaYaIniciada)
         CitaDetalleAccion(
-          label: 'Dar alta',
+          label: 'Completar atención',
           icon: Icons.task_alt_outlined,
           isPrimary: true,
           onTap: () async {
@@ -347,12 +347,13 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
             return true;
           },
         ),
-      if (estado == CitasEstado.programada && citaYaIniciada)
+      if (estado == CitasEstado.completada &&
+          !CitasUtils.tieneCitaNuevaProgramada(cita))
         CitaDetalleAccion(
           label: 'Programar control',
           icon: Icons.event_repeat_outlined,
           onTap: () async {
-            await _abrirFormulario(cita: cita, programarControl: true);
+            await _programarControl(cita);
             return true;
           },
         ),
@@ -459,18 +460,34 @@ class _NotificacionesPageState extends State<NotificacionesPage> {
   }
 
   Future<void> _darAltaCita(CitaMedica cita) async {
-    final ok = await InicioCitasUtils.confirmarYEnviar(
-      context: context,
-      titulo: 'Dar alta',
-      mensaje: '¿Deseas cerrar la atención y dar de alta esta cita?',
-      request: () => _citasService.darAltaCita(cita.id),
-      fallback: 'No se pudo dar de alta la cita.',
+    final payload = await InicioCitasUtils.solicitarCompletarAtencion(
+      context,
+      montoInicial: InicioCitasUtils.montoSugeridoCita(cita),
+    );
+    if (payload == null) return;
+    final ok = InicioCitasUtils.handleResponse(
+      response: await _citasService.completarAtencionCita(
+        cita.id,
+        payload.toJson(),
+      ),
+      fallback: 'No se pudo completar la atención.',
       mounted: mounted,
       onError: _showError,
     );
     if (ok) {
       await _cargarInicial();
+      final programarControl = await InicioCitasUtils.confirmarProgramarControl(
+        context,
+      );
+      if (!mounted || !programarControl) return;
+      await _programarControl(cita);
     }
+  }
+
+  Future<void> _programarControl(CitaMedica cita) async {
+    await _abrirFormulario(cita: cita, programarControl: true);
+    if (!mounted) return;
+    await _cargarInicial();
   }
 
   Future<void> _marcarNoAsistio(CitaMedica cita) async {
