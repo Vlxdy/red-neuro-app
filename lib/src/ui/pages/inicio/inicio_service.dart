@@ -94,6 +94,25 @@ class MisCitasHomeService extends ServiceConfig {
     );
   }
 
+  Future<HomeBandejaListadoResult> obtenerPagosPendientes({
+    int pagina = 1,
+    int limite = 10,
+    String scope = 'mine',
+    String? idPersonal,
+    String? idLugar,
+    DateTime? fechaBase,
+  }) {
+    return _obtenerListado(
+      path: '/citas/home/pagos-pendientes',
+      pagina: pagina,
+      limite: limite,
+      scope: scope,
+      idPersonal: idPersonal,
+      idLugar: idLugar,
+      fechaBase: fechaBase,
+    );
+  }
+
   Future<HomeProgramadasResult> obtenerProgramadasAsignadas({
     int pagina = 1,
     int limite = 10,
@@ -225,6 +244,7 @@ class HomeBandejaData {
   final HomePreviewBloque rechazadasSolicitadasPorMi;
   final HomePreviewBloque borradores;
   final HomePreviewBloque programadasAsignadas;
+  final HomePreviewBloque pagosPendientes;
 
   const HomeBandejaData({
     required this.contadores,
@@ -232,6 +252,7 @@ class HomeBandejaData {
     required this.rechazadasSolicitadasPorMi,
     required this.borradores,
     required this.programadasAsignadas,
+    required this.pagosPendientes,
   });
 
   factory HomeBandejaData.fromJson(Map<String, dynamic> json) {
@@ -253,6 +274,9 @@ class HomeBandejaData {
       programadasAsignadas: HomePreviewBloque.fromJson(
         preview['programadasAsignadas'] as Map<String, dynamic>? ?? {},
       ),
+      pagosPendientes: HomePreviewBloque.fromJson(
+        preview['pagosPendientes'] as Map<String, dynamic>? ?? {},
+      ),
     );
   }
 
@@ -263,6 +287,7 @@ class HomeBandejaData {
       rechazadasSolicitadasPorMi: HomePreviewBloque.empty(),
       borradores: HomePreviewBloque.empty(),
       programadasAsignadas: HomePreviewBloque.empty(),
+      pagosPendientes: HomePreviewBloque.empty(),
     );
   }
 }
@@ -272,12 +297,14 @@ class HomeContadores {
   final int rechazadasSolicitadasPorMi;
   final int borradores;
   final int programadasAsignadas;
+  final int pagosPendientes;
 
   const HomeContadores({
     required this.pendientesAprobacionAsignadas,
     required this.rechazadasSolicitadasPorMi,
     required this.borradores,
     required this.programadasAsignadas,
+    required this.pagosPendientes,
   });
 
   factory HomeContadores.fromJson(Map<String, dynamic> json) {
@@ -287,6 +314,7 @@ class HomeContadores {
       rechazadasSolicitadasPorMi: parse(json['rechazadasSolicitadasPorMi']),
       borradores: parse(json['borradores']),
       programadasAsignadas: parse(json['programadasAsignadas']),
+      pagosPendientes: parse(json['pagosPendientes']),
     );
   }
 
@@ -296,6 +324,7 @@ class HomeContadores {
       rechazadasSolicitadasPorMi: 0,
       borradores: 0,
       programadasAsignadas: 0,
+      pagosPendientes: 0,
     );
   }
 }

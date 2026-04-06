@@ -34,7 +34,7 @@ import 'package:red_neuro_app/src/ui/pages/inicio/widgets/inicio_cita_compact_ti
 final GlobalKey<ScaffoldMessengerState> misCitasHomeMessenger =
     GlobalKey<ScaffoldMessengerState>();
 
-enum _BandejaTipo { pendientes, rechazadas, borradores, programadas }
+enum _BandejaTipo { pendientes, rechazadas, borradores, programadas, pagosPendientes }
 
 class MisCitasHomePage extends StatefulWidget {
   const MisCitasHomePage({super.key});
@@ -62,11 +62,13 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
   static const _collapseRechazadasKey = 'inicio_bandeja_rechazadas_collapsed';
   static const _collapseBorradoresKey = 'inicio_bandeja_borradores_collapsed';
   static const _collapseProgramadasKey = 'inicio_bandeja_programadas_collapsed';
+  static const _collapsePagosPendientesKey = 'inicio_bandeja_pagos_pendientes_collapsed';
 
   bool _pendientesCollapsed = false;
   bool _rechazadasCollapsed = false;
   bool _borradoresCollapsed = false;
   bool _programadasCollapsed = false;
+  bool _pagosPendientesCollapsed = false;
 
   Timer? _socketReloadDebouncer;
   final ValueNotifier<int> _bandejasRefreshNotifier = ValueNotifier<int>(0);
@@ -134,12 +136,14 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
     final rechazadas = await PreferencesService.instance.getString(_collapseRechazadasKey);
     final borradores = await PreferencesService.instance.getString(_collapseBorradoresKey);
     final programadas = await PreferencesService.instance.getString(_collapseProgramadasKey);
+    final pagosPendientes = await PreferencesService.instance.getString(_collapsePagosPendientesKey);
     if (!mounted) return;
     setState(() {
       _pendientesCollapsed = pendientes == '1';
       _rechazadasCollapsed = rechazadas == '1';
       _borradoresCollapsed = borradores == '1';
       _programadasCollapsed = programadas == '1';
+      _pagosPendientesCollapsed = pagosPendientes == '1';
     });
   }
 
@@ -165,6 +169,10 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
         setState(() => _programadasCollapsed = !_programadasCollapsed);
         await _persistCollapsed(_collapseProgramadasKey, _programadasCollapsed);
         break;
+      case _BandejaTipo.pagosPendientes:
+        setState(() => _pagosPendientesCollapsed = !_pagosPendientesCollapsed);
+        await _persistCollapsed(_collapsePagosPendientesKey, _pagosPendientesCollapsed);
+        break;
     }
   }
 
@@ -189,6 +197,8 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
         return _borradoresCollapsed;
       case _BandejaTipo.programadas:
         return _programadasCollapsed;
+      case _BandejaTipo.pagosPendientes:
+        return _pagosPendientesCollapsed;
     }
   }
 
@@ -728,6 +738,13 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
                         tipo: _BandejaTipo.programadas,
                         isCollapsed: _isCollapsed(_BandejaTipo.programadas),
                       ),
+                      if (datos.pagosPendientes.total > 0)
+                        _buildSeccionWidget(
+                          titulo: 'Pagos pendientes',
+                          bloque: datos.pagosPendientes,
+                          tipo: _BandejaTipo.pagosPendientes,
+                          isCollapsed: _isCollapsed(_BandejaTipo.pagosPendientes),
+                        ),
                     ],
                   ),
           ),
@@ -812,6 +829,14 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
         onTap: () => _abrirDetalle(_BandejaTipo.programadas),
         accentColor: CitasEstado.programada.color(_theme),
       ),
+      if (contadores.pagosPendientes > 0)
+        InicioBandejaCounterCard(
+          titulo: 'Pagos pendientes',
+          valor: contadores.pagosPendientes,
+          icon: Icons.payments_outlined,
+          onTap: () => _abrirDetalle(_BandejaTipo.pagosPendientes),
+          accentColor: _theme.warning,
+        ),
     ];
 
     return LayoutBuilder(
@@ -981,6 +1006,12 @@ class _BandejaDetallePageState extends State<_BandejaDetallePage> {
         scope: widget.scope,
         idPersonal: widget.idPersonal,
       );
+    } else if (widget.tipo == _BandejaTipo.pagosPendientes) {
+      res = await widget.service.obtenerPagosPendientes(
+        pagina: paginaSolicitada,
+        scope: widget.scope,
+        idPersonal: widget.idPersonal,
+      );
     } else {
       res = await widget.service.obtenerBorradores(
         pagina: paginaSolicitada,
@@ -1013,6 +1044,7 @@ class _BandejaDetallePageState extends State<_BandejaDetallePage> {
       _BandejaTipo.rechazadas => 'Rechazadas solicitadas',
       _BandejaTipo.borradores => 'Borradores',
       _BandejaTipo.programadas => 'Programadas asignadas',
+      _BandejaTipo.pagosPendientes => 'Pagos pendientes',
     };
 
     return Scaffold(
