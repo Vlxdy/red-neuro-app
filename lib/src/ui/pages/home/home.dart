@@ -647,7 +647,6 @@ List<ChildrenItem> _submodulesFromRole({
   const supportedRoutesOrder = [
     '/admin/home',
     '/admin/citas',
-    '/admin/pagos',
     '/admin/cajas',
     '/admin/pacientes',
     '/admin/personal_medico',
@@ -752,8 +751,6 @@ ChildrenItem _submoduleToItem(
       normalizedUrl.contains('lugares') || normalizedName == 'lugares';
   final isCitasModule =
       normalizedUrl == '/admin/citas' || normalizedName == 'citas';
-  final isPagosModule =
-      normalizedUrl == '/admin/pagos' || normalizedName == 'pagos';
   final isCajasModule =
       normalizedUrl == '/admin/cajas' ||
       normalizedName == 'cajas' ||
@@ -773,8 +770,6 @@ ChildrenItem _submoduleToItem(
       ? 'home'
       : isCitasModule
       ? 'citas'
-      : isPagosModule
-      ? 'pagos'
       : isCajasModule
       ? 'cajas'
       : isCategoriasModule
@@ -798,8 +793,6 @@ ChildrenItem _submoduleToItem(
         ? 'Categorías'
         : isServiciosModule
         ? 'Servicios'
-        : isPagosModule
-        ? 'Pagos'
         : isCajasModule
         ? 'Cajas'
         : (subModule.label.isNotEmpty ? subModule.label : subModule.nombre),
@@ -1259,17 +1252,6 @@ _TrayBlueprint _resolveTrayBlueprint(SubModulo subModule) {
         'Aplicar filtros por médico o estado',
       ],
       icon: _moduleIconData('calendar'),
-    ),
-    '/admin/pagos': _TrayBlueprint(
-      title: 'Pagos pendientes',
-      description:
-          'Regulariza pagos pendientes de citas completadas y administra anulaciones.',
-      actions: const [
-        'Listar pendientes con estado PENDIENTE para regularización',
-        'Cobrar pendientes con método de pago y caja abierta',
-        'Anular pagos cuando corresponda',
-      ],
-      icon: _moduleIconData('pagos'),
     ),
     '/admin/cajas': _TrayBlueprint(
       title: 'Cajas',
