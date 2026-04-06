@@ -4761,6 +4761,64 @@
         ]
       }
     },
+    "/pagos/{id}/corregir": {
+      "post": {
+        "operationId": "PagosCitasController_corregirPago",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CorregirCitaPagoDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/CitaPagoResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Corrige un pago creando un nuevo registro y marcando el anterior como reemplazado",
+        "tags": [
+          "Gestión de Pagos de Citas"
+        ]
+      }
+    },
     "/reportes/pagos": {
       "get": {
         "operationId": "ReportesCitasController_reportePagos",
@@ -4891,6 +4949,297 @@
         ]
       }
     },
+    "/caja": {
+      "get": {
+        "operationId": "CajaCitasController_listarCajas",
+        "parameters": [
+          {
+            "name": "limite",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 10,
+              "maximum": 50,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pagina",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "filtro",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ordenRaw",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "estado",
+            "required": false,
+            "in": "query",
+            "description": "Estado de la caja",
+            "schema": {
+              "example": "ABIERTA",
+              "type": "string",
+              "enum": [
+                "ABIERTA",
+                "REVISION",
+                "CERRADA"
+              ]
+            }
+          },
+          {
+            "name": "gestion",
+            "required": false,
+            "in": "query",
+            "description": "Gestión (año)",
+            "schema": {
+              "example": 2026,
+              "type": "number"
+            }
+          },
+          {
+            "name": "mes",
+            "required": false,
+            "in": "query",
+            "description": "Mes (1-12)",
+            "schema": {
+              "example": 4,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/CajaListadoResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lista cajas para bandeja/selector",
+        "tags": [
+          "Caja de Citas"
+        ]
+      }
+    },
+    "/caja/{id}": {
+      "get": {
+        "operationId": "CajaCitasController_obtenerCaja",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/CajaSesionResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Obtiene detalle de una caja",
+        "tags": [
+          "Caja de Citas"
+        ]
+      }
+    },
+    "/caja/{id}/movimientos": {
+      "get": {
+        "operationId": "CajaCitasController_listarMovimientosCaja",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          },
+          {
+            "name": "limite",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 10,
+              "maximum": 50,
+              "default": 10,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pagina",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "filtro",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "ordenRaw",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "estadoPago",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDIENTE",
+                "PAGADO",
+                "ANULADO",
+                "REEMPLAZADO"
+              ]
+            }
+          },
+          {
+            "name": "metodoPago",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "EFECTIVO",
+                "QR",
+                "TRANSFERENCIA",
+                "TARJETA",
+                "OTRO"
+              ]
+            }
+          },
+          {
+            "name": "fechaDesde",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "2026-04-01T00:00:00Z",
+              "type": "string"
+            }
+          },
+          {
+            "name": "fechaHasta",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "2026-04-30T23:59:59Z",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/CajaMovimientosResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Lista movimientos paginados de una caja",
+        "tags": [
+          "Caja de Citas"
+        ]
+      }
+    },
     "/caja/apertura": {
       "post": {
         "operationId": "CajaCitasController_abrirCaja",
@@ -4982,6 +5331,64 @@
           }
         ],
         "summary": "Cierra caja manualmente (solo jefe)",
+        "tags": [
+          "Caja de Citas"
+        ]
+      }
+    },
+    "/caja/{id}/cierre": {
+      "post": {
+        "operationId": "CajaCitasController_cerrarCajaPorId",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "example": "12",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CierreCajaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/BaseResponseDto"
+                    },
+                    {
+                      "properties": {
+                        "datos": {
+                          "$ref": "#/components/schemas/CajaSesionResponseDto"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cierra caja por identificador (solo jefe)",
         "tags": [
           "Caja de Citas"
         ]
@@ -8789,7 +9196,8 @@
             "enum": [
               "PENDIENTE",
               "PAGADO",
-              "ANULADO"
+              "ANULADO",
+              "REEMPLAZADO"
             ],
             "example": "PENDIENTE"
           },
@@ -8800,6 +9208,10 @@
           "idUsuarioRegistro": {
             "type": "string",
             "example": "8"
+          },
+          "idPagoOrigen": {
+            "type": "string",
+            "example": "123"
           }
         },
         "required": [
@@ -9539,6 +9951,60 @@
           "motivo"
         ]
       },
+      "CorregirCitaPagoDto": {
+        "type": "object",
+        "properties": {
+          "monto": {
+            "type": "number",
+            "description": "Monto corregido del pago",
+            "example": 100.5,
+            "minimum": 0
+          },
+          "metodoPago": {
+            "type": "string",
+            "enum": [
+              "EFECTIVO",
+              "QR",
+              "TRANSFERENCIA",
+              "TARJETA",
+              "OTRO"
+            ],
+            "description": "Método de pago corregido",
+            "example": "QR"
+          },
+          "fechaPago": {
+            "type": "string",
+            "description": "Fecha del pago corregido en formato ISO. Si no se envía, usa ahora.",
+            "example": "2026-04-02T18:00:00Z"
+          },
+          "tipoMovimiento": {
+            "type": "string",
+            "enum": [
+              "PAGO",
+              "AJUSTE",
+              "DEVOLUCION"
+            ],
+            "description": "Tipo de movimiento corregido",
+            "example": "PAGO",
+            "default": "PAGO"
+          },
+          "motivo": {
+            "type": "string",
+            "description": "Motivo de corrección del pago",
+            "example": "Corrección de método de pago"
+          },
+          "observacion": {
+            "type": "string",
+            "description": "Observación del nuevo pago corregido",
+            "example": "Se corrige por carga errónea"
+          }
+        },
+        "required": [
+          "monto",
+          "metodoPago",
+          "motivo"
+        ]
+      },
       "ReportePagosResumenDto": {
         "type": "object",
         "properties": {
@@ -9640,6 +10106,10 @@
           "montoRecaudado": {
             "type": "number",
             "example": 620.5
+          },
+          "pagosPendientes": {
+            "type": "number",
+            "example": 0
           }
         },
         "required": [
@@ -9647,6 +10117,48 @@
           "estado",
           "fechaApertura",
           "montoRecaudado"
+        ]
+      },
+      "CajaListadoResponseDto": {
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CajaSesionResponseDto"
+            }
+          },
+          "total": {
+            "type": "number",
+            "example": 12
+          },
+          "defaultCajaId": {
+            "type": "string",
+            "example": "10"
+          }
+        },
+        "required": [
+          "rows",
+          "total"
+        ]
+      },
+      "CajaMovimientosResponseDto": {
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CitaPagoResponseDto"
+            }
+          },
+          "total": {
+            "type": "number",
+            "example": 123
+          }
+        },
+        "required": [
+          "rows",
+          "total"
         ]
       },
       "AperturaCajaDto": {
