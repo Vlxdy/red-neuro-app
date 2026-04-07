@@ -9,12 +9,14 @@ import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/constants/citas_estado.dart';
 import 'package:red_neuro_app/src/constants/constants.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
+import 'package:red_neuro_app/src/models/pago_con_cita_resumen.dart';
 import 'package:red_neuro_app/src/models/personal_medico.dart';
 import 'package:red_neuro_app/src/plugins/auth/auth.dart';
 import 'package:red_neuro_app/src/utils/role_utils.dart';
 import 'package:red_neuro_app/src/plugins/utils/logger.dart';
 import 'package:red_neuro_app/src/plugins/utils/preferences.dart';
 import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
+import 'package:red_neuro_app/src/ui/common/components/pago_con_cita_card.dart';
 import 'package:red_neuro_app/src/ui/common/dialogs/dialogos.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
@@ -739,7 +741,7 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
                         isCollapsed: _isCollapsed(_BandejaTipo.programadas),
                       ),
                       if (datos.pagosPendientes.total > 0)
-                        _buildSeccionWidget(
+                        _buildSeccionPagosWidget(
                           titulo: 'Pagos pendientes',
                           bloque: datos.pagosPendientes,
                           tipo: _BandejaTipo.pagosPendientes,
@@ -883,6 +885,33 @@ class _MisCitasHomePageState extends State<MisCitasHomePage> {
       onViewAll: bloque.total > bloque.items.length ? () => _abrirDetalle(tipo) : null,
     );
   }
+
+  Widget _buildSeccionPagosWidget({
+    required String titulo,
+    required HomePreviewPagosBloque bloque,
+    required _BandejaTipo tipo,
+    required bool isCollapsed,
+  }) {
+    final contenido = bloque.items.isEmpty
+        ? <Widget>[const Text('Sin resultados')]
+        : bloque.items
+            .map(
+              (pago) => PagoConCitaCard(
+                pago: pago,
+                onTapVerCita: () => _mostrarDetalleCita(pago.cita),
+              ),
+            )
+            .toList();
+
+    return InicioBandejaSectionCard(
+      titulo: titulo,
+      total: bloque.total,
+      isCollapsed: isCollapsed,
+      onToggle: () => _toggleBloque(tipo),
+      content: contenido,
+      onViewAll: bloque.total > bloque.items.length ? () => _abrirDetalle(tipo) : null,
+    );
+  }
 }
 
 
@@ -915,13 +944,17 @@ class _BandejaDetallePageState extends State<_BandejaDetallePage> {
   int _pagina = 1;
   int _total = 0;
   List<CitaMedica> _items = [];
+  List<PagoConCitaResumen> _pagoItems = [];
   List<HomeGrupoDia> _grupos = [];
 
   bool get _isProgramadas => widget.tipo == _BandejaTipo.programadas;
+  bool get _isPagos => widget.tipo == _BandejaTipo.pagosPendientes;
   bool get _hasMore {
     final loaded = _isProgramadas
         ? _grupos.fold<int>(0, (acc, g) => acc + g.items.length)
-        : _items.length;
+        : _isPagos
+            ? _pagoItems.length
+            : _items.length;
     return loaded < _total;
   }
 
@@ -962,7 +995,7 @@ class _BandejaDetallePageState extends State<_BandejaDetallePage> {
     if (_loadingMore || _refreshing || (!reset && !_hasMore)) return;
 
     final paginaSolicitada = reset ? 1 : _pagina;
-    final cargarConPantallaInicial = reset && _items.isEmpty && _grupos.isEmpty;
+    final cargarConPantallaInicial = reset && _items.isEmpty && _grupos.isEmpty && _pagoItems.isEmpty;
 
     setState(() {
       if (reset) {
@@ -1007,11 +1040,21 @@ class _BandejaDetallePageState extends State<_BandejaDetallePage> {
         idPersonal: widget.idPersonal,
       );
     } else if (widget.tipo == _BandejaTipo.pagosPendientes) {
-      res = await widget.service.obtenerPagosPendientes(
+      final pagosRes = await widget.service.obtenerPagosPendientes(
         pagina: paginaSolicitada,
         scope: widget.scope,
         idPersonal: widget.idPersonal,
       );
+      if (!mounted) return;
+      setState(() {
+        _total = pagosRes.total;
+        _pagoItems = reset ? [...pagosRes.filas] : [..._pagoItems, ...pagosRes.filas];
+        _loading = false;
+        _loadingMore = false;
+        _refreshing = false;
+        _pagina = paginaSolicitada + 1;
+      });
+      return;
     } else {
       res = await widget.service.obtenerBorradores(
         pagina: paginaSolicitada,
@@ -1070,6 +1113,13 @@ class _BandejaDetallePageState extends State<_BandejaDetallePage> {
                   const SizedBox(height: 12),
                   if (_isProgramadas)
                     ..._buildProgramadas()
+                  else if (_isPagos)
+                    ..._pagoItems.map(
+                      (pago) => PagoConCitaCard(
+                        pago: pago,
+                        onTapVerCita: () => _abrirDetalleCita(pago.cita),
+                      ),
+                    )
                   else
                     ..._items.map((cita) => InicioCitaCompactTile(cita: cita, onTap: () => _abrirDetalleCita(cita))),
                   if (_loadingMore)
