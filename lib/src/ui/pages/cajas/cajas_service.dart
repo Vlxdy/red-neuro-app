@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:red_neuro_app/src/config/service_config.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
+import 'package:red_neuro_app/src/models/pago_con_cita_resumen.dart';
 
 class CajaDetalle {
   final String id;
@@ -59,49 +60,6 @@ class CajaDetalle {
   }
 }
 
-class CajaMovimiento {
-  final String id;
-  final String idCita;
-  final double monto;
-  final DateTime? fechaPago;
-  final String metodoPago;
-  final String estadoPago;
-  final String observacion;
-
-  const CajaMovimiento({
-    required this.id,
-    required this.idCita,
-    required this.monto,
-    required this.fechaPago,
-    required this.metodoPago,
-    required this.estadoPago,
-    required this.observacion,
-  });
-
-  factory CajaMovimiento.fromJson(Map<String, dynamic> json) {
-    double parseMonto(dynamic value) {
-      if (value is num) return value.toDouble();
-      if (value is String) return double.tryParse(value) ?? 0;
-      return 0;
-    }
-
-    DateTime? parseFecha(dynamic value) {
-      if (value is! String || value.trim().isEmpty) return null;
-      return DateTime.tryParse(value);
-    }
-
-    return CajaMovimiento(
-      id: '${json['id'] ?? ''}',
-      idCita: '${json['idCita'] ?? ''}',
-      monto: parseMonto(json['monto']),
-      fechaPago: parseFecha(json['fechaPago']),
-      metodoPago: '${json['metodoPago'] ?? '-'}',
-      estadoPago: '${json['estadoPago'] ?? json['estado'] ?? '-'}',
-      observacion: '${json['observacion'] ?? ''}',
-    );
-  }
-}
-
 class CajaListadoResult {
   final List<CajaDetalle> rows;
   final int total;
@@ -119,7 +77,7 @@ class CajaListadoResult {
 }
 
 class CajaMovimientosResult {
-  final List<CajaMovimiento> rows;
+  final List<PagoConCitaResumen> rows;
   final int total;
   final StatusNetwork status;
   final String message;
@@ -208,13 +166,13 @@ class CajasService extends ServiceConfig {
     );
 
     final payload = _parsePayload(response.data);
-    final rowsRaw = payload['rows'];
+    final rowsRaw = payload['rows'] ?? payload['filas'];
     final rows = (rowsRaw is List)
         ? rowsRaw
               .whereType<Map<String, dynamic>>()
-              .map(CajaMovimiento.fromJson)
+              .map(PagoConCitaResumen.fromJson)
               .toList()
-        : <CajaMovimiento>[];
+        : <PagoConCitaResumen>[];
 
     return CajaMovimientosResult(
       rows: rows,

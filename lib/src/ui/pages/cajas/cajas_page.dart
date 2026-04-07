@@ -2,9 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:red_neuro_app/src/config/theme_controller.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
+import 'package:red_neuro_app/src/models/cita.dart';
+import 'package:red_neuro_app/src/models/pago_con_cita_resumen.dart';
+import 'package:red_neuro_app/src/ui/common/components/pago_con_cita_card.dart';
 import 'package:red_neuro_app/src/ui/common/layout/tray_module_header.dart';
 import 'package:red_neuro_app/src/ui/common/snackbar/snackbar.dart';
 import 'package:red_neuro_app/src/ui/global/template_page.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/citas_service.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/citas_utils.dart';
+import 'package:red_neuro_app/src/ui/pages/citas/widgets/citas_detalle_modal.dart';
+import 'package:red_neuro_app/src/ui/pages/inicio/inicio_citas_utils.dart';
 import 'package:red_neuro_app/src/ui/pages/cajas/cajas_service.dart';
 
 final GlobalKey<ScaffoldMessengerState> cajasMessenger =
@@ -24,18 +31,20 @@ class _CajasPageState extends State<CajasPage> {
     symbol: 'Bs ',
     decimalDigits: 2,
   );
+  final DateFormat _date = DateFormat('dd/MM/yyyy');
   final DateFormat _dateTime = DateFormat('dd/MM/yyyy HH:mm');
   static const int _limiteMovimientos = 20;
   static const int _limiteCajas = 10;
 
   late final CajasService _service;
+  late final CitasService _citasService;
 
   List<CajaDetalle> _cajas = const [];
   int _totalCajas = 0;
   String? _defaultCajaId;
   String? _selectedCajaId;
   CajaDetalle? _cajaDetalle;
-  List<CajaMovimiento> _movimientos = const [];
+  List<PagoConCitaResumen> _movimientos = const [];
 
   int _totalMovimientos = 0;
   int _pagina = 1;
@@ -49,6 +58,7 @@ class _CajasPageState extends State<CajasPage> {
   void initState() {
     super.initState();
     _service = CajasService(context);
+    _citasService = CitasService(context);
     _loadInicial();
   }
 
@@ -295,26 +305,52 @@ class _CajasPageState extends State<CajasPage> {
     );
   }
 
-  Color _chipColorByEstado(String estado) {
-    switch (estado.toUpperCase()) {
-      case 'PAGADO':
-        return theme.success;
-      case 'PENDIENTE':
-        return theme.warning;
-      case 'ANULADO':
-      case 'REEMPLAZADO':
-        return theme.error;
-      default:
-        return theme.secondary;
-    }
-  }
-
   String _formatDateTime(DateTime? value) {
     if (value == null) return '-';
     return _dateTime.format(value.toLocal());
   }
 
   String _formatMonto(double value) => _money.format(value);
+
+  Future<void> _mostrarDetalleCita(CitaMedica cita) async {
+    final payload = CitasUtils.construirDetalleModalPayload(
+      cita: cita,
+      theme: theme,
+      titulo: 'Detalle de cita',
+      nombrePaciente: InicioCitasUtils.nombrePaciente,
+      formatearGenero: InicioCitasUtils.formatearGenero,
+      formatearFechaPaciente: InicioCitasUtils.formatearFechaPaciente,
+      calcularEdadPaciente: InicioCitasUtils.calcularEdadPaciente,
+      etiquetaPrestacion: InicioCitasUtils.etiquetaPrestacion,
+      nombreMedico: InicioCitasUtils.nombreMedico,
+      resolveAvatarUrl: (url) => (url ?? '').trim(),
+      inicialesPersonal: InicioCitasUtils.inicialesPersonal,
+      formatoFechaCita: InicioCitasUtils.formatoFechaCita,
+      formatoHorarioCita: InicioCitasUtils.formatoHorarioCita,
+    );
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => CitasDetalleModal.fromPayload(
+        cita: cita,
+        theme: theme,
+        payload: payload,
+        acciones: const [],
+        onClose: () => Navigator.of(sheetContext).pop(),
+        onVerHistorial: () => InicioCitasUtils.mostrarHistorialCita(
+          context: context,
+          cita: cita,
+          service: _citasService,
+          theme: theme,
+          dateFormat: _date,
+          dateTimeFormat: _dateTime,
+        ),
+        onCopiarDato: (_) async {},
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -502,30 +538,9 @@ class _CajasPageState extends State<CajasPage> {
     return Column(
       children: [
         ..._movimientos.map(
-          (mov) => Card(
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              title: Text(_formatMonto(mov.monto)),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Pago: ${mov.id}'),
-                  Text('Cita: ${mov.idCita.isEmpty ? '-' : mov.idCita}'),
-                  Text('Método: ${mov.metodoPago}'),
-                  Text('Fecha: ${_formatDateTime(mov.fechaPago)}'),
-                  if (mov.observacion.trim().isNotEmpty)
-                    Text('Obs: ${mov.observacion.trim()}'),
-                ],
-              ),
-              trailing: Chip(
-                label: Text(mov.estadoPago.toUpperCase()),
-                backgroundColor: _chipColorByEstado(mov.estadoPago).withValues(alpha: 0.14),
-                labelStyle: TextStyle(
-                  color: _chipColorByEstado(mov.estadoPago),
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
+          (mov) => PagoConCitaCard(
+            pago: mov,
+            onTapVerCita: () => _mostrarDetalleCita(mov.cita),
           ),
         ),
         if (_hasMoreMovimientos)

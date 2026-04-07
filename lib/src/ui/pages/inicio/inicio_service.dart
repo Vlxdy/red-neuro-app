@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:red_neuro_app/src/config/service_config.dart';
 import 'package:red_neuro_app/src/constants/network.dart';
 import 'package:red_neuro_app/src/models/cita.dart';
+import 'package:red_neuro_app/src/models/pago_con_cita_resumen.dart';
 
 class MisCitasHomeService extends ServiceConfig {
   MisCitasHomeService(BuildContext context) : super('', context);
@@ -94,22 +95,41 @@ class MisCitasHomeService extends ServiceConfig {
     );
   }
 
-  Future<HomeBandejaListadoResult> obtenerPagosPendientes({
+  Future<HomeBandejaPagosResult> obtenerPagosPendientes({
     int pagina = 1,
     int limite = 10,
     String scope = 'mine',
     String? idPersonal,
     String? idLugar,
     DateTime? fechaBase,
-  }) {
-    return _obtenerListado(
-      path: '/citas/home/pagos-pendientes',
-      pagina: pagina,
-      limite: limite,
-      scope: scope,
-      idPersonal: idPersonal,
-      idLugar: idLugar,
-      fechaBase: fechaBase,
+  }) async {
+    final response = await _fetchWithRetry(
+      '/citas/home/pagos-pendientes',
+      params: {
+        'pagina': '$pagina',
+        'limite': '$limite',
+        'scope': scope,
+        if (idPersonal != null && idPersonal.isNotEmpty) 'idPersonal': idPersonal,
+        if (idLugar != null && idLugar.isNotEmpty) 'idLugar': idLugar,
+        if (fechaBase != null) 'fechaBase': _formatDate(fechaBase),
+      },
+    );
+
+    if (response.status != StatusNetwork.connected) {
+      return HomeBandejaPagosResult.empty(response.message, response.status);
+    }
+
+    final payload = _parsePayload(response.data);
+    final filasRaw = payload['filas'] ?? payload['items'] ?? payload['rows'];
+    final filas = (filasRaw is List)
+        ? filasRaw.whereType<Map<String, dynamic>>().map(PagoConCitaResumen.fromAnyJson).toList()
+        : <PagoConCitaResumen>[];
+
+    return HomeBandejaPagosResult(
+      filas: filas,
+      total: _parseInt(payload['total']),
+      status: response.status,
+      message: response.message,
     );
   }
 
@@ -211,6 +231,12 @@ class MisCitasHomeService extends ServiceConfig {
     return int.tryParse(value?.toString() ?? '') ?? 0;
   }
 
+  Map<String, dynamic> _parsePayload(Map<String, dynamic> data) {
+    final payload = data['datos'] ?? data['data'] ?? data;
+    if (payload is Map<String, dynamic>) return payload;
+    return <String, dynamic>{};
+  }
+
   String _formatDate(DateTime date) {
     final m = date.month.toString().padLeft(2, '0');
     final d = date.day.toString().padLeft(2, '0');
@@ -244,7 +270,7 @@ class HomeBandejaData {
   final HomePreviewBloque rechazadasSolicitadasPorMi;
   final HomePreviewBloque borradores;
   final HomePreviewBloque programadasAsignadas;
-  final HomePreviewBloque pagosPendientes;
+  final HomePreviewPagosBloque pagosPendientes;
 
   const HomeBandejaData({
     required this.contadores,
@@ -274,7 +300,7 @@ class HomeBandejaData {
       programadasAsignadas: HomePreviewBloque.fromJson(
         preview['programadasAsignadas'] as Map<String, dynamic>? ?? {},
       ),
-      pagosPendientes: HomePreviewBloque.fromJson(
+      pagosPendientes: HomePreviewPagosBloque.fromJson(
         preview['pagosPendientes'] as Map<String, dynamic>? ?? {},
       ),
     );
@@ -287,7 +313,7 @@ class HomeBandejaData {
       rechazadasSolicitadasPorMi: HomePreviewBloque.empty(),
       borradores: HomePreviewBloque.empty(),
       programadasAsignadas: HomePreviewBloque.empty(),
-      pagosPendientes: HomePreviewBloque.empty(),
+      pagosPendientes: HomePreviewPagosBloque.empty(),
     );
   }
 }
@@ -359,6 +385,39 @@ class HomePreviewBloque {
   }
 }
 
+class HomePreviewPagosBloque {
+  final List<PagoConCitaResumen> items;
+  final int total;
+  final int limitAplicado;
+  final bool hasMore;
+
+  const HomePreviewPagosBloque({
+    required this.items,
+    required this.total,
+    required this.limitAplicado,
+    required this.hasMore,
+  });
+
+  factory HomePreviewPagosBloque.fromJson(Map<String, dynamic> json) {
+    final payload = (json['datos'] is Map<String, dynamic>)
+        ? (json['datos'] as Map<String, dynamic>)
+        : json;
+    final itemsRaw = payload['items'] ?? payload['filas'] ?? payload['rows'];
+    return HomePreviewPagosBloque(
+      items: (itemsRaw is List)
+          ? itemsRaw.whereType<Map<String, dynamic>>().map(PagoConCitaResumen.fromAnyJson).toList()
+          : <PagoConCitaResumen>[],
+      total: int.tryParse(payload['total']?.toString() ?? '') ?? 0,
+      limitAplicado: int.tryParse(payload['limitAplicado']?.toString() ?? '') ?? 0,
+      hasMore: payload['hasMore'] == true,
+    );
+  }
+
+  factory HomePreviewPagosBloque.empty() {
+    return const HomePreviewPagosBloque(items: [], total: 0, limitAplicado: 0, hasMore: false);
+  }
+}
+
 class HomeBandejaListadoResult {
   final List<CitaMedica> filas;
   final int total;
@@ -374,6 +433,29 @@ class HomeBandejaListadoResult {
 
   factory HomeBandejaListadoResult.empty(String message, StatusNetwork status) {
     return HomeBandejaListadoResult(
+      filas: const [],
+      total: 0,
+      status: status,
+      message: message,
+    );
+  }
+}
+
+class HomeBandejaPagosResult {
+  final List<PagoConCitaResumen> filas;
+  final int total;
+  final StatusNetwork status;
+  final String message;
+
+  const HomeBandejaPagosResult({
+    required this.filas,
+    required this.total,
+    required this.status,
+    required this.message,
+  });
+
+  factory HomeBandejaPagosResult.empty(String message, StatusNetwork status) {
+    return HomeBandejaPagosResult(
       filas: const [],
       total: 0,
       status: status,
