@@ -2497,9 +2497,17 @@
                     {
                       "properties": {
                         "datos": {
-                          "type": "array",
-                          "items": {
-                            "$ref": "#/components/schemas/CitaPagoResponseDto"
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "number"
+                            },
+                            "filas": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/PagoConCitaResumenDto"
+                              }
+                            }
                           }
                         }
                       }
@@ -2515,7 +2523,7 @@
             "bearer": []
           }
         ],
-        "summary": "Lista los pagos registrados de una cita",
+        "summary": "Lista los pagos registrados de una cita en formato unificado",
         "tags": [
           "Gestión de Citas"
         ]
@@ -3926,7 +3934,7 @@
                             "filas": {
                               "type": "array",
                               "items": {
-                                "$ref": "#/components/schemas/CitaResponseDto"
+                                "$ref": "#/components/schemas/PagoConCitaResumenDto"
                               }
                             }
                           }
@@ -3944,7 +3952,7 @@
             "bearer": []
           }
         ],
-        "summary": "Lista incremental de citas con pago pendiente",
+        "summary": "Lista incremental de pagos pendientes",
         "tags": [
           "Gestión de Citas Home"
         ]
@@ -4679,9 +4687,17 @@
                     {
                       "properties": {
                         "datos": {
-                          "type": "array",
-                          "items": {
-                            "$ref": "#/components/schemas/CitaPagoResponseDto"
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "number"
+                            },
+                            "filas": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/PagoConCitaResumenDto"
+                              }
+                            }
                           }
                         }
                       }
@@ -4697,7 +4713,7 @@
             "bearer": []
           }
         ],
-        "summary": "Lista la bandeja de pagos pendientes por regularizar",
+        "summary": "Lista la bandeja de pagos pendientes",
         "tags": [
           "Gestión de Pagos de Citas"
         ]
@@ -5219,7 +5235,18 @@
                     {
                       "properties": {
                         "datos": {
-                          "$ref": "#/components/schemas/CajaMovimientosResponseDto"
+                          "type": "object",
+                          "properties": {
+                            "total": {
+                              "type": "number"
+                            },
+                            "filas": {
+                              "type": "array",
+                              "items": {
+                                "$ref": "#/components/schemas/PagoConCitaResumenDto"
+                              }
+                            }
+                          }
                         }
                       }
                     }
@@ -5234,7 +5261,7 @@
             "bearer": []
           }
         ],
-        "summary": "Lista movimientos paginados de una caja",
+        "summary": "Lista movimientos paginados de una caja con formato unificado",
         "tags": [
           "Caja de Citas"
         ]
@@ -9272,6 +9299,132 @@
           "metodoPago"
         ]
       },
+      "CitaResumenPagoDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "cita-456"
+          },
+          "detalle": {
+            "type": "string",
+            "example": "Control nutricional"
+          },
+          "fechaInicio": {
+            "type": "string",
+            "example": "2026-04-06T14:00:00.000Z"
+          },
+          "fechaFin": {
+            "type": "string",
+            "example": "2026-04-06T14:30:00.000Z"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "INACTIVO",
+              "BORRADOR",
+              "SOLICITADA",
+              "PROGRAMADA",
+              "COMPLETADA",
+              "NO_ASISTIO",
+              "REPROGRAMADA",
+              "CANCELADA",
+              "RECHAZADA"
+            ],
+            "example": "COMPLETADA"
+          },
+          "tipoCita": {
+            "type": "string",
+            "enum": [
+              "CONSULTA",
+              "ESTUDIO"
+            ],
+            "example": "CONSULTA"
+          },
+          "paciente": {
+            "$ref": "#/components/schemas/PacienteResponseDto"
+          },
+          "personal": {
+            "$ref": "#/components/schemas/PersonalResponseDto"
+          },
+          "servicio": {
+            "$ref": "#/components/schemas/ServicioCitaDto"
+          }
+        },
+        "required": [
+          "id",
+          "detalle",
+          "fechaInicio",
+          "fechaFin",
+          "estado",
+          "tipoCita"
+        ]
+      },
+      "PagoConCitaResumenDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "pago-123"
+          },
+          "monto": {
+            "type": "number",
+            "example": 120.5
+          },
+          "estadoPago": {
+            "type": "string",
+            "enum": [
+              "PENDIENTE",
+              "PAGADO",
+              "ANULADO",
+              "REEMPLAZADO"
+            ],
+            "example": "PAGADO"
+          },
+          "metodoPago": {
+            "type": "string",
+            "enum": [
+              "EFECTIVO",
+              "QR",
+              "TRANSFERENCIA",
+              "TARJETA",
+              "OTRO"
+            ],
+            "example": "QR"
+          },
+          "tipoMovimiento": {
+            "type": "string",
+            "enum": [
+              "PAGO",
+              "AJUSTE",
+              "DEVOLUCION"
+            ],
+            "example": "PAGO"
+          },
+          "fechaPago": {
+            "type": "string",
+            "example": "2026-04-06T14:31:00.000Z"
+          },
+          "observacion": {
+            "type": "string",
+            "example": "Pago en caja"
+          },
+          "usuarioRegistro": {
+            "$ref": "#/components/schemas/PersonalResponseDto"
+          },
+          "cita": {
+            "$ref": "#/components/schemas/CitaResumenPagoDto"
+          }
+        },
+        "required": [
+          "id",
+          "monto",
+          "estadoPago",
+          "tipoMovimiento",
+          "usuarioRegistro",
+          "cita"
+        ]
+      },
       "Number": {
         "type": "object",
         "properties": {}
@@ -10135,25 +10288,6 @@
           "defaultCajaId": {
             "type": "string",
             "example": "10"
-          }
-        },
-        "required": [
-          "rows",
-          "total"
-        ]
-      },
-      "CajaMovimientosResponseDto": {
-        "type": "object",
-        "properties": {
-          "rows": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CitaPagoResponseDto"
-            }
-          },
-          "total": {
-            "type": "number",
-            "example": 123
           }
         },
         "required": [
